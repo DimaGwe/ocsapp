@@ -271,7 +271,7 @@ ob_start();
   <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
 
     <!-- Hero Sliders Card -->
-    <a href="<?= url('/admin/sliders') ?>" class="quick-link-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 24px; border-radius: var(--radius-xl); text-decoration: none; display: block; transition: all var(--transition-base); box-shadow: var(--shadow-sm);">
+    <a href="<?= url('/admin/sliders') ?>" class="quick-link-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 24px; border-radius: var(--radius-xl); text-decoration: none; display: block; transition: all var(--transition-base); box-shadow: var(--shadow-sm);">
       <div style="font-size: 36px; margin-bottom: 12px;">🎨</div>
       <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">Hero Sliders</h3>
       <p style="opacity: 0.9; font-size: 14px; margin: 0;">Manage homepage hero slider images, titles, and buttons</p>
