@@ -13,7 +13,8 @@
       "Bash(mkdir:*)",
       "Bash(scp:*)",
       "Bash(tar:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []
