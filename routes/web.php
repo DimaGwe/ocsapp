@@ -228,6 +228,15 @@ return [
     'POST /admin/sliders/delete' => ['SliderController', 'delete'],
     'POST /admin/sliders/update-order' => ['SliderController', 'updateOrder'],
 
+    // Promo Banners Management
+    'GET /admin/promo-banners' => ['PromoBannerController', 'index'],
+    'GET /admin/promo-banners/edit' => ['PromoBannerController', 'edit'],
+    'POST /admin/promo-banners/update' => ['PromoBannerController', 'update'],
+    'GET /admin/promo-banners/create' => ['PromoBannerController', 'create'],
+    'POST /admin/promo-banners/create' => ['PromoBannerController', 'create'],
+    'POST /admin/promo-banners/delete' => ['PromoBannerController', 'delete'],
+    'POST /admin/promo-banners/update-order' => ['PromoBannerController', 'updateOrder'],
+
     // ===================================
     // SELLER ROUTES
     // ===================================

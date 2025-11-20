@@ -569,10 +569,58 @@ $stmt = $db->query("
 $heroSliders = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
 // ============================================
+// PROMO BANNER - Get active promo banner and selected products
+// ============================================
+$promoBanner = null;
+$promoProducts = [];
+
+try {
+    // Get first active promo banner
+    $stmt = $db->query("
+        SELECT id, title, subtitle, discount_percentage, selected_products, button_text, button_url
+        FROM promo_banners
+        WHERE status = 'active'
+        ORDER BY sort_order ASC, id ASC
+        LIMIT 1
+    ");
+    $promoBanner = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+    // If banner exists and has selected products, fetch them
+    if ($promoBanner && !empty($promoBanner['selected_products'])) {
+        $selectedProductIds = json_decode($promoBanner['selected_products'], true);
+
+        if (!empty($selectedProductIds) && is_array($selectedProductIds)) {
+            $placeholders = str_repeat('?,', count($selectedProductIds) - 1) . '?';
+
+            $stmt = $db->prepare("
+                SELECT
+                    p.id,
+                    p.name,
+                    p.slug,
+                    pi.image_path as image
+                FROM products p
+                LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
+                WHERE p.id IN ($placeholders)
+                  AND p.status = 'active'
+                ORDER BY FIELD(p.id, $placeholders)
+            ");
+            $stmt->execute(array_merge($selectedProductIds, $selectedProductIds));
+            $promoProducts = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        }
+    }
+} catch (\PDOException $e) {
+    logger("Promo banner fetch error: " . $e->getMessage(), 'info');
+    $promoBanner = null;
+    $promoProducts = [];
+}
+
+// ============================================
 // Render view with ALL data
 // ============================================
 view('buyer.home', [
     'heroSliders' => $heroSliders,  // NEW! Hero sliders from database
+    'promoBanner' => $promoBanner,  // NEW! Active promo banner
+    'promoProducts' => $promoProducts,  // NEW! Selected products for promo
     'mostSellingProducts' => $mostSellingProducts,
     'featuredProducts' => $featuredProducts,
     'saleProducts' => $saleProducts,

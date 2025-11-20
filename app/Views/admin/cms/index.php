@@ -280,6 +280,16 @@ ob_start();
       </div>
     </a>
 
+    <!-- Promo Banners Card -->
+    <a href="<?= url('/admin/promo-banners') ?>" class="quick-link-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 24px; border-radius: var(--radius-xl); text-decoration: none; display: block; transition: all var(--transition-base); box-shadow: var(--shadow-sm);">
+      <div style="font-size: 36px; margin-bottom: 12px;">💰</div>
+      <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">Promo Banners</h3>
+      <p style="opacity: 0.9; font-size: 14px; margin: 0;">Customize discount percentages and featured products</p>
+      <div style="margin-top: 16px; display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px;">
+        Manage Banners <span>→</span>
+      </div>
+    </a>
+
     <!-- Add more quick links here in the future -->
 
   </div>

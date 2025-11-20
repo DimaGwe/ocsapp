@@ -88,31 +88,44 @@ $cartCount = $cartCount ?? 0;
       <div class="hero-dots" role="tablist"></div>
     </section>
 
-    <!-- Promo Banner -->
+    <!-- Promo Banner - Admin Managed -->
+    <?php if (!empty($promoBanner)): ?>
     <section class="promo-banner">
       <div class="promo-text">
         <div class="discount-badge">
-          <div class="discount-percent">20%</div>
+          <div class="discount-percent"><?= htmlspecialchars($promoBanner['discount_percentage']) ?>%</div>
           <div class="discount-label"><?= $t['sale'] ?></div>
         </div>
 
         <div class="promo-content">
-          <h2><?= $t['super_savings'] ?></h2>
-          <p><?= $t['on_select_products'] ?></p>
+          <h2><?= htmlspecialchars($promoBanner['title']) ?></h2>
+          <?php if (!empty($promoBanner['subtitle'])): ?>
+            <p><?= htmlspecialchars($promoBanner['subtitle']) ?></p>
+          <?php endif; ?>
         </div>
       </div>
 
       <div class="promo-image-slider">
-        <?php 
+        <?php
+        // Use admin-selected products, fallback to sale products, then default images
         $promoImages = [];
-        if (!empty($saleProducts)) {
+
+        if (!empty($promoProducts)) {
+          foreach ($promoProducts as $product) {
+            if (!empty($product['image'])) {
+              $promoImages[] = url($product['image']);
+            }
+          }
+        }
+
+        if (empty($promoImages) && !empty($saleProducts)) {
           foreach (array_slice($saleProducts, 0, 5) as $product) {
             if (!empty($product['image'])) {
               $promoImages[] = url($product['image']);
             }
           }
         }
-        
+
         if (empty($promoImages)) {
           $promoImages = [
             asset('images/products/promo1.jpeg'),
@@ -123,18 +136,21 @@ $cartCount = $cartCount ?? 0;
           ];
         }
         ?>
-        
+
         <div class="promo-slides-container">
           <?php foreach ($promoImages as $index => $image): ?>
-            <div class="promo-slide <?= $index === 0 ? 'active' : '' ?> <?= $index === 1 ? 'next' : '' ?>" 
+            <div class="promo-slide <?= $index === 0 ? 'active' : '' ?> <?= $index === 1 ? 'next' : '' ?>"
                  style="background-image: url('<?= $image ?>');">
             </div>
           <?php endforeach; ?>
         </div>
       </div>
-      
-      <a href="<?= url('deals') ?>" class="promo-cta"><?= $t['shop_now'] ?> →</a>
+
+      <a href="<?= url($promoBanner['button_url'] ?? 'deals') ?>" class="promo-cta">
+        <?= htmlspecialchars($promoBanner['button_text'] ?? $t['shop_now']) ?> →
+      </a>
     </section>
+    <?php endif; ?>
 
     <!-- Delivery Features -->
     <section class="promo-duo">
