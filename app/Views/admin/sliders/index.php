@@ -4,416 +4,406 @@
  * File: app/Views/admin/sliders/index.php
  */
 
-$pageTitle = $pageTitle ?? 'Hero Sliders Management';
+$pageTitle = $pageTitle ?? 'Hero Sliders';
+$currentPage = $currentPage ?? 'cms';
+
+ob_start();
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($pageTitle) ?> - OCS Admin</title>
-    <?= csrfMeta() ?>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
 
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #f8fafc;
-            color: #1e293b;
-            line-height: 1.6;
-        }
+<style>
+  /* Hero Sliders Specific Styles */
+  .cms-header {
+    margin-bottom: 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
 
-        .admin-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
+  .cms-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
 
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid #e2e8f0;
-        }
+  .cms-header-subtitle {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-top: 4px;
+  }
 
-        .page-header h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #0f172a;
-        }
+  .btn-create {
+    padding: 12px 24px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
 
-        .btn {
-            display: inline-block;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.2s;
-            border: none;
-            cursor: pointer;
-            font-size: 0.95rem;
-        }
+  .btn-create:hover {
+    background: var(--primary-600);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+  }
 
-        .btn-primary {
-            background: #3b82f6;
-            color: white;
-        }
+  .btn-secondary {
+    padding: 12px 24px;
+    background: var(--gray-200);
+    color: var(--dark);
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
 
-        .btn-primary:hover {
-            background: #2563eb;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-        }
+  .btn-secondary:hover {
+    background: var(--gray-300);
+  }
 
-        .btn-secondary {
-            background: #64748b;
-            color: white;
-        }
+  .sliders-grid {
+    display: grid;
+    gap: 24px;
+  }
 
-        .btn-secondary:hover {
-            background: #475569;
-        }
+  .slider-card {
+    background: white;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+    padding: 24px;
+    display: grid;
+    grid-template-columns: 60px 200px 1fr auto;
+    gap: 20px;
+    align-items: center;
+    transition: all var(--transition-base);
+  }
 
-        .btn-danger {
-            background: #ef4444;
-            color: white;
-        }
+  .slider-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
 
-        .btn-danger:hover {
-            background: #dc2626;
-        }
+  .slider-order-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
 
-        .btn-sm {
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-        }
+  .drag-handle {
+    cursor: move;
+    color: var(--text-muted);
+    font-size: 20px;
+  }
 
-        .flash-message {
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-            margin-bottom: 1.5rem;
-            font-weight: 500;
-        }
+  .slider-order {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: var(--gray-100);
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    color: var(--text);
+    font-size: 14px;
+  }
 
-        .flash-success {
-            background: #d1fae5;
-            color: #065f46;
-            border: 1px solid #6ee7b7;
-        }
+  .slider-image {
+    width: 200px;
+    height: 120px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--gray-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
-        .flash-error {
-            background: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #fca5a5;
-        }
+  .slider-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 
-        .sliders-grid {
-            display: grid;
-            gap: 1.5rem;
-        }
+  .slider-image-placeholder {
+    font-size: 48px;
+    color: var(--text-muted);
+  }
 
-        .slider-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            display: grid;
-            grid-template-columns: 200px 1fr auto;
-            gap: 1.5rem;
-            align-items: center;
-            transition: all 0.2s;
-        }
+  .slider-content {
+    flex: 1;
+  }
 
-        .slider-card:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            transform: translateY(-2px);
-        }
+  .slider-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 8px;
+  }
 
-        .slider-image {
-            width: 200px;
-            height: 120px;
-            border-radius: 8px;
-            object-fit: cover;
-            background: #f1f5f9;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #94a3b8;
-            font-size: 3rem;
-        }
+  .slider-description {
+    color: var(--text);
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
 
-        .slider-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 8px;
-        }
+  .slider-meta {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
 
-        .slider-content {
-            flex: 1;
-        }
+  .slider-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
 
-        .slider-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #0f172a;
-            margin-bottom: 0.5rem;
-        }
+  .slider-meta-item strong {
+    color: var(--text);
+  }
 
-        .slider-description {
-            color: #64748b;
-            margin-bottom: 0.75rem;
-            line-height: 1.5;
-        }
+  .status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
 
-        .slider-meta {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-            font-size: 0.875rem;
-            color: #64748b;
-        }
+  .status-active {
+    background: #dcfce7;
+    color: #166534;
+  }
 
-        .slider-meta-item {
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-        }
+  .status-inactive {
+    background: var(--gray-200);
+    color: var(--text-muted);
+  }
 
-        .status-badge {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
+  .slider-actions {
+    display: flex;
+    gap: 8px;
+    flex-direction: column;
+  }
 
-        .status-active {
-            background: #d1fae5;
-            color: #065f46;
-        }
+  .btn-edit, .btn-delete {
+    padding: 8px 16px;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: none;
+    white-space: nowrap;
+  }
 
-        .status-inactive {
-            background: #f1f5f9;
-            color: #64748b;
-        }
+  .btn-edit {
+    background: var(--primary);
+    color: white;
+  }
 
-        .slider-actions {
-            display: flex;
-            gap: 0.5rem;
-            flex-direction: column;
-        }
+  .btn-edit:hover {
+    background: var(--primary-600);
+  }
 
-        .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
+  .btn-delete {
+    background: #fee2e2;
+    color: #991b1b;
+  }
 
-        .empty-state-icon {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-            opacity: 0.5;
-        }
+  .btn-delete:hover {
+    background: #fca5a5;
+  }
 
-        .empty-state h2 {
-            font-size: 1.5rem;
-            color: #475569;
-            margin-bottom: 0.5rem;
-        }
+  .empty-state {
+    text-align: center;
+    padding: 80px 40px;
+    background: white;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+  }
 
-        .empty-state p {
-            color: #94a3b8;
-            margin-bottom: 1.5rem;
-        }
+  .empty-state-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+  }
 
-        .drag-handle {
-            cursor: move;
-            color: #94a3b8;
-            font-size: 1.5rem;
-            margin-right: 0.5rem;
-        }
+  .empty-state h2 {
+    font-size: 24px;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
 
-        .slider-order {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 32px;
-            height: 32px;
-            background: #f1f5f9;
-            border-radius: 6px;
-            font-weight: 600;
-            color: #475569;
-        }
-    </style>
-</head>
-<body>
-    <div class="admin-container">
-        <!-- Header -->
-        <div class="page-header">
-            <div>
-                <h1>🎨 Hero Sliders Management</h1>
-                <p style="color: #64748b; margin-top: 0.5rem;">Manage homepage hero slider images and content</p>
-            </div>
-            <div style="display: flex; gap: 1rem;">
-                <a href="<?= url('/admin/sliders/create') ?>" class="btn btn-primary">
-                    + Add New Slide
-                </a>
-                <a href="<?= url('/admin') ?>" class="btn btn-secondary">
-                    ← Back to Dashboard
-                </a>
-            </div>
+  .empty-state p {
+    color: var(--text-muted);
+    margin-bottom: 24px;
+  }
+</style>
+
+<!-- Page Header -->
+<div class="cms-header">
+  <div>
+    <h1>
+      <span>🎨</span> Hero Sliders
+    </h1>
+    <div class="cms-header-subtitle">Manage homepage hero slider images and content</div>
+  </div>
+  <div style="display: flex; gap: 12px;">
+    <a href="<?= url('/admin/sliders/create') ?>" class="btn-create">
+      + Add New Slide
+    </a>
+    <a href="<?= url('/admin/cms') ?>" class="btn-secondary">
+      ← Back to CMS
+    </a>
+  </div>
+</div>
+
+<!-- Sliders List -->
+<?php if (!empty($sliders)): ?>
+  <div class="sliders-grid">
+    <?php foreach ($sliders as $slider): ?>
+      <div class="slider-card" data-id="<?= $slider['id'] ?>">
+        <!-- Order & Drag Handle -->
+        <div class="slider-order-col">
+          <span class="drag-handle" title="Drag to reorder">⋮⋮</span>
+          <span class="slider-order"><?= $slider['sort_order'] ?></span>
         </div>
 
-        <!-- Flash Messages -->
-        <?php if (hasFlash('success')): ?>
-            <div class="flash-message flash-success">
-                ✓ <?= flash('success') ?>
+        <!-- Image -->
+        <div class="slider-image">
+          <?php if (!empty($slider['image_path'])): ?>
+            <img src="<?= url($slider['image_path']) ?>"
+                 alt="<?= htmlspecialchars($slider['title']) ?>">
+          <?php else: ?>
+            <div class="slider-image-placeholder">🖼️</div>
+          <?php endif; ?>
+        </div>
+
+        <!-- Content -->
+        <div class="slider-content">
+          <div class="slider-title"><?= htmlspecialchars($slider['title']) ?></div>
+
+          <?php if (!empty($slider['description'])): ?>
+            <div class="slider-description">
+              <?= htmlspecialchars($slider['description']) ?>
             </div>
-        <?php endif; ?>
+          <?php endif; ?>
 
-        <?php if (hasFlash('error')): ?>
-            <div class="flash-message flash-error">
-                ✗ <?= flash('error') ?>
+          <div class="slider-meta">
+            <?php if (!empty($slider['button_text'])): ?>
+              <div class="slider-meta-item">
+                <strong>Button:</strong> <?= htmlspecialchars($slider['button_text']) ?>
+              </div>
+            <?php endif; ?>
+
+            <?php if (!empty($slider['button_url'])): ?>
+              <div class="slider-meta-item">
+                <strong>URL:</strong> <?= htmlspecialchars($slider['button_url']) ?>
+              </div>
+            <?php endif; ?>
+
+            <div class="slider-meta-item">
+              <strong>Status:</strong>
+              <span class="status-badge status-<?= $slider['status'] ?>">
+                <?= $slider['status'] ?>
+              </span>
             </div>
-        <?php endif; ?>
+          </div>
+        </div>
 
-        <!-- Sliders List -->
-        <?php if (!empty($sliders)): ?>
-            <div class="sliders-grid">
-                <?php foreach ($sliders as $slider): ?>
-                    <div class="slider-card" data-id="<?= $slider['id'] ?>">
-                        <!-- Order & Drag Handle -->
-                        <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
-                            <span class="drag-handle" title="Drag to reorder">⋮⋮</span>
-                            <span class="slider-order"><?= $slider['sort_order'] ?></span>
-                        </div>
+        <!-- Actions -->
+        <div class="slider-actions">
+          <a href="<?= url('/admin/sliders/edit?id=' . $slider['id']) ?>"
+             class="btn-edit">
+            ✎ Edit
+          </a>
+          <button class="btn-delete delete-slider"
+                  data-id="<?= $slider['id'] ?>"
+                  data-title="<?= htmlspecialchars($slider['title']) ?>">
+            🗑 Delete
+          </button>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  </div>
+<?php else: ?>
+  <div class="empty-state">
+    <div class="empty-state-icon">🎨</div>
+    <h2>No Sliders Yet</h2>
+    <p>Create your first hero slider to get started</p>
+    <a href="<?= url('/admin/sliders/create') ?>" class="btn-create">
+      + Create First Slide
+    </a>
+  </div>
+<?php endif; ?>
 
-                        <!-- Image -->
-                        <div class="slider-image">
-                            <?php if (!empty($slider['image_path'])): ?>
-                                <img src="<?= url($slider['image_path']) ?>"
-                                     alt="<?= htmlspecialchars($slider['title']) ?>">
-                            <?php else: ?>
-                                🖼️
-                            <?php endif; ?>
-                        </div>
+<script>
+  // Delete slider functionality
+  document.querySelectorAll('.delete-slider').forEach(btn => {
+    btn.addEventListener('click', async function() {
+      const id = this.dataset.id;
+      const title = this.dataset.title;
 
-                        <!-- Content -->
-                        <div class="slider-content">
-                            <div class="slider-title"><?= htmlspecialchars($slider['title']) ?></div>
+      if (!confirm(`Are you sure you want to delete "${title}"?\n\nThis action cannot be undone.`)) {
+        return;
+      }
 
-                            <?php if (!empty($slider['description'])): ?>
-                                <div class="slider-description">
-                                    <?= htmlspecialchars($slider['description']) ?>
-                                </div>
-                            <?php endif; ?>
-
-                            <div class="slider-meta">
-                                <?php if (!empty($slider['button_text'])): ?>
-                                    <div class="slider-meta-item">
-                                        <strong>Button:</strong> <?= htmlspecialchars($slider['button_text']) ?>
-                                    </div>
-                                <?php endif; ?>
-
-                                <?php if (!empty($slider['button_url'])): ?>
-                                    <div class="slider-meta-item">
-                                        <strong>URL:</strong> <?= htmlspecialchars($slider['button_url']) ?>
-                                    </div>
-                                <?php endif; ?>
-
-                                <div class="slider-meta-item">
-                                    <strong>Status:</strong>
-                                    <span class="status-badge status-<?= $slider['status'] ?>">
-                                        <?= $slider['status'] ?>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Actions -->
-                        <div class="slider-actions">
-                            <a href="<?= url('/admin/sliders/edit?id=' . $slider['id']) ?>"
-                               class="btn btn-primary btn-sm">
-                                ✎ Edit
-                            </a>
-                            <button class="btn btn-danger btn-sm delete-slider"
-                                    data-id="<?= $slider['id'] ?>"
-                                    data-title="<?= htmlspecialchars($slider['title']) ?>">
-                                🗑 Delete
-                            </button>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        <?php else: ?>
-            <div class="empty-state">
-                <div class="empty-state-icon">🎨</div>
-                <h2>No Sliders Yet</h2>
-                <p>Create your first hero slider to get started</p>
-                <a href="<?= url('/admin/sliders/create') ?>" class="btn btn-primary">
-                    + Create First Slide
-                </a>
-            </div>
-        <?php endif; ?>
-    </div>
-
-    <script>
-        // Delete slider functionality
-        document.querySelectorAll('.delete-slider').forEach(btn => {
-            btn.addEventListener('click', async function() {
-                const id = this.dataset.id;
-                const title = this.dataset.title;
-
-                if (!confirm(`Are you sure you want to delete "${title}"?\n\nThis action cannot be undone.`)) {
-                    return;
-                }
-
-                try {
-                    const response = await fetch('<?= url('/admin/sliders/delete') ?>', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
-                        },
-                        body: JSON.stringify({
-                            id: id,
-                            _csrf_token: document.querySelector('meta[name="csrf-token"]')?.content || ''
-                        })
-                    });
-
-                    const result = await response.json();
-
-                    if (result.success) {
-                        window.location.reload();
-                    } else {
-                        alert('Failed to delete slider: ' + (result.error || 'Unknown error'));
-                    }
-                } catch (error) {
-                    console.error('Delete error:', error);
-                    alert('Failed to delete slider. Please try again.');
-                }
-            });
+      try {
+        const response = await fetch('<?= url('/admin/sliders/delete') ?>', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+          },
+          body: JSON.stringify({
+            id: id,
+            _csrf_token: document.querySelector('meta[name="csrf-token"]')?.content || ''
+          })
         });
 
-        // Auto-hide flash messages after 5 seconds
-        setTimeout(() => {
-            document.querySelectorAll('.flash-message').forEach(msg => {
-                msg.style.transition = 'opacity 0.5s';
-                msg.style.opacity = '0';
-                setTimeout(() => msg.remove(), 500);
-            });
-        }, 5000);
-    </script>
-</body>
-</html>
+        const result = await response.json();
+
+        if (result.success) {
+          window.location.reload();
+        } else {
+          alert('Failed to delete slider: ' + (result.error || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Delete error:', error);
+        alert('Failed to delete slider. Please try again.');
+      }
+    });
+  });
+</script>
+
+<?php
+$content = ob_get_clean();
+require dirname(__DIR__) . '/layout.php';
+?>

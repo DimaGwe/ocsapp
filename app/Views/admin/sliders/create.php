@@ -1,431 +1,446 @@
 <?php
 /**
  * Hero Slider - Edit View
- * File: app/Views/admin/sliders/edit.php
+ * File: app/Views/admin/sliders/create.php
  */
 
 $pageTitle = $pageTitle ?? 'Create New Slider';
+$currentPage = $currentPage ?? 'cms';
 $slider = $slider ?? [];
+
+ob_start();
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($pageTitle) ?> - OCS Admin</title>
-    <?= csrfMeta() ?>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
 
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #f8fafc;
-            color: #1e293b;
-            line-height: 1.6;
-        }
+<style>
+  .edit-header {
+    margin-bottom: 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
 
-        .admin-container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
+  .edit-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--dark);
+  }
 
-        .page-header {
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid #e2e8f0;
-        }
+  .edit-header .breadcrumb {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
 
-        .page-header h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #0f172a;
-            margin-bottom: 0.5rem;
-        }
+  .edit-header .breadcrumb a {
+    color: var(--primary);
+    text-decoration: none;
+  }
 
-        .breadcrumb {
-            color: #64748b;
-            font-size: 0.9rem;
-        }
+  .edit-header .breadcrumb a:hover {
+    text-decoration: underline;
+  }
 
-        .breadcrumb a {
-            color: #3b82f6;
-            text-decoration: none;
-        }
+  .btn-back {
+    padding: 10px 20px;
+    background: white;
+    color: var(--gray-700);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
 
-        .breadcrumb a:hover {
-            text-decoration: underline;
-        }
+  .btn-back:hover {
+    border-color: var(--gray-400);
+    background: var(--gray-50);
+  }
 
-        .form-card {
-            background: white;
-            border-radius: 12px;
-            padding: 2rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
+  .edit-card {
+    background: white;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+    padding: 32px;
+    max-width: 900px;
+  }
 
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
+  .form-section {
+    margin-bottom: 32px;
+  }
 
-        .form-group label {
-            display: block;
-            font-weight: 600;
-            color: #0f172a;
-            margin-bottom: 0.5rem;
-        }
+  .form-section:last-child {
+    margin-bottom: 0;
+  }
 
-        .form-group label .required {
-            color: #ef4444;
-        }
+  .form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--dark);
+    margin-bottom: 8px;
+  }
 
-        .form-group input[type="text"],
-        .form-group input[type="number"],
-        .form-group textarea,
-        .form-group select {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: all 0.2s;
-        }
+  .form-label .required {
+    color: var(--danger);
+  }
 
-        .form-group input:focus,
-        .form-group textarea:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
+  .form-description {
+    font-size: 13px;
+    color: var(--gray-500);
+    margin-bottom: 12px;
+  }
 
-        .form-group textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
+  .form-input,
+  .form-textarea,
+  .form-select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-family: inherit;
+    transition: all var(--transition-base);
+  }
 
-        .form-group .help-text {
-            font-size: 0.875rem;
-            color: #64748b;
-            margin-top: 0.25rem;
-        }
+  .form-input:focus,
+  .form-textarea:focus,
+  .form-select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
 
-        .file-upload-wrapper {
-            border: 2px dashed #cbd5e1;
-            border-radius: 8px;
-            padding: 2rem;
-            text-align: center;
-            transition: all 0.2s;
-            cursor: pointer;
-        }
+  .form-textarea {
+    resize: vertical;
+    min-height: 100px;
+  }
 
-        .file-upload-wrapper:hover {
-            border-color: #3b82f6;
-            background: #f8fafc;
-        }
+  .current-image {
+    margin-bottom: 16px;
+    padding: 16px;
+    background: var(--gray-50);
+    border-radius: var(--radius-lg);
+  }
 
-        .file-upload-wrapper.drag-over {
-            border-color: #3b82f6;
-            background: #eff6ff;
-        }
+  .current-image img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+  }
 
-        .file-upload-wrapper input[type="file"] {
-            display: none;
-        }
+  .file-upload-wrapper {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    text-align: center;
+    transition: all var(--transition-base);
+    cursor: pointer;
+    background: var(--gray-50);
+  }
 
-        .upload-icon {
-            font-size: 3rem;
-            margin-bottom: 0.5rem;
-        }
+  .file-upload-wrapper:hover {
+    border-color: var(--primary);
+    background: #eff6ff;
+  }
 
-        .current-image {
-            margin-top: 1rem;
-            padding: 1rem;
-            background: #f8fafc;
-            border-radius: 8px;
-        }
+  .file-upload-wrapper.drag-over {
+    border-color: var(--primary);
+    background: #eff6ff;
+  }
 
-        .current-image img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
+  .file-upload-wrapper input[type="file"] {
+    display: none;
+  }
 
-        .form-actions {
-            display: flex;
-            gap: 1rem;
-            margin-top: 2rem;
-            padding-top: 2rem;
-            border-top: 1px solid #e2e8f0;
-        }
+  .upload-icon {
+    font-size: 48px;
+    margin-bottom: 8px;
+  }
 
-        .btn {
-            display: inline-block;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.2s;
-            border: none;
-            cursor: pointer;
-            font-size: 1rem;
-        }
+  .file-name-display {
+    margin-top: 12px;
+    color: var(--primary);
+    font-weight: 600;
+  }
 
-        .btn-primary {
-            background: #3b82f6;
-            color: white;
-        }
+  .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 32px;
+  }
 
-        .btn-primary:hover {
-            background: #2563eb;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-        }
+  .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
 
-        .btn-secondary {
-            background: #e2e8f0;
-            color: #475569;
-        }
+  .toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--gray-300);
+    transition: 0.4s;
+    border-radius: 32px;
+  }
 
-        .btn-secondary:hover {
-            background: #cbd5e1;
-        }
+  .toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 24px;
+    width: 24px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+  }
 
-        .flash-message {
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-            margin-bottom: 1.5rem;
-            font-weight: 500;
-        }
+  .toggle-switch input:checked + .toggle-slider {
+    background-color: var(--primary);
+  }
 
-        .flash-error {
-            background: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #fca5a5;
-        }
+  .toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(28px);
+  }
 
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 32px;
-        }
+  .form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 32px;
+    padding-top: 32px;
+    border-top: 2px solid var(--border);
+  }
 
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
+  .btn-save {
+    padding: 12px 24px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
 
-        .toggle-slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #cbd5e1;
-            transition: 0.4s;
-            border-radius: 32px;
-        }
+  .btn-save:hover {
+    background: var(--primary-600);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+  }
 
-        .toggle-slider:before {
-            position: absolute;
-            content: "";
-            height: 24px;
-            width: 24px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: 0.4s;
-            border-radius: 50%;
-        }
+  .btn-cancel {
+    padding: 12px 24px;
+    background: white;
+    color: var(--gray-700);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
 
-        .toggle-switch input:checked + .toggle-slider {
-            background-color: #3b82f6;
-        }
+  .btn-cancel:hover {
+    border-color: var(--gray-400);
+    background: var(--gray-50);
+  }
+</style>
 
-        .toggle-switch input:checked + .toggle-slider:before {
-            transform: translateX(28px);
-        }
-    </style>
-</head>
-<body>
-    <div class="admin-container">
-        <!-- Header -->
-        <div class="page-header">
-            <div class="breadcrumb">
-                <a href="<?= url('/admin') ?>">Dashboard</a> /
-                <a href="<?= url('/admin/sliders') ?>">Sliders</a> /
-                Edit
-            </div>
-            <h1>✎ Create New Slider</h1>
-        </div>
+<!-- Page Header -->
+<div class="edit-header">
+  <div>
+    <div class="breadcrumb">
+      <a href="<?= url('/admin/cms') ?>">CMS</a> /
+      <a href="<?= url('/admin/sliders') ?>">Hero Sliders</a> /
+      Edit
+    </div>
+    <h1>✎ Create New Slider</h1>
+  </div>
+  <a href="<?= url('/admin/sliders') ?>" class="btn-back">
+    ← Back to Sliders
+  </a>
+</div>
 
-        <!-- Flash Messages -->
-        <?php if (hasFlash('error')): ?>
-            <div class="flash-message flash-error">
-                ✗ <?= flash('error') ?>
-            </div>
-        <?php endif; ?>
+<!-- Edit Form -->
+<div class="edit-card">
+  <form method="POST" action="<?= url('/admin/sliders/create') ?>" enctype="multipart/form-data">
+    <?= csrfField() ?>
 
-        <!-- Edit Form -->
-        <div class="form-card">
-            <form method="POST" action="<?= url('/admin/sliders/create') ?>" enctype="multipart/form-data">
-                <?= csrfField() ?>
-
-                <!-- Title -->
-                <div class="form-group">
-                    <label for="title">Slide Title <span class="required">*</span></label>
-                    <input type="text"
-                           id="title"
-                           name="title"
-                           value="<?= htmlspecialchars($slider['title'] ?? '') ?>"
-                           required>
-                    <div class="help-text">Main heading text for the slide</div>
-                </div>
-
-                <!-- Description -->
-                <div class="form-group">
-                    <label for="description">Description</label>
-                    <textarea id="description"
-                              name="description"
-                              rows="3"><?= htmlspecialchars($slider['description'] ?? '') ?></textarea>
-                    <div class="help-text">Subtitle or description text (optional)</div>
-                </div>
-
-                <!-- Button Text -->
-                <div class="form-group">
-                    <label for="button_text">Button Text</label>
-                    <input type="text"
-                           id="button_text"
-                           name="button_text"
-                           value="<?= htmlspecialchars($slider['button_text'] ?? '') ?>"
-                           placeholder="e.g., Shop Now">
-                    <div class="help-text">Text displayed on the button (optional)</div>
-                </div>
-
-                <!-- Button URL -->
-                <div class="form-group">
-                    <label for="button_url">Button URL</label>
-                    <input type="text"
-                           id="button_url"
-                           name="button_url"
-                           value="<?= htmlspecialchars($slider['button_url'] ?? '') ?>"
-                           placeholder="/categories">
-                    <div class="help-text">Where the button links to (e.g., /categories, /deals)</div>
-                </div>
-
-                <!-- Image Upload -->
-                <div class="form-group">
-                    <label for="image">Slider Image</label>
-
-                    <label for="image" class="file-upload-wrapper" id="fileUploadWrapper">
-                        <div class="upload-icon">📤</div>
-                        <div><strong>Click to upload</strong> or drag and drop</div>
-                        <div class="help-text">JPEG, PNG, GIF, WebP (Max 5MB)</div>
-                        <input type="file"
-                               id="image"
-                               name="image"
-                               accept="image/jpeg,image/jpg,image/png,image/gif,image/webp">
-                    </label>
-                    <div id="fileName" style="margin-top: 0.5rem; color: #3b82f6; font-weight: 500;"></div>
-                </div>
-
-                <!-- Sort Order -->
-                <div class="form-group">
-                    <label for="sort_order">Display Order</label>
-                    <input type="number"
-                           id="sort_order"
-                           name="sort_order"
-                           value="<?= $slider['sort_order'] ?? 0 ?>"
-                           min="0">
-                    <div class="help-text">Lower numbers appear first (e.g., 1, 2, 3...)</div>
-                </div>
-
-                <!-- Status -->
-                <div class="form-group">
-                    <label>Status</label>
-                    <div style="display: flex; align-items: center; gap: 1rem;">
-                        <label class="toggle-switch">
-                            <input type="checkbox"
-                                   name="status"
-                                   value="active"
-                                   <?= ($slider['status'] ?? 'active') === 'active' ? 'checked' : '' ?>>
-                            <span class="toggle-slider"></span>
-                        </label>
-                        <span id="statusText">
-                            <?= ($slider['status'] ?? 'active') === 'active' ? 'Active (Visible on website)' : 'Inactive (Hidden)' ?>
-                        </span>
-                    </div>
-                    <input type="hidden" name="status" id="statusInput" value="<?= $slider['status'] ?? 'active' ?>">
-                </div>
-
-                <!-- Form Actions -->
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">
-                        💾 Save Changes
-                    </button>
-                    <a href="<?= url('/admin/sliders') ?>" class="btn btn-secondary">
-                        Cancel
-                    </a>
-                </div>
-            </form>
-        </div>
+    <!-- Title -->
+    <div class="form-section">
+      <label class="form-label" for="title">
+        Slide Title <span class="required">*</span>
+      </label>
+      <div class="form-description">Main heading text for the slide</div>
+      <input type="text"
+             id="title"
+             name="title"
+             class="form-input"
+             value="<?= htmlspecialchars($slider['title'] ?? '') ?>"
+             required>
     </div>
 
-    <script>
-        // File upload handling
-        const fileInput = document.getElementById('image');
-        const fileUploadWrapper = document.getElementById('fileUploadWrapper');
-        const fileNameDisplay = document.getElementById('fileName');
+    <!-- Description -->
+    <div class="form-section">
+      <label class="form-label" for="description">Description</label>
+      <div class="form-description">Subtitle or description text (optional)</div>
+      <textarea id="description"
+                name="description"
+                class="form-textarea"
+                rows="3"><?= htmlspecialchars($slider['description'] ?? '') ?></textarea>
+    </div>
 
-        fileInput.addEventListener('change', function() {
-            if (this.files && this.files[0]) {
-                fileNameDisplay.textContent = '📎 Selected: ' + this.files[0].name;
-            }
-        });
+    <!-- Button Text -->
+    <div class="form-section">
+      <label class="form-label" for="button_text">Button Text</label>
+      <div class="form-description">Text displayed on the button (e.g., "Shop Now", "View Deals")</div>
+      <input type="text"
+             id="button_text"
+             name="button_text"
+             class="form-input"
+             value="<?= htmlspecialchars($slider['button_text'] ?? '') ?>"
+             placeholder="Shop Now">
+    </div>
 
-        // Drag and drop
-        fileUploadWrapper.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            this.classList.add('drag-over');
-        });
+    <!-- Button URL -->
+    <div class="form-section">
+      <label class="form-label" for="button_url">Button URL</label>
+      <div class="form-description">Where the button links to (e.g., /categories, /deals)</div>
+      <input type="text"
+             id="button_url"
+             name="button_url"
+             class="form-input"
+             value="<?= htmlspecialchars($slider['button_url'] ?? '') ?>"
+             placeholder="/categories">
+    </div>
 
-        fileUploadWrapper.addEventListener('dragleave', function() {
-            this.classList.remove('drag-over');
-        });
+    <!-- Image Upload -->
+    <div class="form-section">
+      <label class="form-label" for="image">Slider Image</label>
+      <div class="form-description">Upload an image for this slider (recommended: 1920x600px)</div>
 
-        fileUploadWrapper.addEventListener('drop', function(e) {
-            e.preventDefault();
-            this.classList.remove('drag-over');
+      <label for="image" class="file-upload-wrapper" id="fileUploadWrapper">
+        <div class="upload-icon">📤</div>
+        <div><strong>Click to upload</strong> or drag and drop</div>
+        <div class="form-description" style="margin-top: 8px;">JPEG, PNG, GIF, WebP (Max 5MB)</div>
+        <input type="file"
+               id="image"
+               name="image"
+               accept="image/jpeg,image/jpg,image/png,image/gif,image/webp">
+      </label>
+      <div id="fileName" class="file-name-display"></div>
+    </div>
 
-            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                fileInput.files = e.dataTransfer.files;
-                fileNameDisplay.textContent = '📎 Selected: ' + e.dataTransfer.files[0].name;
-            }
-        });
+    <!-- Sort Order -->
+    <div class="form-section">
+      <label class="form-label" for="sort_order">Display Order</label>
+      <div class="form-description">Lower numbers appear first (e.g., 1, 2, 3...)</div>
+      <input type="number"
+             id="sort_order"
+             name="sort_order"
+             class="form-input"
+             value="<?= $slider['sort_order'] ?? 0 ?>"
+             min="0">
+    </div>
 
-        // Status toggle
-        const statusCheckbox = document.querySelector('input[name="status"][type="checkbox"]');
-        const statusText = document.getElementById('statusText');
-        const statusInput = document.getElementById('statusInput');
+    <!-- Status -->
+    <div class="form-section">
+      <label class="form-label">Status</label>
+      <div class="form-description">Toggle to show or hide this slider on the website</div>
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <label class="toggle-switch">
+          <input type="checkbox"
+                 id="statusCheckbox"
+                 <?= ($slider['status'] ?? 'active') === 'active' ? 'checked' : '' ?>>
+          <span class="toggle-slider"></span>
+        </label>
+        <span id="statusText" style="color: var(--text); font-weight: 500;">
+          <?= ($slider['status'] ?? 'active') === 'active' ? 'Active (Visible on website)' : 'Inactive (Hidden)' ?>
+        </span>
+      </div>
+      <input type="hidden" name="status" id="statusInput" value="<?= $slider['status'] ?? 'active' ?>">
+    </div>
 
-        statusCheckbox.addEventListener('change', function() {
-            if (this.checked) {
-                statusText.textContent = 'Active (Visible on website)';
-                statusInput.value = 'active';
-            } else {
-                statusText.textContent = 'Inactive (Hidden)';
-                statusInput.value = 'inactive';
-            }
-        });
-    </script>
-</body>
-</html>
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button type="submit" class="btn-save">
+        💾 Save Changes
+      </button>
+      <a href="<?= url('/admin/sliders') ?>" class="btn-cancel">
+        Cancel
+      </a>
+    </div>
+  </form>
+</div>
+
+<script>
+  // File upload handling
+  const fileInput = document.getElementById('image');
+  const fileUploadWrapper = document.getElementById('fileUploadWrapper');
+  const fileNameDisplay = document.getElementById('fileName');
+
+  fileInput.addEventListener('change', function() {
+    if (this.files && this.files[0]) {
+      fileNameDisplay.textContent = '📎 Selected: ' + this.files[0].name;
+    }
+  });
+
+  // Drag and drop
+  fileUploadWrapper.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    this.classList.add('drag-over');
+  });
+
+  fileUploadWrapper.addEventListener('dragleave', function() {
+    this.classList.remove('drag-over');
+  });
+
+  fileUploadWrapper.addEventListener('drop', function(e) {
+    e.preventDefault();
+    this.classList.remove('drag-over');
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      fileInput.files = e.dataTransfer.files;
+      fileNameDisplay.textContent = '📎 Selected: ' + e.dataTransfer.files[0].name;
+    }
+  });
+
+  // Status toggle
+  const statusCheckbox = document.getElementById('statusCheckbox');
+  const statusText = document.getElementById('statusText');
+  const statusInput = document.getElementById('statusInput');
+
+  statusCheckbox.addEventListener('change', function() {
+    if (this.checked) {
+      statusText.textContent = 'Active (Visible on website)';
+      statusInput.value = 'active';
+    } else {
+      statusText.textContent = 'Inactive (Hidden)';
+      statusInput.value = 'inactive';
+    }
+  });
+</script>
+
+<?php
+$content = ob_get_clean();
+require dirname(__DIR__) . '/layout.php';
+?>
