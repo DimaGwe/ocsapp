@@ -265,6 +265,33 @@ ob_start();
   </div>
 </div>
 
+<!-- Quick Links Section -->
+<div style="margin-bottom: 32px;">
+  <h2 style="font-size: 18px; font-weight: 700; color: var(--dark); margin-bottom: 16px;">Content Management Tools</h2>
+  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
+
+    <!-- Hero Sliders Card -->
+    <a href="<?= url('/admin/sliders') ?>" class="quick-link-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 24px; border-radius: var(--radius-xl); text-decoration: none; display: block; transition: all var(--transition-base); box-shadow: var(--shadow-sm);">
+      <div style="font-size: 36px; margin-bottom: 12px;">🎨</div>
+      <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">Hero Sliders</h3>
+      <p style="opacity: 0.9; font-size: 14px; margin: 0;">Manage homepage hero slider images, titles, and buttons</p>
+      <div style="margin-top: 16px; display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px;">
+        Manage Sliders <span>→</span>
+      </div>
+    </a>
+
+    <!-- Add more quick links here in the future -->
+
+  </div>
+</div>
+
+<style>
+  .quick-link-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
+</style>
+
 <!-- Content Sections -->
 <?php if (empty($contentsByPage)): ?>
   <div class="content-card">
