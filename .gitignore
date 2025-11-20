@@ -16,3 +16,15 @@ desktop.ini
 # Temporary files
 *.tmp
 *.temp
+
+# Backups (sensitive data)
+backups/
+*.sql
+*.sql.gz
+*.tar.gz
+*.env
+marketplace.env
+
+# Environment files (contain credentials)
+.env
+.env.*
