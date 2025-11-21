@@ -1,7 +1,7 @@
 # Promo Banners Management System - Implementation Summary
 
 **Date**: 2025-11-20
-**Last Updated**: 2025-11-20 (Best Sellers Filter Fixed)
+**Last Updated**: 2025-11-20 (Best Sellers Page Filter Added)
 **Status**: ✅ Complete & Deployed to Production
 **Feature**: Admin-managed promotional banners with custom discounts and product selection
 
@@ -782,6 +782,53 @@ Products display on homepage if ALL conditions met:
 - `/deploy_homecontroller_fix.php` (deployment script created)
 
 **Git Commit:** `c01d821`
+
+### 5. Best Sellers Page Filter (2025-11-20)
+**File**: `/app/Controllers/HomeController.php`
+**Page**: `https://ocsapp.ca/best-sellers`
+
+**Problem:**
+- Best Sellers page (`/best-sellers`) showed all products with `is_most_selling = 1` flag
+- Included products from all shops, not just OCS Store
+- Inconsistent with homepage filtering
+
+**Root Cause:**
+```php
+// BEFORE:
+SELECT p.*, pi.image_path as image, b.name as brand_name
+FROM products p
+LEFT JOIN product_images pi ON p.id = pi.product_id
+WHERE p.is_most_selling = 1
+  AND p.status = 'active'
+```
+
+**Solution:**
+Added INNER JOIN with shop_inventory and filter by OCS Store:
+
+```php
+// AFTER:
+SELECT p.*, pi.image_path as image, b.name as brand_name
+FROM products p
+INNER JOIN shop_inventory si ON p.id = si.product_id AND si.shop_id = 1
+LEFT JOIN product_images pi ON p.id = pi.product_id
+WHERE p.is_most_selling = 1
+  AND p.status = 'active'
+  AND si.status = 'active'
+```
+
+**Changes Applied:**
+1. Added `INNER JOIN shop_inventory si` with `shop_id = 1`
+2. Added `si.status = 'active'` filter
+3. Updated both the count query and products query
+4. Added `COUNT(DISTINCT p.id)` to count query
+
+**Result:**
+- ✅ Best Sellers page now shows only OCS Store products
+- ✅ Consistent with homepage Best Sellers section
+- ✅ Admin controls visibility via `is_most_selling` flag
+- ✅ No products from other shops appear
+
+**Git Commit:** `09437bb`
 
 ---
 
