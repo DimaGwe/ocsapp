@@ -655,36 +655,42 @@ view('buyer.home', [
 
     /**
      * Best Sellers page (dedicated page for most selling products)
+     * Filtered to show only OCS Store (shop_id = 1) products
      */
     public function bestSellers(): void {
         try {
             $db = \Database::getConnection();
-            
+
             $page = max(1, (int) get('page', 1));
             $perPage = 24;
             $offset = ($page - 1) * $perPage;
-            
-            // Get total count
+
+            // Get total count - OCS Store products only
             $stmt = $db->query("
-                SELECT COUNT(*) as count 
-                FROM products 
-                WHERE is_most_selling = 1 AND status = 'active'
+                SELECT COUNT(DISTINCT p.id) as count
+                FROM products p
+                INNER JOIN shop_inventory si ON p.id = si.product_id AND si.shop_id = 1
+                WHERE p.is_most_selling = 1
+                  AND p.status = 'active'
+                  AND si.status = 'active'
             ");
             $total = $stmt->fetch()['count'];
-            
-            // Get products
+
+            // Get products - OCS Store only
             $stmt = $db->prepare("
-                SELECT p.*, 
+                SELECT p.*,
                        p.base_price as price,
                        p.compare_at_price,
                        pi.image_path as image,
                        b.name as brand_name,
                        b.slug as brand_slug
                 FROM products p
+                INNER JOIN shop_inventory si ON p.id = si.product_id AND si.shop_id = 1
                 LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
                 LEFT JOIN brands b ON p.brand_id = b.id
                 WHERE p.is_most_selling = 1
                   AND p.status = 'active'
+                  AND si.status = 'active'
                 ORDER BY p.sort_order DESC, p.created_at DESC
                 LIMIT {$perPage} OFFSET {$offset}
             ");
