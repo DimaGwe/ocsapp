@@ -697,17 +697,46 @@ view('buyer.home', [
             ");
             $stmt->execute();
             $products = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-            
-            // Normalize images
+
+            // Normalize images and calculate discounts
             foreach ($products as &$product) {
                 $product['image'] = $this->normalizeImagePath($product['image']);
+
+                // Calculate discount percentage
+                if (!empty($product['compare_at_price']) && $product['compare_at_price'] > $product['price']) {
+                    $product['discount_percentage'] = round((($product['compare_at_price'] - $product['price']) / $product['compare_at_price']) * 100);
+                } else {
+                    $product['discount_percentage'] = 0;
+                }
             }
-            
+
+            // Get tags for each product
+            foreach ($products as &$product) {
+                $stmt = $db->prepare("
+                    SELECT t.id, t.name, t.slug
+                    FROM tags t
+                    INNER JOIN product_tags pt ON t.id = pt.tag_id
+                    WHERE pt.product_id = ?
+                    ORDER BY t.name
+                ");
+                $stmt->execute([$product['id']]);
+                $product['tags'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            }
+
+            // Get cart count for header
+            $cartCount = 0;
+            if (isset($_SESSION['cart']) && is_array($_SESSION['cart'])) {
+                foreach ($_SESSION['cart'] as $item) {
+                    $cartCount += $item['quantity'] ?? 0;
+                }
+            }
+
             view('buyer.best-sellers', [
                 'products' => $products,
                 'total' => $total,
                 'page' => $page,
                 'perPage' => $perPage,
+                'cartCount' => $cartCount,
             ]);
             
         } catch (\PDOException $e) {
