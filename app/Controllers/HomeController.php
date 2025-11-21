@@ -179,7 +179,7 @@ class HomeController {
             // 1. MOST SELLING PRODUCTS (Data-Driven by Actual Sales)
             // ============================================
             // Get products with highest sales volume from last 30 days
-            // Filtered to show only OCS Store (Shop ID 1) AND admin-created products (seller_id = 1)
+            // Filtered to show only OCS Store (Shop ID 1) - ALL products regardless of seller
             $stmt = $db->query("
                 SELECT p.*,
                        p.base_price as price,
@@ -202,11 +202,10 @@ class HomeController {
                     AND o.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
                 WHERE p.status = 'active'
                   AND si.status = 'active'
-                  AND p.seller_id = 1
                 GROUP BY p.id
                 HAVING total_sold > 0
                 ORDER BY total_sold DESC, p.created_at DESC
-                LIMIT 12
+                LIMIT 24
             ");
             $mostSellingProducts = $stmt->fetchAll(\PDO::FETCH_ASSOC);
             
@@ -239,7 +238,7 @@ class HomeController {
             // 2. BEST SELLERS (Admin-Curated Featured Products)
             // ============================================
             // Products manually selected by admin via "Show on Home" checkbox
-            // Filtered to show only OCS Store (Shop ID 1) AND admin-created products (seller_id = 1)
+            // Filtered to show only OCS Store (Shop ID 1) - ALL products regardless of seller
             $stmt = $db->query("
                 SELECT p.*,
                        p.base_price as price,
@@ -254,9 +253,8 @@ class HomeController {
                 WHERE p.show_on_home = 1
                   AND p.status = 'active'
                   AND si.status = 'active'
-                  AND p.seller_id = 1
                 ORDER BY p.sort_order DESC, p.created_at DESC
-                LIMIT 12
+                LIMIT 24
             ");
             $featuredProducts = $stmt->fetchAll(\PDO::FETCH_ASSOC);
             
