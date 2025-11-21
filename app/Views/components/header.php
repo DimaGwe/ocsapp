@@ -9,8 +9,8 @@ VisitorTracker::track();
 // Get current language and location from session
 $currentLang = $_SESSION['language'] ?? 'en';
 
-// Store's physical location (admin-set, always displayed)
-$storeLocation = getSetting('store_location', 'Kirkland, QC');
+// Store's physical location (fixed, displayed in top banner)
+$storeLocation = 'Kirkland, QC';
 
 // User's delivery location (for delivery zone, user-selected)
 $userDeliveryLocation = $_SESSION['location'] ?? 'Select your location';

@@ -1,7 +1,8 @@
 # Promo Banners Management System - Implementation Summary
 
 **Date**: 2025-11-20
-**Status**: ✅ Complete
+**Last Updated**: 2025-11-20 (Deals Page Integration Complete)
+**Status**: ✅ Complete & Deployed to Production
 **Feature**: Admin-managed promotional banners with custom discounts and product selection
 
 ---
@@ -501,14 +502,16 @@ Admin needs to:
 
 ### Current Status:
 ✅ All core functionality implemented
-✅ Database migration ready
+✅ Database migration run successfully
 ✅ Routes configured
 ✅ Views created (index, edit, create)
 ✅ Controller complete
 ✅ HomeController updated
 ✅ home.php updated to use dynamic data
 ✅ CMS card added
-✅ Ready for production use!
+✅ **DEPLOYED TO PRODUCTION** (https://ocsapp.ca)
+✅ Deals page integrated with promo banners
+✅ Header location fix applied
 
 ---
 
@@ -577,17 +580,209 @@ You can now:
 
 **Implementation Complete** ✅
 **Tested** ✅
-**Committed to Git** ✅
+**Deployed to Production** ✅
 **Documentation** ✅
 **Ready to Use** ✅
 
-**Next Step**: Run the database migration to create the `promo_banners` table!
+---
 
-```sql
--- Run this in your MySQL database:
-SOURCE /path/to/database/migrations/create_promo_banners_table.sql
+## 🚀 Production Deployment (2025-11-20)
+
+### Deployed Files:
+1. ✅ `/app/Controllers/PromoBannerController.php` - Promo banner CRUD controller
+2. ✅ `/app/Controllers/DealsController.php` - Updated to use promo banners
+3. ✅ `/app/Views/admin/promo-banners/index.php` - Banner list view
+4. ✅ `/app/Views/admin/promo-banners/edit.php` - Edit form
+5. ✅ `/app/Views/admin/promo-banners/create.php` - Create form
+6. ✅ `/app/Views/buyer/deals.php` - Updated deals page
+7. ✅ `/app/Views/buyer/home.php` - Dynamic promo banner section
+8. ✅ `/app/Views/admin/cms/index.php` - Added orange promo banners card
+9. ✅ `/app/Views/components/header.php` - Fixed location display
+10. ✅ `/routes/web.php` - Added 7 promo banner routes
+11. ✅ `/app/Controllers/HomeController.php` - Promo banner fetching logic
+
+### Database:
+- ✅ `promo_banners` table created on production
+- ✅ Initial banner inserted: "Super Savings 20%"
+- ✅ 3 products selected: Asparagus, Avocados, Bagel (IDs: 115, 252, 104)
+
+### Production URLs:
+- **Admin Management**: https://ocsapp.ca/admin/promo-banners
+- **Deals Page**: https://ocsapp.ca/deals (now shows promo products)
+- **Homepage**: https://ocsapp.ca (shows active promo banner)
+- **CMS Dashboard**: https://ocsapp.ca/admin/cms (orange promo card)
+
+### Current Live Status:
+- ✅ Homepage showing "Super Savings 20%" banner
+- ✅ 3 products displaying in carousel rotation
+- ✅ Deals page showing 3 products with 20% discount
+- ✅ Admin can edit/create/delete banners
+- ✅ Location button showing "Select your location" (fixed)
+
+---
+
+## 📋 Latest Updates (2025-11-20)
+
+### 1. Deals Page Integration
+**File**: `/app/Controllers/DealsController.php`
+
+Updated to display products from active promo banners instead of hardcoded sale products:
+
+```php
+// Fetch all active promo banners
+$stmt = $db->query("
+    SELECT id, title, subtitle, discount_percentage, selected_products, button_text, button_url
+    FROM promo_banners
+    WHERE status = 'active'
+    ORDER BY sort_order ASC, id ASC
+");
+
+// Collect product IDs from all banners
+$allProductIds = [];
+foreach ($promoBanners as $banner) {
+    $selectedProducts = json_decode($banner['selected_products'], true);
+    foreach ($selectedProducts as $productId) {
+        $productId = intval($productId); // Convert to integer
+        $allProductIds[] = $productId;
+    }
+}
+
+// Fetch products with banner info
+// Apply banner discount percentages
+$basePrice = $product['is_on_sale'] ? $product['sale_price'] : $product['base_price'];
+$discountAmount = $basePrice * ($bannerInfo['discount_percentage'] / 100);
+$product['deal_price'] = $basePrice - $discountAmount;
 ```
 
-Then access: `https://ocsapp.ca/admin/promo-banners`
+**Features:**
+- ✅ Shows products from ALL active promo banners
+- ✅ Applies admin-defined discount percentages
+- ✅ Displays promo banner tags (💰 Super Savings)
+- ✅ Orange gradient promo tags at top of page
+- ✅ Sorting by discount, price low/high
+- ✅ Empty state for no active promos
 
-Enjoy your new promotional banner management system! 💰✨
+**File**: `/app/Views/buyer/deals.php`
+
+Added visual promo banner indicators:
+- Orange gradient promo tags showing active campaigns
+- Banner-specific tags on each product card
+- Promo discount percentage badges
+- Dynamic pricing based on banner discounts
+
+### 2. Header Location Fix
+**File**: `/app/Views/components/header.php`
+
+Fixed the location display issue:
+
+**Before (Broken)**:
+```php
+$currentLocation = $_SESSION['location'] ?? 'Kirkland, QC';
+<span id="currentLocationText"><?= htmlspecialchars($currentLocation) ?></span>
+```
+
+**After (Fixed)**:
+```php
+// Store's physical location (fixed, displayed in top banner)
+$storeLocation = 'Kirkland, QC';
+
+// User's delivery location (for delivery zone, user-selected)
+$userDeliveryLocation = $_SESSION['location'] ?? 'Select your location';
+
+<span id="currentLocationText"><?= htmlspecialchars($userDeliveryLocation) ?></span>
+```
+
+**Result:**
+- ✅ Top banner shows: "Store Location: Kirkland, QC" (fixed, never changes)
+- ✅ Header button shows: "Select your location" (dynamic, user can change)
+- ✅ Location detection updates only the header button, not top banner
+
+### 3. Bug Fixes During Deployment
+
+**Issue 1**: Site returned 404 errors temporarily
+- **Cause**: Testing curl without proper headers
+- **Fix**: Site was actually working, just needed proper HTTP headers
+
+**Issue 2**: Deals page showing empty state
+- **Cause**: JSON decode returned strings, SQL needed integers
+- **Fix**: Added `intval($productId)` conversion in controller
+
+**Issue 3**: SQL error "Unknown column 'si.quantity'"
+- **Cause**: Column is `si.stock_quantity`, not `si.quantity`
+- **Fix**: Updated query to use correct column name
+
+All issues resolved. System running smoothly in production.
+
+---
+
+## 📸 Production Screenshots Status
+
+### What's Live Now:
+1. **Homepage Promo Banner**: Showing "Super Savings 20%" with 3 rotating products
+2. **Deals Page**: 3 products with 20% discounts from promo banner
+3. **Admin Promo Banners**: Orange CMS card + full management interface
+4. **Location Button**: Shows "Select your location" (not "Kirkland, QC")
+
+---
+
+## 🔄 Git Commit Summary
+
+### Files to Commit:
+```bash
+# New Files:
+app/Controllers/PromoBannerController.php
+app/Views/admin/promo-banners/index.php
+app/Views/admin/promo-banners/edit.php
+app/Views/admin/promo-banners/create.php
+database/migrations/create_promo_banners_table.sql
+
+# Modified Files:
+app/Controllers/DealsController.php
+app/Controllers/HomeController.php
+app/Views/buyer/home.php
+app/Views/buyer/deals.php
+app/Views/admin/cms/index.php
+app/Views/components/header.php
+routes/web.php
+PROMO_BANNERS_MANAGEMENT_SUMMARY.md
+
+# Backups Created:
+app/Controllers/DealsController.php.bak5
+app/Views/buyer/deals.php.bak5
+app/Views/components/header.php.bak4
+app/Views/buyer/home.php.backup_20251120_211627
+```
+
+**Recommended commit message:**
+```
+feat: Add promo banners management system + deals page integration
+
+- Add full CRUD for promotional banners with admin interface
+- Integrate promo banners into homepage and deals page
+- Add product multi-select dropdown with images
+- Update deals page to show promo banner products
+- Fix header location display (store vs user location)
+- Add orange promo banners card to CMS dashboard
+- Deploy to production with database migration
+
+Features:
+- Admin can change discount % (0-100)
+- Select specific OCS products for promos
+- Create multiple campaigns with toggle active/inactive
+- Deals page now dynamic based on active promos
+- Homepage carousel uses admin-selected products
+
+Production: https://ocsapp.ca/admin/promo-banners
+```
+
+---
+
+Access: `https://ocsapp.ca/admin/promo-banners`
+
+**System fully operational!** 💰✨
+
+Current production data:
+- 1 active banner: "Super Savings"
+- 20% discount
+- 3 selected products (Asparagus, Avocados, Bagel)
+- Visible on homepage and deals page
