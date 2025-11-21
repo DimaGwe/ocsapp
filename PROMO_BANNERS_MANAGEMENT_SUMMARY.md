@@ -783,52 +783,55 @@ Products display on homepage if ALL conditions met:
 
 **Git Commit:** `c01d821`
 
-### 5. Best Sellers Page Filter (2025-11-20)
+### 5. Best Sellers Page - Use Same Flag as Homepage (2025-11-20)
 **File**: `/app/Controllers/HomeController.php`
 **Page**: `https://ocsapp.ca/best-sellers`
 
 **Problem:**
-- Best Sellers page (`/best-sellers`) showed all products with `is_most_selling = 1` flag
-- Included products from all shops, not just OCS Store
-- Inconsistent with homepage filtering
+- Homepage Best Sellers section: Used `show_on_home = 1` flag (7 products)
+- Best Sellers page (`/best-sellers`): Used `is_most_selling = 1` flag (different products)
+- User expects both to show the SAME 7 OCS Store products
+- "OCS Store products = Admin products, they should be the same"
 
 **Root Cause:**
 ```php
-// BEFORE:
-SELECT p.*, pi.image_path as image, b.name as brand_name
-FROM products p
-LEFT JOIN product_images pi ON p.id = pi.product_id
-WHERE p.is_most_selling = 1
+// BEFORE (Best Sellers page):
+WHERE p.is_most_selling = 1  // Different flag than homepage!
   AND p.status = 'active'
 ```
 
 **Solution:**
-Added INNER JOIN with shop_inventory and filter by OCS Store:
+Changed Best Sellers page to use `show_on_home = 1` flag (same as homepage):
 
 ```php
-// AFTER:
+// AFTER (Best Sellers page):
 SELECT p.*, pi.image_path as image, b.name as brand_name
 FROM products p
 INNER JOIN shop_inventory si ON p.id = si.product_id AND si.shop_id = 1
 LEFT JOIN product_images pi ON p.id = pi.product_id
-WHERE p.is_most_selling = 1
+LEFT JOIN brands b ON p.brand_id = b.id
+WHERE p.show_on_home = 1  // Same flag as homepage!
   AND p.status = 'active'
   AND si.status = 'active'
 ```
 
 **Changes Applied:**
-1. Added `INNER JOIN shop_inventory si` with `shop_id = 1`
-2. Added `si.status = 'active'` filter
-3. Updated both the count query and products query
-4. Added `COUNT(DISTINCT p.id)` to count query
+1. Changed from `is_most_selling = 1` to `show_on_home = 1`
+2. Added `INNER JOIN shop_inventory si` with `shop_id = 1` (OCS Store only)
+3. Added `si.status = 'active'` filter
+4. Updated both count query and products query
+5. No `seller_id` restrictions (shows ALL products in OCS Store)
 
 **Result:**
-- ✅ Best Sellers page now shows only OCS Store products
-- ✅ Consistent with homepage Best Sellers section
-- ✅ Admin controls visibility via `is_most_selling` flag
-- ✅ No products from other shops appear
+- ✅ Homepage Best Sellers: 7 products with `show_on_home = 1`
+- ✅ Best Sellers page: SAME 7 products with `show_on_home = 1`
+- ✅ Consistent experience across both pages
+- ✅ Single admin flag controls both homepage AND dedicated page
+- ✅ OCS Store products = Admin products (treated as same)
 
-**Git Commit:** `09437bb`
+**Git Commits:**
+- `09437bb` - Initial OCS Store filter
+- `bd8bd9e` - Changed to use show_on_home flag
 
 ---
 
