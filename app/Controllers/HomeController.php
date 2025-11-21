@@ -654,8 +654,9 @@ view('buyer.home', [
     }
 
     /**
-     * Best Sellers page (dedicated page for most selling products)
-     * Filtered to show only OCS Store (shop_id = 1) products
+     * Best Sellers page (dedicated page for OCS Store featured products)
+     * Shows same products as homepage Best Sellers section
+     * Filtered to show only OCS Store (shop_id = 1) products - ALL products regardless of seller
      */
     public function bestSellers(): void {
         try {
@@ -665,18 +666,18 @@ view('buyer.home', [
             $perPage = 24;
             $offset = ($page - 1) * $perPage;
 
-            // Get total count - OCS Store products only
+            // Get total count - OCS Store products with "show on home" flag
             $stmt = $db->query("
                 SELECT COUNT(DISTINCT p.id) as count
                 FROM products p
                 INNER JOIN shop_inventory si ON p.id = si.product_id AND si.shop_id = 1
-                WHERE p.is_most_selling = 1
+                WHERE p.show_on_home = 1
                   AND p.status = 'active'
                   AND si.status = 'active'
             ");
             $total = $stmt->fetch()['count'];
 
-            // Get products - OCS Store only
+            // Get products - Same as homepage Best Sellers section
             $stmt = $db->prepare("
                 SELECT p.*,
                        p.base_price as price,
@@ -688,7 +689,7 @@ view('buyer.home', [
                 INNER JOIN shop_inventory si ON p.id = si.product_id AND si.shop_id = 1
                 LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
                 LEFT JOIN brands b ON p.brand_id = b.id
-                WHERE p.is_most_selling = 1
+                WHERE p.show_on_home = 1
                   AND p.status = 'active'
                   AND si.status = 'active'
                 ORDER BY p.sort_order DESC, p.created_at DESC
