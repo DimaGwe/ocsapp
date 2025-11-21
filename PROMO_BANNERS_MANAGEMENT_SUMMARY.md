@@ -1,7 +1,7 @@
 # Promo Banners Management System - Implementation Summary
 
 **Date**: 2025-11-20
-**Last Updated**: 2025-11-20 (Deals Page Integration Complete)
+**Last Updated**: 2025-11-20 (Best Sellers Filter Fixed)
 **Status**: ✅ Complete & Deployed to Production
 **Feature**: Admin-managed promotional banners with custom discounts and product selection
 
@@ -712,6 +712,76 @@ $userDeliveryLocation = $_SESSION['location'] ?? 'Select your location';
 - **Fix**: Updated query to use correct column name
 
 All issues resolved. System running smoothly in production.
+
+### 4. Best Sellers Filter Fix (2025-11-20)
+**File**: `/app/Controllers/HomeController.php`
+
+**Problem:**
+- Homepage Best Sellers section only showing 4 products instead of all 7+ marked "show on home"
+- Database query filtered by `seller_id = 1`, excluding products with NULL or different seller_id
+
+**Root Cause:**
+```php
+// Line 257 (BEFORE):
+WHERE p.show_on_home = 1
+  AND p.status = 'active'
+  AND si.status = 'active'
+  AND p.seller_id = 1  // <-- This excluded 6 products
+```
+
+**Products Excluded:**
+- 3 products with `seller_id = NULL` (Broccoli, Orange, Orangese)
+- 1 product with `seller_id = 33` (Fresh Whole Milk)
+- Only showing products where `seller_id = 1` (admin-created only)
+
+**Solution:**
+Removed the `seller_id = 1` filter from two queries:
+1. **Best Sellers query** (line 257) - Admin-curated "show on home" products
+2. **Most Selling Products query** (line 205) - Data-driven top sellers
+
+```php
+// Line 257 (AFTER):
+WHERE p.show_on_home = 1
+  AND p.status = 'active'
+  AND si.status = 'active'
+  // seller_id filter removed - show ALL products in OCS Store
+```
+
+**Updated Query Logic:**
+```php
+// Products manually selected by admin via "Show on Home" checkbox
+// Filtered to show only OCS Store (Shop ID 1) - ALL products regardless of seller
+$stmt = $db->query("
+    SELECT p.*, pi.image_path as image, b.name as brand_name
+    FROM products p
+    INNER JOIN shop_inventory si ON p.id = si.product_id AND si.shop_id = 1
+    WHERE p.show_on_home = 1
+      AND p.status = 'active'
+      AND si.status = 'active'
+    ORDER BY p.sort_order DESC, p.created_at DESC
+    LIMIT 24
+");
+```
+
+**Result:**
+- ✅ All products marked "show on home" in OCS Store now display (7+ products)
+- ✅ Includes products created by admin (seller_id=1)
+- ✅ Includes products with NULL seller_id
+- ✅ Includes products from other sellers
+- ✅ Consistent with user expectation: "admin and OCS store is the same"
+
+**Requirements After Fix:**
+Products display on homepage if ALL conditions met:
+1. `show_on_home = 1` (admin marked it to show)
+2. In OCS Store inventory (`shop_id = 1`)
+3. Product status = 'active'
+4. Shop inventory status = 'active'
+
+**Files Changed:**
+- `/app/Controllers/HomeController.php` (removed 2 seller_id filters)
+- `/deploy_homecontroller_fix.php` (deployment script created)
+
+**Git Commit:** `c01d821`
 
 ---
 
