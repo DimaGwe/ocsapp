@@ -28,3 +28,26 @@ marketplace.env
 # Environment files (contain credentials)
 .env
 .env.*
+
+# Credentials and sensitive data
+*.csv
+ocsapp_credentials.csv
+
+# Claude Code
+.claude/agents/
+.claude/settings.local.json
+
+# Temporary system files
+nul
+
+# Deployment documentation (project-specific)
+DEPLOY_*.md
+UPLOAD_*.md
+VENDOR_SYSTEM_DEPLOYMENT.md
+FILES_TO_UPLOAD.txt
+README_VENDOR_DEPLOYMENT.md
+
+# Temporary images (root level only, not assets)
+/*.jpg
+/*.png
+/*.webp
