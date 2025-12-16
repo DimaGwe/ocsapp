@@ -2,23 +2,24 @@
 use App\Helpers\VisitorTracker;
 VisitorTracker::track();
 /**
- * OCS Header Component - With Role-Based Account Routing
+ * OCSAPP Header Component - With Role-Based Account Routing
  * Last Updated: November 10, 2025
  */
 
 // Get current language and location from session
-$currentLang = $_SESSION['language'] ?? 'en';
+$currentLang = $_SESSION['language'] ?? 'fr';
 
 // Store's physical location (fixed, displayed in top banner)
 $storeLocation = 'Kirkland, QC';
 
+// Get translations first (needed for default location text)
+$t = getTranslations($currentLang);
+
 // User's delivery location (for delivery zone, user-selected)
-$userDeliveryLocation = $_SESSION['location'] ?? 'Select your location';
+$defaultLocationText = $t['select_location'] ?? ($currentLang === 'fr' ? 'Choisir votre emplacement' : 'Select your location');
+$userDeliveryLocation = $_SESSION['location'] ?? $defaultLocationText;
 
 $cartCount = $cartCount ?? 0;
-
-// Get translations
-$t = getTranslations($currentLang);
 
 // FIXED: Get role-based account URL
 $accountDashboardUrl = accountUrl(); // Uses new helper function
@@ -28,8 +29,8 @@ $accountDashboardUrl = accountUrl(); // Uses new helper function
 <header class="header">
     <div class="logo-section">
         <a href="<?= url('/') ?>" class="logo">
-            <img src="<?= asset('images/logo.png') ?>" alt="OCS Logo" class="logo-img">
-            <span>OCS</span>
+            <img src="<?= asset('images/logo.png') ?>" alt="OCSAPP Logo" class="logo-img">
+            <span>OCSAPP</span>
         </a>
         <button class="location-selector" id="locationBtn" type="button" aria-label="<?= $t['choose_location'] ?>">
             <span>📍</span>
@@ -47,30 +48,30 @@ $accountDashboardUrl = accountUrl(); // Uses new helper function
     </form>
 
     <div class="header-actions">
-        <!-- Language Selector -->
-        <div class="language-selector">
-            <button class="language-btn" 
-                    id="languageBtn" 
+        <!-- Language Selector - notranslate prevents browser auto-translate issues -->
+        <div class="language-selector notranslate" translate="no">
+            <button class="language-btn"
+                    id="languageBtn"
                     type="button"
                     aria-label="Select language"
                     aria-expanded="false">
-                <span><?= strtoupper($currentLang) ?></span>
+                <span class="notranslate" translate="no"><?= strtoupper($currentLang) ?></span>
                 <span>▼</span>
             </button>
             <div class="language-dropdown" id="languageDropdown" role="menu">
-                <div class="language-option <?= $currentLang === 'en' ? 'selected' : '' ?>" 
+                <div class="language-option <?= $currentLang === 'en' ? 'selected' : '' ?>"
                      data-lang="en"
                      role="menuitem"
                      tabindex="0">
                     <span>🇺🇸</span>
-                    <span>English</span>
+                    <span class="notranslate" translate="no">English</span>
                 </div>
-                <div class="language-option <?= $currentLang === 'fr' ? 'selected' : '' ?>" 
+                <div class="language-option <?= $currentLang === 'fr' ? 'selected' : '' ?>"
                      data-lang="fr"
                      role="menuitem"
                      tabindex="0">
                     <span>🇫🇷</span>
-                    <span>Français</span>
+                    <span class="notranslate" translate="no">Français</span>
                 </div>
             </div>
         </div>
@@ -98,14 +99,53 @@ $accountDashboardUrl = accountUrl(); // Uses new helper function
     </div>
 </header>
 
+<!-- Location Autocomplete Styles -->
+<style>
+.location-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    max-height: 250px;
+    overflow-y: auto;
+    z-index: 1000;
+    margin-top: 4px;
+}
+.suggestion-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid #f3f4f6;
+    transition: background 0.15s;
+}
+.suggestion-item:last-child { border-bottom: none; }
+.suggestion-item:hover { background: #f0fdf4; }
+.suggestion-icon { margin-right: 10px; font-size: 16px; }
+.suggestion-text {
+    font-size: 13px;
+    color: #374151;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+</style>
+
 <!-- Location Popover -->
 <div class="popover" id="locationPopover" style="display:none;" role="dialog" aria-labelledby="locationPopoverTitle">
     <h4 id="locationPopoverTitle"><?= $t['choose_location'] ?></h4>
-    <div class="field">
-        <input type="text" 
-               placeholder="<?= $t['search_location'] ?>" 
+    <div class="field" style="position: relative;">
+        <input type="text"
+               placeholder="<?= $t['search_location'] ?>"
                id="locSearchInput"
+               autocomplete="off"
                aria-label="<?= $t['search_location'] ?>">
+        <!-- Autocomplete suggestions -->
+        <div id="locationSuggestions" class="location-suggestions" style="display: none;"></div>
     </div>
     <div class="or-divider"><span><?= $t['or'] ?></span></div>
     <button type="button" class="detect-btn" id="detectBtn">
@@ -170,7 +210,7 @@ $accountDashboardUrl = accountUrl(); // Uses new helper function
 
 <script>
 /**
- * OCS Header JavaScript - With Geolocation Fix
+ * OCSAPP Header JavaScript - With Geolocation Fix
  */
 (function() {
     'use strict';
@@ -496,48 +536,134 @@ $accountDashboardUrl = accountUrl(); // Uses new helper function
         });
     }
 
-    if (locSearchInput) {
+    // Location autocomplete
+    const locationSuggestions = document.getElementById('locationSuggestions');
+    let autocompleteTimeout = null;
+
+    async function searchLocations(query) {
+        if (query.length < 3) {
+            locationSuggestions.style.display = 'none';
+            return;
+        }
+
+        try {
+            const url = `https://nominatim.openstreetmap.org/search?` + new URLSearchParams({
+                q: query,
+                format: 'json',
+                limit: 5,
+                addressdetails: 1,
+                countrycodes: 'ca', // Canada only
+                viewbox: '-74.5,45.0,-73.0,46.0', // Montreal/Kirkland area bias
+                bounded: 0 // Allow results outside viewbox but prioritize inside
+            });
+
+            const response = await fetch(url, {
+                headers: { 'User-Agent': 'OCSMarketplace/1.0' }
+            });
+
+            if (!response.ok) throw new Error('Search failed');
+
+            const results = await response.json();
+
+            if (results.length > 0) {
+                locationSuggestions.innerHTML = results.map(r => `
+                    <div class="suggestion-item"
+                         data-lat="${r.lat}"
+                         data-lon="${r.lon}"
+                         data-name="${r.address?.city || r.address?.town || r.address?.municipality || r.display_name.split(',')[0]}">
+                        <span class="suggestion-icon">📍</span>
+                        <span class="suggestion-text">${r.display_name}</span>
+                    </div>
+                `).join('');
+                locationSuggestions.style.display = 'block';
+            } else {
+                locationSuggestions.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Autocomplete error:', error);
+            locationSuggestions.style.display = 'none';
+        }
+    }
+
+    async function selectLocation(lat, lon, name) {
+        try {
+            const response = await postJSON(config.urls.setLocation, {
+                location: name,
+                latitude: parseFloat(lat),
+                longitude: parseFloat(lon),
+                radius: radiusRange?.value || 5
+            });
+
+            if (response && response.success) {
+                if (currentLocationText) {
+                    currentLocationText.textContent = name;
+                }
+                locationPopover.style.display = 'none';
+                locationSuggestions.style.display = 'none';
+                window.location.reload();
+            }
+        } catch (error) {
+            console.error('Location save error:', error);
+            alert('Could not save location');
+        }
+    }
+
+    if (locSearchInput && locationSuggestions) {
+        // Autocomplete on input
+        locSearchInput.addEventListener('input', function() {
+            clearTimeout(autocompleteTimeout);
+            autocompleteTimeout = setTimeout(() => {
+                searchLocations(this.value.trim());
+            }, 300);
+        });
+
+        // Handle suggestion clicks
+        locationSuggestions.addEventListener('click', function(e) {
+            const item = e.target.closest('.suggestion-item');
+            if (item) {
+                const lat = item.dataset.lat;
+                const lon = item.dataset.lon;
+                const name = item.dataset.name;
+                locSearchInput.value = name;
+                selectLocation(lat, lon, name);
+            }
+        });
+
+        // Handle Enter key for manual entry
         locSearchInput.addEventListener('keydown', async function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 const location = this.value.trim();
-                
+
                 if (!location) {
                     alert('Please enter a location');
                     return;
                 }
 
-                console.log('📝 Manual location entry:', location);
+                // If suggestions are visible, select first one
+                const firstSuggestion = locationSuggestions.querySelector('.suggestion-item');
+                if (firstSuggestion && locationSuggestions.style.display !== 'none') {
+                    firstSuggestion.click();
+                    return;
+                }
 
+                // Otherwise save manually
                 try {
                     const response = await postJSON(config.urls.setLocation, {
                         location: location,
                         radius: radiusRange?.value || 5
                     });
-                    
-                    console.log('📨 Save response:', response);
-                    
-                    // FIXED: Check response.success properly
+
                     if (response && response.success) {
-                        // Update UI
                         if (currentLocationText) {
                             currentLocationText.textContent = location;
                         }
-                        
-                        // Close popover
                         locationPopover.style.display = 'none';
-                        
-                        // Reload to update products
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 500);
-                    } else {
-                        throw new Error(response?.message || response?.error || 'Save failed');
+                        window.location.reload();
                     }
-                    
                 } catch (error) {
-                    console.error('❌ Location update error:', error);
-                    alert('Could not save your location: ' + error.message);
+                    console.error('Location update error:', error);
+                    alert('Could not save your location');
                 }
             }
         });

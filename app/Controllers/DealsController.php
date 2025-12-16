@@ -25,7 +25,7 @@ class DealsController {
 
             // Get all active promo banners
             $stmt = $db->query("
-                SELECT id, title, subtitle, discount_percentage, selected_products, button_text, button_url
+                SELECT id, title, title_fr, subtitle, subtitle_fr, discount_percentage, selected_products, button_text, button_text_fr, button_url
                 FROM promo_banners
                 WHERE status = 'active'
                 ORDER BY sort_order ASC, id ASC

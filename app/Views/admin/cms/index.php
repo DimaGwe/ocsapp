@@ -290,6 +290,26 @@ ob_start();
       </div>
     </a>
 
+    <!-- Legal Content Card -->
+    <a href="<?= url('/admin/legal') ?>" class="quick-link-card" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; padding: 24px; border-radius: var(--radius-xl); text-decoration: none; display: block; transition: all var(--transition-base); box-shadow: var(--shadow-sm);">
+      <div style="font-size: 36px; margin-bottom: 12px;">⚖️</div>
+      <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">Legal Content</h3>
+      <p style="opacity: 0.9; font-size: 14px; margin: 0;">Manage Terms, Privacy Policy with version control</p>
+      <div style="margin-top: 16px; display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px;">
+        Manage Legal Pages <span>→</span>
+      </div>
+    </a>
+
+    <!-- Content Pages Card -->
+    <a href="<?= url('/admin/content-pages') ?>" class="quick-link-card" style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: white; padding: 24px; border-radius: var(--radius-xl); text-decoration: none; display: block; transition: all var(--transition-base); box-shadow: var(--shadow-sm);">
+      <div style="font-size: 36px; margin-bottom: 12px;">📄</div>
+      <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">Content Pages</h3>
+      <p style="opacity: 0.9; font-size: 14px; margin: 0;">Manage About Us, Contact Us, and other static pages</p>
+      <div style="margin-top: 16px; display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px;">
+        Manage Pages <span>→</span>
+      </div>
+    </a>
+
     <!-- Add more quick links here in the future -->
 
   </div>

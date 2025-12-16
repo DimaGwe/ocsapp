@@ -105,6 +105,34 @@ return [
     'GET /account' => ['AccountController', 'index'],
 
     // ===================================
+    // VENDOR ROUTES
+    // ===================================
+
+    // Public Vendor Pages
+    'GET /vendor-central' => ['VendorController', 'vendorCentral'],
+    'GET /vendors/{slug}' => ['VendorController', 'show'],  // Public vendor profile
+
+    // ===================================
+    // SELLER PUBLIC PAGES
+    // ===================================
+    'GET /seller-central' => ['PageController', 'sellerCentral'],
+
+    // Vendor Authentication
+    'GET /vendor/login' => ['VendorController', 'login'],
+    'POST /vendor/login' => ['VendorController', 'processLogin'],
+    'GET /vendor/logout' => ['VendorController', 'logout'],
+
+    // Vendor Application (Public)
+    'GET /vendor/apply' => ['VendorController', 'showApplyForm'],
+    'POST /vendor/submit-application' => ['VendorController', 'submitApplication'],
+
+    // Vendor Dashboard (Requires Authentication)
+    'GET /vendor/dashboard' => ['VendorController', 'dashboard'],
+    'GET /vendor/orders' => ['VendorController', 'orders'],
+    'POST /vendor/order/approve' => ['VendorController', 'approveOrder'],
+    'POST /vendor/order/reject' => ['VendorController', 'rejectOrder'],
+
+    // ===================================
     // ADMIN ROUTES
     // ===================================
     'GET /admin/dashboard' => ['AdminController', 'dashboard'],
@@ -144,13 +172,27 @@ return [
     'POST /admin/categories/update' => ['CategoryController', 'update'],
     'POST /admin/categories/delete' => ['CategoryController', 'delete'],
 
-    // Brands Management
-    'GET /admin/brands' => ['BrandController', 'index'],
-    'GET /admin/brands/create' => ['BrandController', 'create'],
-    'POST /admin/brands/store' => ['BrandController', 'store'],
-    'GET /admin/brands/edit' => ['BrandController', 'edit'],
-    'POST /admin/brands/update' => ['BrandController', 'update'],
-    'POST /admin/brands/delete' => ['BrandController', 'delete'],
+    // Vendors Management
+    'GET /admin/vendors' => ['AdminVendorController', 'index'],
+    'GET /admin/vendors/create' => ['AdminVendorController', 'create'],
+    'POST /admin/vendors/store' => ['AdminVendorController', 'store'],
+    'GET /admin/vendors/view' => ['AdminVendorController', 'view'],
+    'GET /admin/vendors/edit' => ['AdminVendorController', 'edit'],
+    'POST /admin/vendors/update' => ['AdminVendorController', 'update'],
+    'POST /admin/vendors/approve' => ['AdminVendorController', 'approve'],
+    'POST /admin/vendors/suspend' => ['AdminVendorController', 'suspend'],
+    'POST /admin/vendors/activate' => ['AdminVendorController', 'activate'],
+    'POST /admin/vendors/delete' => ['AdminVendorController', 'delete'],
+
+    // Vendor Invites
+    'GET /admin/vendors/invites' => ['AdminVendorController', 'invites'],
+    'POST /admin/vendors/generate-invite' => ['AdminVendorController', 'generateInvite'],
+
+    // Email Templates Management
+    'GET /admin/emails' => ['AdminEmailController', 'index'],
+    'GET /admin/emails/edit' => ['AdminEmailController', 'edit'],
+    'GET /admin/emails/preview' => ['AdminEmailController', 'preview'],
+    'POST /admin/emails/update' => ['AdminEmailController', 'update'],
 
     // Products Management
     'GET /admin/products' => ['ProductController', 'index'],
@@ -236,6 +278,30 @@ return [
     'POST /admin/promo-banners/create' => ['PromoBannerController', 'create'],
     'POST /admin/promo-banners/delete' => ['PromoBannerController', 'delete'],
     'POST /admin/promo-banners/update-order' => ['PromoBannerController', 'updateOrder'],
+
+    // Legal Content Management
+    'GET /admin/legal' => ['AdminLegalController', 'index'],
+    'GET /admin/legal/edit' => ['AdminLegalController', 'edit'],
+    'POST /admin/legal/update' => ['AdminLegalController', 'update'],
+    'GET /admin/legal/preview' => ['AdminLegalController', 'preview'],
+    'POST /admin/legal/restore' => ['AdminLegalController', 'restore'],
+
+    // Content Pages Management (About, Contact, etc.)
+    'GET /admin/content-pages' => ['AdminContentPagesController', 'index'],
+    'GET /admin/content-pages/edit' => ['AdminContentPagesController', 'edit'],
+    'POST /admin/content-pages/update' => ['AdminContentPagesController', 'update'],
+    'GET /admin/content-pages/create' => ['AdminContentPagesController', 'create'],
+    'POST /admin/content-pages/delete' => ['AdminContentPagesController', 'delete'],
+
+    // Translations Management (Multilingual)
+    'GET /admin/translations' => ['AdminTranslationsController', 'index'],
+    'GET /admin/translations/edit' => ['AdminTranslationsController', 'edit'],
+    'POST /admin/translations/update' => ['AdminTranslationsController', 'update'],
+    'POST /admin/translations/bulk-update' => ['AdminTranslationsController', 'bulkUpdate'],
+    'GET /admin/translations/create' => ['AdminTranslationsController', 'create'],
+    'POST /admin/translations/create' => ['AdminTranslationsController', 'create'],
+    'POST /admin/translations/delete' => ['AdminTranslationsController', 'delete'],
+    'GET /admin/translations/export' => ['AdminTranslationsController', 'export'],
 
     // ===================================
     // SELLER ROUTES

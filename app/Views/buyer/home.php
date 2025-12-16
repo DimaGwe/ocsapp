@@ -1,12 +1,12 @@
 <?php
 
 /**
- * OCS Landing Page - With Centralized Translations
+ * OCSAPP Landing Page - With Centralized Translations
  * File: app/Views/buyer/home.php
  */
 
 // Get current language
-$currentLang = $_SESSION['language'] ?? 'en';
+$currentLang = $_SESSION['language'] ?? 'fr';
 
 // Get ALL translations for current language
 $t = getTranslations($currentLang);
@@ -15,7 +15,7 @@ $t = getTranslations($currentLang);
 $mostSellingProducts = $mostSellingProducts ?? [];
 $featuredProducts = $featuredProducts ?? [];
 $saleProducts = $saleProducts ?? [];
-$topBrands = $topBrands ?? [];
+$topVendors = $topVendors ?? [];  // UPDATED: Was topBrands
 $categories = $categories ?? [];
 $groceryStoreShops = $groceryStoreShops ?? [];  // NEW!
 $foodCourtShops = $foodCourtShops ?? [];
@@ -30,77 +30,120 @@ $cartCount = $cartCount ?? 0;
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OCS – Zero-Emission Grocery Delivery</title>
+  <title>OCSAPP – Zero-Emission Grocery Delivery</title>
   <?= csrfMeta() ?>
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="<?= asset('images/logo.png') ?>">
+  <link rel="apple-touch-icon" href="<?= asset('images/logo.png') ?>">
+  <meta name="theme-color" content="#00b207">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="<?= asset('css/styles.css') ?>">
   <link rel="stylesheet" href="<?= asset('css/promo-banner.css') ?>">
 </head>
 <body>
-  <!-- Top Banner - Shows store's physical location (admin-set) -->
-  <?php $storeLocation = getSetting('store_location', 'Kirkland, QC'); ?>
-  <div class="top-banner">
-    <?= $t['store_location'] ?>: <?= htmlspecialchars($storeLocation) ?> |
-    <?= $t['need_help'] ?>: <a href="tel:<?= getSetting('store_phone', '+15146931001') ?>"><?= getSetting('store_phone', '+1 (514) 693-1001') ?></a>
-  </div>
+  <!-- Beta Notice (Modal + Banner) -->
+  <?php include __DIR__ . '/../components/beta-notice.php'; ?>
+
+  <!-- Top Banner -->
+ <div class="top-banner">
+  <?= $t['store_location'] ?>: <?= htmlspecialchars($currentLocation) ?> |
+  <?= $t['need_help'] ?>: <a href="tel:+15146931001">+1 (514) 693-1001</a>
+</div>
 
   <!-- Header -->
   <?php include __DIR__ . '/../components/header.php'; ?>
 
   <!-- Main Content -->
   <main class="page">
-    <!-- Hero Slider - Admin Managed -->
+    <!-- Hero Slider -->
     <section class="hero-slider" aria-label="Promotional Banners">
       <div class="slides-wrapper" id="heroSlider">
-        <?php if (!empty($heroSliders)): ?>
-          <?php foreach ($heroSliders as $index => $slider): ?>
-            <div class="slide <?= $index === 0 ? 'active' : '' ?>"
-                 data-bg="<?= !empty($slider['image_path']) ? asset($slider['image_path']) : asset('images/hero/default.jpg') ?>">
-              <div class="slide-content">
-                <h2><?= htmlspecialchars($slider['title']) ?></h2>
-                <?php if (!empty($slider['description'])): ?>
-                  <p><?= htmlspecialchars($slider['description']) ?></p>
-                <?php endif; ?>
-                <?php if (!empty($slider['button_text']) && !empty($slider['button_url'])): ?>
-                  <button class="slide-btn"
-                          onclick="window.location.href='<?= url($slider['button_url']) ?>'">
-                    <?= htmlspecialchars($slider['button_text']) ?>
-                  </button>
-                <?php endif; ?>
-              </div>
-            </div>
-          <?php endforeach; ?>
-        <?php else: ?>
-          <!-- Fallback slide if no sliders configured -->
-          <div class="slide active" data-bg="<?= asset('images/hero/hero1.png') ?>">
-            <div class="slide-content">
-              <h2>Welcome to OCS Marketplace</h2>
-              <p>Shop fresh, delivered zero-emission</p>
-              <button class="slide-btn" onclick="window.location.href='<?= url('categories') ?>'">Shop Now</button>
-            </div>
+        <!-- Slide 1 -->
+        <div class="slide active" data-bg="<?= asset('images/hero/hero1.png') ?>">
+          <div class="slide-content">
+            <h2><?= $t['hero_title_1'] ?></h2>
+            <p><?= $t['hero_desc_1'] ?></p>
+            <button class="slide-btn" onclick="window.location.href='<?= url('categories') ?>'"><?= $t['shop_now'] ?></button>
           </div>
-        <?php endif; ?>
+        </div>
+        
+        <!-- Slide 2 -->
+        <div class="slide" data-bg="<?= asset('images/hero/hero2.jpg') ?>">
+          <div class="slide-content">
+            <h2><?= $t['hero_title_2'] ?></h2>
+            <p><?= $t['hero_desc_2'] ?></p>
+            <button class="slide-btn" onclick="window.location.href='<?= url('deals') ?>'"><?= $t['view_deals'] ?></button>
+          </div>
+        </div>
+        
+        <!-- Slide 3 -->
+        <div class="slide" data-bg="<?= asset('images/hero/hero3.jpg') ?>">
+          <div class="slide-content">
+            <h2><?= $t['hero_title_3'] ?></h2>
+            <p><?= $t['hero_desc_3'] ?></p>
+            <button class="slide-btn" onclick="window.location.href='<?= url('categories') ?>'"><?= $t['explore_local'] ?></button>
+          </div>
+        </div>
+        
+        <!-- Slide 4 -->
+        <div class="slide" data-bg="<?= asset('images/feature/low-cost-groceries.png') ?>">
+          <div class="slide-content">
+            <h2><?= $t['hero_title_4'] ?></h2>
+            <p><?= $t['hero_desc_4'] ?></p>
+            <button class="slide-btn" onclick="window.location.href='<?= url('categories') ?>'"><?= $t['shop_now'] ?></button>
+          </div>
+        </div>
+        
+        <!-- Slide 5 -->
+        <div class="slide" data-bg="<?= asset('images/feature/local-products.png') ?>">
+          <div class="slide-content">
+            <h2><?= $t['hero_title_5'] ?></h2>
+            <p><?= $t['hero_desc_5'] ?></p>
+            <button class="slide-btn" onclick="window.location.href='<?= url('categories') ?>'"><?= $t['shop_now'] ?></button>
+          </div>
+        </div>
+        
+        <!-- Slide 6 -->
+        <div class="slide" data-bg="<?= asset('images/feature/international-brands.png') ?>">
+          <div class="slide-content">
+            <h2><?= $t['hero_title_6'] ?></h2>
+            <p><?= $t['hero_desc_6'] ?></p>
+            <button class="slide-btn" onclick="window.location.href='<?= url('categories') ?>'"><?= $t['shop_now'] ?></button>
+          </div>
+        </div>
       </div>
-      <button class="hero-nav prev" aria-label="Previous Slide">‹</button>
-      <button class="hero-nav next" aria-label="Next Slide">›</button>
+      <button class="hero-nav prev" aria-label="Previous Slide"></button>
+      <button class="hero-nav next" aria-label="Next Slide"></button>
       <div class="hero-dots" role="tablist"></div>
     </section>
 
     <!-- Promo Banner - Admin Managed -->
     <?php if (!empty($promoBanner)): ?>
+    <?php
+      // Get multilingual promo banner content
+      $promoTitle = ($currentLang === 'fr' && !empty($promoBanner['title_fr']))
+        ? $promoBanner['title_fr']
+        : $promoBanner['title'];
+      $promoSubtitle = ($currentLang === 'fr' && !empty($promoBanner['subtitle_fr']))
+        ? $promoBanner['subtitle_fr']
+        : $promoBanner['subtitle'];
+      $promoButtonText = ($currentLang === 'fr' && !empty($promoBanner['button_text_fr']))
+        ? $promoBanner['button_text_fr']
+        : ($promoBanner['button_text'] ?? $t['shop_now']);
+    ?>
     <section class="promo-banner">
       <div class="promo-text">
         <div class="discount-badge">
           <div class="discount-percent"><?= htmlspecialchars($promoBanner['discount_percentage']) ?>%</div>
-          <div class="discount-label"><?= $t['sale'] ?></div>
+          <div class="discount-label"><?= $t['sale'] ?? 'Sale' ?></div>
         </div>
-
         <div class="promo-content">
-          <h2><?= htmlspecialchars($promoBanner['title']) ?></h2>
-          <?php if (!empty($promoBanner['subtitle'])): ?>
-            <p><?= htmlspecialchars($promoBanner['subtitle']) ?></p>
+          <h2><?= htmlspecialchars($promoTitle) ?></h2>
+          <?php if (!empty($promoSubtitle)): ?>
+            <p><?= htmlspecialchars($promoSubtitle) ?></p>
           <?php endif; ?>
         </div>
       </div>
@@ -147,11 +190,10 @@ $cartCount = $cartCount ?? 0;
       </div>
 
       <a href="<?= url($promoBanner['button_url'] ?? 'deals') ?>" class="promo-cta">
-        <?= htmlspecialchars($promoBanner['button_text'] ?? $t['shop_now']) ?> →
+        <?= htmlspecialchars($promoButtonText) ?> →
       </a>
     </section>
     <?php endif; ?>
-
     <!-- Delivery Features -->
     <section class="promo-duo">
       <div class="section-header section-header-centered">
@@ -178,92 +220,146 @@ $cartCount = $cartCount ?? 0;
     <button class="scroll-btn scroll-btn-right" data-scroll-target="mostSellingScroll" aria-label="Scroll right">›</button>
     <div class="products-scroll-grid" id="mostSellingScroll">
     <?php foreach ($mostSellingProducts as $product): ?>
-      <?php 
+      <?php
         $discount = $product['discount_percentage'] ?? 0;
-        if (!$discount && isset($product['compare_at_price']) && $product['compare_at_price'] > 0) {
+        if (!$discount && isset($product['compare_at_price']) && $product['compare_at_price'] > 0 && $product['compare_at_price'] > $product['price']) {
           $discount = round((($product['compare_at_price'] - $product['price']) / $product['compare_at_price']) * 100);
         }
-        
+
         $productTags = $product['tags'] ?? [];
         if (is_string($productTags)) {
           $productTags = json_decode($productTags, true) ?: [];
         }
+
+        $stock = $product['stock_quantity'] ?? 100;
+        $savings = ($product['compare_at_price'] ?? 0) - ($product['price'] ?? 0);
       ?>
-      <article class="product-card">
-        <div class="product-badges">
+      <article class="product-card" style="position: relative; overflow: hidden;">
+        <!-- Product Image Container -->
+        <div class="product-image-wrapper">
+          <!-- Sale Badge (Top Left of Image) -->
           <?php if ($discount > 0): ?>
-            <div class="product-badge sale"><?= $t['sale'] ?> <?= $discount ?>%</div>
-          <?php endif; ?>
-          
-          <?php if (!empty($product['is_featured'])): ?>
-            <div class="product-badge featured">⭐ <?= $t['featured'] ?></div>
-          <?php endif; ?>
-          
-          <?php 
-            $badgeMap = [
-              'bestseller' => ['class' => 'bestseller', 'icon' => '🏆', 'label' => $t['bestseller']],
-              'new-arrival' => ['class' => 'new', 'icon' => '🆕', 'label' => $t['new']],
-              'organic' => ['class' => 'organic', 'icon' => '🌿', 'label' => $t['organic']],
-              'premium' => ['class' => 'premium', 'icon' => '💎', 'label' => $t['premium']],
-              'eco-friendly' => ['class' => 'eco', 'icon' => '♻️', 'label' => $t['eco']],
-              'limited-edition' => ['class' => 'limited', 'icon' => '⚡', 'label' => $t['limited']]
-            ];
-            
-            foreach ($productTags as $tag):
-              if (isset($tag['slug']) && isset($badgeMap[$tag['slug']])):
-                $badge = $badgeMap[$tag['slug']];
-          ?>
-            <div class="product-badge <?= $badge['class'] ?>">
-              <?= $badge['icon'] ?> <?= $badge['label'] ?>
+            <div class="sale-badge">
+              -<?= $discount ?>% <?= $t['off'] ?? 'OFF' ?>
             </div>
-          <?php 
-              endif;
-            endforeach;
-          ?>
-        </div>
-        
-        <a href="<?= url('product/' . $product['slug']) ?>" class="product-image">
-          <?php if (!empty($product['image'])): ?>
-            <img src="<?= url($product['image']) ?>" 
-                 alt="<?= htmlspecialchars($product['name']) ?>"
-                 loading="lazy">
-          <?php else: ?>
-            <div class="product-placeholder">📦</div>
           <?php endif; ?>
-        </a>
-        
-        <div class="product-info">
-          <h3 class="product-name">
-            <a href="<?= url('product/' . $product['slug']) ?>">
+
+          <!-- Tags (Below Sale Badge, Top Left of Image) -->
+          <?php if (!empty($productTags)): ?>
+            <div class="product-badges" style="position: absolute; top: <?= $discount > 0 ? '55px' : '15px' ?>; left: 15px; z-index: 3; display: flex; flex-wrap: wrap; gap: 4px; max-width: 70%;">
+              <?php
+                $badgeMap = [
+                  'bestseller' => ['class' => 'bestseller', 'icon' => '🏆', 'label' => $t['bestseller'] ?? 'Best Seller'],
+                  'new-arrival' => ['class' => 'new', 'icon' => '🆕', 'label' => $t['new'] ?? 'New'],
+                  'organic' => ['class' => 'organic', 'icon' => '🌿', 'label' => $t['organic'] ?? 'Organic'],
+                  'premium' => ['class' => 'premium', 'icon' => '💎', 'label' => $t['premium'] ?? 'Premium'],
+                  'eco-friendly' => ['class' => 'eco', 'icon' => '♻️', 'label' => $t['eco'] ?? 'Eco'],
+                  'limited-edition' => ['class' => 'limited', 'icon' => '⚡', 'label' => $t['limited'] ?? 'Limited']
+                ];
+
+                foreach ($productTags as $tag):
+                  if (isset($tag['slug']) && isset($badgeMap[$tag['slug']])):
+                    $badge = $badgeMap[$tag['slug']];
+              ?>
+                <span class="product-badge <?= $badge['class'] ?>" style="background: rgba(0, 178, 7, 0.9); color: white; font-size: 11px; padding: 4px 10px; border-radius: 12px; white-space: nowrap; font-weight: 600; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
+                  <?= $badge['icon'] ?> <?= $badge['label'] ?>
+                </span>
+              <?php
+                  endif;
+                endforeach;
+              ?>
+            </div>
+          <?php endif; ?>
+
+          <!-- Wishlist Button (Top Right of Image) -->
+          <button class="wishlist-btn" onclick="toggleWishlist(<?= $product['id'] ?>)">
+            <i class="far fa-heart"></i>
+          </button>
+
+          <!-- Product Image -->
+          <a href="<?= url('product/' . ($product['slug'] ?? $product['id'])) ?>" class="product-image">
+            <?php if (!empty($product['image'])): ?>
+              <img src="<?= url($product['image']) ?>"
+                   alt="<?= htmlspecialchars($product['name']) ?>"
+                   loading="lazy">
+            <?php else: ?>
+              <div class="product-placeholder" style="display: flex; align-items: center; justify-content: center; height: 100%; font-size: 48px;">📦</div>
+            <?php endif; ?>
+          </a>
+        </div><!-- End Product Image Container -->
+
+        <!-- Product Info -->
+        <div class="product-info" style="padding: 16px;">
+          <!-- Category -->
+          <?php if (!empty($product['category_name'])): ?>
+            <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.5px; margin-bottom: 6px;">
+              <?= htmlspecialchars($product['category_name']) ?>
+            </div>
+          <?php endif; ?>
+
+          <!-- Product Name -->
+          <h3 class="product-name" style="margin: 0 0 8px 0;">
+            <a href="<?= url('product/' . ($product['slug'] ?? $product['id'])) ?>" style="font-size: 14px; font-weight: 600; color: #1f2937; text-decoration: none; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4;">
               <?= htmlspecialchars($product['name']) ?>
             </a>
           </h3>
-          
-          <div class="product-price">
-            <?= currency($product['price']) ?>
-            <?php if (!empty($product['compare_at_price']) && $product['compare_at_price'] > $product['price']): ?>
-              <span class="old-price"><?= currency($product['compare_at_price']) ?></span>
+
+          <!-- Stars Rating -->
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+            <?php $rating = $product['average_rating'] ?? 0; ?>
+            <span style="display: flex; gap: 2px;">
+              <?php for($i = 1; $i <= 5; $i++): ?>
+                <?php if ($i <= floor($rating)): ?>
+                  <i class="fas fa-star" style="color: #fbbf24; font-size: 12px;"></i>
+                <?php elseif ($i - 0.5 <= $rating): ?>
+                  <i class="fas fa-star-half-alt" style="color: #fbbf24; font-size: 12px;"></i>
+                <?php else: ?>
+                  <i class="far fa-star" style="color: #d1d5db; font-size: 12px;"></i>
+                <?php endif; ?>
+              <?php endfor; ?>
+            </span>
+            <?php if ($rating > 0): ?>
+              <span style="font-size: 12px; color: #6b7280; font-weight: 500;"><?= number_format($rating, 1) ?></span>
             <?php endif; ?>
           </div>
-          
-          <?php if (!empty($product['average_rating'])): ?>
-            <div class="product-rating">
-              <span class="stars">
-                <?php 
-                  $rating = $product['average_rating'] ?? 0;
-                  for($i = 0; $i < 5; $i++): 
-                    echo ($i < floor($rating)) ? '⭐' : '☆';
-                  endfor; 
-                ?>
-              </span>
-              <span><?= number_format($rating, 1) ?></span>
+
+          <!-- Pricing -->
+          <div style="margin-bottom: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 20px; font-weight: 700; color: #00b207;"><?= currency($product['price']) ?></span>
+              <?php if (!empty($product['compare_at_price']) && $product['compare_at_price'] > $product['price']): ?>
+                <span style="font-size: 14px; color: #9ca3af; text-decoration: line-through;"><?= currency($product['compare_at_price']) ?></span>
+              <?php endif; ?>
             </div>
-          <?php endif; ?>
-          
-          <button class="add-to-cart" 
+            <?php if ($savings > 0): ?>
+              <div style="font-size: 12px; color: #00b207; font-weight: 600; margin-top: 2px;">
+                <?= $t['you_save'] ?? 'You save' ?> <?= currency($savings) ?>
+              </div>
+            <?php endif; ?>
+          </div>
+
+          <!-- Stock Status -->
+          <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; margin-bottom: 12px; font-weight: 500; <?= $stock > 10 ? 'color: #00b207;' : ($stock > 0 ? 'color: #f59e0b;' : 'color: #ef4444;') ?>">
+            <?php if ($stock > 10): ?>
+              <i class="fas fa-check-circle"></i>
+              <?= $t['in_stock'] ?? 'In Stock' ?>
+            <?php elseif ($stock > 0): ?>
+              <i class="fas fa-exclamation-triangle"></i>
+              <?= sprintf($t['low_stock'] ?? 'Only %d left', $stock) ?>
+            <?php else: ?>
+              <i class="fas fa-times-circle"></i>
+              <?= $t['out_of_stock'] ?? 'Out of Stock' ?>
+            <?php endif; ?>
+          </div>
+
+          <!-- Add to Cart Button -->
+          <button class="add-to-cart"
                   data-product-id="<?= $product['id'] ?>"
-                  aria-label="<?= $t['add_to_cart'] ?>">
-            <?= $t['add_to_cart'] ?>
+                  <?= $stock <= 0 ? 'disabled' : '' ?>
+                  style="width: 100%; padding: 12px; background: linear-gradient(135deg, #00b207 0%, #009206 100%); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; <?= $stock <= 0 ? 'background: #d1d5db; cursor: not-allowed;' : '' ?>"
+                  aria-label="<?= $t['add_to_cart'] ?? 'Add to Cart' ?>">
+            <i class="fas fa-shopping-cart"></i>
+            <?= $t['add_to_cart'] ?? 'Add to Cart' ?>
           </button>
         </div>
       </article>
@@ -286,92 +382,146 @@ $cartCount = $cartCount ?? 0;
     <button class="scroll-btn scroll-btn-right" aria-label="Scroll right">›</button>
     <div class="products-scroll-grid" id="bestSellersScroll">
     <?php foreach ($featuredProducts as $product): ?>
-      <?php 
+      <?php
         $discount = 0;
-        if (isset($product['compare_at_price']) && $product['compare_at_price'] > 0) {
+        if (isset($product['compare_at_price']) && $product['compare_at_price'] > 0 && $product['compare_at_price'] > $product['price']) {
           $discount = round((($product['compare_at_price'] - $product['price']) / $product['compare_at_price']) * 100);
         }
-        
+
         $productTags = $product['tags'] ?? [];
         if (is_string($productTags)) {
           $productTags = json_decode($productTags, true) ?: [];
         }
+
+        $stock = $product['stock_quantity'] ?? 100;
+        $savings = ($product['compare_at_price'] ?? 0) - ($product['price'] ?? 0);
       ?>
-      <article class="product-card">
-        <div class="product-badges">
+      <article class="product-card" style="position: relative; overflow: hidden;">
+        <!-- Product Image Container -->
+        <div class="product-image-wrapper">
+          <!-- Sale Badge (Top Left of Image) -->
           <?php if ($discount > 0): ?>
-            <div class="product-badge sale"><?= $t['sale'] ?> <?= $discount ?>%</div>
-          <?php endif; ?>
-          
-          <?php if (!empty($product['is_featured'])): ?>
-            <div class="product-badge featured">⭐ <?= $t['featured'] ?></div>
-          <?php endif; ?>
-          
-          <?php 
-            $badgeMap = [
-              'bestseller' => ['class' => 'bestseller', 'icon' => '🏆', 'label' => $t['bestseller']],
-              'new-arrival' => ['class' => 'new', 'icon' => '🆕', 'label' => $t['new']],
-              'organic' => ['class' => 'organic', 'icon' => '🌿', 'label' => $t['organic']],
-              'premium' => ['class' => 'premium', 'icon' => '💎', 'label' => $t['premium']],
-              'eco-friendly' => ['class' => 'eco', 'icon' => '♻️', 'label' => $t['eco']],
-              'limited-edition' => ['class' => 'limited', 'icon' => '⚡', 'label' => $t['limited']]
-            ];
-            
-            foreach ($productTags as $tag):
-              if (isset($tag['slug']) && isset($badgeMap[$tag['slug']])):
-                $badge = $badgeMap[$tag['slug']];
-          ?>
-            <div class="product-badge <?= $badge['class'] ?>">
-              <?= $badge['icon'] ?> <?= $badge['label'] ?>
+            <div class="sale-badge">
+              -<?= $discount ?>% <?= $t['off'] ?? 'OFF' ?>
             </div>
-          <?php 
-              endif;
-            endforeach;
-          ?>
-        </div>
-        
-        <a href="<?= url('product/' . $product['slug']) ?>" class="product-image">
-          <?php if (!empty($product['image'])): ?>
-            <img src="<?= url($product['image']) ?>" 
-                 alt="<?= htmlspecialchars($product['name']) ?>"
-                 loading="lazy">
-          <?php else: ?>
-            <div class="product-placeholder">📦</div>
           <?php endif; ?>
-        </a>
-        
-        <div class="product-info">
-          <h3 class="product-name">
-            <a href="<?= url('product/' . $product['slug']) ?>">
+
+          <!-- Tags (Below Sale Badge, Top Left of Image) -->
+          <?php if (!empty($productTags)): ?>
+            <div class="product-badges" style="position: absolute; top: <?= $discount > 0 ? '55px' : '15px' ?>; left: 15px; z-index: 3; display: flex; flex-wrap: wrap; gap: 4px; max-width: 70%;">
+              <?php
+                $badgeMap = [
+                  'bestseller' => ['class' => 'bestseller', 'icon' => '🏆', 'label' => $t['bestseller'] ?? 'Best Seller'],
+                  'new-arrival' => ['class' => 'new', 'icon' => '🆕', 'label' => $t['new'] ?? 'New'],
+                  'organic' => ['class' => 'organic', 'icon' => '🌿', 'label' => $t['organic'] ?? 'Organic'],
+                  'premium' => ['class' => 'premium', 'icon' => '💎', 'label' => $t['premium'] ?? 'Premium'],
+                  'eco-friendly' => ['class' => 'eco', 'icon' => '♻️', 'label' => $t['eco'] ?? 'Eco'],
+                  'limited-edition' => ['class' => 'limited', 'icon' => '⚡', 'label' => $t['limited'] ?? 'Limited']
+                ];
+
+                foreach ($productTags as $tag):
+                  if (isset($tag['slug']) && isset($badgeMap[$tag['slug']])):
+                    $badge = $badgeMap[$tag['slug']];
+              ?>
+                <span class="product-badge <?= $badge['class'] ?>" style="background: rgba(0, 178, 7, 0.9); color: white; font-size: 11px; padding: 4px 10px; border-radius: 12px; white-space: nowrap; font-weight: 600; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
+                  <?= $badge['icon'] ?> <?= $badge['label'] ?>
+                </span>
+              <?php
+                  endif;
+                endforeach;
+              ?>
+            </div>
+          <?php endif; ?>
+
+          <!-- Wishlist Button (Top Right of Image) -->
+          <button class="wishlist-btn" onclick="toggleWishlist(<?= $product['id'] ?>)">
+            <i class="far fa-heart"></i>
+          </button>
+
+          <!-- Product Image -->
+          <a href="<?= url('product/' . ($product['slug'] ?? $product['id'])) ?>" class="product-image">
+            <?php if (!empty($product['image'])): ?>
+              <img src="<?= url($product['image']) ?>"
+                   alt="<?= htmlspecialchars($product['name']) ?>"
+                   loading="lazy">
+            <?php else: ?>
+              <div class="product-placeholder" style="display: flex; align-items: center; justify-content: center; height: 100%; font-size: 48px;">📦</div>
+            <?php endif; ?>
+          </a>
+        </div><!-- End Product Image Container -->
+
+        <!-- Product Info -->
+        <div class="product-info" style="padding: 16px;">
+          <!-- Category -->
+          <?php if (!empty($product['category_name'])): ?>
+            <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.5px; margin-bottom: 6px;">
+              <?= htmlspecialchars($product['category_name']) ?>
+            </div>
+          <?php endif; ?>
+
+          <!-- Product Name -->
+          <h3 class="product-name" style="margin: 0 0 8px 0;">
+            <a href="<?= url('product/' . ($product['slug'] ?? $product['id'])) ?>" style="font-size: 14px; font-weight: 600; color: #1f2937; text-decoration: none; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4;">
               <?= htmlspecialchars($product['name']) ?>
             </a>
           </h3>
-          
-          <div class="product-price">
-            <?= currency($product['price']) ?>
-            <?php if (!empty($product['compare_at_price']) && $product['compare_at_price'] > $product['price']): ?>
-              <span class="old-price"><?= currency($product['compare_at_price']) ?></span>
+
+          <!-- Stars Rating -->
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+            <?php $rating = $product['average_rating'] ?? 0; ?>
+            <span style="display: flex; gap: 2px;">
+              <?php for($i = 1; $i <= 5; $i++): ?>
+                <?php if ($i <= floor($rating)): ?>
+                  <i class="fas fa-star" style="color: #fbbf24; font-size: 12px;"></i>
+                <?php elseif ($i - 0.5 <= $rating): ?>
+                  <i class="fas fa-star-half-alt" style="color: #fbbf24; font-size: 12px;"></i>
+                <?php else: ?>
+                  <i class="far fa-star" style="color: #d1d5db; font-size: 12px;"></i>
+                <?php endif; ?>
+              <?php endfor; ?>
+            </span>
+            <?php if ($rating > 0): ?>
+              <span style="font-size: 12px; color: #6b7280; font-weight: 500;"><?= number_format($rating, 1) ?></span>
             <?php endif; ?>
           </div>
-          
-          <?php if (!empty($product['average_rating'])): ?>
-            <div class="product-rating">
-              <span class="stars">
-                <?php 
-                  $rating = $product['average_rating'] ?? 0;
-                  for($i = 0; $i < 5; $i++): 
-                    echo ($i < floor($rating)) ? '⭐' : '☆';
-                  endfor; 
-                ?>
-              </span>
-              <span><?= number_format($rating, 1) ?></span>
+
+          <!-- Pricing -->
+          <div style="margin-bottom: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 20px; font-weight: 700; color: #00b207;"><?= currency($product['price']) ?></span>
+              <?php if (!empty($product['compare_at_price']) && $product['compare_at_price'] > $product['price']): ?>
+                <span style="font-size: 14px; color: #9ca3af; text-decoration: line-through;"><?= currency($product['compare_at_price']) ?></span>
+              <?php endif; ?>
             </div>
-          <?php endif; ?>
-          
+            <?php if ($savings > 0): ?>
+              <div style="font-size: 12px; color: #00b207; font-weight: 600; margin-top: 2px;">
+                <?= $t['you_save'] ?? 'You save' ?> <?= currency($savings) ?>
+              </div>
+            <?php endif; ?>
+          </div>
+
+          <!-- Stock Status -->
+          <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; margin-bottom: 12px; font-weight: 500; <?= $stock > 10 ? 'color: #00b207;' : ($stock > 0 ? 'color: #f59e0b;' : 'color: #ef4444;') ?>">
+            <?php if ($stock > 10): ?>
+              <i class="fas fa-check-circle"></i>
+              <?= $t['in_stock'] ?? 'In Stock' ?>
+            <?php elseif ($stock > 0): ?>
+              <i class="fas fa-exclamation-triangle"></i>
+              <?= sprintf($t['low_stock'] ?? 'Only %d left', $stock) ?>
+            <?php else: ?>
+              <i class="fas fa-times-circle"></i>
+              <?= $t['out_of_stock'] ?? 'Out of Stock' ?>
+            <?php endif; ?>
+          </div>
+
+          <!-- Add to Cart Button -->
           <button class="add-to-cart"
                   data-product-id="<?= $product['id'] ?>"
-                  aria-label="<?= $t['add_to_cart'] ?>">
-            <?= $t['add_to_cart'] ?>
+                  <?= $stock <= 0 ? 'disabled' : '' ?>
+                  style="width: 100%; padding: 12px; background: linear-gradient(135deg, #00b207 0%, #009206 100%); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; <?= $stock <= 0 ? 'background: #d1d5db; cursor: not-allowed;' : '' ?>"
+                  aria-label="<?= $t['add_to_cart'] ?? 'Add to Cart' ?>">
+            <i class="fas fa-shopping-cart"></i>
+            <?= $t['add_to_cart'] ?? 'Add to Cart' ?>
           </button>
         </div>
       </article>
@@ -411,32 +561,32 @@ $cartCount = $cartCount ?? 0;
     </section>
     <?php endif; ?>
 
-    <!-- Top Brands -->
-    <?php if (!empty($topBrands)): ?>
+    <!-- Top Vendors (Replaced Brands) -->
+    <?php if (!empty($topVendors)): ?>
 <section class="brands-section">
   <div class="section-header">
-    <h2 class="section-title"><?= $t['top_brands'] ?></h2>
-    <a href="<?= url('brands') ?>" class="view-all"><?= $t['view_all'] ?> →</a>
+    <h2 class="section-title"><?= $t['top_vendors'] ?? 'Our Vendors' ?></h2>
+    <a href="<?= url('vendor-central') ?>" class="view-all"><?= $t['view_all'] ?> →</a>
   </div>
 
   <div class="products-scroll-container">
-    <button class="scroll-btn scroll-btn-left" data-scroll-target="topBrandsScroll" aria-label="Scroll left">‹</button>
-    <button class="scroll-btn scroll-btn-right" data-scroll-target="topBrandsScroll" aria-label="Scroll right">›</button>
-    <div class="products-scroll-grid" id="topBrandsScroll">
-    <?php foreach ($topBrands as $brand): ?>
+    <button class="scroll-btn scroll-btn-left" data-scroll-target="topVendorsScroll" aria-label="Scroll left">‹</button>
+    <button class="scroll-btn scroll-btn-right" data-scroll-target="topVendorsScroll" aria-label="Scroll right">›</button>
+    <div class="products-scroll-grid" id="topVendorsScroll">
+    <?php foreach ($topVendors as $vendor): ?>
     <div class="brand-card">
       <div class="brand-logo">
-        <?php if (!empty($brand['logo'])): ?>
-          <img src="<?= asset($brand['logo']) ?>" alt="<?= htmlspecialchars($brand['name']) ?>">
+        <?php if (!empty($vendor['logo'])): ?>
+          <img src="<?= asset($vendor['logo']) ?>" alt="<?= htmlspecialchars($vendor['company_name']) ?>">
         <?php else: ?>
           <div class="brand-logo-placeholder">
-            <?= strtoupper(substr($brand['name'], 0, 2)) ?>
+            <?= strtoupper(substr($vendor['company_name'], 0, 2)) ?>
           </div>
         <?php endif; ?>
       </div>
-      <div class="product-name"><?= htmlspecialchars($brand['name']) ?></div>
-      <div class="product-price"><?= $t['from'] ?> <?= currency($brand['min_price'] ?? 0) ?></div>
-      <button class="add-to-cart" onclick="window.location.href='<?= url('brands/' . ($brand['slug'] ?? '')) ?>'">
+      <div class="product-name"><?= htmlspecialchars($vendor['company_name']) ?></div>
+      <div class="product-price"><?= $t['from'] ?> <?= currency($vendor['min_price'] ?? 0) ?></div>
+      <button class="add-to-cart" onclick="window.location.href='<?= url('vendors/' . ($vendor['slug'] ?? '')) ?>'">
         <?= $t['shop'] ?>
       </button>
     </div>
@@ -455,14 +605,10 @@ $cartCount = $cartCount ?? 0;
 
 <!-- Virtual Mall Main Header -->
 <section class="malls-header">
-  <section class="promo-duo">
-    <div class="section-header section-header-centered">
-      <h2 class="section-title section-title-large">OCS Virtual Mall</h2>
-    </div>
-    <p style="text-align: center; color: var(--gray-600); font-size: 16px; max-width: 700px; margin: 0 auto 20px;">
-      Discover more than groceries! Explore restaurants, stores, and specialty shops all in one place.
-    </p>
-  </section>
+  <div class="malls-header-content">
+    <h2><?= $t['virtual_mall'] ?? 'OCSAPP Virtual Mall' ?></h2>
+    <p><?= $t['virtual_mall_desc'] ?? 'Discover more than groceries! Explore restaurants, stores, and specialty shops. All in one place.' ?></p>
+  </div>
 </section>
 
 <!-- VIRTUAL MALL: Grocery Stores (NEW!) -->
@@ -481,7 +627,15 @@ $cartCount = $cartCount ?? 0;
     <button class="scroll-btn scroll-btn-right" data-scroll-target="groceryStoresScroll" aria-label="Scroll right">›</button>
     <div class="products-scroll-grid" id="groceryStoresScroll">
     <?php foreach ($groceryStoreShops as $shop): ?>
-    <a href="<?= url('shops/' . $shop['slug']) ?>" class="category-card shop-card">
+    <a href="<?= url('shops/' . $shop['slug']) ?>" class="shop-card">
+      <!-- Shop Type Badge -->
+      <?php $rating = $shop['average_rating'] ?? 0; $packagingTime = $shop['packaging_time'] ?? 30; ?>
+      <div class="shop-badges">
+        <span class="shop-badge grocery">
+          <?= $t['grocery_store'] ?? 'Grocery' ?>
+        </span>
+      </div>
+
       <div class="category-icon shop-mall-logo">
         <?php if (!empty($shop['display_logo'])): ?>
           <img src="<?= $shop['display_logo'] ?>" alt="<?= htmlspecialchars($shop['name']) ?>">
@@ -496,16 +650,15 @@ $cartCount = $cartCount ?? 0;
       <div class="shop-meta">
         <div class="shop-rating">
           <span class="stars">
-            <?php 
-              $rating = $shop['average_rating'] ?? 0;
-              for($i = 0; $i < 5; $i++): 
+            <?php
+              for($i = 0; $i < 5; $i++):
                 echo ($i < floor($rating)) ? '⭐' : '☆';
-              endfor; 
+              endfor;
             ?>
           </span>
           <span><?= number_format($rating, 1) ?></span>
         </div>
-        <div class="category-count">⚡ <?= $shop['packaging_time'] ?? 30 ?> <?= $t['mins'] ?? 'mins' ?></div>
+        <div class="category-count">⚡ <?= $packagingTime ?> <?= $t['mins'] ?? 'mins' ?></div>
       </div>
     </a>
     <?php endforeach; ?>
@@ -530,7 +683,15 @@ $cartCount = $cartCount ?? 0;
     <button class="scroll-btn scroll-btn-right" data-scroll-target="foodCourtScroll" aria-label="Scroll right">›</button>
     <div class="products-scroll-grid" id="foodCourtScroll">
     <?php foreach ($foodCourtShops as $shop): ?>
-    <a href="<?= url('shops/' . $shop['slug']) ?>" class="category-card shop-card">
+    <a href="<?= url('shops/' . $shop['slug']) ?>" class="shop-card">
+      <!-- Shop Type Badge -->
+      <?php $rating = $shop['average_rating'] ?? 0; $packagingTime = $shop['packaging_time'] ?? 30; ?>
+      <div class="shop-badges">
+        <span class="shop-badge foodcourt">
+          <?= $t['food_court'] ?? 'Food Court' ?>
+        </span>
+      </div>
+
       <div class="category-icon shop-mall-logo">
         <?php if (!empty($shop['display_logo'])): ?>
           <img src="<?= $shop['display_logo'] ?>" alt="<?= htmlspecialchars($shop['name']) ?>">
@@ -545,16 +706,15 @@ $cartCount = $cartCount ?? 0;
       <div class="shop-meta">
         <div class="shop-rating">
           <span class="stars">
-            <?php 
-              $rating = $shop['average_rating'] ?? 0;
-              for($i = 0; $i < 5; $i++): 
+            <?php
+              for($i = 0; $i < 5; $i++):
                 echo ($i < floor($rating)) ? '⭐' : '☆';
-              endfor; 
+              endfor;
             ?>
           </span>
           <span><?= number_format($rating, 1) ?></span>
         </div>
-        <div class="category-count">⚡ <?= $shop['packaging_time'] ?? 30 ?> <?= $t['mins'] ?? 'mins' ?></div>
+        <div class="category-count">⚡ <?= $packagingTime ?> <?= $t['mins'] ?? 'mins' ?></div>
       </div>
     </a>
     <?php endforeach; ?>
@@ -579,7 +739,15 @@ $cartCount = $cartCount ?? 0;
     <button class="scroll-btn scroll-btn-right" data-scroll-target="storesScroll" aria-label="Scroll right">›</button>
     <div class="products-scroll-grid" id="storesScroll">
     <?php foreach ($storesShops as $shop): ?>
-    <a href="<?= url('shops/' . $shop['slug']) ?>" class="category-card shop-card">
+    <a href="<?= url('shops/' . $shop['slug']) ?>" class="shop-card">
+      <!-- Shop Type Badge -->
+      <?php $rating = $shop['average_rating'] ?? 0; $packagingTime = $shop['packaging_time'] ?? 30; ?>
+      <div class="shop-badges">
+        <span class="shop-badge store">
+          <?= $t['store'] ?? 'Store' ?>
+        </span>
+      </div>
+
       <div class="category-icon shop-mall-logo">
         <?php if (!empty($shop['display_logo'])): ?>
           <img src="<?= $shop['display_logo'] ?>" alt="<?= htmlspecialchars($shop['name']) ?>">
@@ -594,16 +762,15 @@ $cartCount = $cartCount ?? 0;
       <div class="shop-meta">
         <div class="shop-rating">
           <span class="stars">
-            <?php 
-              $rating = $shop['average_rating'] ?? 0;
-              for($i = 0; $i < 5; $i++): 
+            <?php
+              for($i = 0; $i < 5; $i++):
                 echo ($i < floor($rating)) ? '⭐' : '☆';
-              endfor; 
+              endfor;
             ?>
           </span>
           <span><?= number_format($rating, 1) ?></span>
         </div>
-        <div class="category-count">⚡ <?= $shop['packaging_time'] ?? 30 ?> <?= $t['mins'] ?? 'mins' ?></div>
+        <div class="category-count">⚡ <?= $packagingTime ?> <?= $t['mins'] ?? 'mins' ?></div>
       </div>
     </a>
     <?php endforeach; ?>
@@ -750,35 +917,7 @@ $cartCount = $cartCount ?? 0;
   </main>
 
   <!-- Footer -->
-  <footer class="footer">
-    <div class="footer-grid">
-      <div>
-        <h4><?= $t['get_to_know'] ?></h4>
-        <ul>
-          <li><a href="<?= url('about') ?>"><?= $t['about_us'] ?></a></li>
-          <li><a href="<?= url('contact') ?>"><?= $t['contact_us'] ?></a></li>
-        </ul>
-      </div>
-      <div>
-        <h4><?= $t['promote_with_us'] ?></h4>
-        <ul>
-          <li><a href="<?= url('register') ?>"><?= $t['sell_on'] ?></a></li>
-          <li><a href="<?= url('seller/help') ?>"><?= $t['vendor_central'] ?></a></li>
-        </ul>
-      </div>
-      <div>
-        <h4><?= $t['connect_with_us'] ?></h4>
-        <ul>
-          <li><a href="#">Facebook</a></li>
-          <li><a href="#">Twitter</a></li>
-          <li><a href="#">Instagram</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p>OCS © <?= date('Y') ?>. <?= $t['all_rights'] ?></p>
-    </div>
-  </footer>
+  <?php include __DIR__ . '/../components/footer.php'; ?>
 
   <!-- JavaScript -->
   <script>
@@ -791,12 +930,62 @@ $cartCount = $cartCount ?? 0;
         search: '<?= url('search') ?>',
         newsletter: '<?= url('newsletter/subscribe') ?>',
         cartAdd: '<?= url('cart/add') ?>',
-        cartCount: '<?= url('cart/count') ?>'
+        cartCount: '<?= url('cart/count') ?>',
+        wishlistToggle: '<?= url('api/wishlist/toggle') ?>'
       }
     };
+
+    // Toggle wishlist function
+    function toggleWishlist(productId) {
+      const btn = event.currentTarget;
+      const icon = btn.querySelector('i');
+
+      // Toggle visual state immediately
+      if (icon.classList.contains('far')) {
+        icon.classList.remove('far');
+        icon.classList.add('fas');
+        icon.style.color = '#ef4444';
+      } else {
+        icon.classList.remove('fas');
+        icon.classList.add('far');
+        icon.style.color = '#d1d5db';
+      }
+
+      // Send to server
+      fetch(window.OCS_CONFIG.urls.wishlistToggle, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+        },
+        body: JSON.stringify({ product_id: productId })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (!data.success) {
+          // Revert if failed
+          if (icon.classList.contains('far')) {
+            icon.classList.remove('far');
+            icon.classList.add('fas');
+            icon.style.color = '#ef4444';
+          } else {
+            icon.classList.remove('fas');
+            icon.classList.add('far');
+            icon.style.color = '#d1d5db';
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Wishlist error:', error);
+      });
+    }
   </script>
   
   <script src="<?= asset('js/promo-banner.js') ?>"></script>
   <script src="<?= asset('js/home.js') ?>"></script>
+  <script src="<?= asset('js/smart-scroll.js') ?>"></script>
+
+<!-- Auth Popup for Guests -->
+<?php include __DIR__ . "/../components/auth-popup.php"; ?>
 </body>
 </html>

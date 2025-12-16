@@ -309,21 +309,22 @@ class HomeController {
             }
             
             // ============================================
-            // 4. TOP BRANDS
+            // 4. TOP VENDORS (Replaced Brands)
             // ============================================
             $stmt = $db->query("
-                SELECT b.*,
-                       COUNT(DISTINCT p.id) as product_count,
+                SELECT v.*,
+                       COUNT(DISTINCT vp.product_id) as product_count,
                        MIN(p.base_price) as min_price
-                FROM brands b
-                INNER JOIN products p ON b.id = p.brand_id
-                WHERE b.is_active = 1 AND p.status = 'active'
-                GROUP BY b.id
+                FROM vendors v
+                INNER JOIN vendor_products vp ON v.id = vp.vendor_id AND vp.is_active = 1
+                INNER JOIN products p ON vp.product_id = p.id AND p.status = 'active'
+                WHERE v.status = 'active' AND v.is_approved = 1
+                GROUP BY v.id
                 HAVING product_count > 0
                 ORDER BY product_count DESC
                 LIMIT 12
             ");
-            $topBrands = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $topVendors = $stmt->fetchAll(\PDO::FETCH_ASSOC);
             
             // ============================================
             // 5. FEATURED CATEGORIES (with product count and images)
@@ -575,7 +576,7 @@ $promoProducts = [];
 try {
     // Get first active promo banner
     $stmt = $db->query("
-        SELECT id, title, subtitle, discount_percentage, selected_products, button_text, button_url
+        SELECT id, title, title_fr, subtitle, subtitle_fr, discount_percentage, selected_products, button_text, button_text_fr, button_url
         FROM promo_banners
         WHERE status = 'active'
         ORDER BY sort_order ASC, id ASC
@@ -622,7 +623,7 @@ view('buyer.home', [
     'mostSellingProducts' => $mostSellingProducts,
     'featuredProducts' => $featuredProducts,
     'saleProducts' => $saleProducts,
-    'topBrands' => $topBrands,
+    'topVendors' => $topVendors,  // UPDATED: Was topBrands
     'categories' => $categories,
     'groceryStoreShops' => $groceryStoreShops,  // NEW!
     'foodCourtShops' => $foodCourtShops,
@@ -641,7 +642,7 @@ view('buyer.home', [
                 'mostSellingProducts' => [],
                 'featuredProducts' => [],
                 'saleProducts' => [],
-                'topBrands' => [],
+                'topVendors' => [],  // UPDATED: Was topBrands
                 'categories' => [],
                 'foodCourtShops' => [],
                 'storesShops' => [],
@@ -1088,12 +1089,26 @@ view('buyer.home', [
             ");
             $stmt->execute([$shop['id']]);
             $products = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-            
+
             // Normalize image paths
             foreach ($products as &$product) {
                 $product['image'] = $this->normalizeImagePath($product['image']);
                 $product['price'] = $product['shop_price'] ?? $product['base_price'];
             }
+
+            // Get categories for shop products
+            $stmt = $db->prepare("
+                SELECT DISTINCT c.id, c.name, c.slug
+                FROM categories c
+                INNER JOIN product_categories pc ON c.id = pc.category_id
+                INNER JOIN shop_inventory si ON pc.product_id = si.product_id
+                WHERE si.shop_id = ?
+                AND si.status = 'active'
+                AND c.is_active = 1
+                ORDER BY c.name
+            ");
+            $stmt->execute([$shop['id']]);
+            $categories = $stmt->fetchAll(\PDO::FETCH_ASSOC);
             
             // Get shop reviews (if table exists)
             $reviews = [];
@@ -1129,6 +1144,7 @@ view('buyer.home', [
                 'shop' => $shop,
                 'shopHours' => $shopHours,
                 'products' => $products,
+                'categories' => $categories,
                 'reviews' => $reviews,
                 'currentLocation' => $currentLocation,
                 'cartCount' => $cartCount,

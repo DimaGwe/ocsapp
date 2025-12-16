@@ -1,0 +1,300 @@
+/**
+ * Beta Notice - Modal & Banner Styles
+ * For OCS Marketplace Beta Phase
+ */
+
+/* ===================================
+   BETA BANNER (Persistent)
+   =================================== */
+.beta-banner {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  color: #fff;
+  text-align: center;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  border-bottom: 3px solid #e65100;
+}
+
+.beta-banner-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.beta-banner-icon {
+  font-size: 20px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.beta-banner-text {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.beta-banner-text strong {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.beta-banner-link {
+  color: #fff;
+  text-decoration: underline;
+  font-weight: 600;
+  transition: opacity 0.2s ease;
+}
+
+.beta-banner-link:hover {
+  opacity: 0.8;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .beta-banner {
+    padding: 10px 15px;
+    font-size: 12px;
+  }
+
+  .beta-banner-content {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .beta-banner-icon {
+    font-size: 18px;
+  }
+
+  .beta-banner-text {
+    font-size: 12px;
+  }
+}
+
+/* ===================================
+   BETA MODAL (First Visit)
+   =================================== */
+.beta-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.beta-modal {
+  background: #fff;
+  border-radius: 16px;
+  max-width: 550px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.beta-modal-header {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  padding: 30px;
+  text-align: center;
+  color: #fff;
+}
+
+.beta-modal-icon {
+  font-size: 64px;
+  margin-bottom: 12px;
+  animation: bounce 1s ease infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.beta-modal-title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.beta-modal-subtitle {
+  margin: 8px 0 0;
+  font-size: 16px;
+  opacity: 0.95;
+  font-weight: 500;
+}
+
+.beta-modal-body {
+  padding: 35px 30px;
+}
+
+.beta-modal-notice {
+  background: #fff3cd;
+  border-left: 4px solid #ff9800;
+  padding: 16px 20px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.beta-modal-notice-title {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.beta-modal-notice-text {
+  margin: 0;
+  font-size: 15px;
+  color: #4b5563;
+  line-height: 1.6;
+}
+
+.beta-modal-list {
+  margin: 20px 0;
+  padding-left: 24px;
+}
+
+.beta-modal-list li {
+  margin-bottom: 12px;
+  font-size: 15px;
+  color: #4b5563;
+  line-height: 1.6;
+}
+
+.beta-modal-list li strong {
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.beta-modal-info {
+  background: #e8f5e9;
+  border-left: 4px solid #00b207;
+  padding: 16px 20px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.beta-modal-info p {
+  margin: 0;
+  font-size: 14px;
+  color: #1f2937;
+  line-height: 1.6;
+}
+
+.beta-modal-footer {
+  padding: 0 30px 30px;
+}
+
+.beta-modal-button {
+  width: 100%;
+  padding: 16px 32px;
+  background: linear-gradient(135deg, #00b207 0%, #009206 100%);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(0, 178, 7, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.beta-modal-button:hover {
+  background: linear-gradient(135deg, #009206 0%, #007a05 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 178, 7, 0.4);
+}
+
+.beta-modal-button:active {
+  transform: translateY(0);
+}
+
+.beta-modal-disclaimer {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .beta-modal {
+    margin: 20px;
+  }
+
+  .beta-modal-header {
+    padding: 25px 20px;
+  }
+
+  .beta-modal-icon {
+    font-size: 52px;
+  }
+
+  .beta-modal-title {
+    font-size: 24px;
+  }
+
+  .beta-modal-subtitle {
+    font-size: 14px;
+  }
+
+  .beta-modal-body {
+    padding: 25px 20px;
+  }
+
+  .beta-modal-footer {
+    padding: 0 20px 25px;
+  }
+
+  .beta-modal-button {
+    font-size: 16px;
+    padding: 14px 28px;
+  }
+}
+
+/* Hide modal by default */
+.beta-modal-overlay.hidden {
+  display: none;
+}
