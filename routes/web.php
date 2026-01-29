@@ -8,9 +8,15 @@ return [
     // ===================================
     // PUBLIC ROUTES (Customer-facing)
     // ===================================
-    
-    // Home
-    'GET /' => ['HomeController', 'index'],
+
+    // Landing Page
+    'GET /' => function() {
+        require __DIR__ . '/../public/landing.php';
+        exit;
+    },
+
+    // Marketplace Home
+    'GET /home' => ['HomeController', 'index'],
 
     // SEO - Sitemap & Robots
     'GET /sitemap.xml' => ['SeoController', 'sitemap'],
@@ -52,6 +58,8 @@ return [
     // Language & Location Settings
     'POST /set-language' => ['HomeController', 'setLanguage'],
     'POST /set-location' => ['HomeController', 'setLocation'],
+    'POST /api/location/search' => ['LocationController', 'search'],
+    'POST /api/location/reverse-geocode' => ['LocationController', 'reverseGeocode'],
 
     // Static Pages
     'GET /terms' => ['PageController', 'terms'],
@@ -105,51 +113,46 @@ return [
     'GET /account' => ['AccountController', 'index'],
 
     // ===================================
-    // VENDOR ROUTES
-    // ===================================
-
-    // Public Vendor Pages
-    'GET /vendor-central' => ['VendorController', 'vendorCentral'],
-    'GET /vendors/{slug}' => ['VendorController', 'show'],  // Public vendor profile
-
-    // ===================================
     // SELLER PUBLIC PAGES
     // ===================================
     'GET /seller-central' => ['PageController', 'sellerCentral'],
 
-    // Vendor Authentication
-    'GET /vendor/login' => ['VendorController', 'login'],
-    'POST /vendor/login' => ['VendorController', 'processLogin'],
-    'GET /vendor/logout' => ['VendorController', 'logout'],
+    // ===================================
+    // BUYER PUBLIC PAGES
+    // ===================================
+    'GET /buyer-central' => ['PageController', 'buyerCentral'],
 
-    // Vendor Application (Public)
-    'GET /vendor/apply' => ['VendorController', 'showApplyForm'],
-    'POST /vendor/submit-application' => ['VendorController', 'submitApplication'],
-
-    // Vendor Dashboard (Requires Authentication)
-    'GET /vendor/dashboard' => ['VendorController', 'dashboard'],
-    'GET /vendor/orders' => ['VendorController', 'orders'],
-    'POST /vendor/order/approve' => ['VendorController', 'approveOrder'],
-    'POST /vendor/order/reject' => ['VendorController', 'rejectOrder'],
+    // ===================================
+    // SUPPLIER PUBLIC PAGES
+    // ===================================
+    'GET /supplier-central' => ['SupplierAuthController', 'landing'],
 
     // ===================================
     // ADMIN ROUTES
     // ===================================
     'GET /admin/dashboard' => ['AdminController', 'dashboard'],
-    
+    'GET /admin/planner' => ['AdminController', 'planner'],
+    'GET /admin/planner/html-editor' => ['AdminController', 'htmlEditor'],
+    'GET /admin/notifications' => ['AdminController', 'notifications'],
+
     // Users Management
     'GET /admin/users' => ['AdminController', 'users'],
     'GET /admin/users/edit' => ['AdminController', 'editUser'],
+    'POST /admin/users/store' => ['AdminController', 'storeUser'],
     'POST /admin/users/update' => ['AdminController', 'updateUser'],
+    'POST /admin/users/change-status' => ['AdminController', 'changeUserStatus'],
     'POST /admin/users/delete' => ['AdminController', 'deleteUser'],
 
     // Sellers Management
     'GET /admin/sellers' => ['AdminSellerController', 'index'],
     'GET /admin/sellers/view' => ['AdminSellerController', 'view'],
+    'GET /admin/sellers/verification-review' => ['AdminSellerController', 'verificationReview'],
+    'POST /admin/sellers/verification/approve' => ['AdminSellerController', 'verificationAction'],
     'GET /admin/sellers/edit' => ['AdminController', 'editSeller'],
     'POST /admin/sellers/update' => ['AdminController', 'updateSeller'],
     'POST /admin/sellers/suspend' => ['AdminSellerController', 'suspend'],
     'POST /admin/sellers/activate' => ['AdminSellerController', 'activate'],
+    'POST /admin/sellers/delete' => ['AdminSellerController', 'delete'],
 
     // Shops Management
     'GET /admin/shops' => ['AdminShopController', 'index'],
@@ -172,22 +175,6 @@ return [
     'POST /admin/categories/update' => ['CategoryController', 'update'],
     'POST /admin/categories/delete' => ['CategoryController', 'delete'],
 
-    // Vendors Management
-    'GET /admin/vendors' => ['AdminVendorController', 'index'],
-    'GET /admin/vendors/create' => ['AdminVendorController', 'create'],
-    'POST /admin/vendors/store' => ['AdminVendorController', 'store'],
-    'GET /admin/vendors/view' => ['AdminVendorController', 'view'],
-    'GET /admin/vendors/edit' => ['AdminVendorController', 'edit'],
-    'POST /admin/vendors/update' => ['AdminVendorController', 'update'],
-    'POST /admin/vendors/approve' => ['AdminVendorController', 'approve'],
-    'POST /admin/vendors/suspend' => ['AdminVendorController', 'suspend'],
-    'POST /admin/vendors/activate' => ['AdminVendorController', 'activate'],
-    'POST /admin/vendors/delete' => ['AdminVendorController', 'delete'],
-
-    // Vendor Invites
-    'GET /admin/vendors/invites' => ['AdminVendorController', 'invites'],
-    'POST /admin/vendors/generate-invite' => ['AdminVendorController', 'generateInvite'],
-
     // Email Templates Management
     'GET /admin/emails' => ['AdminEmailController', 'index'],
     'GET /admin/emails/edit' => ['AdminEmailController', 'edit'],
@@ -201,6 +188,15 @@ return [
     'GET /admin/products/edit' => ['ProductController', 'edit'],
     'POST /admin/products/update' => ['ProductController', 'update'],
     'POST /admin/products/delete' => ['ProductController', 'delete'],
+
+    // Sales Management
+    'GET /admin/sales' => ['AdminSalesController', 'index'],
+    'GET /admin/sales/create' => ['AdminSalesController', 'create'],
+    'POST /admin/sales/store' => ['AdminSalesController', 'store'],
+    'GET /admin/sales/edit' => ['AdminSalesController', 'edit'],
+    'POST /admin/sales/update' => ['AdminSalesController', 'update'],
+    'POST /admin/sales/end' => ['AdminSalesController', 'endSale'],
+    'GET /admin/sales/process-scheduled' => ['AdminSalesController', 'processScheduledSales'],
     'POST /admin/products/upload-images' => ['ProductController', 'uploadImages'],
     'POST /admin/products/delete-image' => ['ProductController', 'deleteImage'],
     'POST /admin/products/toggle-feature' => ['ProductController', 'toggleFeature'],
@@ -215,11 +211,85 @@ return [
     'POST /admin/products/update-stock' => ['ProductController', 'updateStock'],
     'POST /admin/products/restock' => ['ProductController', 'restock'],
     'GET /admin/products/stock/export' => ['ProductController', 'exportStock'],
+    'GET /admin/products/allocations' => ['ProductController', 'allocations'],
+    'GET /admin/products/stock-movements' => ['ProductController', 'stockMovements'],
+
+    // Business Accounts Management (Distribution Portal)
+    'GET /admin/business-accounts' => ['AdminBusinessController', 'index'],
+    'GET /admin/business-accounts/view' => ['AdminBusinessController', 'view'],
+    'POST /admin/business-accounts/suspend' => ['AdminBusinessController', 'suspend'],
+    'POST /admin/business-accounts/activate' => ['AdminBusinessController', 'activate'],
+    'POST /admin/business-accounts/update-tier' => ['AdminBusinessController', 'updateTier'],
+    'POST /admin/business-accounts/delete' => ['AdminBusinessController', 'delete'],
+
+    // Distribution Requests Management (Admin)
+    'GET /admin/distribution' => ['AdminDistributionController', 'index'],
+    'GET /admin/distribution/view' => ['AdminDistributionController', 'view'],
+    'POST /admin/distribution/update-prices' => ['AdminDistributionController', 'updatePrices'],
+    'POST /admin/distribution/create-invoice' => ['AdminDistributionController', 'createInvoice'],
+    'POST /admin/distribution/update-status' => ['AdminDistributionController', 'updateStatus'],
+    'POST /admin/distribution/approve' => ['AdminDistributionController', 'approve'],
+    'POST /admin/distribution/cancel' => ['AdminDistributionController', 'cancel'],
+    'POST /admin/distribution/resend-payment-link' => ['AdminDistributionController', 'resendPaymentLink'],
+    'POST /admin/distribution/start-procurement' => ['AdminDistributionController', 'startProcurement'],
+    'POST /admin/distribution/mark-in-transit' => ['AdminDistributionController', 'markInTransit'],
+    'POST /admin/distribution/mark-delivered' => ['AdminDistributionController', 'markDelivered'],
+
+    // Leads CRM
+    'GET /admin/leads' => ['AdminLeadsController', 'index'],
+    'GET /admin/leads/create' => ['AdminLeadsController', 'create'],
+    'POST /admin/leads/store' => ['AdminLeadsController', 'store'],
+    'GET /admin/leads/view' => ['AdminLeadsController', 'view'],
+    'GET /admin/leads/edit' => ['AdminLeadsController', 'edit'],
+    'POST /admin/leads/update' => ['AdminLeadsController', 'update'],
+    'POST /admin/leads/add-activity' => ['AdminLeadsController', 'addActivity'],
+    'POST /admin/leads/update-status' => ['AdminLeadsController', 'updateStatus'],
+    'POST /admin/leads/delete' => ['AdminLeadsController', 'delete'],
+
+    // Shipment Management (Admin - Phase 3)
+    'GET /admin/shipments' => ['AdminShipmentController', 'index'],
+    'GET /admin/shipments/view' => ['AdminShipmentController', 'view'],
+    'POST /admin/shipments/quote' => ['AdminShipmentController', 'createQuote'],
+    'POST /admin/shipments/status' => ['AdminShipmentController', 'updateStatus'],
+    'POST /admin/shipments/mark-paid' => ['AdminShipmentController', 'markPaid'],
+    'POST /admin/shipments/destination-status' => ['AdminShipmentController', 'updateDestinationStatus'],
+
+    // Supplier Management (Product Suppliers)
+    'GET /admin/suppliers' => ['SupplierController', 'index'],
+    'GET /admin/suppliers/create' => ['SupplierController', 'create'],
+    'POST /admin/suppliers/store' => ['SupplierController', 'store'],
+    'GET /admin/suppliers/edit' => ['SupplierController', 'edit'],
+    'POST /admin/suppliers/update' => ['SupplierController', 'update'],
+    'POST /admin/suppliers/delete' => ['SupplierController', 'delete'],
+    'POST /admin/suppliers/send-invite' => ['SupplierController', 'sendInvite'],
+    'POST /admin/suppliers/resend-invite' => ['SupplierController', 'resendInvite'],
+    'POST /admin/suppliers/cancel-invite' => ['SupplierController', 'cancelInvite'],
+    'POST /admin/suppliers/delete-invite' => ['SupplierController', 'deleteInvite'],
+    'POST /admin/suppliers/reset-password' => ['SupplierController', 'resetPassword'],
+
+    // Purchase Orders
+    'GET /admin/purchase-orders' => ['PurchaseOrderController', 'index'],
+    'GET /admin/purchase-orders/create' => ['PurchaseOrderController', 'create'],
+    'POST /admin/purchase-orders/store' => ['PurchaseOrderController', 'store'],
+    'GET /admin/purchase-orders/view' => ['PurchaseOrderController', 'view'],
+    'GET /admin/purchase-orders/receive' => ['PurchaseOrderController', 'receive'],
+    'POST /admin/purchase-orders/process-receiving' => ['PurchaseOrderController', 'processReceiving'],
+    'POST /admin/purchase-orders/update-status' => ['PurchaseOrderController', 'updateStatus'],
+
+    // Supplier Catalog Browser
+    'GET /admin/supplier-catalog' => ['SupplierCatalogController', 'browse'],
+    'POST /admin/supplier-catalog/add-to-draft' => ['SupplierCatalogController', 'addToDraft'],
+    'GET /admin/supplier-catalog/draft' => ['SupplierCatalogController', 'viewDraft'],
+    'POST /admin/supplier-catalog/update-draft-item' => ['SupplierCatalogController', 'updateDraftItem'],
+    'POST /admin/supplier-catalog/remove-draft-item' => ['SupplierCatalogController', 'removeDraftItem'],
+    'POST /admin/supplier-catalog/clear-draft' => ['SupplierCatalogController', 'clearDraft'],
+    'POST /admin/supplier-catalog/create-po-from-draft' => ['SupplierCatalogController', 'createPOFromDraft'],
+    'GET /admin/supplier-catalog/create-pos' => ['SupplierCatalogController', 'createPOs'],
 
     // Orders Management (Admin)
-    'GET /admin/orders' => ['OrderController', 'adminOrders'],
-    'GET /admin/orders/view' => ['OrderController', 'orderDetail'],
-    'POST /admin/orders/update-status' => ['OrderController', 'updateOrderStatus'],
+    'GET /admin/orders' => ['AdminOrdersController', 'index'],
+    'GET /admin/orders/view' => ['AdminOrdersController', 'view'],
+    'POST /admin/orders/update-status' => ['AdminOrdersController', 'updateStatus'],
     'POST /admin/orders/delete' => ['AdminOrdersController', 'delete'],
 
     // Admin Delivery Management Routes
@@ -236,6 +306,8 @@ return [
     'GET /admin/delivery/earnings' => ['AdminDeliveryController', 'earnings'],
     'GET /admin/delivery/driver-details' => ['AdminDeliveryController', 'driverDetails'],
     'POST /admin/delivery/mark-paid' => ['AdminDeliveryController', 'markPaid'],
+    'GET /admin/delivery/details' => ['AdminDeliveryController', 'deliveryDetails'],
+    'POST /admin/delivery/assign-driver' => ['AdminDeliveryController', 'assignDriverToDelivery'],
 
     // Reports
     'GET /admin/reports' => ['ReportsController', 'index'],
@@ -251,7 +323,9 @@ return [
     // Settings
     'GET /admin/settings' => ['SettingsController', 'index'],
     'POST /admin/settings/update' => ['SettingsController', 'update'],
-    
+    'GET /admin/settings/payment' => ['SettingsController', 'payment'],
+    'POST /admin/settings/payment/save' => ['SettingsController', 'savePayment'],
+
     // CMS (Content Management)
     'GET /admin/cms' => ['CmsController', 'index'],
     'GET /admin/cms/edit' => ['CmsController', 'edit'],
@@ -260,6 +334,11 @@ return [
     'GET /admin/cms/create' => ['CmsController', 'create'],
     'POST /admin/cms/create' => ['CmsController', 'create'],
     'POST /admin/cms/delete' => ['CmsController', 'delete'],
+
+    // Homepage Settings (NEW!)
+    'GET /admin/homepage' => ['AdminHomepageController', 'index'],
+    'POST /admin/homepage/update' => ['AdminHomepageController', 'update'],
+    'POST /admin/homepage/reset' => ['AdminHomepageController', 'reset'],
 
     // Hero Sliders Management
     'GET /admin/sliders' => ['SliderController', 'index'],
@@ -311,7 +390,11 @@ return [
     'POST /seller/shop/store' => ['ShopController', 'store'],
     'GET /seller/shop/settings' => ['ShopController', 'settings'],
     'POST /seller/shop/update' => ['ShopController', 'update'],
-    
+
+    // Seller Verification
+    'GET /seller/verification' => ['SellerVerificationController', 'index'],
+    'POST /seller/verification/submit' => ['SellerVerificationController', 'submit'],
+
     // Inventory Management
     'GET /seller/inventory' => ['InventoryController', 'index'],
     'GET /seller/inventory/add' => ['InventoryController', 'add'],
@@ -338,6 +421,102 @@ return [
     'POST /delivery/reject' => ['DeliveryController', 'rejectDelivery'],
     'POST /delivery/status' => ['DeliveryController', 'updateStatus'],
     'POST /delivery/availability' => ['DeliveryController', 'updateAvailability'],
+
+    // ===================================
+    // SUPPLIER PORTAL ROUTES
+    // ===================================
+
+    // Supplier Authentication
+    'GET /supplier/login' => ['SupplierAuthController', 'login'],
+    'POST /supplier/login' => ['SupplierAuthController', 'processLogin'],
+    'GET /supplier/logout' => ['SupplierAuthController', 'logout'],
+    'GET /supplier/accept-invite' => ['SupplierAuthController', 'acceptInvite'],
+    'POST /supplier/complete-registration' => ['SupplierAuthController', 'completeRegistration'],
+
+    // Supplier Dashboard
+    'GET /supplier/dashboard' => ['SupplierAuthController', 'dashboard'],
+
+    // Supplier Settings
+    'GET /supplier/settings' => ['SupplierAuthController', 'settings'],
+    'POST /supplier/update-password' => ['SupplierAuthController', 'updatePassword'],
+
+    // Supplier Product Management
+    'GET /supplier/products' => ['SupplierProductController', 'index'],
+    'GET /supplier/products/create' => ['SupplierProductController', 'create'],
+    'POST /supplier/products/store' => ['SupplierProductController', 'store'],
+    'GET /supplier/products/edit' => ['SupplierProductController', 'edit'],
+    'POST /supplier/products/update' => ['SupplierProductController', 'update'],
+    'POST /supplier/products/delete' => ['SupplierProductController', 'delete'],
+
+    // Supplier Orders
+    'GET /supplier/orders' => ['SupplierProductController', 'orders'],
+    'GET /supplier/orders/view' => ['SupplierProductController', 'viewOrder'],
+    'POST /supplier/orders/accept' => ['SupplierProductController', 'acceptOrder'],
+    'POST /supplier/orders/decline' => ['SupplierProductController', 'declineOrder'],
+
+    // Supplier Analytics
+    'GET /supplier/analytics' => ['SupplierProductController', 'analytics'],
+
+    // ===================================
+    // DISTRIBUTION PORTAL ROUTES
+    // ===================================
+
+    // Distribution Landing & Auth
+    'GET /distribution' => ['DistributionAuthController', 'landing'],
+    'GET /distribution/login' => ['DistributionAuthController', 'showLogin'],
+    'POST /distribution/login' => ['DistributionAuthController', 'login'],
+    'GET /distribution/register' => ['DistributionAuthController', 'showRegister'],
+    'POST /distribution/register' => ['DistributionAuthController', 'register'],
+    'GET /distribution/logout' => ['DistributionAuthController', 'logout'],
+
+    // Distribution Dashboard
+    'GET /distribution/dashboard' => ['DistributionAuthController', 'dashboard'],
+
+    // Distribution Procurement Requests (Phase 2)
+    'GET /distribution/requests' => ['DistributionRequestController', 'index'],
+    'GET /distribution/requests/create' => ['DistributionRequestController', 'create'],
+    'POST /distribution/requests/store' => ['DistributionRequestController', 'store'],
+    'GET /distribution/requests/show' => ['DistributionRequestController', 'show'],
+    'GET /distribution/requests/edit' => ['DistributionRequestController', 'edit'],
+    'POST /distribution/requests/update' => ['DistributionRequestController', 'update'],
+    'POST /distribution/requests/submit' => ['DistributionRequestController', 'submit'],
+    'POST /distribution/requests/cancel' => ['DistributionRequestController', 'cancel'],
+    'POST /distribution/requests/delete' => ['DistributionRequestController', 'delete'],
+
+    // Distribution Shipments (Phase 3 - Outbound Distribution)
+    'GET /distribution/shipments' => ['DistributionShipmentController', 'index'],
+    'GET /distribution/shipments/create' => ['DistributionShipmentController', 'create'],
+    'POST /distribution/shipments/store' => ['DistributionShipmentController', 'store'],
+    'GET /distribution/shipments/show' => ['DistributionShipmentController', 'show'],
+    'GET /distribution/shipments/edit' => ['DistributionShipmentController', 'edit'],
+    'POST /distribution/shipments/update' => ['DistributionShipmentController', 'update'],
+    'POST /distribution/shipments/submit' => ['DistributionShipmentController', 'submit'],
+    'POST /distribution/shipments/cancel' => ['DistributionShipmentController', 'cancel'],
+    'GET /distribution/shipments/track' => ['DistributionShipmentController', 'track'],
+
+    // Distribution Payment Flow
+    'GET /distribution/pay' => ['DistributionPaymentController', 'showPaymentPage'],
+    'POST /distribution/pay/create-session' => ['DistributionPaymentController', 'createCheckoutSession'],
+    'GET /distribution/pay/success' => ['DistributionPaymentController', 'paymentSuccess'],
+    'POST /distribution/pay/webhook' => ['DistributionPaymentController', 'webhook'],
+
+    // Distribution Documents (PDF Downloads)
+    'GET /distribution/documents/invoice' => ['DistributionDocumentController', 'invoice'],
+    'GET /distribution/documents/purchase-order' => ['DistributionDocumentController', 'purchaseOrder'],
+    'GET /distribution/documents/sales-order' => ['DistributionDocumentController', 'salesOrder'],
+
+    // Distribution Recurring Routes (Phase 3)
+    'GET /distribution/routes' => ['DistributionRouteController', 'index'],
+    'GET /distribution/routes/create' => ['DistributionRouteController', 'create'],
+    'POST /distribution/routes/store' => ['DistributionRouteController', 'store'],
+    'GET /distribution/routes/show' => ['DistributionRouteController', 'show'],
+    'GET /distribution/routes/edit' => ['DistributionRouteController', 'edit'],
+    'POST /distribution/routes/update' => ['DistributionRouteController', 'update'],
+    'POST /distribution/routes/pause' => ['DistributionRouteController', 'pause'],
+    'POST /distribution/routes/resume' => ['DistributionRouteController', 'resume'],
+    'POST /distribution/routes/cancel' => ['DistributionRouteController', 'cancel'],
+    'GET /distribution/routes/draft' => ['DistributionRouteController', 'viewDraft'],
+    'POST /distribution/routes/approve' => ['DistributionRouteController', 'approveDraft'],
 
     // ===================================
     // UNIFIED DASHBOARD ROUTES
@@ -383,4 +562,57 @@ return [
     // ===================================
     'POST /api/newsletter/subscribe' => ['NewsletterController', 'subscribe'],
     'GET /api/search/suggestions' => ['SearchController', 'suggestions'],
+
+    // ===================================
+    // PLANNER API ROUTES
+    // ===================================
+    // Notes
+    'GET /api/planner/notes' => ['Api\\PlannerNotesController', 'index'],
+    'POST /api/planner/notes' => ['Api\\PlannerNotesController', 'store'],
+    'DELETE /api/planner/notes' => ['Api\\PlannerNotesController', 'destroy'],
+    'GET /api/planner/notes/comments' => ['Api\\PlannerNotesController', 'getComments'],
+    'POST /api/planner/notes/comments' => ['Api\\PlannerNotesController', 'storeComment'],
+
+    // Todos
+    'GET /api/planner/todos' => ['Api\\PlannerTodosController', 'index'],
+    'POST /api/planner/todos' => ['Api\\PlannerTodosController', 'store'],
+    'PUT /api/planner/todos' => ['Api\\PlannerTodosController', 'toggleComplete'],
+    'DELETE /api/planner/todos' => ['Api\\PlannerTodosController', 'destroy'],
+    'GET /api/planner/todos/comments' => ['Api\\PlannerTodosController', 'getComments'],
+    'POST /api/planner/todos/comments' => ['Api\\PlannerTodosController', 'storeComment'],
+
+    // Documents
+    'GET /api/planner/documents' => ['Api\\PlannerDocumentsController', 'index'],
+    'POST /api/planner/documents' => ['Api\\PlannerDocumentsController', 'store'],
+    'DELETE /api/planner/documents' => ['Api\\PlannerDocumentsController', 'destroy'],
+    'GET /api/planner/documents/view' => ['Api\\PlannerDocumentsController', 'view'],
+    'GET /api/planner/documents/download' => ['Api\\PlannerDocumentsController', 'download'],
+
+    // Templates
+    'GET /api/planner/templates' => ['Api\\PlannerTemplatesController', 'index'],
+    'GET /api/planner/templates/show' => ['Api\\PlannerTemplatesController', 'show'],
+    'POST /api/planner/templates' => ['Api\\PlannerTemplatesController', 'store'],
+    'PUT /api/planner/templates' => ['Api\\PlannerTemplatesController', 'update'],
+    'DELETE /api/planner/templates' => ['Api\\PlannerTemplatesController', 'destroy'],
+    'GET /api/planner/templates/revisions' => ['Api\\PlannerTemplatesController', 'getRevisions'],
+    'GET /api/planner/templates/revision' => ['Api\\PlannerTemplatesController', 'getRevision'],
+    'POST /api/planner/templates/restore' => ['Api\\PlannerTemplatesController', 'restoreRevision'],
+    'GET /api/planner/templates/categories' => ['Api\\PlannerTemplatesController', 'getCategories'],
+
+    // PDF Generation
+    'POST /api/pdf/generate' => ['Api\\PdfController', 'generate'],
+
+    // Activity
+    'GET /api/planner/activity' => ['Api\\PlannerActivityController', 'index'],
+
+    // Users
+    'GET /api/planner/users' => ['Api\\PlannerUsersController', 'index'],
+
+    // ===================================
+    // ADMIN NOTIFICATIONS API
+    // ===================================
+    'GET /api/admin/notifications' => ['Api\\NotificationsController', 'index'],
+    'GET /api/admin/notifications/count' => ['Api\\NotificationsController', 'count'],
+    'POST /api/admin/notifications/mark-read' => ['Api\\NotificationsController', 'markRead'],
+    'POST /api/admin/notifications/mark-all-read' => ['Api\\NotificationsController', 'markAllRead'],
 ];
