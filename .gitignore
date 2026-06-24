@@ -1,5 +1,6 @@
 # IDE and Editor
-.vscode/
+.vscode/sftp.json
+.vscode/*.log
 .idea/
 *.swp
 *.swo
@@ -36,6 +37,22 @@ ocsapp_credentials.csv
 # Claude Code
 .claude/agents/
 .claude/settings.local.json
+
+# Editor/manual backup files
+*.bak
+*.bak*
+*.backup
+*.backup*
+
+# Local dev test/diagnostic scripts (buyer views)
+app/Views/buyer/simple_db_test.php
+app/Views/buyer/test-db-update.php
+app/Views/buyer/test-routing-settings.php
+app/Views/buyer/test_products.php
+app/Views/buyer/verify-controllers.php
+
+# Vendor doc containing an example Stripe key (trips GitHub secret scanning)
+vendor/stripe/stripe-php/README.md
 
 # Temporary system files
 nul
