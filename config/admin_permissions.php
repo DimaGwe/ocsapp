@@ -25,7 +25,6 @@ return [
         // Dashboard & Analytics
         'dashboard' => ['super_admin', 'admin', 'admin_staff'],
         'planner' => ['super_admin', 'admin'],
-        'html-editor' => ['super_admin', 'admin'],
         'analytics' => ['super_admin', 'admin'],
 
         // User Management
@@ -35,9 +34,17 @@ return [
         'distribution' => ['super_admin', 'admin'],
         'shipments' => ['super_admin', 'admin', 'admin_staff'],
         'delivery' => ['super_admin', 'admin', 'admin_staff'],
+        'driver-activity' => ['super_admin', 'admin'],
         'shops' => ['super_admin', 'admin', 'admin_staff'],
         'ocs-store' => ['super_admin', 'admin'],
-        'leads' => ['super_admin', 'admin'],
+        'waitlist'       => ['super_admin', 'admin'],
+        'leads'          => ['super_admin', 'admin'],
+        'marketing'      => ['super_admin', 'admin'],
+        'content-creator'=> ['super_admin', 'admin'],
+        'content-library'=> ['super_admin', 'admin'],
+        'support'        => ['super_admin', 'admin', 'admin_staff'],
+        'agent-dashboard'=> ['super_admin', 'admin', 'admin_staff'],
+        'call-log'       => ['super_admin', 'admin', 'admin_staff'],
 
         // Catalog
         'products' => ['super_admin', 'admin', 'admin_staff'],
@@ -45,6 +52,8 @@ return [
         'suppliers' => ['super_admin', 'admin'],
         'purchase-orders' => ['super_admin', 'admin'],
         'supplier-catalog' => ['super_admin', 'admin'],
+        'payables' => ['super_admin', 'admin'],
+        'receivables' => ['super_admin', 'admin'],
         'categories' => ['super_admin', 'admin'],
         'sales' => ['super_admin', 'admin'],
 
@@ -57,6 +66,7 @@ return [
         'ads' => ['super_admin', 'admin'],
         'affiliates' => ['super_admin', 'admin'],
         'coupons' => ['super_admin', 'admin'],
+        'newsletter' => ['super_admin', 'admin'],
 
         // System (Super Admin Only)
         'settings' => ['super_admin'],
@@ -68,6 +78,7 @@ return [
         'legal' => ['super_admin'],
         'sliders' => ['super_admin'],
         'emails' => ['super_admin'],
+        'email-log' => ['super_admin', 'admin'],
         'translations' => ['super_admin'],
 
         // Notifications (all admin tiers)
@@ -87,6 +98,7 @@ return [
         '/admin/legal' => ['super_admin'],
         '/admin/sliders' => ['super_admin'],
         '/admin/emails' => ['super_admin'],
+        '/admin/email-log' => ['super_admin', 'admin'],
         '/admin/translations' => ['super_admin'],
 
         // User management - super_admin only
@@ -98,9 +110,11 @@ return [
         '/admin/purchase-orders' => ['super_admin', 'admin'],
         '/admin/supplier-catalog' => ['super_admin', 'admin'],
         '/admin/distribution' => ['super_admin', 'admin'],
+        '/admin/receivables' => ['super_admin', 'admin'],
 
         // Planner & analytics - admin+ only
         '/admin/planner' => ['super_admin', 'admin'],
+        '/admin/planner/me' => ['super_admin', 'admin'],
         '/admin/visitor-analytics' => ['super_admin', 'admin'],
 
         // Marketing - admin+ only
@@ -108,6 +122,7 @@ return [
         '/admin/ads' => ['super_admin', 'admin'],
         '/admin/affiliates' => ['super_admin', 'admin'],
         '/admin/coupons' => ['super_admin', 'admin'],
+        '/admin/newsletter' => ['super_admin', 'admin'],
 
         // Categories & sales management - admin+ only
         '/admin/categories' => ['super_admin', 'admin'],
@@ -119,6 +134,9 @@ return [
 
         // Leads CRM - admin+ only
         '/admin/leads' => ['super_admin', 'admin'],
+
+        // Driver Activity Log - admin+ only
+        '/admin/driver-activity' => ['super_admin', 'admin'],
     ],
 
     // View-only restrictions for admin_staff
@@ -141,6 +159,38 @@ return [
         ],
     ],
 
+    // Department-based menu access for admin_staff users
+    // Only applies when role = admin_staff AND department is set
+    // super_admin and admin roles bypass department filtering entirely
+    'department_menu_access' => [
+        'ops' => [
+            'dashboard', 'planner', 'notifications',
+            'sellers', 'shops',
+            'orders', 'shipments', 'delivery', 'distribution',
+            'products', 'stock', 'supplier-catalog',
+            'support', 'agent-dashboard', 'call-log',
+        ],
+        'finance' => [
+            'dashboard', 'planner', 'notifications',
+            'orders', 'payables', 'receivables',
+            'sales', 'reports', 'analytics',
+        ],
+        'tech' => [
+            'dashboard', 'planner', 'notifications',
+            'settings', 'email-log',
+        ],
+        'support' => [
+            'dashboard', 'notifications',
+            'support', 'agent-dashboard', 'call-log',
+            'orders',
+        ],
+        'logistics' => [
+            'dashboard', 'planner', 'notifications',
+            'orders', 'shipments', 'delivery', 'distribution',
+        ],
+        'management' => [], // empty = no restriction, sees everything role allows
+    ],
+
     // Menu section labels (for grouping in sidebar)
     'menu_sections' => [
         'main' => [
@@ -153,7 +203,7 @@ return [
         ],
         'operations' => [
             'label' => 'Operations',
-            'items' => ['orders', 'shipments', 'delivery', 'distribution'],
+            'items' => ['orders', 'shipments', 'delivery', 'distribution', 'driver-activity'],
         ],
         'catalog' => [
             'label' => 'Catalog',

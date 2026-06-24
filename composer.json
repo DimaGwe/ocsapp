@@ -4,11 +4,17 @@
     "type": "project",
     "require": {
         "php": ">=7.4",
-        "phpmailer/phpmailer": "^6.8"
+        "phpmailer/phpmailer": "^6.8",
+        "dompdf/dompdf": "^3.1",
+        "stripe/stripe-php": "^19.3"
     },
     "autoload": {
         "psr-4": {
             "App\\": "app/"
-        }
+        },
+        "files": [
+            "app/Helpers/functions.php",
+            "app/Helpers/translation_helper.php"
+        ]
     }
 }

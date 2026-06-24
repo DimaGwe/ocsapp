@@ -9,43 +9,46 @@ return [
     // Test mode - set to false for production
     'test_mode' => false,
 
-    // SMTP Configuration (Hostinger)
+    // SMTP Configuration - credentials loaded from .env
     'smtp' => [
-        'host' => 'smtp.hostinger.com',
-        'port' => 465,
-        'encryption' => 'ssl', // SSL on port 465
-        'username' => 'info@ocsapp.ca',
-        'password' => 'JdF$ocs_2026',
-        'from_address' => 'info@ocsapp.ca',
-        'from_name' => 'OCSAPP',
+        'host' => env('MAIL_HOST', 'smtp.hostinger.com'),
+        'port' => (int) env('MAIL_PORT', 465),
+        'encryption' => env('MAIL_ENCRYPTION', 'ssl'),
+        'username' => env('MAIL_USERNAME', ''),
+        'password' => env('MAIL_PASSWORD', ''),
+        'from_address' => env('MAIL_FROM_ADDRESS', ''),
+        'from_name' => env('MAIL_FROM_NAME', 'OCSAPP Marketplace'),
     ],
 
     // Default settings
     'defaults' => [
         'charset' => 'UTF-8',
-        'reply_to' => 'info@ocsapp.ca', // Now using the actual Hostinger email
+        'reply_to' => 'info@ocsapp.ca', // Professional email address
     ],
 
     // Email templates path
     'templates_path' => __DIR__ . '/../app/Views/emails/',
 
+    // Admin email for notifications
+    'admin_email' => 'info@ocsapp.ca',
+
     // Email notifications settings
     'notifications' => [
         'order_confirmation' => [
             'enabled' => true,
-            'subject' => 'Order Confirmation - Order #{order_number}',
+            'subject' => 'Commande confirmée #{order_number} / Order Confirmed #{order_number}',
         ],
         'order_status_update' => [
             'enabled' => true,
-            'subject' => 'Order Update - Order #{order_number}',
+            'subject' => 'Mise à jour de commande #{order_number} / Order Update #{order_number}',
         ],
         'order_cancelled' => [
             'enabled' => true,
-            'subject' => 'Order Cancelled - Order #{order_number}',
+            'subject' => 'Commande annulée #{order_number} / Order Cancelled #{order_number}',
         ],
         'low_stock_alert' => [
             'enabled' => true,
-            'subject' => 'Low Stock Alert - {product_name}',
+            'subject' => 'Alerte stock faible — {product_name} / Low Stock Alert — {product_name}',
         ],
     ],
 
