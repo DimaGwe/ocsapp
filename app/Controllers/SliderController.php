@@ -3,9 +3,16 @@
 namespace App\Controllers;
 
 use Database;
+use App\Middlewares\AuthMiddleware;
 
 class SliderController
 {
+    public function __construct()
+    {
+        // Super admin only - hero sliders are content management
+        AuthMiddleware::superAdmin();
+    }
+
     /**
      * Display all hero sliders
      */

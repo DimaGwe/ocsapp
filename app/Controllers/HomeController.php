@@ -189,7 +189,9 @@ class HomeController {
                        b.slug as brand_slug,
                        c.name as category_name,
                        c.slug as category_slug,
-                       COALESCE(SUM(oi.quantity), 0) as total_sold
+                       si.stock_quantity,
+                       COALESCE(SUM(oi.quantity), 0) as total_sold,
+                       0 as average_rating
                 FROM products p
                 INNER JOIN shop_inventory si ON p.id = si.product_id AND si.shop_id = 1
                 LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
@@ -202,7 +204,7 @@ class HomeController {
                     AND o.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
                 WHERE p.status = 'active'
                   AND si.status = 'active'
-                GROUP BY p.id
+                GROUP BY p.id, si.stock_quantity
                 HAVING total_sold > 0
                 ORDER BY total_sold DESC, p.created_at DESC
                 LIMIT 24
@@ -245,11 +247,16 @@ class HomeController {
                        p.compare_at_price,
                        pi.image_path as image,
                        b.name as brand_name,
-                       b.slug as brand_slug
+                       b.slug as brand_slug,
+                       c.name as category_name,
+                       si.stock_quantity,
+                       0 as average_rating
                 FROM products p
                 INNER JOIN shop_inventory si ON p.id = si.product_id AND si.shop_id = 1
                 LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
                 LEFT JOIN brands b ON p.brand_id = b.id
+                LEFT JOIN product_categories pc ON p.id = pc.product_id AND pc.is_primary = 1
+                LEFT JOIN categories c ON pc.category_id = c.id
                 WHERE p.show_on_home = 1
                   AND p.status = 'active'
                   AND si.status = 'active'
@@ -286,15 +293,21 @@ class HomeController {
             // 3. SALE PRODUCTS (20% OFF Banner)
             // ============================================
             $stmt = $db->query("
-                SELECT p.*, 
+                SELECT p.*,
                        p.sale_price as price,
                        p.base_price as compare_at_price,
                        p.sale_percentage,
                        pi.image_path as image,
-                       b.name as brand_name
+                       b.name as brand_name,
+                       c.name as category_name,
+                       si.stock_quantity,
+                       0 as average_rating
                 FROM products p
                 LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
                 LEFT JOIN brands b ON p.brand_id = b.id
+                LEFT JOIN product_categories pc ON p.id = pc.product_id AND pc.is_primary = 1
+                LEFT JOIN categories c ON pc.category_id = c.id
+                LEFT JOIN shop_inventory si ON p.id = si.product_id AND si.shop_id = 1
                 WHERE p.is_on_sale = 1
                   AND p.sale_price IS NOT NULL
                   AND p.status = 'active'
@@ -309,22 +322,26 @@ class HomeController {
             }
             
             // ============================================
-            // 4. TOP VENDORS (Replaced Brands)
+            // 4. TOP SHOPS (Based on active products) - NOT vendors!
+            // NOTE: These are shops, not vendors. Vendors = suppliers/manufacturers
             // ============================================
             $stmt = $db->query("
-                SELECT v.*,
-                       COUNT(DISTINCT vp.product_id) as product_count,
-                       MIN(p.base_price) as min_price
-                FROM vendors v
-                INNER JOIN vendor_products vp ON v.id = vp.vendor_id AND vp.is_active = 1
-                INNER JOIN products p ON vp.product_id = p.id AND p.status = 'active'
-                WHERE v.status = 'active' AND v.is_approved = 1
-                GROUP BY v.id
+                SELECT
+                    s.id,
+                    s.name as company_name,
+                    s.slug,
+                    s.logo,
+                    COUNT(DISTINCT p.id) as product_count,
+                    MIN(p.base_price) as min_price
+                FROM shops s
+                INNER JOIN products p ON p.seller_id = s.seller_id AND p.status = 'active'
+                WHERE s.is_active = 1 AND s.is_approved = 1
+                GROUP BY s.id
                 HAVING product_count > 0
                 ORDER BY product_count DESC
                 LIMIT 12
             ");
-            $topVendors = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $topVendors = $stmt->fetchAll(\PDO::FETCH_ASSOC); // TODO: Rename variable to $topShops
             
             // ============================================
             // 5. FEATURED CATEGORIES (with product count and images)
@@ -344,9 +361,8 @@ class HomeController {
                 WHERE c.is_active = 1
                   AND c.parent_id IS NULL
                 GROUP BY c.id
-                HAVING product_count > 0
                 ORDER BY product_count DESC, c.sort_order ASC
-                LIMIT 8
+                LIMIT 12
             ");
             $categories = $stmt->fetchAll(\PDO::FETCH_ASSOC);
             
@@ -568,49 +584,25 @@ $stmt = $db->query("
 $heroSliders = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
 // ============================================
-// PROMO BANNER - Get active promo banner and selected products
+// PROMO BANNER - Get active promo banner settings (products come from Sales Management automatically)
 // ============================================
 $promoBanner = null;
-$promoProducts = [];
 
 try {
-    // Get first active promo banner
+    // Get first active promo banner - only controls appearance/messaging (bilingual)
+    // Products are automatically shown from sale products in the view
     $stmt = $db->query("
-        SELECT id, title, title_fr, subtitle, subtitle_fr, discount_percentage, selected_products, button_text, button_text_fr, button_url
+        SELECT id, title_en, title_fr, subtitle_en, subtitle_fr,
+               discount_badge_en, discount_badge_fr, button_text_en, button_text_fr, button_url
         FROM promo_banners
         WHERE status = 'active'
         ORDER BY sort_order ASC, id ASC
         LIMIT 1
     ");
     $promoBanner = $stmt->fetch(\PDO::FETCH_ASSOC);
-
-    // If banner exists and has selected products, fetch them
-    if ($promoBanner && !empty($promoBanner['selected_products'])) {
-        $selectedProductIds = json_decode($promoBanner['selected_products'], true);
-
-        if (!empty($selectedProductIds) && is_array($selectedProductIds)) {
-            $placeholders = str_repeat('?,', count($selectedProductIds) - 1) . '?';
-
-            $stmt = $db->prepare("
-                SELECT
-                    p.id,
-                    p.name,
-                    p.slug,
-                    pi.image_path as image
-                FROM products p
-                LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
-                WHERE p.id IN ($placeholders)
-                  AND p.status = 'active'
-                ORDER BY FIELD(p.id, $placeholders)
-            ");
-            $stmt->execute(array_merge($selectedProductIds, $selectedProductIds));
-            $promoProducts = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        }
-    }
 } catch (\PDOException $e) {
     logger("Promo banner fetch error: " . $e->getMessage(), 'info');
     $promoBanner = null;
-    $promoProducts = [];
 }
 
 // ============================================
@@ -618,11 +610,10 @@ try {
 // ============================================
 view('buyer.home', [
     'heroSliders' => $heroSliders,  // NEW! Hero sliders from database
-    'promoBanner' => $promoBanner,  // NEW! Active promo banner
-    'promoProducts' => $promoProducts,  // NEW! Selected products for promo
+    'promoBanner' => $promoBanner,  // NEW! Active promo banner (controls appearance only)
     'mostSellingProducts' => $mostSellingProducts,
     'featuredProducts' => $featuredProducts,
-    'saleProducts' => $saleProducts,
+    'saleProducts' => $saleProducts,  // Used for promo banner product images
     'topVendors' => $topVendors,  // UPDATED: Was topBrands
     'categories' => $categories,
     'groceryStoreShops' => $groceryStoreShops,  // NEW!
@@ -685,11 +676,16 @@ view('buyer.home', [
                        p.compare_at_price,
                        pi.image_path as image,
                        b.name as brand_name,
-                       b.slug as brand_slug
+                       b.slug as brand_slug,
+                       c.name as category_name,
+                       si.stock_quantity,
+                       0 as average_rating
                 FROM products p
                 INNER JOIN shop_inventory si ON p.id = si.product_id AND si.shop_id = 1
                 LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
                 LEFT JOIN brands b ON p.brand_id = b.id
+                LEFT JOIN product_categories pc ON p.id = pc.product_id AND pc.is_primary = 1
+                LEFT JOIN categories c ON pc.category_id = c.id
                 WHERE p.show_on_home = 1
                   AND p.status = 'active'
                   AND si.status = 'active'
@@ -815,7 +811,7 @@ view('buyer.home', [
             $stmt->execute([$category['id']]);
             $products = $stmt->fetchAll();
             
-            view('buyer.category-single', [
+            view('buyer.category-detail', [
                 'category' => $category,
                 'products' => $products,
             ]);
@@ -1110,28 +1106,37 @@ view('buyer.home', [
             $stmt->execute([$shop['id']]);
             $categories = $stmt->fetchAll(\PDO::FETCH_ASSOC);
             
-            // Get shop reviews (if table exists)
+            // Get shop reviews
             $reviews = [];
             try {
                 $stmt = $db->prepare("
                     SELECT r.*,
-                           u.name as user_name
-                    FROM reviews r
+                           CONCAT(u.first_name, ' ', u.last_name) as user_name
+                    FROM shop_reviews r
                     LEFT JOIN users u ON r.user_id = u.id
-                    WHERE r.shop_id = ?
+                    WHERE r.shop_id = ? AND r.is_approved = 1
                     ORDER BY r.created_at DESC
                     LIMIT 10
                 ");
                 $stmt->execute([$shop['id']]);
                 $reviews = $stmt->fetchAll(\PDO::FETCH_ASSOC);
             } catch (\PDOException $e) {
-                // Reviews table doesn't exist yet
-                logger("Reviews error: " . $e->getMessage(), 'info');
+                logger("Shop reviews error: " . $e->getMessage(), 'info');
             }
-            
+
+            // Get shop policies
+            $shopPolicies = [];
+            try {
+                $stmt = $db->prepare("SELECT * FROM shop_policies WHERE shop_id = ? LIMIT 1");
+                $stmt->execute([$shop['id']]);
+                $shopPolicies = $stmt->fetch(\PDO::FETCH_ASSOC) ?: [];
+            } catch (\PDOException $e) {
+                logger("Shop policies error: " . $e->getMessage(), 'info');
+            }
+
             // Get current location
             $currentLocation = $_SESSION['user_location'] ?? env('DEFAULT_LOCATION', 'Santo Domingo');
-            
+
             // Get cart count
             $cartCount = 0;
             if (isset($_SESSION['cart']) && is_array($_SESSION['cart'])) {
@@ -1139,13 +1144,14 @@ view('buyer.home', [
                     $cartCount += $item['quantity'] ?? 0;
                 }
             }
-            
+
             view('buyer.shop-single', [
                 'shop' => $shop,
                 'shopHours' => $shopHours,
                 'products' => $products,
                 'categories' => $categories,
                 'reviews' => $reviews,
+                'shopPolicies' => $shopPolicies,
                 'currentLocation' => $currentLocation,
                 'cartCount' => $cartCount,
             ]);
@@ -1154,6 +1160,178 @@ view('buyer.home', [
             logger("Shop page error: " . $e->getMessage(), 'error');
             setFlash('error', 'Error loading shop');
             redirect(url('shops'));
+        }
+    }
+
+    public function submitReview($slug = null): void {
+        if (!verifyCsrfForApi()) {
+            jsonResponse(['success' => false, 'message' => 'Invalid request'], 403);
+            return;
+        }
+        if (!isLoggedIn()) {
+            jsonResponse(['success' => false, 'message' => 'Login required', 'login_required' => true], 401);
+            return;
+        }
+
+        $rating = (int) post('rating', 0);
+        $comment = trim(post('comment', ''));
+
+        if ($rating < 1 || $rating > 5) {
+            jsonResponse(['success' => false, 'message' => 'Rating must be between 1 and 5'], 422);
+            return;
+        }
+
+        try {
+            $db = \Database::getConnection();
+
+            $stmt = $db->prepare("SELECT id FROM shops WHERE slug = ? AND is_active = 1 AND is_approved = 1 LIMIT 1");
+            $stmt->execute([$slug]);
+            $shop = $stmt->fetch();
+
+            if (!$shop) {
+                jsonResponse(['success' => false, 'message' => 'Shop not found'], 404);
+                return;
+            }
+
+            // One review per user per shop
+            $stmt = $db->prepare("SELECT id FROM shop_reviews WHERE shop_id = ? AND user_id = ? LIMIT 1");
+            $stmt->execute([$shop['id'], userId()]);
+            if ($stmt->fetch()) {
+                $fr = ($_SESSION['language'] ?? 'en') === 'fr';
+                jsonResponse(['success' => false, 'message' => $fr
+                    ? 'Vous avez deja soumis un avis pour cette boutique.'
+                    : 'You have already reviewed this shop.'], 409);
+                return;
+            }
+
+            $stmt = $db->prepare("INSERT INTO shop_reviews (shop_id, user_id, rating, comment, is_approved, created_at) VALUES (?, ?, ?, ?, 0, NOW())");
+            $stmt->execute([$shop['id'], userId(), $rating, $comment ?: null]);
+
+            // Recalculate aggregate (approved reviews only)
+            $db->prepare("
+                UPDATE shops s
+                SET reviews_count = (SELECT COUNT(*) FROM shop_reviews WHERE shop_id = s.id AND is_approved = 1),
+                    average_rating = COALESCE((SELECT AVG(rating) FROM shop_reviews WHERE shop_id = s.id AND is_approved = 1), 0)
+                WHERE s.id = ?
+            ")->execute([$shop['id']]);
+
+            $fr = ($_SESSION['language'] ?? 'en') === 'fr';
+            jsonResponse(['success' => true, 'message' => $fr
+                ? 'Merci! Votre avis est en attente de validation.'
+                : 'Thank you! Your review is pending approval.']);
+        } catch (\PDOException $e) {
+            logger("submitReview error: " . $e->getMessage(), 'error');
+            jsonResponse(['success' => false, 'message' => 'Server error'], 500);
+        }
+    }
+
+    public function contactShop($slug = null): void {
+        if (!verifyCsrfForApi()) {
+            jsonResponse(['success' => false, 'message' => 'Invalid request'], 403);
+            return;
+        }
+
+        $name = trim(post('name', ''));
+        $email = trim(post('email', ''));
+        $message = trim(post('message', ''));
+
+        if (!$name || !$email || !$message) {
+            jsonResponse(['success' => false, 'message' => 'All fields are required'], 422);
+            return;
+        }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            jsonResponse(['success' => false, 'message' => 'Invalid email address'], 422);
+            return;
+        }
+
+        try {
+            $db = \Database::getConnection();
+
+            $stmt = $db->prepare("SELECT id, name, email FROM shops WHERE slug = ? AND is_active = 1 AND is_approved = 1 LIMIT 1");
+            $stmt->execute([$slug]);
+            $shop = $stmt->fetch();
+
+            if (!$shop) {
+                jsonResponse(['success' => false, 'message' => 'Shop not found'], 404);
+                return;
+            }
+
+            $shopEmail = $shop['email'] ?? null;
+            if (!$shopEmail) {
+                $fr = ($_SESSION['language'] ?? 'en') === 'fr';
+                jsonResponse(['success' => false, 'message' => $fr
+                    ? 'Cette boutique n\'a pas d\'adresse courriel publique.'
+                    : 'This shop does not have a public email address.'], 422);
+                return;
+            }
+
+            $subject = 'Message from OCSAPP buyer - ' . htmlspecialchars($name);
+            $body = "
+                <p>You have a new message from an OCSAPP buyer on your shop page.</p>
+                <table style='border-collapse:collapse;width:100%'>
+                    <tr><td style='padding:8px;font-weight:600;width:100px'>From:</td><td style='padding:8px'>" . htmlspecialchars($name) . "</td></tr>
+                    <tr><td style='padding:8px;font-weight:600'>Reply-to:</td><td style='padding:8px'>" . htmlspecialchars($email) . "</td></tr>
+                    <tr><td style='padding:8px;font-weight:600;vertical-align:top'>Message:</td><td style='padding:8px'>" . nl2br(htmlspecialchars($message)) . "</td></tr>
+                </table>
+                <p style='color:#666;font-size:13px'>Reply directly to this email to respond to the buyer.</p>
+            ";
+
+            \EmailHelper::send($shopEmail, $subject, $body, ['reply_to' => $email]);
+
+            $fr = ($_SESSION['language'] ?? 'en') === 'fr';
+            jsonResponse(['success' => true, 'message' => $fr
+                ? 'Votre message a ete envoye avec succes!'
+                : 'Your message has been sent successfully!']);
+        } catch (\PDOException $e) {
+            logger("contactShop error: " . $e->getMessage(), 'error');
+            jsonResponse(['success' => false, 'message' => 'Server error'], 500);
+        }
+    }
+
+    public function reportShop($slug = null): void {
+        if (!verifyCsrfForApi()) {
+            jsonResponse(['success' => false, 'message' => 'Invalid request'], 403);
+            return;
+        }
+        if (!isLoggedIn()) {
+            jsonResponse(['success' => false, 'message' => 'Login required', 'login_required' => true], 401);
+            return;
+        }
+
+        $reason = trim(post('reason', ''));
+        $description = trim(post('description', ''));
+        $validReasons = ['spam', 'counterfeit', 'inappropriate', 'other'];
+
+        if (!in_array($reason, $validReasons)) {
+            jsonResponse(['success' => false, 'message' => 'Invalid reason'], 422);
+            return;
+        }
+
+        try {
+            $db = \Database::getConnection();
+
+            $stmt = $db->prepare("SELECT id FROM shops WHERE slug = ? AND is_active = 1 LIMIT 1");
+            $stmt->execute([$slug]);
+            $shop = $stmt->fetch();
+
+            if (!$shop) {
+                jsonResponse(['success' => false, 'message' => 'Shop not found'], 404);
+                return;
+            }
+
+            $stmt = $db->prepare("
+                INSERT INTO shop_reports (shop_id, user_id, reason, description, ip_address, status, created_at)
+                VALUES (?, ?, ?, ?, ?, 'pending', NOW())
+            ");
+            $stmt->execute([$shop['id'], userId(), $reason, $description ?: null, $_SERVER['REMOTE_ADDR'] ?? null]);
+
+            $fr = ($_SESSION['language'] ?? 'en') === 'fr';
+            jsonResponse(['success' => true, 'message' => $fr
+                ? 'Votre signalement a ete soumis. Merci.'
+                : 'Your report has been submitted. Thank you.']);
+        } catch (\PDOException $e) {
+            logger("reportShop error: " . $e->getMessage(), 'error');
+            jsonResponse(['success' => false, 'message' => 'Server error'], 500);
         }
     }
 
@@ -1200,7 +1378,7 @@ view('buyer.home', [
             $stmt->execute([$searchTerm, $searchTerm, $searchTerm]);
             $total = $stmt->fetch()['count'];
             
-            view('buyer.search-results', [
+            view('buyer.search', [
                 'products' => $products,
                 'query' => $query,
                 'total' => $total,

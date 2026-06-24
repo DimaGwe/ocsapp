@@ -25,10 +25,28 @@ $cartCount = $cartCount ?? 0;
 $accountDashboardUrl = accountUrl(); // Uses new helper function
 ?>
 
+<!-- Skip navigation link (WCAG 2.1 SC 2.4.1) -->
+<style>
+.skip-link { position: absolute; left: -9999px; top: auto; width: 1px; height: 1px; overflow: hidden; }
+.skip-link:focus { position: fixed; top: 12px; left: 12px; z-index: 99999; width: auto; height: auto; padding: 10px 18px; background: #00b207; color: #fff; font-size: 14px; font-weight: 600; border-radius: 6px; text-decoration: none; outline: 3px solid #fff; }
+</style>
+<a href="#main-content" class="skip-link">
+    <?= ($currentLang === 'fr') ? 'Aller au contenu principal' : 'Skip to main content' ?>
+</a>
+
+<!-- Beta Notice (Modal + Banner) -->
+<?php include __DIR__ . '/beta-notice.php'; ?>
+
+<!-- Top Banner -->
+<div class="top-banner">
+    <?= $t['store_location'] ?>: <?= htmlspecialchars($storeLocation) ?> |
+    <?= $t['need_help'] ?>: <a href="tel:+15147463789">+1 (514) 746-3789</a>
+</div>
+
 <!-- Header -->
 <header class="header">
     <div class="logo-section">
-        <a href="<?= url('/') ?>" class="logo">
+        <a href="<?= url('home') ?>" class="logo">
             <img src="<?= asset('images/logo.png') ?>" alt="OCSAPP Logo" class="logo-img">
             <span>OCSAPP</span>
         </a>
@@ -84,10 +102,14 @@ $accountDashboardUrl = accountUrl(); // Uses new helper function
 
         <!-- Sign In / Account - FIXED: Now role-aware -->
         <?php if (function_exists('isLoggedIn') && isLoggedIn()): ?>
+            <?php
+            $userRole = $_SESSION['user']['role'] ?? 'buyer';
+            $isAdminTier = in_array($userRole, ['super_admin', 'admin', 'admin_staff']);
+            ?>
             <a href="<?= $accountDashboardUrl ?>" class="sign-in-btn">
                 <?php if (hasRole('seller')): ?>
                     <?= $t['seller_dashboard'] ?? 'Dashboard' ?>
-                <?php elseif (hasRole('admin')): ?>
+                <?php elseif ($isAdminTier): ?>
                     <?= $t['admin_panel'] ?? 'Admin' ?>
                 <?php else: ?>
                     <?= $t['account'] ?>
@@ -135,34 +157,64 @@ $accountDashboardUrl = accountUrl(); // Uses new helper function
 }
 </style>
 
-<!-- Location Popover -->
-<div class="popover" id="locationPopover" style="display:none;" role="dialog" aria-labelledby="locationPopoverTitle">
-    <h4 id="locationPopoverTitle"><?= $t['choose_location'] ?></h4>
-    <div class="field" style="position: relative;">
-        <input type="text"
-               placeholder="<?= $t['search_location'] ?>"
-               id="locSearchInput"
-               autocomplete="off"
-               aria-label="<?= $t['search_location'] ?>">
-        <!-- Autocomplete suggestions -->
-        <div id="locationSuggestions" class="location-suggestions" style="display: none;"></div>
-    </div>
-    <div class="or-divider"><span><?= $t['or'] ?></span></div>
-    <button type="button" class="detect-btn" id="detectBtn">
-        📍 <?= $t['detect_location'] ?>
-    </button>
-    <div class="radius">
-        <label for="radiusRange">
-            <?= $t['delivery_radius'] ?>: <span id="radiusLabel">5</span> km
-        </label>
-        <input type="range" 
-               id="radiusRange" 
-               min="1" 
-               max="20" 
-               value="5"
-               aria-label="<?= $t['delivery_radius'] ?>">
+<!-- Modern Location Modal -->
+<div class="location-modal-overlay" id="locationModalOverlay">
+    <div class="location-modal" id="locationModal">
+        <!-- Modal Header -->
+        <div class="location-modal-header">
+            <div class="location-modal-title">
+                <i class="fas fa-location-dot"></i>
+                <span><?= $t['choose_location'] ?? 'Choose Your Location' ?></span>
+            </div>
+            <button type="button" class="location-modal-close" id="locationModalClose" aria-label="Close">
+                <i class="fas fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="location-modal-body">
+            <!-- Search Input -->
+            <div class="location-search-wrapper">
+                <i class="fas fa-magnifying-glass location-search-icon"></i>
+                <input
+                    type="text"
+                    class="location-search-input"
+                    id="locationSearchInput"
+                    placeholder="<?= $t['location_placeholder'] ?? 'Enter street, city, or postal code' ?>"
+                    autocomplete="off"
+                    aria-label="<?= $t['search_location'] ?? 'Search for your address' ?>">
+
+                <!-- Autocomplete Suggestions -->
+                <div class="location-suggestions" id="locationSuggestions"></div>
+            </div>
+
+            <!-- Use Current Location Button -->
+            <button type="button" class="use-location-btn" id="useCurrentLocationBtn">
+                <i class="fas fa-location-crosshairs"></i>
+                <span><?= $t['use_current_location'] ?? 'Use Current Location' ?></span>
+            </button>
+
+            <!-- Divider -->
+            <div class="location-divider">
+                <span><?= $t['recent_locations'] ?? 'Recent Locations' ?></span>
+            </div>
+
+            <!-- Recent Locations -->
+            <div class="recent-locations-section">
+                <div id="recentLocationsContainer">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<!-- Load Location Modal CSS & JS -->
+<link rel="stylesheet" href="<?= asset('css/components/location-modal.css') ?>">
+<script src="<?= asset('js/location-modal.js') ?>"></script>
+
+<!-- Load Beta Notice CSS -->
+<link rel="stylesheet" href="<?= asset('css/beta-notice.css') ?>">
 
 <!-- Mobile Bottom Navigation - FIXED: Now role-aware -->
 <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
@@ -207,6 +259,7 @@ $accountDashboardUrl = accountUrl(); // Uses new helper function
         <div class="nav-label"><?= $t['cart'] ?></div>
     </a>
 </nav>
+<div id="main-content" tabindex="-1"></div>
 
 <script>
 /**
@@ -399,283 +452,7 @@ $accountDashboardUrl = accountUrl(); // Uses new helper function
         });
     }
     
-    // LOCATION SELECTOR
-    const locationBtn = document.getElementById('locationBtn');
-    const locationPopover = document.getElementById('locationPopover');
-    const detectBtn = document.getElementById('detectBtn');
-    const radiusRange = document.getElementById('radiusRange');
-    const radiusLabel = document.getElementById('radiusLabel');
-    const locSearchInput = document.getElementById('locSearchInput');
-    const currentLocationText = document.getElementById('currentLocationText');
-    
-    if (locationBtn && locationPopover) {
-        locationBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            const isVisible = locationPopover.style.display === 'block';
-            locationPopover.style.display = isVisible ? 'none' : 'block';
-            
-            if (!isVisible) {
-                locSearchInput?.focus();
-            }
-        });
-    }
-    
-    if (radiusRange && radiusLabel) {
-        radiusRange.addEventListener('input', function() {
-            radiusLabel.textContent = this.value;
-        });
-    }
-    
-    if (detectBtn) {
-        detectBtn.addEventListener('click', async function() {
-            console.log('🖱️ Detect Location clicked');
-            
-            if (!navigator.geolocation) {
-                alert(t.geoNotSupported || 'Geolocation is not supported');
-                return;
-            }
-
-            const originalText = detectBtn.textContent;
-            detectBtn.disabled = true;
-            detectBtn.textContent = '📍 ' + (t.detecting || 'Detecting...');
-
-            navigator.geolocation.getCurrentPosition(
-                async (position) => {
-                    try {
-                        const lat = position.coords.latitude;
-                        const lon = position.coords.longitude;
-                        
-                        console.log('✅ Got coordinates:', lat, lon);
-                        
-                        // Get address from coordinates
-                        let locationData;
-                        try {
-                            locationData = await reverseGeocode(lat, lon);
-                            console.log('✅ Reverse geocoded:', locationData);
-                        } catch (geoError) {
-                            console.warn('Reverse geocoding failed, using coordinates:', geoError);
-                            locationData = {
-                                name: `${lat.toFixed(4)}, ${lon.toFixed(4)}`,
-                                latitude: lat,
-                                longitude: lon
-                            };
-                        }
-                        
-                        // Save to backend
-                        console.log('💾 Saving location:', locationData.name);
-                        
-                        const response = await postJSON(config.urls.setLocation, {
-                            location: locationData.name,
-                            latitude: lat,
-                            longitude: lon,
-                            radius: radiusRange?.value || 5,
-                            city: locationData.city,
-                            country: locationData.country
-                        });
-                        
-                        console.log('📨 Save response:', response);
-                        
-                        // FIXED: Check response.success properly
-                        if (response && response.success) {
-                            // Update UI immediately
-                            if (currentLocationText) {
-                                currentLocationText.textContent = locationData.name;
-                            }
-                            
-                            // Close popover
-                            locationPopover.style.display = 'none';
-                            
-                            // Show success message
-                            detectBtn.textContent = '✓ ' + locationData.name;
-                            detectBtn.style.background = '#4CAF50';
-
-                            // Re-enable button after showing success
-                            setTimeout(() => {
-                                detectBtn.disabled = false;
-                                detectBtn.textContent = originalText;
-                                detectBtn.style.background = '';
-                            }, 2000);
-                        } else {
-                            throw new Error(response?.message || response?.error || 'Save failed');
-                        }
-                        
-                    } catch (error) {
-                        console.error('❌ Location save error:', error);
-                        alert('Could not save your location: ' + error.message);
-                        detectBtn.disabled = false;
-                        detectBtn.textContent = originalText;
-                    }
-                },
-                (error) => {
-                    console.error('❌ Geolocation error:', error);
-                    let errorMessage = 'Could not detect your location';
-                    
-                    switch(error.code) {
-                        case error.PERMISSION_DENIED:
-                            errorMessage = config.currentLang === 'fr' 
-                                ? "Permission de localisation refusée" 
-                                : "Location permission denied. Please allow location access.";
-                            break;
-                        case error.POSITION_UNAVAILABLE:
-                            errorMessage = config.currentLang === 'fr'
-                                ? "Position indisponible"
-                                : "Location information unavailable";
-                            break;
-                        case error.TIMEOUT:
-                            errorMessage = config.currentLang === 'fr'
-                                ? "Délai d'attente dépassé"
-                                : "Location request timed out";
-                            break;
-                    }
-                    
-                    alert(errorMessage);
-                    detectBtn.disabled = false;
-                    detectBtn.textContent = originalText;
-                }
-            );
-        });
-    }
-
-    // Location autocomplete
-    const locationSuggestions = document.getElementById('locationSuggestions');
-    let autocompleteTimeout = null;
-
-    async function searchLocations(query) {
-        if (query.length < 3) {
-            locationSuggestions.style.display = 'none';
-            return;
-        }
-
-        try {
-            const url = `https://nominatim.openstreetmap.org/search?` + new URLSearchParams({
-                q: query,
-                format: 'json',
-                limit: 5,
-                addressdetails: 1,
-                countrycodes: 'ca', // Canada only
-                viewbox: '-74.5,45.0,-73.0,46.0', // Montreal/Kirkland area bias
-                bounded: 0 // Allow results outside viewbox but prioritize inside
-            });
-
-            const response = await fetch(url, {
-                headers: { 'User-Agent': 'OCSMarketplace/1.0' }
-            });
-
-            if (!response.ok) throw new Error('Search failed');
-
-            const results = await response.json();
-
-            if (results.length > 0) {
-                locationSuggestions.innerHTML = results.map(r => `
-                    <div class="suggestion-item"
-                         data-lat="${r.lat}"
-                         data-lon="${r.lon}"
-                         data-name="${r.address?.city || r.address?.town || r.address?.municipality || r.display_name.split(',')[0]}">
-                        <span class="suggestion-icon">📍</span>
-                        <span class="suggestion-text">${r.display_name}</span>
-                    </div>
-                `).join('');
-                locationSuggestions.style.display = 'block';
-            } else {
-                locationSuggestions.style.display = 'none';
-            }
-        } catch (error) {
-            console.error('Autocomplete error:', error);
-            locationSuggestions.style.display = 'none';
-        }
-    }
-
-    async function selectLocation(lat, lon, name) {
-        try {
-            const response = await postJSON(config.urls.setLocation, {
-                location: name,
-                latitude: parseFloat(lat),
-                longitude: parseFloat(lon),
-                radius: radiusRange?.value || 5
-            });
-
-            if (response && response.success) {
-                if (currentLocationText) {
-                    currentLocationText.textContent = name;
-                }
-                locationPopover.style.display = 'none';
-                locationSuggestions.style.display = 'none';
-                window.location.reload();
-            }
-        } catch (error) {
-            console.error('Location save error:', error);
-            alert('Could not save location');
-        }
-    }
-
-    if (locSearchInput && locationSuggestions) {
-        // Autocomplete on input
-        locSearchInput.addEventListener('input', function() {
-            clearTimeout(autocompleteTimeout);
-            autocompleteTimeout = setTimeout(() => {
-                searchLocations(this.value.trim());
-            }, 300);
-        });
-
-        // Handle suggestion clicks
-        locationSuggestions.addEventListener('click', function(e) {
-            const item = e.target.closest('.suggestion-item');
-            if (item) {
-                const lat = item.dataset.lat;
-                const lon = item.dataset.lon;
-                const name = item.dataset.name;
-                locSearchInput.value = name;
-                selectLocation(lat, lon, name);
-            }
-        });
-
-        // Handle Enter key for manual entry
-        locSearchInput.addEventListener('keydown', async function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                const location = this.value.trim();
-
-                if (!location) {
-                    alert('Please enter a location');
-                    return;
-                }
-
-                // If suggestions are visible, select first one
-                const firstSuggestion = locationSuggestions.querySelector('.suggestion-item');
-                if (firstSuggestion && locationSuggestions.style.display !== 'none') {
-                    firstSuggestion.click();
-                    return;
-                }
-
-                // Otherwise save manually
-                try {
-                    const response = await postJSON(config.urls.setLocation, {
-                        location: location,
-                        radius: radiusRange?.value || 5
-                    });
-
-                    if (response && response.success) {
-                        if (currentLocationText) {
-                            currentLocationText.textContent = location;
-                        }
-                        locationPopover.style.display = 'none';
-                        window.location.reload();
-                    }
-                } catch (error) {
-                    console.error('Location update error:', error);
-                    alert('Could not save your location');
-                }
-            }
-        });
-    }
-    
-    document.addEventListener('click', function(e) {
-        if (locationPopover && 
-            !e.target.closest('.location-selector') && 
-            !e.target.closest('#locationPopover')) {
-            locationPopover.style.display = 'none';
-        }
-    });
+    // LOCATION SELECTOR - Handled by location-modal.js
     
     // CART COUNT
     async function loadCartCount() {
@@ -712,3 +489,33 @@ $accountDashboardUrl = accountUrl(); // Uses new helper function
 
 })();
 </script>
+
+<!-- Cookie Consent Banner -->
+<?php if (empty($_COOKIE['cookie_consent'])): ?>
+<?php
+$_cookieFr = ($currentLang === 'fr');
+$_cookieText   = $t['cookie_banner_prefix']    ?? ($_cookieFr ? 'Nous utilisons des témoins pour améliorer votre expérience et assurer le bon fonctionnement du site. En continuant à utiliser OCSAPP Marketplace, vous acceptez notre' : 'We use cookies to improve your experience and ensure the site works properly. By continuing to use OCSAPP Marketplace, you agree to our');
+$_cookieLink   = $t['cookie_policy_link_text'] ?? ($_cookieFr ? 'Politique des témoins' : 'Cookie Policy');
+$_cookieAccept = $t['cookie_accept']           ?? ($_cookieFr ? 'Accepter' : 'Accept');
+$_cookieDecline= $t['cookie_decline']          ?? ($_cookieFr ? 'Refuser'  : 'Decline');
+?>
+<div id="cookieBanner" style="position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#1a1a1a;color:#fff;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;box-shadow:0 -4px 16px rgba(0,0,0,.3);">
+    <p style="margin:0;font-size:14px;line-height:1.5;flex:1;min-width:200px;">
+        <?= $_cookieText ?> <a href="<?= url('cookies') ?>" style="color:#00b207;"><?= $_cookieLink ?></a>.
+    </p>
+    <div style="display:flex;gap:10px;flex-shrink:0;">
+        <button onclick="acceptCookies()" style="padding:10px 24px;background:#00b207;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;"><?= $_cookieAccept ?></button>
+        <button onclick="declineCookies()" style="padding:10px 16px;background:transparent;color:#aaa;border:1px solid #555;border-radius:8px;font-size:14px;cursor:pointer;"><?= $_cookieDecline ?></button>
+    </div>
+</div>
+<script>
+function acceptCookies() {
+    document.cookie = "cookie_consent=accepted; max-age=" + (365*24*3600) + "; path=/; SameSite=Lax";
+    document.getElementById('cookieBanner').style.display = 'none';
+}
+function declineCookies() {
+    document.cookie = "cookie_consent=declined; max-age=" + (365*24*3600) + "; path=/; SameSite=Lax";
+    document.getElementById('cookieBanner').style.display = 'none';
+}
+</script>
+<?php endif; ?>

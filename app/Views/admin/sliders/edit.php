@@ -5,7 +5,7 @@
  */
 
 $pageTitle = $pageTitle ?? 'Edit Slider';
-$currentPage = $currentPage ?? 'cms';
+$currentPage = 'sliders';
 $slider = $slider ?? [];
 
 ob_start();

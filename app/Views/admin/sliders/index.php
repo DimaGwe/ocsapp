@@ -5,7 +5,7 @@
  */
 
 $pageTitle = $pageTitle ?? 'Hero Sliders';
-$currentPage = $currentPage ?? 'cms';
+$currentPage = 'sliders';
 
 ob_start();
 ?>

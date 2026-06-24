@@ -36,29 +36,36 @@ $cartCount = $cartCount ?? 0;
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Styles -->
-    <link rel="stylesheet" href="<?= asset('css/styles.css') ?>">
+    <!-- Modular CSS Architecture -->
+    <link rel="stylesheet" href="<?= asset('css/global.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/components/header.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/components/footer.css') ?>">
 </head>
 <body>
-    <!-- Top Banner -->
-    <div class="top-banner">
-        <?= $t['store_location'] ?>: <?= htmlspecialchars($storeLocation) ?> |
-        <?= $t['need_help'] ?>: <a href="tel:+18095551234">+1 (809) 555-1234</a>
-    </div>
-
-    <!-- Header -->
+    <!-- Header (includes beta notice and top banner) -->
     <?php include __DIR__ . '/../components/header.php'; ?>
 
-    <main class="page">
-        <!-- Breadcrumb -->
-        <div class="breadcrumb">
-            <a href="<?= url('/') ?>"><?= $t['home'] ?? 'Home' ?></a>
-            <span class="separator">›</span>
-            <a href="<?= url('/categories') ?>"><?= $t['categories'] ?? 'Categories' ?></a>
-            <span class="separator">›</span>
-            <span class="current"><?= htmlspecialchars($category['name']) ?></span>
-        </div>
+    <!-- Breadcrumb Menu -->
+    <div class="breadcrumb-menu">
+        <a href="<?= url('/') ?>" class="breadcrumb-btn">
+            <span>🏠</span>
+            <span><?= $t['home'] ?? 'Home' ?></span>
+        </a>
+        <a href="<?= url('categories') ?>" class="breadcrumb-btn">
+            <span>☰</span>
+            <span><?= $t['categories'] ?? 'Categories' ?></span>
+        </a>
+        <a href="<?= url('category/' . ($category['slug'] ?? '')) ?>" class="breadcrumb-btn active">
+            <?php if (!empty($category['icon'])): ?>
+                <i class="<?= htmlspecialchars($category['icon']) ?>"></i>
+            <?php else: ?>
+                <span>📦</span>
+            <?php endif; ?>
+            <span><?= htmlspecialchars($category['name']) ?></span>
+        </a>
+    </div>
 
+    <main class="page">
         <!-- Category Header -->
         <div class="category-header">
             <div class="category-header-content">
@@ -207,38 +214,81 @@ $cartCount = $cartCount ?? 0;
     <?php include __DIR__ . '/../components/footer.php'; ?>
 
     <style>
-        /* Breadcrumb */
-        .breadcrumb {
+        /* Breadcrumb Menu */
+        .breadcrumb-menu {
+            background: transparent;
+            padding: 20px 5%;
             display: flex;
+            gap: 15px;
+            align-items: center;
+            max-width: 1400px;
+            margin: 20px auto 0;
+            position: relative;
+        }
+
+        .breadcrumb-menu::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 5%;
+            right: 5%;
+            height: 1px;
+            background: #e6e6e6;
+        }
+
+        .breadcrumb-btn {
+            display: inline-flex;
             align-items: center;
             gap: 8px;
-            margin-bottom: 24px;
-            font-size: 14px;
-        }
-
-        .breadcrumb a {
-            color: var(--primary);
+            padding: 10px 20px;
+            background: #f7f7f7;
+            color: #333;
             text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.2s;
+            border: 1px solid #e6e6e6;
         }
 
-        .breadcrumb a:hover {
-            text-decoration: underline;
+        .breadcrumb-btn:hover {
+            background: #00b207;
+            color: white;
+            border-color: #00b207;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,178,7,0.2);
         }
 
-        .breadcrumb .separator {
-            color: #9ca3af;
+        .breadcrumb-btn.active {
+            background: #00b207;
+            color: white;
+            border-color: #00b207;
         }
 
-        .breadcrumb .current {
-            color: #6b7280;
+        @media (max-width: 1024px) {
+            .breadcrumb-menu {
+                padding: 20px 4%;
+            }
+
+            .breadcrumb-menu::after {
+                left: 4%;
+                right: 4%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .breadcrumb-menu {
+                gap: 10px;
+            }
         }
 
         /* Category Header */
         .category-header {
-            background: linear-gradient(135deg, #00b207 0%, #059669 50%, #10b981 100%);
+            background: linear-gradient(135deg, #00b207 0%, #009206 100%);
             padding: 40px;
             border-radius: 16px;
             box-shadow: 0 10px 30px rgba(0, 178, 7, 0.2);
+            margin-top: 30px;
             margin-bottom: 40px;
             position: relative;
             overflow: hidden;
@@ -323,7 +373,7 @@ $cartCount = $cartCount ?? 0;
         /* Products Grid */
         .products-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
             gap: 24px;
             margin-bottom: 40px;
         }
@@ -333,9 +383,10 @@ $cartCount = $cartCount ?? 0;
             background: white;
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
+            z-index: 1;
         }
 
         .product-card::after {
@@ -347,12 +398,12 @@ $cartCount = $cartCount ?? 0;
             opacity: 0;
             transition: opacity 0.3s ease;
             pointer-events: none;
-            z-index: 10;
         }
 
         .product-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            transform: translateY(-6px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+            z-index: 10;
         }
 
         .product-card:hover::after {
@@ -527,15 +578,15 @@ $cartCount = $cartCount ?? 0;
         }
 
         .stock-status.in-stock {
-            color: #00b207;
+            color: #1a1a1a;
         }
 
         .stock-status.low-stock {
-            color: #f59e0b;
+            color: #ed8936;
         }
 
         .stock-status.out-of-stock {
-            color: #ef4444;
+            color: #f56565;
         }
 
         /* Add to Cart Button */
@@ -610,6 +661,13 @@ $cartCount = $cartCount ?? 0;
         }
 
         /* Responsive */
+        @media (max-width: 1200px) {
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+                gap: 20px;
+            }
+        }
+
         @media (max-width: 768px) {
             .category-header {
                 padding: 30px 20px;
@@ -631,8 +689,15 @@ $cartCount = $cartCount ?? 0;
             }
 
             .products-grid {
-                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
                 gap: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .products-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
             }
         }
     </style>
@@ -660,6 +725,17 @@ $cartCount = $cartCount ?? 0;
         }
     </script>
 
+    <!-- OCSAPP Config for cart/auth functionality -->
+    <script>
+        window.OCSAPP_CONFIG = {
+            isLoggedIn: <?= function_exists('isLoggedIn') && isLoggedIn() ? 'true' : 'false' ?>,
+            currentLang: '<?= $currentLang ?>',
+            urls: {
+                cartAdd: '<?= url('cart/add') ?>',
+                cartCount: '<?= url('cart/count') ?>'
+            }
+        };
+    </script>
     <script src="<?= asset('js/home.js') ?>"></script>
 </body>
 </html>

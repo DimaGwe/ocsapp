@@ -35,23 +35,35 @@ $cartCount = $cartCount ?? 0;
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Styles -->
-    <link rel="stylesheet" href="<?= asset('css/styles.css') ?>">
+    <!-- Modular CSS Architecture -->
+    <link rel="stylesheet" href="<?= asset('css/global.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/components/header.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/components/footer.css') ?>">
 </head>
 <body>
-    <!-- Top Banner -->
-    <div class="top-banner">
-        <?= $t['store_location'] ?>: <?= htmlspecialchars($storeLocation) ?> |
-        <?= $t['need_help'] ?>: <a href="tel:+18095551234">+1 (809) 555-1234</a>
-    </div>
-
-    <!-- Header -->
+    <!-- Header (includes beta notice and top banner) -->
     <?php include __DIR__ . '/../components/header.php'; ?>
+
+    <!-- Breadcrumb Menu -->
+    <div class="breadcrumb-menu">
+        <a href="<?= url('/') ?>" class="breadcrumb-btn">
+            <span>🏠</span>
+            <span><?= $t['home'] ?? 'Home' ?></span>
+        </a>
+        <a href="<?= url('categories') ?>" class="breadcrumb-btn active">
+            <span>☰</span>
+            <span><?= $t['categories'] ?? 'Categories' ?></span>
+        </a>
+        <a href="<?= url('shops') ?>" class="breadcrumb-btn">
+            <span>🏪</span>
+            <span><?= $t['shops'] ?? 'Shops' ?></span>
+        </a>
+    </div>
 
     <main class="page">
         <!-- Page Header -->
         <div class="categories-header">
-            <h1>🛍️ <?= $t['shop_by_category'] ?? 'Shop by Category' ?></h1>
+            <h1><?= $t['shop_by_category'] ?? 'Shop by Category' ?></h1>
             <p><?= $t['browse_categories_desc'] ?? 'Browse our wide selection of product categories' ?></p>
         </div>
 
@@ -131,11 +143,80 @@ $cartCount = $cartCount ?? 0;
     <?php include __DIR__ . '/../components/footer.php'; ?>
 
     <style>
+        /* Breadcrumb Menu */
+        .breadcrumb-menu {
+            background: transparent;
+            padding: 20px 5%;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            max-width: 1400px;
+            margin: 20px auto 0;
+            position: relative;
+        }
+
+        .breadcrumb-menu::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 5%;
+            right: 5%;
+            height: 1px;
+            background: #e6e6e6;
+        }
+
+        .breadcrumb-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: #f7f7f7;
+            color: #333;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.2s;
+            border: 1px solid #e6e6e6;
+        }
+
+        .breadcrumb-btn:hover {
+            background: #00b207;
+            color: white;
+            border-color: #00b207;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,178,7,0.2);
+        }
+
+        .breadcrumb-btn.active {
+            background: #00b207;
+            color: white;
+            border-color: #00b207;
+        }
+
+        @media (max-width: 1024px) {
+            .breadcrumb-menu {
+                padding: 20px 4%;
+            }
+
+            .breadcrumb-menu::after {
+                left: 4%;
+                right: 4%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .breadcrumb-menu {
+                gap: 10px;
+            }
+        }
+
         /* Categories Page Header */
         .categories-header {
             text-align: center;
+            margin-top: 30px;
             margin-bottom: 40px;
-            background: linear-gradient(135deg, #00b207 0%, #059669 50%, #10b981 100%);
+            background: linear-gradient(135deg, #00b207 0%, #009206 100%);
             padding: 60px 40px;
             border-radius: 16px;
             box-shadow: 0 10px 30px rgba(0, 178, 7, 0.2);
@@ -204,11 +285,12 @@ $cartCount = $cartCount ?? 0;
             background: white;
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             text-decoration: none;
             display: block;
             position: relative;
+            z-index: 1;
         }
 
         .category-card::after {
@@ -220,12 +302,12 @@ $cartCount = $cartCount ?? 0;
             opacity: 0;
             transition: opacity 0.3s ease;
             pointer-events: none;
-            z-index: 10;
         }
 
         .category-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            transform: translateY(-6px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+            z-index: 10;
         }
 
         .category-card:hover::after {
@@ -237,7 +319,7 @@ $cartCount = $cartCount ?? 0;
             width: 100%;
             height: 200px;
             overflow: hidden;
-            background: #f8f8f8;
+            background: #f5f5f5;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -248,6 +330,7 @@ $cartCount = $cartCount ?? 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
+            object-position: center;
             transition: transform 0.3s ease;
         }
 

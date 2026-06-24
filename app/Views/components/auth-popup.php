@@ -408,28 +408,68 @@ function requireAuth(event) {
   return false;
 }
 
-// Auto-attach to add-to-cart buttons and wishlist buttons for guests
+// "Continue as Guest" functionality - handled by home.js via addToCartDirect()
+// Add-to-cart login check is now handled in home.js
+
 document.addEventListener('DOMContentLoaded', function() {
-  // Add to cart buttons
-  document.querySelectorAll('.add-to-cart').forEach(function(btn) {
-    const originalOnclick = btn.onclick;
-    btn.onclick = function(e) {
-      requireAuth(e);
+  // Add "Continue as Guest" button dynamically if not present
+  const popupFooter = document.querySelector('.auth-popup-footer');
+  if (popupFooter && !document.getElementById('authContinueGuestBtn')) {
+    const guestBtn = document.createElement('button');
+    guestBtn.type = 'button';
+    guestBtn.id = 'authContinueGuestBtn';
+    guestBtn.className = 'auth-continue-guest-btn';
+    guestBtn.innerHTML = '<i class="fas fa-shopping-cart"></i> Continue as Guest';
+    guestBtn.onclick = function() {
+      closeAuthPopup();
+      // Add pending product to cart
+      if (window.pendingCartProduct && typeof window.addToCartDirect === 'function') {
+        window.addToCartDirect(
+          window.pendingCartProduct.productId,
+          window.pendingCartProduct.quantity || 1
+        );
+        window.pendingCartProduct = null;
+      }
     };
-  });
 
-  // Wishlist buttons
+    // Insert before footer text
+    popupFooter.insertBefore(guestBtn, popupFooter.firstChild);
+
+    // Add styles for the guest button
+    const style = document.createElement('style');
+    style.textContent = `
+      .auth-continue-guest-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 12px 20px;
+        margin-bottom: 16px;
+        background: #f3f4f6;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #4b5563;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: inherit;
+      }
+      .auth-continue-guest-btn:hover {
+        background: #e5e7eb;
+        border-color: #d1d5db;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // Wishlist buttons still require auth (no guest option for wishlists)
   document.querySelectorAll('.wishlist-btn').forEach(function(btn) {
-    const originalOnclick = btn.onclick;
     btn.onclick = function(e) {
       requireAuth(e);
     };
   });
-
-  // Product card clicks (optional - can enable if you want to block product viewing)
-  // document.querySelectorAll('.product-card a').forEach(function(link) {
-  //   link.addEventListener('click', requireAuth);
-  // });
 });
 </script>
 <?php endif; ?>

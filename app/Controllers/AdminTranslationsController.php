@@ -14,7 +14,7 @@ class AdminTranslationsController
 
     public function __construct()
     {
-        AuthMiddleware::handle('admin');
+        AuthMiddleware::superAdmin();
         $this->db = \Database::getConnection();
     }
 

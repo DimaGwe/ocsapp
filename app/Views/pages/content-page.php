@@ -10,7 +10,7 @@ $currentLang = $_SESSION['language'] ?? 'fr';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($page['title']) ?> - OCS Marketplace</title>
+    <title><?= htmlspecialchars($page['title']) ?> - OCSAPP Marketplace</title>
     <?php if (!empty($page['meta_description'])): ?>
         <meta name="description" content="<?= htmlspecialchars($page['meta_description']) ?>">
     <?php endif; ?>
@@ -20,8 +20,15 @@ $currentLang = $_SESSION['language'] ?? 'fr';
     <link rel="apple-touch-icon" href="<?= asset('images/logo.png') ?>">
     <meta name="theme-color" content="#00b207">
 
-    <link rel="stylesheet" href="<?= asset('css/styles.css') ?>">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Modular CSS Architecture -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="<?= asset('css/global.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/components/header.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/components/footer.css') ?>">
     <style>
         .content-page {
             max-width: 1200px;
@@ -131,7 +138,7 @@ $currentLang = $_SESSION['language'] ?? 'fr';
         <div class="content-page">
             <div class="content-container">
                 <a href="<?= url('/') ?>" class="back-link">
-                    <i class="fas fa-arrow-left"></i> Back to Home
+                    <i class="fas fa-arrow-left"></i> <?= $currentLang === 'fr' ? 'Retour à l\'accueil' : 'Back to Home' ?>
                 </a>
 
                 <!-- Header -->

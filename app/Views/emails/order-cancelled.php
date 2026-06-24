@@ -3,11 +3,11 @@ $orderNumber = htmlspecialchars($order['order_number'] ?? 'N/A');
 $orderTotal = number_format($order['total'] ?? 0, 2);
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr-CA">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Cancelled</title>
+    <title>Commande annulée / Order Cancelled</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5;">
     <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f5f5f5;">
@@ -17,16 +17,109 @@ $orderTotal = number_format($order['total'] ?? 0, 2);
 
                     <!-- Header -->
                     <tr>
-                        <td style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 40px 30px; text-align: center; border-radius: 12px 12px 0 0;">
+                        <td style="background: linear-gradient(135deg, #00b207 0%, #009206 100%); padding: 40px 30px; text-align: center; border-radius: 12px 12px 0 0;">
+                            <img src="https://ocsapp.ca/assets/images/logo.png" alt="OCSAPP" style="max-width: 180px; height: auto; margin-bottom: 20px;">
                             <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">
-                                ✕ Order Cancelled
+                                Commande annulée / Order Cancelled
                             </h1>
                         </td>
                     </tr>
 
-                    <!-- Body Content -->
+                    <!-- French Body -->
                     <tr>
-                        <td style="padding: 40px 30px;">
+                        <td style="padding: 40px 30px 20px 30px;">
+                            <h2 style="margin: 0 0 20px; color: #1f2937; font-size: 24px;">
+                                Bonjour <?= htmlspecialchars($user['first_name'] ?? 'là') ?>,
+                            </h2>
+
+                            <p style="margin: 0 0 16px; color: #4b5563; font-size: 16px; line-height: 1.6;">
+                                Votre commande a été annulée. Nous sommes désolés de l'apprendre.
+                            </p>
+
+                            <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #fef2f2; border-radius: 8px; margin-bottom: 24px; border: 1px solid #fecaca;">
+                                <tr>
+                                    <td style="padding: 20px;">
+                                        <h3 style="margin: 0 0 12px; color: #ef4444; font-size: 18px;">Détails de la commande annulée</h3>
+                                        <p style="margin: 0 0 8px; color: #6b7280; font-size: 14px;">
+                                            <strong>Numéro de commande :</strong> <?= $orderNumber ?>
+                                        </p>
+                                        <p style="margin: 0 0 8px; color: #6b7280; font-size: 14px;">
+                                            <strong>Montant :</strong> $<?= $orderTotal ?>
+                                        </p>
+                                        <p style="margin: 0; color: #6b7280; font-size: 14px;">
+                                            <strong>Statut :</strong> <span style="color: #ef4444; font-weight: 600;">Annulé</span>
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <?php if (!empty($reason)): ?>
+                            <table role="presentation" style="width: 100%; border-collapse: collapse; border-left: 4px solid #ef4444; background-color: #fef2f2; border-radius: 4px; margin-bottom: 24px;">
+                                <tr>
+                                    <td style="padding: 16px 20px;">
+                                        <p style="margin: 0 0 8px; color: #1f2937; font-size: 14px; font-weight: 600;">
+                                            Motif d'annulation :
+                                        </p>
+                                        <p style="margin: 0; color: #4b5563; font-size: 14px; line-height: 1.6;">
+                                            <?= htmlspecialchars($reason) ?>
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                            <?php endif; ?>
+
+                            <table role="presentation" style="width: 100%; border-collapse: collapse; border-left: 4px solid #00b207; background-color: #f0fdf4; border-radius: 4px; margin-bottom: 24px;">
+                                <tr>
+                                    <td style="padding: 16px 20px;">
+                                        <p style="margin: 0 0 8px; color: #1f2937; font-size: 14px; font-weight: 600;">
+                                            💳 Informations de remboursement
+                                        </p>
+                                        <p style="margin: 0; color: #4b5563; font-size: 14px; line-height: 1.6;">
+                                            Si vous avez déjà été débité, un remboursement complet de $<?= $orderTotal ?> sera traité sur votre mode de paiement d'origine dans un délai de 5 à 7 jours ouvrables.
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <table role="presentation" style="width: 100%; margin-bottom: 24px;">
+                                <tr>
+                                    <td align="center">
+                                        <a href="https://ocsapp.ca/shop" style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #00b207 0%, #009206 100%); color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 12px rgba(0, 178, 7, 0.3);">
+                                            Continuer mes achats →
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <p style="margin: 0 0 8px; color: #4b5563; font-size: 14px; line-height: 1.6;">
+                                Des questions sur cette annulation ?
+                            </p>
+                            <p style="margin: 0; color: #4b5563; font-size: 14px; line-height: 1.6;">
+                                📧 <a href="mailto:info@ocsapp.ca" style="color: #00b207; text-decoration: none;">info@ocsapp.ca</a>
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Language Divider -->
+                    <tr>
+                      <td style="padding: 0 30px;">
+                        <table role="presentation" style="width:100%;border-collapse:collapse;">
+                          <tr>
+                            <td style="padding:24px 0 8px;text-align:center;">
+                              <hr style="border:none;border-top:2px dashed #e5e7eb;margin:0 0 12px;">
+                              <span style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:1.5px;">
+                                🇬🇧 English version follows below / La version française précède
+                              </span>
+                              <hr style="border:none;border-top:2px dashed #e5e7eb;margin:12px 0 0;">
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+
+                    <!-- English Body -->
+                    <tr>
+                        <td style="padding: 20px 30px 40px 30px;">
                             <h2 style="margin: 0 0 20px; color: #1f2937; font-size: 24px;">
                                 Hi <?= htmlspecialchars($user['first_name'] ?? 'there') ?>,
                             </h2>
@@ -35,7 +128,6 @@ $orderTotal = number_format($order['total'] ?? 0, 2);
                                 Your order has been cancelled. We're sorry to see this happen.
                             </p>
 
-                            <!-- Order Details Box -->
                             <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #fef2f2; border-radius: 8px; margin-bottom: 24px; border: 1px solid #fecaca;">
                                 <tr>
                                     <td style="padding: 20px;">
@@ -54,7 +146,6 @@ $orderTotal = number_format($order['total'] ?? 0, 2);
                             </table>
 
                             <?php if (!empty($reason)): ?>
-                            <!-- Cancellation Reason -->
                             <table role="presentation" style="width: 100%; border-collapse: collapse; border-left: 4px solid #ef4444; background-color: #fef2f2; border-radius: 4px; margin-bottom: 24px;">
                                 <tr>
                                     <td style="padding: 16px 20px;">
@@ -69,7 +160,6 @@ $orderTotal = number_format($order['total'] ?? 0, 2);
                             </table>
                             <?php endif; ?>
 
-                            <!-- Refund Information -->
                             <table role="presentation" style="width: 100%; border-collapse: collapse; border-left: 4px solid #00b207; background-color: #f0fdf4; border-radius: 4px; margin-bottom: 24px;">
                                 <tr>
                                     <td style="padding: 16px 20px;">
@@ -83,7 +173,6 @@ $orderTotal = number_format($order['total'] ?? 0, 2);
                                 </tr>
                             </table>
 
-                            <!-- CTA Button -->
                             <table role="presentation" style="width: 100%; margin-bottom: 24px;">
                                 <tr>
                                     <td align="center">
@@ -94,7 +183,6 @@ $orderTotal = number_format($order['total'] ?? 0, 2);
                                 </tr>
                             </table>
 
-                            <!-- Help Section -->
                             <p style="margin: 0 0 8px; color: #4b5563; font-size: 14px; line-height: 1.6;">
                                 Questions about this cancellation?
                             </p>
@@ -108,14 +196,15 @@ $orderTotal = number_format($order['total'] ?? 0, 2);
                     <tr>
                         <td style="background-color: #f9fafb; padding: 30px; text-align: center; border-radius: 0 0 12px 12px; border-top: 1px solid #e5e7eb;">
                             <p style="margin: 0 0 8px; color: #9ca3af; font-size: 12px;">
-                                &copy; <?= date('Y') ?> OCSAPP. All rights reserved.
+                                &copy; <?= date('Y') ?> OCSAPP. Tous droits réservés. / All rights reserved.
                             </p>
                             <p style="margin: 0 0 12px; color: #9ca3af; font-size: 12px;">
-                                This is an automated email. Please do not reply to this message.
+                                Courriel automatique — ne pas répondre. / Automated email — do not reply.
                             </p>
                             <p style="margin: 0; color: #9ca3af; font-size: 12px;">
                                 <a href="https://ocsapp.ca/terms" style="color: #6b7280; text-decoration: none;">Terms</a> •
-                                <a href="https://ocsapp.ca/privacy" style="color: #6b7280; text-decoration: none;">Privacy</a>
+                                <a href="https://ocsapp.ca/privacy" style="color: #6b7280; text-decoration: none;">Privacy</a> •
+                                <a href="https://ocsapp.ca/unsubscribe" style="color: #6b7280; text-decoration: none;">Unsubscribe</a>
                             </p>
                         </td>
                     </tr>

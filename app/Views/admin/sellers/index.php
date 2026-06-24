@@ -315,6 +315,14 @@ ob_start();
     font-weight: 700;
     font-size: 16px;
     flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  .seller-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
   }
 
   .seller-info {
@@ -656,7 +664,12 @@ ob_start();
               <td>
                 <div class="seller-cell">
                   <div class="seller-avatar">
-                    <?= strtoupper(substr($seller['first_name'], 0, 1)) ?>
+                    <?php if (!empty($seller['avatar'])): ?>
+                      <img src="<?= htmlspecialchars('https://ocsapp.ca/' . ltrim($seller['avatar'], '/')) ?>"
+                           alt="<?= htmlspecialchars($seller['first_name']) ?>">
+                    <?php else: ?>
+                      <?= strtoupper(substr($seller['first_name'], 0, 1)) ?>
+                    <?php endif; ?>
                   </div>
                   <div class="seller-info">
                     <div class="seller-name">
@@ -722,41 +735,34 @@ ob_start();
 
                   <!-- Suspend/Activate -->
                   <?php if ($seller['status'] === 'active'): ?>
-                    <form method="POST" action="<?= url('admin/sellers/suspend') ?>" style="display: inline;" onsubmit="return confirm('<?= $t['confirm_suspend'] ?>')">
-                      <?= csrfField() ?>
-                      <input type="hidden" name="seller_id" value="<?= $seller['id'] ?>">
-                      <button 
-                        type="submit" 
-                        class="action-btn suspend"
-                        title="<?= $t['suspend_seller'] ?>"
-                      >
-                        <i class="fas fa-ban"></i>
-                      </button>
-                    </form>
+                    <button
+                      type="button"
+                      class="action-btn suspend"
+                      title="<?= $t['suspend_seller'] ?>"
+                      onclick="openSuspendModal(<?= $seller['id'] ?>, '<?= htmlspecialchars($seller['first_name'] . ' ' . $seller['last_name']) ?>')"
+                    >
+                      <i class="fas fa-ban"></i>
+                    </button>
                   <?php else: ?>
-                    <form method="POST" action="<?= url('admin/sellers/activate') ?>" style="display: inline;" onsubmit="return confirm('<?= $t['confirm_activate'] ?>')">
-                      <?= csrfField() ?>
-                      <input type="hidden" name="seller_id" value="<?= $seller['id'] ?>">
-                      <button 
-                        type="submit" 
-                        class="action-btn activate"
-                        title="<?= $t['activate_seller'] ?>"
-                      >
-                        <i class="fas fa-check-circle"></i>
-                      </button>
-                    </form>
+                    <button
+                      type="button"
+                      class="action-btn activate"
+                      title="<?= $t['activate_seller'] ?>"
+                      onclick="openActivateModal(<?= $seller['id'] ?>, '<?= htmlspecialchars($seller['first_name'] . ' ' . $seller['last_name']) ?>')"
+                    >
+                      <i class="fas fa-check-circle"></i>
+                    </button>
                   <?php endif; ?>
 
                   <!-- Delete -->
-                  <form method="POST" action="<?= url('admin/users/delete') ?>" 
-      style="display: inline;" 
-      onsubmit="return confirm('⚠️ PERMANENT DELETE\n\nThis will COMPLETELY remove:\n- User account\n- All their shops\n- All their orders\n- All related data\n\nThis CANNOT be undone!\n\nAre you absolutely sure?')">
-    <?= csrfField() ?>
-    <input type="hidden" name="user_id" value="<?= $user['id'] ?>">
-    <button type="submit" class="action-btn delete" title="Delete User">
-        <i class="fas fa-trash"></i>
-    </button>
-</form>
+                  <button
+                    type="button"
+                    class="action-btn delete"
+                    title="<?= $t['delete_seller'] ?>"
+                    onclick="openDeleteModal(<?= $seller['id'] ?>, '<?= htmlspecialchars($seller['first_name'] . ' ' . $seller['last_name']) ?>')"
+                  >
+                    <i class="fas fa-trash"></i>
+                  </button>
                 </div>
               </td>
             </tr>
@@ -819,6 +825,181 @@ ob_start();
     </div>
   <?php endif; ?>
 </div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9999; align-items: center; justify-content: center;">
+  <div style="background: white; border-radius: 12px; padding: 32px; max-width: 450px; width: 90%; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);">
+    <div style="text-align: center;">
+      <div style="width: 56px; height: 56px; background: #fee2e2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+        <i class="fas fa-exclamation-triangle" style="font-size: 24px; color: #dc2626;"></i>
+      </div>
+      <h3 style="font-size: 20px; font-weight: 700; color: #1f2937; margin-bottom: 8px;">Delete Seller</h3>
+      <p style="font-size: 14px; color: #6b7280; margin-bottom: 24px;">
+        Are you sure you want to delete <strong id="sellerNameDisplay"></strong>? This action cannot be undone and will also delete all their shops and inventory.
+      </p>
+      <form id="deleteForm" method="POST" action="<?= url('admin/sellers/delete') ?>">
+        <?= csrfField() ?>
+        <input type="hidden" name="seller_id" id="sellerIdInput">
+
+        <div style="margin:16px 0 10px;text-align:left;">
+          <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:5px;">Reason for deletion</label>
+          <select name="delete_reason" style="width:100%;padding:9px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;color:#1f2937;">
+            <option value="voluntary">Voluntary departure</option>
+            <option value="inactive">Inactivity</option>
+            <option value="terms_violation">Terms violation</option>
+            <option value="business_conduct">Business conduct</option>
+            <option value="test">Test account</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div style="margin-bottom:10px;text-align:left;">
+          <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:5px;">Notes (optional)</label>
+          <textarea name="delete_notes" rows="2" style="width:100%;padding:9px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;resize:vertical;"></textarea>
+        </div>
+        <div style="margin-bottom:16px;text-align:left;display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" name="can_rejoin" id="sellerCanRejoin" value="1" checked style="width:15px;height:15px;accent-color:#dc2626;">
+          <label for="sellerCanRejoin" style="font-size:13px;color:#374151;cursor:pointer;">Allow re-registration (uncheck = banned)</label>
+        </div>
+
+        <div style="display: flex; gap: 12px; justify-content: center;">
+          <button type="button" onclick="closeDeleteModal()" style="padding: 10px 24px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; font-weight: 600; color: #6b7280; background: white; cursor: pointer; transition: all 0.2s;">
+            Cancel
+          </button>
+          <button type="submit" style="padding: 10px 24px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; color: white; background: #dc2626; cursor: pointer; transition: all 0.2s;">
+            <i class="fas fa-trash"></i> Delete Seller
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Suspend Confirmation Modal -->
+<div id="suspendModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9999; align-items: center; justify-content: center;">
+  <div style="background: white; border-radius: 12px; padding: 32px; max-width: 450px; width: 90%; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);">
+    <div style="text-align: center;">
+      <div style="width: 56px; height: 56px; background: #fef3c7; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+        <i class="fas fa-ban" style="font-size: 24px; color: #d97706;"></i>
+      </div>
+      <h3 style="font-size: 20px; font-weight: 700; color: #1f2937; margin-bottom: 8px;">Suspend Seller</h3>
+      <p style="font-size: 14px; color: #6b7280; margin-bottom: 24px;">
+        Are you sure you want to suspend <strong id="suspendSellerNameDisplay"></strong>? Their shops will be deactivated.
+      </p>
+      <form id="suspendForm" method="POST" action="<?= url('admin/sellers/suspend') ?>" style="display: flex; gap: 12px; justify-content: center;">
+        <?= csrfField() ?>
+        <input type="hidden" name="seller_id" id="suspendSellerIdInput">
+        <button type="button" onclick="closeSuspendModal()" style="padding: 10px 24px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; font-weight: 600; color: #6b7280; background: white; cursor: pointer; transition: all 0.2s;">
+          Cancel
+        </button>
+        <button type="submit" style="padding: 10px 24px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; color: white; background: #f59e0b; cursor: pointer; transition: all 0.2s;">
+          <i class="fas fa-ban"></i> Suspend Seller
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Activate Confirmation Modal -->
+<div id="activateModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9999; align-items: center; justify-content: center;">
+  <div style="background: white; border-radius: 12px; padding: 32px; max-width: 450px; width: 90%; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);">
+    <div style="text-align: center;">
+      <div style="width: 56px; height: 56px; background: #dcfce7; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+        <i class="fas fa-check-circle" style="font-size: 24px; color: #22c55e;"></i>
+      </div>
+      <h3 style="font-size: 20px; font-weight: 700; color: #1f2937; margin-bottom: 8px;">Activate Seller</h3>
+      <p style="font-size: 14px; color: #6b7280; margin-bottom: 24px;">
+        Are you sure you want to activate <strong id="activateSellerNameDisplay"></strong>? Their shops will be activated.
+      </p>
+      <form id="activateForm" method="POST" action="<?= url('admin/sellers/activate') ?>" style="display: flex; gap: 12px; justify-content: center;">
+        <?= csrfField() ?>
+        <input type="hidden" name="seller_id" id="activateSellerIdInput">
+        <button type="button" onclick="closeActivateModal()" style="padding: 10px 24px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; font-weight: 600; color: #6b7280; background: white; cursor: pointer; transition: all 0.2s;">
+          Cancel
+        </button>
+        <button type="submit" style="padding: 10px 24px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; color: white; background: #22c55e; cursor: pointer; transition: all 0.2s;">
+          <i class="fas fa-check-circle"></i> Activate Seller
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+// Delete Modal
+function openDeleteModal(sellerId, sellerName) {
+  document.getElementById('sellerIdInput').value = sellerId;
+  document.getElementById('sellerNameDisplay').textContent = sellerName;
+  const modal = document.getElementById('deleteModal');
+  modal.style.display = 'flex';
+
+  document.addEventListener('keydown', function escHandler(e) {
+    if (e.key === 'Escape') {
+      closeDeleteModal();
+      document.removeEventListener('keydown', escHandler);
+    }
+  });
+}
+
+function closeDeleteModal() {
+  document.getElementById('deleteModal').style.display = 'none';
+}
+
+document.getElementById('deleteModal')?.addEventListener('click', function(e) {
+  if (e.target === this) {
+    closeDeleteModal();
+  }
+});
+
+// Suspend Modal
+function openSuspendModal(sellerId, sellerName) {
+  document.getElementById('suspendSellerIdInput').value = sellerId;
+  document.getElementById('suspendSellerNameDisplay').textContent = sellerName;
+  const modal = document.getElementById('suspendModal');
+  modal.style.display = 'flex';
+
+  document.addEventListener('keydown', function escHandler(e) {
+    if (e.key === 'Escape') {
+      closeSuspendModal();
+      document.removeEventListener('keydown', escHandler);
+    }
+  });
+}
+
+function closeSuspendModal() {
+  document.getElementById('suspendModal').style.display = 'none';
+}
+
+document.getElementById('suspendModal')?.addEventListener('click', function(e) {
+  if (e.target === this) {
+    closeSuspendModal();
+  }
+});
+
+// Activate Modal
+function openActivateModal(sellerId, sellerName) {
+  document.getElementById('activateSellerIdInput').value = sellerId;
+  document.getElementById('activateSellerNameDisplay').textContent = sellerName;
+  const modal = document.getElementById('activateModal');
+  modal.style.display = 'flex';
+
+  document.addEventListener('keydown', function escHandler(e) {
+    if (e.key === 'Escape') {
+      closeActivateModal();
+      document.removeEventListener('keydown', escHandler);
+    }
+  });
+}
+
+function closeActivateModal() {
+  document.getElementById('activateModal').style.display = 'none';
+}
+
+document.getElementById('activateModal')?.addEventListener('click', function(e) {
+  if (e.target === this) {
+    closeActivateModal();
+  }
+});
+</script>
 
 <?php
 $content = ob_get_clean();

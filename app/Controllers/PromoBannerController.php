@@ -52,16 +52,8 @@ class PromoBannerController
             return;
         }
 
-        // Decode selected_products JSON
-        $selectedProducts = json_decode($banner['selected_products'] ?? '[]', true) ?: [];
-
-        // Fetch OCS store products for dropdown
-        $ocsProducts = $this->getOcsProducts();
-
         view('admin/promo-banners/edit', [
             'banner' => $banner,
-            'selectedProducts' => $selectedProducts,
-            'ocsProducts' => $ocsProducts,
             'pageTitle' => 'Edit Promo Banner'
         ]);
     }
@@ -78,25 +70,21 @@ class PromoBannerController
         }
 
         $id = post('id');
-        $title = post('title');
-        $subtitle = post('subtitle');
-        $discountPercentage = post('discount_percentage', 20);
-        $selectedProducts = post('selected_products', []); // Array of product IDs
-        $buttonText = post('button_text', 'Shop Now');
+        $titleEn = post('title_en');
+        $titleFr = post('title_fr');
+        $subtitleEn = post('subtitle_en');
+        $subtitleFr = post('subtitle_fr');
+        $discountBadgeEn = post('discount_badge_en', '20% OFF');
+        $discountBadgeFr = post('discount_badge_fr', '20% DE RABAIS');
+        $buttonTextEn = post('button_text_en', 'Shop Now');
+        $buttonTextFr = post('button_text_fr', 'Magasiner maintenant');
         $buttonUrl = post('button_url', '/deals');
         $sortOrder = post('sort_order', 0);
         $status = post('status', 'active');
 
         // Validate required fields
-        if (empty($title)) {
-            setFlash('error', 'Title is required');
-            back();
-            return;
-        }
-
-        // Validate discount percentage
-        if (!is_numeric($discountPercentage) || $discountPercentage < 0 || $discountPercentage > 100) {
-            setFlash('error', 'Discount percentage must be between 0 and 100');
+        if (empty($titleEn) || empty($titleFr)) {
+            setFlash('error', 'Title is required in both languages');
             back();
             return;
         }
@@ -119,17 +107,17 @@ class PromoBannerController
             return;
         }
 
-        // Encode selected products as JSON
-        $selectedProductsJson = json_encode($selectedProducts);
-
         // Update banner
         $stmt = $db->prepare("
             UPDATE promo_banners
-            SET title = ?,
-                subtitle = ?,
-                discount_percentage = ?,
-                selected_products = ?,
-                button_text = ?,
+            SET title_en = ?,
+                title_fr = ?,
+                subtitle_en = ?,
+                subtitle_fr = ?,
+                discount_badge_en = ?,
+                discount_badge_fr = ?,
+                button_text_en = ?,
+                button_text_fr = ?,
                 button_url = ?,
                 sort_order = ?,
                 status = ?,
@@ -138,11 +126,14 @@ class PromoBannerController
         ");
 
         $result = $stmt->execute([
-            $title,
-            $subtitle,
-            $discountPercentage,
-            $selectedProductsJson,
-            $buttonText,
+            $titleEn,
+            $titleFr,
+            $subtitleEn,
+            $subtitleFr,
+            $discountBadgeEn,
+            $discountBadgeFr,
+            $buttonTextEn,
+            $buttonTextFr,
             $buttonUrl,
             $sortOrder,
             $status,
@@ -164,11 +155,7 @@ class PromoBannerController
     public function create(): void
     {
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-            // Fetch OCS store products for dropdown
-            $ocsProducts = $this->getOcsProducts();
-
             view('admin/promo-banners/create', [
-                'ocsProducts' => $ocsProducts,
                 'pageTitle' => 'Create New Promo Banner'
             ]);
             return;
@@ -181,25 +168,21 @@ class PromoBannerController
             return;
         }
 
-        $title = post('title');
-        $subtitle = post('subtitle');
-        $discountPercentage = post('discount_percentage', 20);
-        $selectedProducts = post('selected_products', []); // Array of product IDs
-        $buttonText = post('button_text', 'Shop Now');
+        $titleEn = post('title_en');
+        $titleFr = post('title_fr');
+        $subtitleEn = post('subtitle_en');
+        $subtitleFr = post('subtitle_fr');
+        $discountBadgeEn = post('discount_badge_en', '20% OFF');
+        $discountBadgeFr = post('discount_badge_fr', '20% DE RABAIS');
+        $buttonTextEn = post('button_text_en', 'Shop Now');
+        $buttonTextFr = post('button_text_fr', 'Magasiner maintenant');
         $buttonUrl = post('button_url', '/deals');
         $sortOrder = post('sort_order', 999);
         $status = post('status', 'active');
 
         // Validate required fields
-        if (empty($title)) {
-            setFlash('error', 'Title is required');
-            back();
-            return;
-        }
-
-        // Validate discount percentage
-        if (!is_numeric($discountPercentage) || $discountPercentage < 0 || $discountPercentage > 100) {
-            setFlash('error', 'Discount percentage must be between 0 and 100');
+        if (empty($titleEn) || empty($titleFr)) {
+            setFlash('error', 'Title is required in both languages');
             back();
             return;
         }
@@ -211,21 +194,21 @@ class PromoBannerController
 
         $db = Database::getConnection();
 
-        // Encode selected products as JSON
-        $selectedProductsJson = json_encode($selectedProducts);
-
         // Insert new banner
         $stmt = $db->prepare("
-            INSERT INTO promo_banners (title, subtitle, discount_percentage, selected_products, button_text, button_url, sort_order, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO promo_banners (title_en, title_fr, subtitle_en, subtitle_fr, discount_badge_en, discount_badge_fr, button_text_en, button_text_fr, button_url, sort_order, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
 
         $result = $stmt->execute([
-            $title,
-            $subtitle,
-            $discountPercentage,
-            $selectedProductsJson,
-            $buttonText,
+            $titleEn,
+            $titleFr,
+            $subtitleEn,
+            $subtitleFr,
+            $discountBadgeEn,
+            $discountBadgeFr,
+            $buttonTextEn,
+            $buttonTextFr,
             $buttonUrl,
             $sortOrder,
             $status
@@ -321,35 +304,4 @@ class PromoBannerController
         exit;
     }
 
-    /**
-     * Get OCS store products for dropdown
-     * @return array
-     */
-    private function getOcsProducts(): array
-    {
-        $db = Database::getConnection();
-
-        // Fetch all active products from OCS store (shop_id = 1, seller_id = 1)
-        $stmt = $db->query("
-            SELECT
-                p.id,
-                p.name,
-                p.slug,
-                p.base_price,
-                p.sale_price,
-                p.is_on_sale,
-                p.sale_percentage,
-                pi.image_path as image
-            FROM products p
-            INNER JOIN shop_inventory si ON p.id = si.product_id AND si.shop_id = 1
-            LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
-            WHERE p.status = 'active'
-              AND p.seller_id = 1
-              AND si.status = 'active'
-            GROUP BY p.id
-            ORDER BY p.name ASC
-        ");
-
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
-    }
 }

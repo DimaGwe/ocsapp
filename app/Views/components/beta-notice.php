@@ -142,6 +142,15 @@ $t = getTranslations($currentLang);
 (function() {
     'use strict';
 
+    function updateBannerOffset() {
+        const banner = document.querySelector('.beta-banner');
+        if (banner) {
+            document.documentElement.style.setProperty('--beta-banner-h', banner.offsetHeight + 'px');
+        }
+    }
+    updateBannerOffset();
+    window.addEventListener('resize', updateBannerOffset);
+
     const STORAGE_KEY = 'ocs_beta_acknowledged';
     const overlay = document.getElementById('betaModalOverlay');
     const acknowledgeBtn = document.getElementById('betaAcknowledgeBtn');

@@ -7,7 +7,7 @@ use App\Middlewares\AuthMiddleware;
 class CmsController {
 
     public function __construct() {
-        AuthMiddleware::handle('admin');
+        AuthMiddleware::superAdmin();
     }
 
     /**

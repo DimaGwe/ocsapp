@@ -34,12 +34,14 @@ if (!function_exists('loadTranslationsFromDb')) {
 
         try {
             $db = \Database::getConnection();
-            $stmt = $db->query("SELECT `key`, en, fr, is_html FROM translations");
+            // Updated query for new structure with en/fr columns
+            $stmt = $db->query("SELECT `key`, en, fr FROM translations");
             $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
             foreach ($rows as $row) {
-                $translations['en'][$row['key']] = $row['en'] ?? '';
-                $translations['fr'][$row['key']] = $row['fr'] ?? '';
+                $key = $row['key'];
+                $translations['en'][$key] = $row['en'] ?? '';
+                $translations['fr'][$key] = $row['fr'] ?? '';
             }
 
             // Cache in session
@@ -139,7 +141,7 @@ if (!function_exists('tRaw')) {
 if (!function_exists('getCurrentLanguage')) {
     function getCurrentLanguage(): string
     {
-        return $_SESSION['language'] ?? 'fr';
+        return $_SESSION['language'] ?? 'en';
     }
 }
 

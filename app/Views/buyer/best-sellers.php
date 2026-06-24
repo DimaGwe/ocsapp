@@ -35,29 +35,41 @@ $totalPages = ceil($total / $perPage);
     <meta name="theme-color" content="#00b207">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link rel="stylesheet" href="<?= asset('css/styles.css') ?>">
+
+    <!-- Modular CSS Architecture -->
+    <link rel="stylesheet" href="<?= asset('css/global.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/components/header.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/components/footer.css') ?>">
 </head>
 <body>
-    <!-- Top Banner -->
-    <div class="top-banner">
-        <?= $t['store_location'] ?>: <?= htmlspecialchars($storeLocation) ?> |
-        <?= $t['need_help'] ?>: <a href="tel:+18095551234">+1 (809) 555-1234</a>
-    </div>
-
-    <!-- Header -->
+    <!-- Header (includes beta notice and top banner) -->
     <?php include __DIR__ . '/../components/header.php'; ?>
+
+    <!-- Breadcrumb Menu -->
+    <div class="breadcrumb-menu">
+        <a href="<?= url('/') ?>" class="breadcrumb-btn">
+            <span>🏠</span>
+            <span><?= $t['home'] ?? 'Home' ?></span>
+        </a>
+        <a href="<?= url('categories') ?>" class="breadcrumb-btn">
+            <span>☰</span>
+            <span><?= $t['categories'] ?? 'Categories' ?></span>
+        </a>
+        <a href="<?= url('shops') ?>" class="breadcrumb-btn">
+            <span>🏪</span>
+            <span><?= $t['shops'] ?? 'Shops' ?></span>
+        </a>
+        <a href="<?= url('best-sellers') ?>" class="breadcrumb-btn active">
+            <span>🏆</span>
+            <span><?= $t['best_sellers'] ?? 'Best Sellers' ?></span>
+        </a>
+    </div>
 
     <main class="page">
         <!-- Page Header -->
-        <div class="best-sellers-header">
-            <h1>🏆 <?= $pageTitle ?></h1>
-
-            <div class="active-promos">
-                <div class="promo-tag">
-                    <span class="promo-icon">💎</span>
-                    <strong><?= $t['best_sellers_subtitle'] ?? 'Our most popular products' ?></strong>
-                </div>
-            </div>
+        <div class="page-header">
+            <h1 class="page-title">🏆 <?= $t['best_sellers_page_title'] ?? $pageTitle ?></h1>
+            <p class="page-subtitle"><?= $t['best_sellers_subtitle'] ?? 'Our most popular products' ?></p>
         </div>
 
         <?php if (!empty($products)): ?>
@@ -75,7 +87,7 @@ $totalPages = ceil($total / $perPage);
             </div>
 
             <!-- Products Grid -->
-            <div class="products-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; margin-bottom: 40px;">
+            <div class="products-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 24px; margin-bottom: 40px;">
                 <?php foreach ($products as $product):
                     $discount = $product['discount_percentage'] ?? 0;
                     $productTags = $product['tags'] ?? [];
@@ -93,6 +105,24 @@ $totalPages = ceil($total / $perPage);
                             <?php if (!empty($product['is_featured'])): ?>
                                 <div class="product-badge featured">⭐ <?= $t['featured'] ?? 'Featured' ?></div>
                             <?php endif; ?>
+
+                            <?php
+                            // Tag badges
+                            $tagBadges = [
+                                'organic' => ['label' => $t['organic'] ?? 'Organic', 'class' => 'organic'],
+                                'bestseller' => ['label' => $t['bestseller'] ?? 'Best Seller', 'class' => 'bestseller'],
+                                'new-arrival' => ['label' => $t['new'] ?? 'New', 'class' => 'new'],
+                                'premium' => ['label' => $t['premium'] ?? 'Premium', 'class' => 'premium'],
+                            ];
+                            foreach ($productTags as $tag):
+                                $tagSlug = is_array($tag) ? ($tag['slug'] ?? '') : $tag;
+                                if (isset($tagBadges[$tagSlug])):
+                            ?>
+                                <div class="product-badge <?= $tagBadges[$tagSlug]['class'] ?>"><?= $tagBadges[$tagSlug]['label'] ?></div>
+                            <?php
+                                endif;
+                            endforeach;
+                            ?>
                         </div>
 
                         <!-- Wishlist Button (Top Right) -->
@@ -120,12 +150,6 @@ $totalPages = ceil($total / $perPage);
                                     <?= htmlspecialchars($product['name']) ?>
                                 </a>
                             </h3>
-
-                            <?php if (!empty($product['show_on_home'])): ?>
-                                <div class="banner-tag">
-                                    🏆 <?= $t['bestseller'] ?? 'Best Seller' ?>
-                                </div>
-                            <?php endif; ?>
 
                             <!-- Stars Rating -->
                             <div class="product-rating">
@@ -238,64 +262,86 @@ $totalPages = ceil($total / $perPage);
     <?php include __DIR__ . '/../components/footer.php'; ?>
 
     <style>
-        /* Best Sellers Page Header */
-        .best-sellers-header {
-            text-align: center;
-            margin-bottom: 40px;
-            background: linear-gradient(135deg, #00b207 0%, #059669 50%, #10b981 100%);
-            padding: 60px 40px;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 178, 7, 0.2);
+        /* Breadcrumb Menu */
+        .breadcrumb-menu {
+            background: transparent;
+            padding: 20px 5%;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            max-width: 1400px;
+            margin: 20px auto 0;
             position: relative;
-            overflow: hidden;
         }
 
-        .best-sellers-header::before {
+        .breadcrumb-menu::after {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
             bottom: 0;
-            background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><rect fill="rgba(255,255,255,0.03)" x="0" y="0" width="50" height="50"/><rect fill="rgba(255,255,255,0.03)" x="50" y="50" width="50" height="50"/></svg>');
-            opacity: 0.3;
-            pointer-events: none;
+            left: 5%;
+            right: 5%;
+            height: 1px;
+            background: #e6e6e6;
         }
 
-        .best-sellers-header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 12px;
-            color: white;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            position: relative;
-            z-index: 1;
-        }
-
-        /* Promo Tag */
-        .active-promos {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-top: 24px;
-            justify-content: center;
-            position: relative;
-            z-index: 1;
-        }
-
-        .promo-tag {
+        .breadcrumb-btn {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 12px 20px;
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: white;
-            border-radius: 50px;
+            padding: 10px 20px;
+            background: #f7f7f7;
+            color: #333;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
             font-size: 14px;
-            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+            transition: all 0.2s;
+            border: 1px solid #e6e6e6;
         }
 
-        .promo-icon {
-            font-size: 18px;
+        .breadcrumb-btn:hover {
+            background: #00b207;
+            color: white;
+            border-color: #00b207;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,178,7,0.2);
+        }
+
+        .breadcrumb-btn.active {
+            background: #00b207;
+            color: white;
+            border-color: #00b207;
+        }
+
+        @media (max-width: 1024px) {
+            .breadcrumb-menu {
+                padding: 20px 4%;
+            }
+
+            .breadcrumb-menu::after {
+                left: 4%;
+                right: 4%;
+            }
+        }
+
+        /* Page Header */
+        .page-header {
+            background: linear-gradient(135deg, #00b207 0%, #009206 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 16px;
+            margin-top: 30px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        .page-title {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .page-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
         }
 
         /* Deals Controls */
@@ -329,168 +375,38 @@ $totalPages = ceil($total / $perPage);
             background: white;
         }
 
-        /* Product Card Enhancements */
-        .product-card {
-            overflow: visible !important;
-        }
-
-        .product-card::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border: 2px solid var(--primary);
-            border-radius: 12px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        .product-card:hover::after {
-            opacity: 1;
-        }
-
-        /* Product Image with padding for border spacing */
-        .product-image {
-            padding: 12px !important;
-            background: #f8f8f8 !important;
-            height: 250px !important;
-            display: block;
-        }
-
-        .product-image img {
-            border-radius: 8px;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        /* Product Info Styling */
-        .product-category {
-            font-size: 12px;
-            color: #9ca3af;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-        }
-
-        .banner-tag {
-            display: inline-block;
-            padding: 4px 10px;
-            background: #fef3c7;
-            color: #92400e;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            width: fit-content;
-        }
-
-        /* Wishlist Button */
-        .wishlist-btn {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            background: white;
-            border: none;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 2;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            transition: all 0.2s ease;
-        }
-
-        .wishlist-btn:hover {
-            background: #fef2f2;
-            transform: scale(1.1);
-        }
-
-        .wishlist-btn.active i,
-        .wishlist-btn i.fas {
-            color: #ef4444;
-        }
-
-        /* Product Rating */
-        .product-rating {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-bottom: 8px;
-        }
-
-        .product-rating .stars {
-            display: flex;
-            gap: 2px;
-        }
-
-        .product-rating .stars i {
-            font-size: 12px;
-        }
-
-        .product-rating .stars .fa-star,
-        .product-rating .stars .fa-star-half-alt {
-            color: #fbbf24;
-        }
-
-        .product-rating .stars .fa-star.far {
-            color: #d1d5db;
-        }
-
-        .product-rating .rating-number {
-            font-size: 12px;
-            color: #6b7280;
-            font-weight: 500;
-        }
-
-        /* Stock Status */
-        .stock-status {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 12px;
-            margin-bottom: 12px;
-            font-weight: 500;
-            width: fit-content;
-        }
-
+        /* Stock Status Override */
         .stock-status.in-stock {
-            color: #00b207;
+            color: #1a1a1a;
         }
 
         .stock-status.low-stock {
-            color: #f59e0b;
+            color: #ed8936;
         }
 
         .stock-status.out-of-stock {
-            color: #ef4444;
-        }
-
-        /* Add to Cart Button */
-        .add-to-cart {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .add-to-cart:disabled {
-            background: #d1d5db;
-            cursor: not-allowed;
+            color: #f56565;
         }
 
         /* Responsive */
+        @media (max-width: 1200px) {
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+                gap: 20px !important;
+            }
+        }
+
         @media (max-width: 768px) {
-            .best-sellers-header h1 {
-                font-size: 2rem;
+            .page-title {
+                font-size: 28px;
             }
 
-            .best-sellers-header {
+            .page-header {
                 padding: 40px 20px;
+            }
+
+            .breadcrumb-menu {
+                gap: 10px;
             }
 
             .deals-controls {
@@ -499,14 +415,31 @@ $totalPages = ceil($total / $perPage);
                 align-items: stretch;
             }
 
-            .promo-tag {
-                font-size: 13px;
-                padding: 10px 16px;
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
+                gap: 16px !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .products-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 12px !important;
             }
         }
     </style>
 
     <script>
+        // Config for cart functionality
+        window.OCSAPP_CONFIG = {
+            isLoggedIn: <?= function_exists('isLoggedIn') && isLoggedIn() ? 'true' : 'false' ?>,
+            currentLang: '<?= $currentLang ?>',
+            urls: {
+                cartAdd: '<?= url('cart/add') ?>',
+                cartCount: '<?= url('cart/count') ?>'
+            }
+        };
+
         // Sort products functionality
         function sortProducts(sortType) {
             const grid = document.querySelector('.products-grid');

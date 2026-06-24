@@ -5,7 +5,7 @@
  */
 
 $pageTitle = $pageTitle ?? 'Promo Banners';
-$currentPage = $currentPage ?? 'cms';
+$currentPage = 'promo-banners';
 
 ob_start();
 ?>
@@ -267,14 +267,10 @@ ob_start();
 <?php if (!empty($banners)): ?>
   <div class="banners-grid">
     <?php foreach ($banners as $banner): ?>
-      <?php
-        $selectedProducts = json_decode($banner['selected_products'] ?? '[]', true) ?: [];
-        $productCount = count($selectedProducts);
-      ?>
       <div class="banner-card" data-id="<?= $banner['id'] ?>">
         <!-- Discount Badge -->
         <div class="banner-discount-badge">
-          <?= $banner['discount_percentage'] ?>%
+          <?= htmlspecialchars($banner['discount_badge'] ?? '20% OFF') ?>
         </div>
 
         <!-- Content -->
@@ -301,8 +297,8 @@ ob_start();
             <?php endif; ?>
 
             <div class="banner-meta-item">
-              <span class="product-count-badge">
-                🛍️ <?= $productCount ?> <?= $productCount === 1 ? 'product' : 'products' ?>
+              <span class="product-count-badge" title="Products automatically from Sales Management">
+                🛍️ Auto from Sales
               </span>
             </div>
 

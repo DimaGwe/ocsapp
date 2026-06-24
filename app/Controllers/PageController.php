@@ -114,31 +114,44 @@ class PageController
     }
 
     /**
-     * About Us page - Load from CMS database
+     * Cookie Policy page
      */
-    public function about(): void
+    public function cookies(): void
+    {
+        view('legal/cookies');
+    }
+
+    public function accessibility(): void
+    {
+        view('legal/accessibility');
+    }
+
+    /**
+     * Return & Refund Policy page
+     */
+    public function returns(): void
     {
         try {
-            $language = $_SESSION['language'] ?? 'fr';
+            $language = $_SESSION['language'] ?? 'en';
 
-            // Load about page from database
             $stmt = $this->db->prepare("
-                SELECT * FROM content_pages
-                WHERE page_type = 'about'
+                SELECT * FROM legal_content
+                WHERE page_type = 'refund'
                 AND language = ?
                 AND is_published = 1
+                ORDER BY version DESC
                 LIMIT 1
             ");
             $stmt->execute([$language]);
             $page = $stmt->fetch();
 
-            // Fallback to English if language version not found
             if (!$page && $language !== 'en') {
                 $stmt = $this->db->prepare("
-                    SELECT * FROM content_pages
-                    WHERE page_type = 'about'
+                    SELECT * FROM legal_content
+                    WHERE page_type = 'refund'
                     AND language = 'en'
                     AND is_published = 1
+                    ORDER BY version DESC
                     LIMIT 1
                 ");
                 $stmt->execute();
@@ -146,17 +159,110 @@ class PageController
             }
 
             if (!$page) {
-                http_response_code(404);
-                echo "About Us page not found";
+                view('legal/returns');
                 return;
             }
 
-            require __DIR__ . '/../Views/pages/content-page.php';
-        } catch (\Exception $e) {
-            error_log("Error loading about page: " . $e->getMessage());
-            http_response_code(500);
-            echo "Error loading page";
+            view('legal/dynamic', ['page' => $page]);
+
+        } catch (\PDOException $e) {
+            logger("Error loading returns policy: " . $e->getMessage(), 'error');
+            view('legal/returns');
         }
+    }
+
+    /**
+     * Seller Agreement page
+     */
+    public function sellerAgreement(): void
+    {
+        $this->loadLegalPage('seller_agreement', 'Seller Agreement');
+    }
+
+    /**
+     * Supplier Agreement page
+     */
+    public function supplierAgreement(): void
+    {
+        $this->loadLegalPage('supplier_agreement', 'Supplier Agreement');
+    }
+
+    /**
+     * Driver / Contractor Agreement page
+     */
+    public function driverAgreement(): void
+    {
+        $this->loadLegalPage('driver_agreement', 'Driver Agreement');
+    }
+
+    /**
+     * Distribution Service Agreement page
+     */
+    public function distributionAgreement(): void
+    {
+        $this->loadLegalPage('distribution_agreement', 'Distribution Agreement');
+    }
+
+    /**
+     * Non-Disclosure Agreement page
+     */
+    public function nda(): void
+    {
+        $this->loadLegalPage('nda', 'Non-Disclosure Agreement');
+    }
+
+    /**
+     * Generic legal page loader from legal_content table
+     */
+    private function loadLegalPage(string $pageType, string $fallbackTitle): void
+    {
+        try {
+            $language = $_SESSION['language'] ?? 'en';
+
+            $stmt = $this->db->prepare("
+                SELECT * FROM legal_content
+                WHERE page_type = ?
+                AND language = ?
+                AND is_published = 1
+                ORDER BY version DESC
+                LIMIT 1
+            ");
+            $stmt->execute([$pageType, $language]);
+            $page = $stmt->fetch();
+
+            if (!$page && $language !== 'en') {
+                $stmt = $this->db->prepare("
+                    SELECT * FROM legal_content
+                    WHERE page_type = ?
+                    AND language = 'en'
+                    AND is_published = 1
+                    ORDER BY version DESC
+                    LIMIT 1
+                ");
+                $stmt->execute([$pageType]);
+                $page = $stmt->fetch();
+            }
+
+            if ($page) {
+                view('legal/dynamic', ['page' => $page]);
+            } else {
+                http_response_code(404);
+                echo htmlspecialchars($fallbackTitle) . ' not found.';
+            }
+
+        } catch (\PDOException $e) {
+            logger("Error loading {$pageType}: " . $e->getMessage(), 'error');
+            http_response_code(500);
+            echo 'Error loading page.';
+        }
+    }
+
+    /**
+     * About Us page - Load from CMS database
+     */
+    public function about(): void
+    {
+        view('pages/about');
     }
 
     /**
@@ -164,45 +270,7 @@ class PageController
      */
     public function contact(): void
     {
-        try {
-            $language = $_SESSION['language'] ?? 'fr';
-
-            // Load contact page from database
-            $stmt = $this->db->prepare("
-                SELECT * FROM content_pages
-                WHERE page_type = 'contact'
-                AND language = ?
-                AND is_published = 1
-                LIMIT 1
-            ");
-            $stmt->execute([$language]);
-            $page = $stmt->fetch();
-
-            // Fallback to English if language version not found
-            if (!$page && $language !== 'en') {
-                $stmt = $this->db->prepare("
-                    SELECT * FROM content_pages
-                    WHERE page_type = 'contact'
-                    AND language = 'en'
-                    AND is_published = 1
-                    LIMIT 1
-                ");
-                $stmt->execute();
-                $page = $stmt->fetch();
-            }
-
-            if (!$page) {
-                http_response_code(404);
-                echo "Contact page not found";
-                return;
-            }
-
-            require __DIR__ . '/../Views/pages/content-page.php';
-        } catch (\Exception $e) {
-            error_log("Error loading contact page: " . $e->getMessage());
-            http_response_code(500);
-            echo "Error loading page";
-        }
+        view('pages/contact');
     }
 
     /**
@@ -211,6 +279,22 @@ class PageController
     public function sellerCentral(): void
     {
         view('pages/seller-central');
+    }
+
+    /**
+     * Buyer Central - Public landing page for buyers
+     */
+    public function buyerCentral(): void
+    {
+        view('pages/buyer-central');
+    }
+
+    /**
+     * Driver Central - Public landing page for delivery drivers
+     */
+    public function driverCentral(): void
+    {
+        view('pages/driver-central');
     }
 
     /**
@@ -225,6 +309,9 @@ class PageController
             return;
         }
 
+        $lang = $_SESSION['language'] ?? 'en';
+        $fr = ($lang === 'fr');
+
         $name = sanitize(post('name', ''));
         $email = sanitize(post('email', ''));
         $subject = sanitize(post('subject', ''));
@@ -232,12 +319,12 @@ class PageController
 
         // Validate inputs
         if (empty($name) || empty($email) || empty($message)) {
-            jsonResponse(['success' => false, 'message' => 'All fields are required']);
+            jsonResponse(['success' => false, 'message' => $fr ? 'Tous les champs sont obligatoires.' : 'All fields are required.']);
             return;
         }
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            jsonResponse(['success' => false, 'message' => 'Invalid email address']);
+            jsonResponse(['success' => false, 'message' => $fr ? 'Adresse courriel invalide.' : 'Invalid email address.']);
             return;
         }
 
@@ -282,12 +369,12 @@ class PageController
 
             jsonResponse([
                 'success' => true,
-                'message' => 'Message sent successfully! We will get back to you soon.'
+                'message' => $fr ? 'Message envoyé avec succès ! Nous vous répondrons bientôt.' : 'Message sent successfully! We will get back to you soon.'
             ]);
 
         } catch (\PDOException $e) {
             logger("Error saving contact message: " . $e->getMessage(), 'error');
-            jsonResponse(['success' => false, 'message' => 'Failed to send message. Please try again.']);
+            jsonResponse(['success' => false, 'message' => $fr ? 'Échec de l\'envoi. Veuillez réessayer.' : 'Failed to send message. Please try again.']);
         }
     }
 }

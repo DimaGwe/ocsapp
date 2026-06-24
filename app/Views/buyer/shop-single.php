@@ -29,7 +29,11 @@ $cartCount = $cartCount ?? 0;
     <?= csrfMeta() ?>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="<?= asset('css/styles.css') ?>">
+
+    <!-- Modular CSS Architecture -->
+    <link rel="stylesheet" href="<?= asset('css/global.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/components/header.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/components/footer.css') ?>">
     <style>
         body {
             padding-bottom: 0;
@@ -39,7 +43,7 @@ $cartCount = $cartCount ?? 0;
         .shop-layout {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 30px 20px;
+            padding: 30px 5%;
             display: grid;
             grid-template-columns: 320px 1fr;
             gap: 20px;
@@ -238,8 +242,8 @@ $cartCount = $cartCount ?? 0;
         
         .products-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 24px;
             padding: 30px;
         }
         
@@ -249,16 +253,26 @@ $cartCount = $cartCount ?? 0;
         }
         
         .breadcrumb-menu {
-            background: white;
-            border-bottom: 1px solid #e6e6e6;
-            padding: 15px 20px;
+            background: transparent;
+            padding: 20px 5%;
             display: flex;
             gap: 15px;
             align-items: center;
             max-width: 1400px;
-            margin: 0 auto;
+            margin: 20px auto 0;
+            position: relative;
         }
-        
+
+        .breadcrumb-menu::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 5%;
+            right: 5%;
+            height: 1px;
+            background: #e6e6e6;
+        }
+
         .breadcrumb-btn {
             display: inline-flex;
             align-items: center;
@@ -273,7 +287,7 @@ $cartCount = $cartCount ?? 0;
             transition: all 0.2s;
             border: 1px solid #e6e6e6;
         }
-        
+
         .breadcrumb-btn:hover {
             background: #00b207;
             color: white;
@@ -281,35 +295,49 @@ $cartCount = $cartCount ?? 0;
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,178,7,0.2);
         }
-        
+
         .breadcrumb-btn.active {
             background: #00b207;
             color: white;
             border-color: #00b207;
         }
         
+        @media (max-width: 1200px) {
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+                gap: 20px;
+            }
+        }
+
         @media (max-width: 1024px) {
             .shop-layout {
                 grid-template-columns: 1fr;
-                padding: 15px;
+                padding: 30px 4%;
             }
             .shop-sidebar {
                 position: relative;
                 top: 0;
             }
             .breadcrumb-menu {
-                display: none;
+                padding: 20px 4%;
+            }
+
+            .breadcrumb-menu::after {
+                left: 4%;
+                right: 4%;
             }
         }
 
         @media (max-width: 768px) {
             .shop-layout {
-                padding: 10px;
+                padding: 30px 4%;
+            }
+            .breadcrumb-menu {
+                gap: 10px;
             }
             .products-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 12px;
-                padding: 15px;
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                gap: 16px;
             }
             .products-header {
                 flex-direction: column;
@@ -331,12 +359,11 @@ $cartCount = $cartCount ?? 0;
 
         @media (max-width: 480px) {
             .shop-layout {
-                padding: 5px;
+                padding: 30px 4%;
             }
             .products-grid {
-                grid-template-columns: 1fr;
-                gap: 10px;
-                padding: 10px;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
             }
             .products-title {
                 font-size: 18px;
@@ -451,13 +478,7 @@ $cartCount = $cartCount ?? 0;
     </style>
 </head>
 <body>
-    <!-- Top Banner -->
-    <div class="top-banner">
-        <?= $t['store_location'] ?>: <?= htmlspecialchars($currentLocation) ?> | 
-        <?= $t['need_help'] ?>: <a href="tel:+18095551234">+1 (809) 555-1234</a>
-    </div>
-
-    <!-- Header -->
+    <!-- Header (includes beta notice and top banner) -->
     <?php include __DIR__ . '/../components/header.php'; ?>
 
     <!-- Breadcrumb Menu -->
@@ -483,9 +504,7 @@ $cartCount = $cartCount ?? 0;
             <div class="shop-info">
                 <div class="shop-logo-large">
                     <?php if (!empty($shop['logo'])): ?>
-                        <img src="<?= asset($shop['logo']) ?>" alt="<?= htmlspecialchars($shop['name']) ?>">
-                    <?php elseif (!empty($shop['display_logo'])): ?>
-                        <img src="<?= $shop['display_logo'] ?>" alt="<?= htmlspecialchars($shop['name']) ?>">
+                        <img src="<?= url($shop['logo']) ?>" alt="<?= htmlspecialchars($shop['name']) ?>">
                     <?php else: ?>
                         <span style="font-size: 60px;">🏪</span>
                     <?php endif; ?>
@@ -509,21 +528,21 @@ $cartCount = $cartCount ?? 0;
                     <span>🛍️</span>
                     <span><?= $t['products'] ?? 'Products' ?></span>
                 </a>
-                <a href="#" class="sidebar-menu-item" onclick="event.preventDefault(); alert('Feedback feature coming soon!');">
+                <a href="#" class="sidebar-menu-item" onclick="event.preventDefault(); openShopModal('feedbackModal');">
                     <span>💬</span>
-                    <span><?= $t['shop_feedback'] ?? 'Shop Feedback' ?></span>
+                    <span><?= $currentLang === 'fr' ? 'Laisser un avis' : 'Leave a Review' ?></span>
                 </a>
-                <a href="#" class="sidebar-menu-item" onclick="event.preventDefault(); alert('Contact feature coming soon!');">
+                <a href="#" class="sidebar-menu-item" onclick="event.preventDefault(); openShopModal('contactModal');">
                     <span>✉️</span>
-                    <span><?= $t['shop_contact'] ?? 'Shop Contact' ?></span>
+                    <span><?= $currentLang === 'fr' ? 'Contacter la boutique' : 'Contact Shop' ?></span>
                 </a>
-                <a href="#" class="sidebar-menu-item" onclick="event.preventDefault(); alert('Policy information coming soon!');">
+                <a href="#" class="sidebar-menu-item" onclick="event.preventDefault(); openShopModal('policyModal');">
                     <span>📋</span>
-                    <span><?= $t['shop_policy'] ?? 'Shop Policy' ?></span>
+                    <span><?= $currentLang === 'fr' ? 'Politiques' : 'Shop Policy' ?></span>
                 </a>
-                <a href="#" class="sidebar-menu-item" onclick="event.preventDefault(); alert('Report feature coming soon!');">
+                <a href="#" class="sidebar-menu-item" onclick="event.preventDefault(); openShopModal('reportModal');">
                     <span>⚠️</span>
-                    <span><?= $t['shop_report_spam'] ?? 'Report Spam' ?></span>
+                    <span><?= $currentLang === 'fr' ? 'Signaler' : 'Report' ?></span>
                 </a>
             </div>
             
@@ -549,7 +568,7 @@ $cartCount = $cartCount ?? 0;
             <!-- Shop Banner -->
             <div class="shop-banner">
                 <?php if (!empty($shop['cover_image'])): ?>
-                    <img src="<?= asset($shop['cover_image']) ?>" alt="<?= htmlspecialchars($shop['name']) ?>">
+                    <img src="<?= url($shop['cover_image']) ?>" alt="<?= htmlspecialchars($shop['name']) ?>">
                 <?php else: ?>
                     <span style="font-size: 80px; color: white;">🏪</span>
                 <?php endif; ?>
@@ -585,12 +604,50 @@ $cartCount = $cartCount ?? 0;
                     <?php foreach ($products as $product):
                         $price = $product['is_on_sale'] ?? false ? ($product['sale_price'] ?? $product['base_price']) : $product['base_price'];
                         $stock = $product['stock_quantity'] ?? 0;
+
+                        // Calculate discount
+                        $discount = 0;
+                        if (!empty($product['is_on_sale']) && !empty($product['base_price']) && $product['base_price'] > $price) {
+                            $discount = round((($product['base_price'] - $price) / $product['base_price']) * 100);
+                        } elseif (!empty($product['compare_at_price']) && $product['compare_at_price'] > $price) {
+                            $discount = round((($product['compare_at_price'] - $price) / $product['compare_at_price']) * 100);
+                        }
+
+                        // Parse tags
+                        $productTags = $product['tags'] ?? [];
+                        if (is_string($productTags)) {
+                            $productTags = json_decode($productTags, true) ?: [];
+                        }
                     ?>
                         <article class="product-card" data-price="<?= $price ?>" data-category="<?= htmlspecialchars($product['category_name'] ?? '') ?>">
-                            <!-- Sale Badge -->
-                            <?php if (!empty($product['is_on_sale'])): ?>
-                                <div class="sale-badge"><?= $t['sale'] ?? 'Sale' ?></div>
-                            <?php endif; ?>
+                            <!-- Product Badges -->
+                            <div class="product-badges">
+                                <?php if ($discount > 0): ?>
+                                    <div class="product-badge sale"><?= $t['sale'] ?? 'Sale' ?> <?= $discount ?>%</div>
+                                <?php endif; ?>
+
+                                <?php if (!empty($product['is_featured'])): ?>
+                                    <div class="product-badge featured">⭐ <?= $t['featured'] ?? 'Featured' ?></div>
+                                <?php endif; ?>
+
+                                <?php
+                                // Tag badges
+                                $tagBadges = [
+                                    'organic' => ['label' => $t['organic'] ?? 'Organic', 'class' => 'organic'],
+                                    'bestseller' => ['label' => $t['bestseller'] ?? 'Best Seller', 'class' => 'bestseller'],
+                                    'new-arrival' => ['label' => $t['new'] ?? 'New', 'class' => 'new'],
+                                    'premium' => ['label' => $t['premium'] ?? 'Premium', 'class' => 'premium'],
+                                ];
+                                foreach ($productTags as $tag):
+                                    $tagSlug = is_array($tag) ? ($tag['slug'] ?? '') : $tag;
+                                    if (isset($tagBadges[$tagSlug])):
+                                ?>
+                                    <div class="product-badge <?= $tagBadges[$tagSlug]['class'] ?>"><?= $tagBadges[$tagSlug]['label'] ?></div>
+                                <?php
+                                    endif;
+                                endforeach;
+                                ?>
+                            </div>
 
                             <!-- Wishlist Button -->
                             <button class="wishlist-btn" onclick="toggleWishlist(<?= $product['id'] ?>)" aria-label="<?= $t['add_to_wishlist'] ?? 'Add to wishlist' ?>">
@@ -600,11 +657,11 @@ $cartCount = $cartCount ?? 0;
                             <!-- Product Image -->
                             <a href="<?= url('product/' . ($product['slug'] ?? $product['id'])) ?>" class="product-image">
                                 <?php if (!empty($product['image'])): ?>
-                                    <img src="<?= asset($product['image']) ?>"
+                                    <img src="<?= url($product['image']) ?>"
                                          alt="<?= htmlspecialchars($product['name']) ?>"
                                          loading="lazy">
                                 <?php else: ?>
-                                    <img src="https://via.placeholder.com/400x400?text=No+Image" alt="<?= htmlspecialchars($product['name']) ?>">
+                                    <img src="<?= asset('images/placeholder.svg') ?>" alt="<?= htmlspecialchars($product['name']) ?>">
                                 <?php endif; ?>
                             </a>
 
@@ -638,7 +695,7 @@ $cartCount = $cartCount ?? 0;
                                         <?php endfor; ?>
                                     </span>
                                     <?php if ($rating > 0): ?>
-                                        <span class="rating-count">(<?= number_format($rating, 1) ?>)</span>
+                                        <span class="rating-number"><?= number_format($rating, 1) ?></span>
                                     <?php endif; ?>
                                 </div>
 
@@ -689,35 +746,7 @@ $cartCount = $cartCount ?? 0;
     </div>
 
     <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-grid">
-            <div>
-                <h4><?= $t['get_to_know'] ?></h4>
-                <ul>
-                    <li><a href="<?= url('about') ?>"><?= $t['about_us'] ?></a></li>
-                    <li><a href="<?= url('contact') ?>"><?= $t['contact_us'] ?></a></li>
-                </ul>
-            </div>
-            <div>
-                <h4><?= $t['promote_with_us'] ?></h4>
-                <ul>
-                    <li><a href="<?= url('register') ?>"><?= $t['sell_on'] ?></a></li>
-                    <li><a href="<?= url('seller/help') ?>"><?= $t['vendor_central'] ?></a></li>
-                </ul>
-            </div>
-            <div>
-                <h4><?= $t['connect_with_us'] ?></h4>
-                <ul>
-                    <li><a href="#">Facebook</a></li>
-                    <li><a href="#">Twitter</a></li>
-                    <li><a href="#">Instagram</a></li>
-                </ul>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <p>OCSAPP © <?= date('Y') ?>. <?= $t['all_rights'] ?></p>
-        </div>
-    </footer>
+    <?php include __DIR__ . '/../components/footer.php'; ?>
 
     <!-- Shop Information Modal -->
     <div class="modal-overlay" id="shopInfoModal" onclick="closeShopInfoModal(event)">
@@ -824,7 +853,7 @@ $cartCount = $cartCount ?? 0;
     </div>
 
     <script>
-        window.OCS_CONFIG = {
+        window.OCSAPP_CONFIG = {
             isLoggedIn: <?= function_exists('isLoggedIn') && isLoggedIn() ? 'true' : 'false' ?>,
             currentLang: '<?= $currentLang ?>',
             urls: {
@@ -916,6 +945,287 @@ $cartCount = $cartCount ?? 0;
     </script>
 
     <script src="<?= asset('js/home.js') ?>"></script>
+
+<!-- Feedback Modal -->
+<div class="modal-overlay" id="feedbackModal" onclick="closeShopModalOverlay(event, 'feedbackModal')">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h2 class="modal-title"><?= $currentLang === 'fr' ? 'Laisser un avis' : 'Leave a Review' ?></h2>
+            <button class="modal-close" onclick="closeShopModal('feedbackModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <?php if (!isLoggedIn()): ?>
+                <p style="color:#666;text-align:center;padding:20px 0">
+                    <?= $currentLang === 'fr' ? 'Veuillez vous connecter pour laisser un avis.' : 'Please log in to leave a review.' ?>
+                    <br><br>
+                    <a href="<?= url('login') ?>" style="background:#00b207;color:white;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:600">
+                        <?= $currentLang === 'fr' ? 'Se connecter' : 'Log In' ?>
+                    </a>
+                </p>
+            <?php else: ?>
+                <form id="feedbackForm" onsubmit="submitShopReview(event)">
+                    <div class="shop-info-section">
+                        <div class="shop-info-label"><?= $currentLang === 'fr' ? 'Note' : 'Rating' ?> *</div>
+                        <div id="starRating" style="display:flex;gap:8px;font-size:32px;cursor:pointer;margin:8px 0">
+                            <?php for ($i = 1; $i <= 5; $i++): ?>
+                                <span class="star-btn" data-value="<?= $i ?>" onclick="setRating(<?= $i ?>)" style="color:#ddd;transition:color 0.15s">&#9733;</span>
+                            <?php endfor; ?>
+                        </div>
+                        <input type="hidden" id="feedbackRating" name="rating" value="0">
+                    </div>
+                    <div class="shop-info-section">
+                        <div class="shop-info-label"><?= $currentLang === 'fr' ? 'Commentaire' : 'Comment' ?></div>
+                        <textarea name="comment" rows="4" placeholder="<?= $currentLang === 'fr' ? 'Partagez votre experience...' : 'Share your experience...' ?>"
+                                  style="width:100%;padding:12px;border:1px solid #e6e6e6;border-radius:8px;font-size:14px;resize:vertical;font-family:inherit"></textarea>
+                    </div>
+                    <div id="feedbackMsg" style="display:none;padding:10px;border-radius:6px;margin-bottom:12px;font-size:14px"></div>
+                    <button type="submit" style="background:#00b207;color:white;border:none;padding:12px 28px;border-radius:8px;font-weight:600;cursor:pointer;font-size:15px">
+                        <?= $currentLang === 'fr' ? 'Soumettre' : 'Submit Review' ?>
+                    </button>
+                </form>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+
+<!-- Contact Modal -->
+<div class="modal-overlay" id="contactModal" onclick="closeShopModalOverlay(event, 'contactModal')">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h2 class="modal-title"><?= $currentLang === 'fr' ? 'Contacter la boutique' : 'Contact Shop' ?></h2>
+            <button class="modal-close" onclick="closeShopModal('contactModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="contactForm" onsubmit="submitShopContact(event)">
+                <div class="shop-info-section">
+                    <div class="shop-info-label"><?= $currentLang === 'fr' ? 'Votre nom' : 'Your Name' ?> *</div>
+                    <input type="text" name="name" value="<?= htmlspecialchars(($_SESSION['user_name'] ?? '')) ?>"
+                           placeholder="<?= $currentLang === 'fr' ? 'Nom complet' : 'Full name' ?>"
+                           required style="width:100%;padding:10px 12px;border:1px solid #e6e6e6;border-radius:8px;font-size:14px">
+                </div>
+                <div class="shop-info-section">
+                    <div class="shop-info-label"><?= $currentLang === 'fr' ? 'Votre courriel' : 'Your Email' ?> *</div>
+                    <input type="email" name="email" value="<?= htmlspecialchars(($_SESSION['user_email'] ?? '')) ?>"
+                           placeholder="courriel@exemple.com"
+                           required style="width:100%;padding:10px 12px;border:1px solid #e6e6e6;border-radius:8px;font-size:14px">
+                </div>
+                <div class="shop-info-section">
+                    <div class="shop-info-label"><?= $currentLang === 'fr' ? 'Message' : 'Message' ?> *</div>
+                    <textarea name="message" rows="4" required
+                              placeholder="<?= $currentLang === 'fr' ? 'Votre message...' : 'Your message...' ?>"
+                              style="width:100%;padding:12px;border:1px solid #e6e6e6;border-radius:8px;font-size:14px;resize:vertical;font-family:inherit"></textarea>
+                </div>
+                <div id="contactMsg" style="display:none;padding:10px;border-radius:6px;margin-bottom:12px;font-size:14px"></div>
+                <button type="submit" style="background:#00b207;color:white;border:none;padding:12px 28px;border-radius:8px;font-weight:600;cursor:pointer;font-size:15px">
+                    <?= $currentLang === 'fr' ? 'Envoyer' : 'Send Message' ?>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Policy Modal -->
+<div class="modal-overlay" id="policyModal" onclick="closeShopModalOverlay(event, 'policyModal')">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h2 class="modal-title"><?= $currentLang === 'fr' ? 'Politiques de la boutique' : 'Shop Policies' ?></h2>
+            <button class="modal-close" onclick="closeShopModal('policyModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <?php
+            $policies = $shopPolicies ?? [];
+            $hasAny = !empty($policies['return_policy']) || !empty($policies['shipping_policy']) || !empty($policies['privacy_policy']) || !empty($policies['terms_of_service']);
+            ?>
+            <?php if ($hasAny): ?>
+                <?php if (!empty($policies['return_policy'])): ?>
+                <div class="shop-info-section">
+                    <div class="shop-info-label"><i class="fas fa-undo" style="color:#00b207;margin-right:6px"></i><?= $currentLang === 'fr' ? 'Politique de retour' : 'Return Policy' ?></div>
+                    <div class="shop-info-value" style="white-space:pre-line"><?= htmlspecialchars($policies['return_policy']) ?></div>
+                </div>
+                <?php endif; ?>
+                <?php if (!empty($policies['shipping_policy'])): ?>
+                <div class="shop-info-section">
+                    <div class="shop-info-label"><i class="fas fa-truck" style="color:#00b207;margin-right:6px"></i><?= $currentLang === 'fr' ? 'Politique de livraison' : 'Shipping Policy' ?></div>
+                    <div class="shop-info-value" style="white-space:pre-line"><?= htmlspecialchars($policies['shipping_policy']) ?></div>
+                </div>
+                <?php endif; ?>
+                <?php if (!empty($policies['privacy_policy'])): ?>
+                <div class="shop-info-section">
+                    <div class="shop-info-label"><i class="fas fa-shield-alt" style="color:#00b207;margin-right:6px"></i><?= $currentLang === 'fr' ? 'Confidentialite' : 'Privacy Policy' ?></div>
+                    <div class="shop-info-value" style="white-space:pre-line"><?= htmlspecialchars($policies['privacy_policy']) ?></div>
+                </div>
+                <?php endif; ?>
+                <?php if (!empty($policies['terms_of_service'])): ?>
+                <div class="shop-info-section">
+                    <div class="shop-info-label"><i class="fas fa-file-contract" style="color:#00b207;margin-right:6px"></i><?= $currentLang === 'fr' ? 'Conditions d\'utilisation' : 'Terms of Service' ?></div>
+                    <div class="shop-info-value" style="white-space:pre-line"><?= htmlspecialchars($policies['terms_of_service']) ?></div>
+                </div>
+                <?php endif; ?>
+            <?php else: ?>
+                <p style="color:#666;margin-bottom:20px">
+                    <?= $currentLang === 'fr'
+                        ? 'Cette boutique n\'a pas encore publie de politiques specifiques. Les politiques generales OCSAPP s\'appliquent.'
+                        : 'This shop has not published specific policies yet. OCSAPP general marketplace policies apply.' ?>
+                </p>
+                <div class="shop-info-section">
+                    <div class="shop-info-label"><i class="fas fa-undo" style="color:#00b207;margin-right:6px"></i><?= $currentLang === 'fr' ? 'Retours' : 'Returns' ?></div>
+                    <div class="shop-info-value"><?= $currentLang === 'fr'
+                        ? 'Les retours sont acceptes dans les 14 jours suivant la reception de la commande, sous reserve que les articles soient en etat non utilise et dans leur emballage d\'origine.'
+                        : 'Returns are accepted within 14 days of receiving your order, provided items are unused and in original packaging.' ?></div>
+                </div>
+                <div class="shop-info-section">
+                    <div class="shop-info-label"><i class="fas fa-truck" style="color:#00b207;margin-right:6px"></i><?= $currentLang === 'fr' ? 'Livraison' : 'Shipping' ?></div>
+                    <div class="shop-info-value"><?= $currentLang === 'fr'
+                        ? 'Les delais de livraison varient selon la zone. Consultez la page de commande pour les estimations en temps reel.'
+                        : 'Delivery times vary by zone. See your order page for real-time estimates.' ?></div>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+
+<!-- Report Modal -->
+<div class="modal-overlay" id="reportModal" onclick="closeShopModalOverlay(event, 'reportModal')">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header" style="background:linear-gradient(135deg,#e53e3e 0%,#c53030 100%)">
+            <h2 class="modal-title"><?= $currentLang === 'fr' ? 'Signaler cette boutique' : 'Report This Shop' ?></h2>
+            <button class="modal-close" onclick="closeShopModal('reportModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <?php if (!isLoggedIn()): ?>
+                <p style="color:#666;text-align:center;padding:20px 0">
+                    <?= $currentLang === 'fr' ? 'Veuillez vous connecter pour signaler une boutique.' : 'Please log in to report a shop.' ?>
+                    <br><br>
+                    <a href="<?= url('login') ?>" style="background:#00b207;color:white;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:600">
+                        <?= $currentLang === 'fr' ? 'Se connecter' : 'Log In' ?>
+                    </a>
+                </p>
+            <?php else: ?>
+                <form id="reportForm" onsubmit="submitShopReport(event)">
+                    <div class="shop-info-section">
+                        <div class="shop-info-label"><?= $currentLang === 'fr' ? 'Raison' : 'Reason' ?> *</div>
+                        <select name="reason" required style="width:100%;padding:10px 12px;border:1px solid #e6e6e6;border-radius:8px;font-size:14px">
+                            <option value=""><?= $currentLang === 'fr' ? '-- Choisir une raison --' : '-- Select a reason --' ?></option>
+                            <option value="spam"><?= $currentLang === 'fr' ? 'Pourriels / contenu non sollicite' : 'Spam / unsolicited content' ?></option>
+                            <option value="counterfeit"><?= $currentLang === 'fr' ? 'Produits contrefaits ou frauduleux' : 'Counterfeit or fraudulent products' ?></option>
+                            <option value="inappropriate"><?= $currentLang === 'fr' ? 'Contenu inapproprie' : 'Inappropriate content' ?></option>
+                            <option value="other"><?= $currentLang === 'fr' ? 'Autre' : 'Other' ?></option>
+                        </select>
+                    </div>
+                    <div class="shop-info-section">
+                        <div class="shop-info-label"><?= $currentLang === 'fr' ? 'Description (optionnel)' : 'Description (optional)' ?></div>
+                        <textarea name="description" rows="3"
+                                  placeholder="<?= $currentLang === 'fr' ? 'Decrivez le probleme...' : 'Describe the issue...' ?>"
+                                  style="width:100%;padding:12px;border:1px solid #e6e6e6;border-radius:8px;font-size:14px;resize:vertical;font-family:inherit"></textarea>
+                    </div>
+                    <div id="reportMsg" style="display:none;padding:10px;border-radius:6px;margin-bottom:12px;font-size:14px"></div>
+                    <button type="submit" style="background:#e53e3e;color:white;border:none;padding:12px 28px;border-radius:8px;font-weight:600;cursor:pointer;font-size:15px">
+                        <?= $currentLang === 'fr' ? 'Soumettre le signalement' : 'Submit Report' ?>
+                    </button>
+                </form>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SHOP_SLUG = '<?= addslashes($shop['slug'] ?? '') ?>';
+    const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+    function openShopModal(id) {
+        document.getElementById(id).classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeShopModal(id) {
+        document.getElementById(id).classList.remove('active');
+        document.body.style.overflow = '';
+    }
+    function closeShopModalOverlay(e, id) {
+        if (e.target.id === id) closeShopModal(id);
+    }
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            ['feedbackModal','contactModal','policyModal','reportModal'].forEach(closeShopModal);
+            closeShopInfoModal({ target: { id: 'shopInfoModal' } });
+        }
+    });
+
+    // Star rating
+    function setRating(val) {
+        document.getElementById('feedbackRating').value = val;
+        document.querySelectorAll('.star-btn').forEach(function(s) {
+            s.style.color = parseInt(s.dataset.value) <= val ? '#ffc107' : '#ddd';
+        });
+    }
+
+    function showMsg(id, text, ok) {
+        var el = document.getElementById(id);
+        el.textContent = text;
+        el.style.display = 'block';
+        el.style.background = ok ? '#d4edda' : '#f8d7da';
+        el.style.color = ok ? '#155724' : '#721c24';
+    }
+
+    async function shopPost(path, data) {
+        const params = new URLSearchParams(data);
+        params.append('_csrf_token', CSRF_TOKEN);
+        const resp = await fetch(path, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': CSRF_TOKEN },
+            body: params.toString()
+        });
+        return resp.json();
+    }
+
+    async function submitShopReview(e) {
+        e.preventDefault();
+        const form = e.target;
+        const rating = parseInt(document.getElementById('feedbackRating').value);
+        if (!rating) {
+            showMsg('feedbackMsg', '<?= $currentLang === 'fr' ? 'Veuillez selectionner une note.' : 'Please select a rating.' ?>', false);
+            return;
+        }
+        const btn = form.querySelector('button[type=submit]');
+        btn.disabled = true;
+        const res = await shopPost('<?= url('shops/' . ($shop['slug'] ?? '') . '/review') ?>', {
+            rating: rating,
+            comment: form.comment.value
+        });
+        showMsg('feedbackMsg', res.message, res.success);
+        if (res.success) form.reset(), setRating(0);
+        btn.disabled = false;
+    }
+
+    async function submitShopContact(e) {
+        e.preventDefault();
+        const form = e.target;
+        const btn = form.querySelector('button[type=submit]');
+        btn.disabled = true;
+        const res = await shopPost('<?= url('shops/' . ($shop['slug'] ?? '') . '/contact') ?>', {
+            name: form.name.value,
+            email: form.email.value,
+            message: form.message.value
+        });
+        showMsg('contactMsg', res.message, res.success);
+        if (res.success) form.reset();
+        btn.disabled = false;
+    }
+
+    async function submitShopReport(e) {
+        e.preventDefault();
+        const form = e.target;
+        const btn = form.querySelector('button[type=submit]');
+        btn.disabled = true;
+        const res = await shopPost('<?= url('shops/' . ($shop['slug'] ?? '') . '/report') ?>', {
+            reason: form.reason.value,
+            description: form.description?.value || ''
+        });
+        showMsg('reportMsg', res.message, res.success);
+        if (res.success) setTimeout(function() { closeShopModal('reportModal'); }, 2000);
+        btn.disabled = false;
+    }
+</script>
+
 <!-- Auth Popup for Guests -->
 <?php include __DIR__ . "/../components/auth-popup.php"; ?>
 </body>

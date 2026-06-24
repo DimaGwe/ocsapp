@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr-CA">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New Seller Application - OCSAPP</title>
+    <title>Nouvelle demande vendeur / New Seller Application - OCSAPP</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5;">
     <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f5f5f5;">
@@ -11,15 +11,15 @@
             <td align="center" style="padding: 40px 20px;">
                 <table role="presentation" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
 
-                    <!-- Header with Orange Gradient (Admin Alert) -->
+                    <!-- Header -->
                     <tr>
-                        <td style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 40px 30px; text-align: center; border-radius: 12px 12px 0 0;">
-                            <div style="font-size: 64px; margin-bottom: 16px;">🔔</div>
+                        <td style="background: linear-gradient(135deg, #00b207 0%, #009206 100%); padding: 40px 30px; text-align: center; border-radius: 12px 12px 0 0;">
+                            <img src="https://ocsapp.ca/assets/images/logo.png" alt="OCSAPP" style="max-width: 180px; height: auto; margin-bottom: 20px;">
                             <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">
-                                New Seller Application
+                                Nouvelle demande vendeur / New Seller Application
                             </h1>
                             <p style="margin: 8px 0 0; color: #ffffff; font-size: 14px; opacity: 0.9;">
-                                Action Required: Seller Approval
+                                Action requise / Action Required: Seller Approval
                             </p>
                         </td>
                     </tr>
@@ -28,7 +28,7 @@
                     <tr>
                         <td style="padding: 40px 30px;">
                             <p style="margin: 0 0 24px; color: #4b5563; font-size: 16px; line-height: 1.6;">
-                                A new seller has registered and is awaiting approval. Please review the application details below:
+                                Un nouveau vendeur s'est inscrit et attend votre approbation. / A new seller has registered and is awaiting approval. Please review the application details below:
                             </p>
 
                             <!-- Seller Details Box -->
@@ -87,7 +87,7 @@
                                 </tr>
                             </table>
 
-                            <!-- Next Steps -->
+                            <!-- What to Review -->
                             <h3 style="margin: 0 0 16px; color: #1f2937; font-size: 18px;">What to Review:</h3>
 
                             <ul style="margin: 0 0 24px; padding-left: 20px; color: #4b5563; font-size: 14px; line-height: 1.8;">
@@ -98,7 +98,7 @@
                                 <li>Approve or reject the application</li>
                             </ul>
 
-                            <!-- Quick Stats Box (Optional) -->
+                            <!-- Quick Stats Box -->
                             <table role="presentation" style="width: 100%; border-collapse: collapse; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-radius: 8px; border: 1px solid #bbf7d0;">
                                 <tr>
                                     <td style="padding: 20px; text-align: center;">
@@ -118,10 +118,10 @@
                     <tr>
                         <td style="background-color: #f9fafb; padding: 30px; text-align: center; border-radius: 0 0 12px 12px; border-top: 1px solid #e5e7eb;">
                             <p style="margin: 0 0 8px; color: #9ca3af; font-size: 12px;">
-                                &copy; {{current_year}} OCSAPP Admin Panel
+                                &copy; {{current_year}} OCSAPP Admin Panel. Tous droits réservés. / All rights reserved.
                             </p>
                             <p style="margin: 0 0 12px; color: #9ca3af; font-size: 12px;">
-                                This email was sent to admin@ocsapp.ca
+                                Courriel automatique — ne pas répondre. / Automated email — do not reply.
                             </p>
                             <p style="margin: 0; color: #9ca3af; font-size: 12px;">
                                 <a href="https://ocsapp.ca/admin" style="color: #6b7280; text-decoration: none;">Admin Dashboard</a> •

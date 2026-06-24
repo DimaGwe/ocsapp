@@ -5,7 +5,7 @@
  */
 
 $pageTitle = $pageTitle ?? 'Create Promo Banner';
-$currentPage = $currentPage ?? 'cms';
+$currentPage = 'promo-banners';
 $ocsProducts = $ocsProducts ?? [];
 
 ob_start();

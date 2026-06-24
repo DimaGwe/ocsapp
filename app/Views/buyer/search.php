@@ -213,7 +213,7 @@ $pageTitle = $t['search_results'] ?? 'Search Results';
                             <?php
                             $imageUrl = !empty($product['image'])
                                 ? (strpos($product['image'], 'http') === 0 ? $product['image'] : asset($product['image']))
-                                : asset('images/placeholder.png');
+                                : asset('images/placeholder.svg');
                             ?>
                             <img src="<?= $imageUrl ?>" alt="<?= htmlspecialchars($product['name']) ?>" loading="lazy">
                             <?php if (!empty($product['compare_at_price']) && $product['compare_at_price'] > $product['price']): ?>

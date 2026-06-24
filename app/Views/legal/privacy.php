@@ -4,20 +4,29 @@
  * File: app/Views/legal/privacy.php
  */
 $currentLang = $_SESSION['language'] ?? 'fr';
+$isFr = ($currentLang === 'fr');
 ?>
 <!DOCTYPE html>
 <html lang="<?= htmlspecialchars($currentLang) ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Privacy Policy - OCSAPP</title>
+    <title><?= $isFr ? 'Politique de confidentialité' : 'Privacy Policy' ?> - OCSAPP</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="<?= asset('images/logo.png') ?>">
     <link rel="apple-touch-icon" href="<?= asset('images/logo.png') ?>">
     <meta name="theme-color" content="#00b207">
 
-    <link rel="stylesheet" href="<?= asset('css/styles.css') ?>">
+    <!-- Modular CSS Architecture -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="<?= asset('css/global.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/components/header.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/components/footer.css') ?>">
     <style>
         .legal-container {
             max-width: 900px;
@@ -96,11 +105,214 @@ $currentLang = $_SESSION['language'] ?? 'fr';
 
     <div class="page">
         <div class="legal-container">
-            <a href="<?= url('/') ?>" class="back-link">← Back to Home</a>
+            <a href="<?= url('/') ?>" class="back-link">
+                ← <?= $isFr ? 'Retour à l\'accueil' : 'Back to Home' ?>
+            </a>
 
+            <?php if ($isFr): ?>
+            <!-- ==================== VERSION FRANÇAISE ==================== -->
+            <div class="legal-header">
+                <h1>Politique de confidentialité</h1>
+                <p>Dernière mise à jour : 25 février 2026</p>
+            </div>
+
+            <div class="legal-content">
+                <div class="highlight-box">
+                    <p><strong>Votre vie privée nous tient à cœur</strong></p>
+                    <p>OCSAPP s'engage à protéger vos renseignements personnels. La présente politique de confidentialité explique comment nous collectons, utilisons, divulguons et protégeons vos données lorsque vous utilisez notre plateforme.</p>
+                </div>
+
+                <h2>1. Renseignements que nous collectons</h2>
+
+                <h3>1.1 Renseignements personnels</h3>
+                <p>Nous collectons les renseignements personnels que vous fournissez volontairement lorsque vous :</p>
+                <ul>
+                    <li>Créez un compte (nom, adresse courriel, numéro de téléphone)</li>
+                    <li>Effectuez un achat (adresse de livraison, informations de facturation)</li>
+                    <li>Contactez le service à la clientèle</li>
+                    <li>Vous abonnez aux infolettres ou aux promotions</li>
+                    <li>Rédigez des avis ou des évaluations</li>
+                </ul>
+
+                <h3>1.2 Renseignements commerciaux (vendeurs)</h3>
+                <p>Pour les comptes vendeurs, nous collectons :</p>
+                <ul>
+                    <li>Les coordonnées de l'entreprise</li>
+                    <li>Les numéros d'identification fiscale</li>
+                    <li>Les informations bancaires pour les paiements</li>
+                    <li>Les coordonnées commerciales</li>
+                    <li>Les données sur les produits et l'inventaire</li>
+                </ul>
+
+                <h3>1.3 Informations collectées automatiquement</h3>
+                <p>Lors de votre utilisation de notre plateforme, nous collectons automatiquement :</p>
+                <ul>
+                    <li>Informations sur l'appareil (adresse IP, type de navigateur, type d'appareil)</li>
+                    <li>Données d'utilisation (pages visitées, temps passé, habitudes de navigation)</li>
+                    <li>Données de localisation (avec votre autorisation)</li>
+                    <li>Témoins de connexion (cookies) et technologies similaires</li>
+                </ul>
+
+                <h2>2. Comment nous utilisons vos renseignements</h2>
+
+                <h3>2.1 Prestation de services</h3>
+                <ul>
+                    <li>Traiter et exécuter les commandes</li>
+                    <li>Gérer votre compte</li>
+                    <li>Traiter les paiements et les remboursements</li>
+                    <li>Fournir le service à la clientèle</li>
+                    <li>Envoyer des confirmations et des mises à jour de commande</li>
+                </ul>
+
+                <h3>2.2 Amélioration de notre plateforme</h3>
+                <ul>
+                    <li>Analyser les habitudes et tendances d'utilisation</li>
+                    <li>Développer de nouvelles fonctionnalités et services</li>
+                    <li>Améliorer l'expérience utilisateur</li>
+                    <li>Effectuer des recherches et des analyses</li>
+                </ul>
+
+                <h3>2.3 Marketing et communications</h3>
+                <ul>
+                    <li>Envoyer des courriels promotionnels (avec votre consentement)</li>
+                    <li>Fournir des recommandations personnalisées</li>
+                    <li>Envoyer des annonces relatives aux services</li>
+                    <li>Vous informer de l'activité de votre compte</li>
+                </ul>
+
+                <h3>2.4 Sécurité et prévention de la fraude</h3>
+                <ul>
+                    <li>Détecter et prévenir les transactions frauduleuses</li>
+                    <li>Surveiller les activités suspectes</li>
+                    <li>Faire respecter nos conditions d'utilisation</li>
+                    <li>Respecter les obligations légales</li>
+                </ul>
+
+                <h2>3. Partage et divulgation de renseignements</h2>
+
+                <h3>3.1 Avec les vendeurs</h3>
+                <p>Lorsque vous effectuez un achat, nous partageons les informations nécessaires avec le vendeur :</p>
+                <ul>
+                    <li>Votre nom et adresse de livraison</li>
+                    <li>Vos coordonnées pour la livraison</li>
+                    <li>Les détails de la commande</li>
+                </ul>
+
+                <h3>3.2 Avec les fournisseurs de services</h3>
+                <p>Nous partageons des informations avec des tiers de confiance qui nous aident à exploiter la plateforme :</p>
+                <ul>
+                    <li>Processeurs de paiement (Stripe, PayPal, etc.)</li>
+                    <li>Services d'expédition et de livraison</li>
+                    <li>Fournisseurs de services de courriel</li>
+                    <li>Fournisseurs d'hébergement en nuage (AWS)</li>
+                    <li>Fournisseurs d'analyse</li>
+                </ul>
+
+                <h3>3.3 Exigences légales</h3>
+                <p>Nous pouvons divulguer des informations lorsque la loi l'exige ou pour :</p>
+                <ul>
+                    <li>Respecter des procédures légales ou des demandes gouvernementales</li>
+                    <li>Faire respecter nos conditions d'utilisation</li>
+                    <li>Protéger nos droits, notre propriété ou notre sécurité</li>
+                    <li>Prévenir la fraude ou les menaces à la sécurité</li>
+                </ul>
+
+                <h2>4. Sécurité des données</h2>
+                <p>Nous mettons en œuvre des mesures de sécurité conformes aux normes de l'industrie :</p>
+                <ul>
+                    <li>Chiffrement SSL/TLS pour la transmission des données</li>
+                    <li>Stockage chiffré des données sensibles</li>
+                    <li>Traitement sécurisé des paiements (conforme à la norme PCI DSS)</li>
+                    <li>Audits de sécurité réguliers</li>
+                    <li>Contrôles d'accès et authentification</li>
+                    <li>Formation des employés sur la protection des données</li>
+                </ul>
+
+                <div class="highlight-box">
+                    <p><strong>Important :</strong> Bien que nous nous efforcions de protéger vos informations, aucune méthode de transmission ou de stockage n'est sécurisée à 100 %. Nous ne pouvons garantir une sécurité absolue.</p>
+                </div>
+
+                <h2>5. Vos droits et choix</h2>
+
+                <h3>5.1 Accès et correction</h3>
+                <p>Vous avez le droit de :</p>
+                <ul>
+                    <li>Accéder à vos renseignements personnels</li>
+                    <li>Corriger des données inexactes</li>
+                    <li>Mettre à jour les détails de votre compte</li>
+                    <li>Demander une copie de vos données</li>
+                </ul>
+
+                <h3>5.2 Désinscription des communications marketing</h3>
+                <ul>
+                    <li>Se désabonner des courriels promotionnels via le lien dans chaque courriel</li>
+                    <li>Mettre à jour vos préférences de communication dans les paramètres du compte</li>
+                    <li>Nous contacter directement pour vous désabonner des communications marketing</li>
+                </ul>
+
+                <h3>5.3 Suppression du compte</h3>
+                <p>Vous pouvez demander la suppression de votre compte en nous contactant. Veuillez noter :</p>
+                <ul>
+                    <li>Nous pouvons conserver certaines informations à des fins légales et commerciales</li>
+                    <li>L'historique des commandes peut être conservé pour des raisons comptables et fiscales</li>
+                    <li>Les comptes supprimés ne peuvent pas être récupérés</li>
+                </ul>
+
+                <h2>6. Témoins de connexion (cookies)</h2>
+                <p>Les cookies sont de petits fichiers texte stockés sur votre appareil qui nous permettent de fournir et d'améliorer nos services. Vous pouvez les gérer via les paramètres de votre navigateur. Notez que la désactivation des cookies peut affecter les fonctionnalités de la plateforme.</p>
+
+                <h2>7. Protection de la vie privée des mineurs</h2>
+                <p>Notre plateforme n'est pas destinée aux personnes de moins de 18 ans. Nous ne collectons pas sciemment d'informations auprès de mineurs. Si vous croyez qu'un enfant nous a fourni des renseignements personnels, veuillez nous contacter immédiatement.</p>
+
+                <h2>8. Rétention des données</h2>
+                <p>Nous conservons vos informations aussi longtemps que nécessaire pour :</p>
+                <ul>
+                    <li>Fournir nos services</li>
+                    <li>Respecter les obligations légales</li>
+                    <li>Résoudre les litiges</li>
+                    <li>Faire respecter nos ententes</li>
+                </ul>
+                <p>Périodes de rétention spécifiques :</p>
+                <ul>
+                    <li>Informations de compte : comptes actifs + 7 ans après la fermeture</li>
+                    <li>Dossiers de transactions : 7 ans (exigences fiscales et comptables)</li>
+                    <li>Données marketing : jusqu'à la désinscription + 30 jours</li>
+                </ul>
+
+                <h2>9. Lois canadiennes et québécoises sur la vie privée</h2>
+                <p>Nous nous conformons aux lois sur la protection de la vie privée applicables, notamment :</p>
+                <ul>
+                    <li>La <em>Loi sur la protection des renseignements personnels et les documents électroniques</em> (LPRPDE)</li>
+                    <li>La <em>Loi 25</em> du Québec (anciennement Projet de loi 64)</li>
+                    <li>La législation provinciale sur la protection de la vie privée</li>
+                </ul>
+
+                <h2>10. Modifications de la politique</h2>
+                <p>Nous pouvons mettre à jour cette politique de confidentialité de temps à autre. Les modifications seront publiées sur cette page avec une date de mise à jour. L'utilisation continue de la plateforme après les modifications constitue une acceptation de la politique mise à jour.</p>
+
+                <h2>11. Nous contacter</h2>
+                <p>Pour toute question concernant cette politique ou pour exercer vos droits :</p>
+                <ul>
+                    <li><strong>Responsable de la protection de la vie privée :</strong> <a href="mailto:privacy@ocsapp.ca" style="color: #00b207;">privacy@ocsapp.ca</a></li>
+                    <li><strong>Soutien général :</strong> <a href="mailto:support@ocsapp.ca" style="color: #00b207;">support@ocsapp.ca</a></li>
+                    <li><strong>Téléphone :</strong> +1 (514) 746-3789</li>
+                    <li><strong>Adresse postale :</strong> Responsable de la protection de la vie privée d'OCS Marketplace<br>
+                        Kirkland, Québec<br>
+                        Canada
+                    </li>
+                </ul>
+
+                <div class="highlight-box" style="margin-top: 40px;">
+                    <p><strong>Votre consentement</strong></p>
+                    <p>En utilisant OCSAPP, vous consentez à la collecte, à l'utilisation et à la divulgation de vos renseignements tels que décrits dans la présente politique de confidentialité.</p>
+                </div>
+            </div>
+
+            <?php else: ?>
+            <!-- ==================== ENGLISH VERSION ==================== -->
             <div class="legal-header">
                 <h1>Privacy Policy</h1>
-                <p>Last Updated: <?= date('F j, Y') ?></p>
+                <p>Last Updated: February 25, 2026</p>
             </div>
 
             <div class="legal-content">
@@ -308,9 +520,9 @@ $currentLang = $_SESSION['language'] ?? 'fr';
                 <ul>
                     <li><strong>Privacy Officer:</strong> <a href="mailto:privacy@ocsapp.ca" style="color: #00b207;">privacy@ocsapp.ca</a></li>
                     <li><strong>General Support:</strong> <a href="mailto:support@ocsapp.ca" style="color: #00b207;">support@ocsapp.ca</a></li>
-                    <li><strong>Phone:</strong> +1 (809) 555-1234</li>
-                    <li><strong>Mail:</strong> OCSAPP Privacy Officer<br>
-                        [Address to be provided]<br>
+                    <li><strong>Phone:</strong> +1 (514) 746-3789</li>
+                    <li><strong>Mail:</strong> OCS Marketplace Privacy Officer<br>
+                        Kirkland, Quebec<br>
                         Canada
                     </li>
                 </ul>
@@ -320,6 +532,7 @@ $currentLang = $_SESSION['language'] ?? 'fr';
                     <p>By using OCSAPP, you consent to the collection, use, and disclosure of your information as described in this Privacy Policy.</p>
                 </div>
             </div>
+            <?php endif; ?>
         </div>
     </div>
 

@@ -22,36 +22,39 @@ class SearchController {
             // Search products
             $stmt = $db->prepare("
                 SELECT p.*,
-                       si.price,
-                       si.compare_at_price,
-                       si.stock_quantity,
+                       p.base_price as price,
+                       p.compare_at_price,
+                       p.stock_quantity,
                        s.name as shop_name,
                        s.slug as shop_slug,
                        (SELECT image_path FROM product_images WHERE product_id = p.id AND is_primary = 1 LIMIT 1) as image
                 FROM products p
-                INNER JOIN shop_inventory si ON p.id = si.product_id
-                INNER JOIN shops s ON si.shop_id = s.id
-                WHERE (p.name LIKE ? OR p.description LIKE ?)
+                LEFT JOIN users u ON p.seller_id = u.id
+                LEFT JOIN shops s ON u.id = s.seller_id
+                WHERE (p.name LIKE ? OR p.description LIKE ? OR p.short_description LIKE ?)
                 AND p.status = 'active'
-                AND si.status = 'active'
-                AND s.is_active = 1
+                AND p.stock_quantity > 0
                 ORDER BY p.name
                 LIMIT 50
             ");
             $searchTerm = "%{$query}%";
-            $stmt->execute([$searchTerm, $searchTerm]);
+            $stmt->execute([$searchTerm, $searchTerm, $searchTerm]);
             $products = $stmt->fetchAll();
 
             // Search shops
             $stmt = $db->prepare("
                 SELECT s.*,
-                       COUNT(DISTINCT si.id) as product_count
+                       s.name,
+                       COUNT(DISTINCT p.id) as product_count,
+                       0 as average_rating
                 FROM shops s
-                LEFT JOIN shop_inventory si ON s.id = si.shop_id AND si.status = 'active'
+                LEFT JOIN users u ON s.seller_id = u.id
+                LEFT JOIN products p ON u.id = p.seller_id AND p.status = 'active'
                 WHERE (s.name LIKE ? OR s.description LIKE ?)
                 AND s.is_active = 1
+                AND s.is_approved = 1
                 GROUP BY s.id
-                ORDER BY s.average_rating DESC
+                ORDER BY s.name ASC
                 LIMIT 20
             ");
             $stmt->execute([$searchTerm, $searchTerm]);

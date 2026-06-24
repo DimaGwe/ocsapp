@@ -50,12 +50,8 @@ if (empty($productImages) && !empty($product['image'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($product['name'] ?? 'Product') ?> - <?= env('APP_NAME', 'OCSAPP') ?></title>
+    <title><?= htmlspecialchars($product['name'] ?? 'Product') ?> - <?= env('APP_NAME', 'OCS') ?></title>
     <?= csrfMeta() ?>
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="<?= asset('images/logo.png') ?>">
-    <link rel="apple-touch-icon" href="<?= asset('images/logo.png') ?>">
-    <meta name="theme-color" content="#00b207">
 
     <?php
     // Generate SEO Meta Tags and Schema
@@ -118,13 +114,8 @@ if (empty($productImages) && !empty($product['image'])) {
     <link rel="stylesheet" href="<?= asset('css/styles.css') ?>">
     <style>
         body {
-            padding-bottom: 0;
+            padding-bottom: 80px;
             background: #f8f9fa;
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
         }
         
         .breadcrumb {
@@ -924,17 +915,9 @@ if (empty($productImages) && !empty($product['image'])) {
     font-size: 14px;
 }
 
-/* Page wrapper for proper footer positioning */
-.page-wrapper {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
 /* Footer fix */
 .footer {
-    margin-top: auto;
-    width: 100%;
+    margin-top: 0;
 }
 
 .footer-bottom {
@@ -952,10 +935,7 @@ if (empty($productImages) && !empty($product['image'])) {
 
     <!-- Header -->
     <?php include __DIR__ . '/../components/header.php'; ?>
-
-    <!-- Page Wrapper -->
-    <div class="page-wrapper">
-
+    
     <!-- Breadcrumb -->
     <div class="breadcrumb">
         <a href="<?= url('/') ?>"><?= $t['home'] ?></a> / 
@@ -969,51 +949,10 @@ if (empty($productImages) && !empty($product['image'])) {
     <div class="product-container">
         <!-- Image Gallery -->
         <div class="image-gallery">
-            <div class="main-image" id="mainImage" style="position: relative;">
-                <!-- Discount Badge (Top Left) -->
+            <div class="main-image" id="mainImage">
                 <?php if ($discount > 0): ?>
-                    <div style="position: absolute; top: 15px; left: 15px; background: linear-gradient(135deg, #00b207 0%, #009206 100%); color: white; padding: 8px 16px; border-radius: 20px; font-weight: 700; font-size: 14px; z-index: 3; box-shadow: 0 4px 12px rgba(0, 178, 7, 0.4);">
-                        -<?= $discount ?>% <?= $t['off'] ?>
-                    </div>
+                    <div class="image-badge"><?= $discount ?>% <?= $t['off'] ?></div>
                 <?php endif; ?>
-
-                <!-- Product Badges (Below Discount Badge) -->
-                <?php
-                $productTags = $product['tags'] ?? [];
-                if (is_string($productTags)) {
-                    $productTags = json_decode($productTags, true) ?: [];
-                }
-                if (!empty($productTags) || !empty($product['is_featured'])):
-                ?>
-                    <div style="position: absolute; top: <?= $discount > 0 ? '55px' : '15px' ?>; left: 15px; z-index: 3; display: flex; flex-direction: column; gap: 6px; max-width: 70%;">
-                        <?php if (!empty($product['is_featured'])): ?>
-                            <span style="background: rgba(255, 193, 7, 0.95); color: #000; font-size: 11px; padding: 6px 12px; border-radius: 12px; white-space: nowrap; font-weight: 600; box-shadow: 0 2px 6px rgba(0,0,0,0.15); width: fit-content;">
-                                ⭐ <?= $t['featured'] ?>
-                            </span>
-                        <?php endif; ?>
-                        <?php
-                        $badgeMap = [
-                            'organic' => ['icon' => '🌿', 'label' => $t['organic'] ?? 'Organic', 'color' => 'rgba(52, 211, 153, 0.95)'],
-                            'bestseller' => ['icon' => '🏆', 'label' => $t['bestseller'] ?? 'Best Seller', 'color' => 'rgba(0, 178, 7, 0.95)'],
-                            'new-arrival' => ['icon' => '🆕', 'label' => $t['new'] ?? 'New', 'color' => 'rgba(59, 130, 246, 0.95)'],
-                            'premium' => ['icon' => '💎', 'label' => $t['premium'] ?? 'Premium', 'color' => 'rgba(139, 92, 246, 0.95)'],
-                        ];
-                        foreach ($productTags as $tag):
-                            $tagSlug = is_array($tag) ? ($tag['slug'] ?? '') : $tag;
-                            if (isset($badgeMap[$tagSlug])):
-                                $badge = $badgeMap[$tagSlug];
-                        ?>
-                            <span style="background: <?= $badge['color'] ?>; color: white; font-size: 11px; padding: 6px 12px; border-radius: 12px; white-space: nowrap; font-weight: 600; box-shadow: 0 2px 6px rgba(0,0,0,0.15); width: fit-content;">
-                                <?= $badge['icon'] ?> <?= $badge['label'] ?>
-                            </span>
-                        <?php
-                            endif;
-                        endforeach;
-                        ?>
-                    </div>
-                <?php endif; ?>
-
-                <!-- Product Image -->
                 <?php if (!empty($productImages)): ?>
                     <img src="<?= htmlspecialchars($productImages[0]['url']) ?>" alt="<?= htmlspecialchars($product['name'] ?? 'Product') ?>" id="mainImageSrc">
                 <?php else: ?>
@@ -1034,6 +973,28 @@ if (empty($productImages) && !empty($product['image'])) {
         
         <!-- Product Info -->
         <div class="product-info">
+            <!-- Badges -->
+            <?php if (!empty($product['tags']) || !empty($product['is_featured'])): ?>
+                <div class="product-badges">
+                    <?php if (!empty($product['is_featured'])): ?>
+                        <span class="badge featured">⭐ <?= $t['featured'] ?></span>
+                    <?php endif; ?>
+                    <?php 
+                    $tags = is_string($product['tags'] ?? '') ? json_decode($product['tags'], true) : ($product['tags'] ?? []);
+                    if (!empty($tags)):
+                        foreach ($tags as $tag):
+                            $tagSlug = is_array($tag) ? ($tag['slug'] ?? '') : $tag;
+                            if ($tagSlug === 'organic'):
+                    ?>
+                        <span class="badge organic">🌱 <?= $t['organic'] ?></span>
+                    <?php 
+                            endif;
+                        endforeach;
+                    endif;
+                    ?>
+                </div>
+            <?php endif; ?>
+            
             <!-- Title -->
             <h1 class="product-title"><?= htmlspecialchars($product['name'] ?? 'Product') ?></h1>
             
@@ -1284,142 +1245,46 @@ if (empty($productImages) && !empty($product['image'])) {
             <h2 class="section-title"><?= $t['you_may_also_like'] ?></h2>
             <div class="products-grid">
                 <?php foreach ($relatedProducts as $related): ?>
-                    <?php
-                        $relatedDiscount = 0;
-                        if (isset($related['compare_at_price']) && $related['compare_at_price'] > 0 && $related['compare_at_price'] > $related['price']) {
-                            $relatedDiscount = round((($related['compare_at_price'] - $related['price']) / $related['compare_at_price']) * 100);
-                        }
-                        $relatedTags = $related['tags'] ?? [];
-                        if (is_string($relatedTags)) {
-                            $relatedTags = json_decode($relatedTags, true) ?: [];
-                        }
-                        $relatedStock = $related['stock_quantity'] ?? 100;
-                        $relatedSavings = ($related['compare_at_price'] ?? 0) - ($related['price'] ?? 0);
-                    ?>
-                    <article class="product-card" style="position: relative; overflow: hidden; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: all 0.3s;">
-                        <!-- Product Image Container -->
-                        <div style="position: relative;">
-                            <!-- Sale Badge -->
-                            <?php if ($relatedDiscount > 0): ?>
-                                <div style="position: absolute; top: 15px; left: 15px; background: linear-gradient(135deg, #00b207 0%, #009206 100%); color: white; padding: 8px 16px; border-radius: 20px; font-weight: 700; font-size: 14px; z-index: 3; box-shadow: 0 4px 12px rgba(0, 178, 7, 0.4);">
-                                    -<?= $relatedDiscount ?>% <?= $t['off'] ?? 'OFF' ?>
-                                </div>
+                    <article class="product-card">
+                        <a href="<?= url('product/' . ($related['slug'] ?? '')) ?>" class="product-image">
+                            <?php if (!empty($related['image'])): ?>
+                                <img src="<?= url($related['image']) ?>" 
+                                     alt="<?= htmlspecialchars($related['name'] ?? 'Product') ?>"
+                                     loading="lazy">
+                            <?php else: ?>
+                                <div class="product-placeholder">📦</div>
                             <?php endif; ?>
-
-                            <!-- Tags -->
-                            <?php if (!empty($relatedTags)): ?>
-                                <div style="position: absolute; top: <?= $relatedDiscount > 0 ? '55px' : '15px' ?>; left: 15px; z-index: 3; display: flex; flex-wrap: wrap; gap: 4px; max-width: 70%;">
-                                    <?php
-                                        $badgeMap = [
-                                            'bestseller' => ['class' => 'bestseller', 'icon' => '🏆', 'label' => $t['bestseller'] ?? 'Best Seller'],
-                                            'new-arrival' => ['class' => 'new', 'icon' => '🆕', 'label' => $t['new'] ?? 'New'],
-                                            'organic' => ['class' => 'organic', 'icon' => '🌿', 'label' => $t['organic'] ?? 'Organic'],
-                                            'premium' => ['class' => 'premium', 'icon' => '💎', 'label' => $t['premium'] ?? 'Premium'],
-                                        ];
-                                        foreach ($relatedTags as $tag):
-                                            if (isset($tag['slug']) && isset($badgeMap[$tag['slug']])):
-                                                $badge = $badgeMap[$tag['slug']];
-                                    ?>
-                                        <span style="background: rgba(0, 178, 7, 0.9); color: white; font-size: 11px; padding: 4px 10px; border-radius: 12px; white-space: nowrap; font-weight: 600; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
-                                            <?= $badge['icon'] ?> <?= $badge['label'] ?>
-                                        </span>
-                                    <?php
-                                            endif;
-                                        endforeach;
-                                    ?>
-                                </div>
-                            <?php endif; ?>
-
-                            <!-- Wishlist Button -->
-                            <button class="wishlist-btn" onclick="toggleWishlist(<?= $related['id'] ?>)" style="position: absolute; top: 15px; right: 15px; width: 36px; height: 36px; border-radius: 50%; background: white; border: none; cursor: pointer; font-size: 18px; color: #d1d5db; z-index: 3; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s;">
-                                <i class="far fa-heart"></i>
-                            </button>
-
-                            <!-- Product Image -->
-                            <a href="<?= url('product/' . ($related['slug'] ?? '')) ?>" style="display: block; height: 220px; background: #f9fafb; padding: 16px;">
-                                <?php if (!empty($related['image'])): ?>
-                                    <img src="<?= url($related['image']) ?>"
-                                         alt="<?= htmlspecialchars($related['name']) ?>"
-                                         loading="lazy"
-                                         style="width: 100%; height: 100%; object-fit: contain; transition: transform 0.3s;">
-                                <?php else: ?>
-                                    <div style="display: flex; align-items: center; justify-content: center; height: 100%; font-size: 48px;">📦</div>
-                                <?php endif; ?>
-                            </a>
-                        </div>
-
-                        <!-- Product Info -->
-                        <div style="padding: 16px;">
-                            <!-- Category -->
-                            <?php if (!empty($related['category_name'])): ?>
-                                <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.5px; margin-bottom: 6px;">
-                                    <?= htmlspecialchars($related['category_name']) ?>
-                                </div>
-                            <?php endif; ?>
-
-                            <!-- Product Name -->
-                            <h3 style="margin: 0 0 8px 0;">
-                                <a href="<?= url('product/' . ($related['slug'] ?? '')) ?>" style="font-size: 14px; font-weight: 600; color: #1f2937; text-decoration: none; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4;">
-                                    <?= htmlspecialchars($related['name']) ?>
+                        </a>
+                        
+                        <div class="product-info">
+                            <h3 class="product-name">
+                                <a href="<?= url('product/' . ($related['slug'] ?? '')) ?>">
+                                    <?= htmlspecialchars($related['name'] ?? 'Product') ?>
                                 </a>
                             </h3>
 
-                            <!-- Rating -->
-                            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
-                                <?php $relatedRating = $related['average_rating'] ?? 0; ?>
-                                <span style="display: flex; gap: 2px;">
-                                    <?php for($i = 1; $i <= 5; $i++): ?>
-                                        <?php if ($i <= floor($relatedRating)): ?>
-                                            <i class="fas fa-star" style="color: #fbbf24; font-size: 12px;"></i>
-                                        <?php elseif ($i - 0.5 <= $relatedRating): ?>
-                                            <i class="fas fa-star-half-alt" style="color: #fbbf24; font-size: 12px;"></i>
-                                        <?php else: ?>
-                                            <i class="far fa-star" style="color: #d1d5db; font-size: 12px;"></i>
-                                        <?php endif; ?>
-                                    <?php endfor; ?>
-                                </span>
-                                <?php if ($relatedRating > 0): ?>
-                                    <span style="font-size: 12px; color: #6b7280; font-weight: 500;"><?= number_format($relatedRating, 1) ?></span>
-                                <?php endif; ?>
+                            <div class="product-price">
+                                <?= currency($related['price'] ?? 0) ?>
                             </div>
 
-                            <!-- Pricing -->
-                            <div style="margin-bottom: 10px;">
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <span style="font-size: 18px; font-weight: 700; color: #00b207;"><?= currency($related['price']) ?></span>
-                                    <?php if (!empty($related['compare_at_price']) && $related['compare_at_price'] > $related['price']): ?>
-                                        <span style="font-size: 13px; color: #9ca3af; text-decoration: line-through;"><?= currency($related['compare_at_price']) ?></span>
-                                    <?php endif; ?>
+                            <?php if (!empty($related['average_rating'])): ?>
+                                <div class="product-rating">
+                                    <span class="stars">
+                                        <?php
+                                            $rating = $related['average_rating'] ?? 0;
+                                            for($i = 0; $i < 5; $i++):
+                                                echo ($i < floor($rating)) ? '⭐' : '☆';
+                                            endfor;
+                                        ?>
+                                    </span>
+                                    <span class="rating-text">(<?= number_format($rating, 1) ?>)</span>
                                 </div>
-                                <?php if ($relatedSavings > 0): ?>
-                                    <div style="font-size: 12px; color: #00b207; font-weight: 600; margin-top: 2px;">
-                                        <?= $t['you_save'] ?? 'You save' ?> <?= currency($relatedSavings) ?>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
+                            <?php endif; ?>
 
-                            <!-- Stock Status -->
-                            <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; margin-bottom: 12px; font-weight: 500; <?= $relatedStock > 10 ? 'color: #00b207;' : ($relatedStock > 0 ? 'color: #f59e0b;' : 'color: #ef4444;') ?>">
-                                <?php if ($relatedStock > 10): ?>
-                                    <i class="fas fa-check-circle"></i>
-                                    <?= $t['in_stock'] ?? 'In Stock' ?>
-                                <?php elseif ($relatedStock > 0): ?>
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                    <?= sprintf($t['low_stock'] ?? 'Only %d left', $relatedStock) ?>
-                                <?php else: ?>
-                                    <i class="fas fa-times-circle"></i>
-                                    <?= $t['out_of_stock'] ?? 'Out of Stock' ?>
-                                <?php endif; ?>
-                            </div>
-
-                            <!-- Add to Cart Button -->
                             <button class="add-to-cart"
-                                    data-product-id="<?= $related['id'] ?>"
-                                    <?= $relatedStock <= 0 ? 'disabled' : '' ?>
-                                    style="width: 100%; padding: 12px; background: linear-gradient(135deg, #00b207 0%, #009206 100%); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; <?= $relatedStock <= 0 ? 'background: #d1d5db; cursor: not-allowed;' : '' ?>"
-                                    aria-label="<?= $t['add_to_cart'] ?? 'Add to Cart' ?>">
-                                <i class="fas fa-shopping-cart"></i>
-                                <?= $t['add_to_cart'] ?? 'Add to Cart' ?>
+                                    data-product-id="<?= $related['id'] ?? 0 ?>"
+                                    aria-label="<?= $t['add_to_cart'] ?>">
+                                <?= $t['add_to_cart'] ?>
                             </button>
                         </div>
                     </article>
@@ -1439,10 +1304,36 @@ if (empty($productImages) && !empty($product['image'])) {
         <div class="modal-counter" id="modalCounter">1 / 1</div>
     </div>
 
-    </div><!-- End Page Wrapper -->
-
     <!-- Footer -->
-    <?php include __DIR__ . '/../components/footer.php'; ?>
+    <footer class="footer">
+        <div class="footer-grid">
+            <div>
+                <h4><?= $t['get_to_know'] ?></h4>
+                <ul>
+                    <li><a href="<?= url('about') ?>"><?= $t['about_us'] ?></a></li>
+                    <li><a href="<?= url('contact') ?>"><?= $t['contact_us'] ?></a></li>
+                </ul>
+            </div>
+            <div>
+                <h4><?= $t['promote_with_us'] ?></h4>
+                <ul>
+                    <li><a href="<?= url('register') ?>"><?= $t['sell_on'] ?></a></li>
+                    <li><a href="<?= url('seller/help') ?>"><?= $t['vendor_central'] ?></a></li>
+                </ul>
+            </div>
+            <div>
+                <h4><?= $t['connect_with_us'] ?></h4>
+                <ul>
+                    <li><a href="#">Facebook</a></li>
+                    <li><a href="#">Twitter</a></li>
+                    <li><a href="#">Instagram</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>OCS © <?= date('Y') ?>. <?= $t['all_rights'] ?></p>
+        </div>
+    </footer>
     
     <script>
         window.OCS_CONFIG = {
@@ -1704,7 +1595,5 @@ if (empty($productImages) && !empty($product['image'])) {
         });
     </script>
     <script src="<?= asset('js/home.js') ?>"></script>
-<!-- Auth Popup for Guests -->
-<?php include __DIR__ . "/../components/auth-popup.php"; ?>
 </body>
 </html>

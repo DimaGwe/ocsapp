@@ -13,7 +13,7 @@ class AdminEmailController
      */
     public function index()
     {
-        AuthMiddleware::handle('admin');
+        AuthMiddleware::superAdmin();
 
         $templatesPath = __DIR__ . '/../Views/emails/';
 
@@ -50,7 +50,7 @@ class AdminEmailController
      */
     public function edit()
     {
-        AuthMiddleware::handle('admin');
+        AuthMiddleware::superAdmin();
 
         $filename = $_GET['template'] ?? '';
 
@@ -86,7 +86,7 @@ class AdminEmailController
      */
     public function update()
     {
-        AuthMiddleware::handle('admin');
+        AuthMiddleware::superAdmin();
 
         $filename = $_POST['filename'] ?? '';
         $content = $_POST['content'] ?? '';
@@ -133,7 +133,7 @@ class AdminEmailController
      */
     public function preview()
     {
-        AuthMiddleware::handle('admin');
+        AuthMiddleware::superAdmin();
 
         $filename = $_GET['template'] ?? '';
 
@@ -201,7 +201,7 @@ class AdminEmailController
      */
     public function previewContent()
     {
-        AuthMiddleware::handle('admin');
+        AuthMiddleware::superAdmin();
 
         $content = $_POST['content'] ?? '';
 

@@ -22,7 +22,7 @@ class AdminContentPagesController {
      * List all content pages
      */
     public function index() {
-        AuthMiddleware::handle('admin');
+        AuthMiddleware::superAdmin();
 
         try {
             $stmt = $this->db->query("
@@ -43,7 +43,7 @@ class AdminContentPagesController {
      * Show edit form for a content page
      */
     public function edit() {
-        AuthMiddleware::handle('admin');
+        AuthMiddleware::superAdmin();
 
         $id = $_GET['id'] ?? null;
         if (!$id) {
@@ -75,7 +75,7 @@ class AdminContentPagesController {
      * Update a content page
      */
     public function update() {
-        AuthMiddleware::handle('admin');
+        AuthMiddleware::superAdmin();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             jsonResponse(['success' => false, 'message' => 'Invalid request method'], 405);
@@ -120,7 +120,7 @@ class AdminContentPagesController {
      * Create a new content page
      */
     public function create() {
-        AuthMiddleware::handle('admin');
+        AuthMiddleware::superAdmin();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->store();
@@ -170,7 +170,7 @@ class AdminContentPagesController {
      * Delete a content page
      */
     public function delete() {
-        AuthMiddleware::handle('admin');
+        AuthMiddleware::superAdmin();
 
         $id = $_POST['id'] ?? null;
         if (!$id) {

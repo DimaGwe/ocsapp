@@ -306,6 +306,13 @@ ob_start();
   .badge.blue { background: #dbeafe; color: #1e40af; }
   .badge.green { background: #dcfce7; color: #166534; }
   .badge.gray { background: var(--gray-200); color: var(--gray-700); }
+  .badge.red { background: #fee2e2; color: #dc2626; }
+  .badge.purple { background: #f3e8ff; color: #7c3aed; }
+  .badge.orange { background: #ffedd5; color: #ea580c; }
+  .badge.teal { background: #ccfbf1; color: #0d9488; }
+  .badge.gold { background: #fef3c7; color: #b45309; }
+  .badge.pink { background: #fce7f3; color: #be185d; }
+  .badge.cyan { background: #cffafe; color: #0891b2; }
 
   .card-footer {
     padding: 16px 24px;
@@ -532,6 +539,48 @@ ob_start();
   </a>
 </div>
 
+<!-- Online Now Widget -->
+<?php
+require_once BASE_PATH . '/app/Helpers/PresenceHelper.php';
+$online = PresenceHelper::onlineCounts();
+if ($online['total'] > 0):
+?>
+<div class="content-card" style="margin-bottom:24px;">
+  <div class="content-card-header" style="display:flex;justify-content:space-between;align-items:center;">
+    <h2 class="content-card-title">
+      <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#10b981;margin-right:8px;animation:pulse 2s infinite;"></span>
+      Online Now - <?= $online['total'] ?> active
+    </h2>
+    <a href="<?= url('/admin/users') ?>" style="font-size:13px;color:#00b207;">View all users</a>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:12px;padding:16px 0 4px;">
+    <?php
+    $breakdown = [
+      'buyer'    => ['label' => 'Buyers',    'icon' => 'fa-shopping-cart', 'color' => '#6d28d9'],
+      'seller'   => ['label' => 'Sellers',   'icon' => 'fa-store',         'color' => '#0284c7'],
+      'driver'   => ['label' => 'Drivers',   'icon' => 'fa-truck',         'color' => '#d97706'],
+      'supplier' => ['label' => 'Suppliers', 'icon' => 'fa-boxes',         'color' => '#ea580c'],
+      'admin'    => ['label' => 'Admins',    'icon' => 'fa-shield-alt',    'color' => '#dc2626'],
+    ];
+    foreach ($breakdown as $role => $info):
+      if ($online[$role] < 1) continue;
+    ?>
+    <div style="display:flex;align-items:center;gap:8px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:8px 14px;">
+      <i class="fas <?= $info['icon'] ?>" style="color:<?= $info['color'] ?>;font-size:13px;"></i>
+      <span style="font-weight:700;font-size:15px;"><?= $online[$role] ?></span>
+      <span style="font-size:13px;color:#6b7280;"><?= $info['label'] ?></span>
+    </div>
+    <?php endforeach; ?>
+  </div>
+</div>
+<style>
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+</style>
+<?php endif; ?>
+
 <!-- Stock Overview Widget -->
 <div class="content-card" style="margin-bottom: 32px;">
   <div class="content-card-header" style="display: flex; justify-content: space-between; align-items: center;">
@@ -621,6 +670,97 @@ ob_start();
   </div>
 </div>
 
+<!-- Driver Training Widget -->
+<?php
+$db2 = \Database::getConnection();
+$totalDrivers = (int)$db2->query("SELECT COUNT(DISTINCT driver_id) FROM driver_training_progress")->fetchColumn();
+$certified = (int)$db2->query("SELECT COUNT(*) FROM driver_certificates")->fetchColumn();
+$inProgress = (int)$db2->query("SELECT COUNT(DISTINCT dtp.driver_id) FROM driver_training_progress dtp LEFT JOIN driver_certificates dc ON dc.driver_id = dtp.driver_id WHERE dc.id IS NULL AND dtp.status IN ('passed','available','failed')")->fetchColumn();
+$stuck = (int)$db2->query("SELECT COUNT(DISTINCT dtp.driver_id) FROM driver_training_progress dtp LEFT JOIN driver_certificates dc ON dc.driver_id = dtp.driver_id WHERE dc.id IS NULL AND dtp.status = 'failed' AND dtp.attempts >= 3")->fetchColumn();
+$notStarted = max(0, $totalDrivers - $certified - $inProgress);
+?>
+<div class="content-card" style="margin-bottom: 32px;">
+  <div class="content-card-header" style="display: flex; justify-content: space-between; align-items: center;">
+    <h3 class="content-card-title"><i class="fas fa-graduation-cap" style="color: var(--primary); margin-right: 8px;"></i> Driver Training</h3>
+    <a href="<?= url('admin/training') ?>" style="font-size: 13px; color: var(--primary); text-decoration: none; font-weight: 600;">
+      Manage <i class="fas fa-arrow-right"></i>
+    </a>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 20px; padding: 24px;">
+    <div style="text-align: center; padding: 16px; background: #dcfce7; border-radius: var(--radius-md);">
+      <div style="font-size: 11px; font-weight: 700; color: var(--gray-600); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Certified</div>
+      <div style="font-size: 32px; font-weight: 700; color: #16a34a; margin-bottom: 4px;"><?= $certified ?></div>
+      <div style="font-size: 12px; color: var(--gray-600);">drivers certified</div>
+    </div>
+    <div style="text-align: center; padding: 16px; background: #dbeafe; border-radius: var(--radius-md);">
+      <div style="font-size: 11px; font-weight: 700; color: var(--gray-600); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">In Progress</div>
+      <div style="font-size: 32px; font-weight: 700; color: #2563eb; margin-bottom: 4px;"><?= $inProgress ?></div>
+      <div style="font-size: 12px; color: var(--gray-600);">in training</div>
+    </div>
+    <div style="text-align: center; padding: 16px; background: <?= $stuck > 0 ? '#fee2e2' : '#f3f4f6' ?>; border-radius: var(--radius-md);">
+      <div style="font-size: 11px; font-weight: 700; color: var(--gray-600); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Stuck</div>
+      <div style="font-size: 32px; font-weight: 700; color: <?= $stuck > 0 ? '#dc2626' : '#6b7280' ?>; margin-bottom: 4px;"><?= $stuck ?></div>
+      <div style="font-size: 12px; color: var(--gray-600);">max attempts reached</div>
+    </div>
+    <div style="text-align: center; padding: 16px; background: #f3f4f6; border-radius: var(--radius-md);">
+      <div style="font-size: 11px; font-weight: 700; color: var(--gray-600); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Not Started</div>
+      <div style="font-size: 32px; font-weight: 700; color: #6b7280; margin-bottom: 4px;"><?= $notStarted ?></div>
+      <div style="font-size: 12px; color: var(--gray-600);">awaiting training</div>
+    </div>
+  </div>
+</div>
+
+<!-- My Tasks Widget -->
+<?php if ($myTaskCount > 0 || true): ?>
+<div class="content-card" style="margin-bottom: 32px;">
+  <div class="content-card-header" style="display: flex; justify-content: space-between; align-items: center;">
+    <h3 class="content-card-title">
+      <i class="fas fa-clipboard-check" style="color: var(--primary); margin-right: 8px;"></i>
+      My Tasks
+      <?php if ($myTaskCount > 0): ?>
+        <span style="display:inline-flex;align-items:center;justify-content:center;background:#00b207;color:white;font-size:12px;font-weight:700;border-radius:12px;padding:2px 9px;margin-left:8px;"><?= $myTaskCount ?></span>
+      <?php endif; ?>
+    </h3>
+    <a href="<?= url('admin/planner') ?>?tab=todos" style="font-size: 13px; color: var(--primary); text-decoration: none; font-weight: 600;">
+      Open Planner <i class="fas fa-arrow-right"></i>
+    </a>
+  </div>
+
+  <?php if (empty($myTasks)): ?>
+    <div style="padding: 32px 24px; text-align: center; color: var(--gray-500);">
+      <i class="fas fa-check-circle" style="font-size: 28px; color: #22c55e; margin-bottom: 10px; display: block;"></i>
+      All caught up - no open tasks assigned to you.
+    </div>
+  <?php else: ?>
+    <div style="padding: 8px 0;">
+      <?php foreach ($myTasks as $task): ?>
+        <div style="display: flex; align-items: flex-start; gap: 14px; padding: 14px 24px; border-top: 1px solid var(--border);">
+          <div style="width: 32px; height: 32px; border-radius: 50%; background: #dcfce7; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
+            <i class="fas fa-circle-dot" style="color: var(--primary); font-size: 13px;"></i>
+          </div>
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-size: 14px; font-weight: 600; color: var(--dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              <?= htmlspecialchars($task['task']) ?>
+            </div>
+            <div style="font-size: 12px; color: var(--gray-500); margin-top: 3px;">
+              from <?= htmlspecialchars($task['created_by_name'] ?? 'Unknown') ?>
+              &middot; <?= formatDate($task['created_at'], 'M d') ?>
+            </div>
+          </div>
+        </div>
+      <?php endforeach; ?>
+      <?php if ($myTaskCount > 5): ?>
+        <div style="padding: 12px 24px; text-align: center; border-top: 1px solid var(--border);">
+          <a href="<?= url('admin/planner') ?>?tab=todos" style="font-size: 13px; color: var(--primary); font-weight: 600; text-decoration: none;">
+            + <?= $myTaskCount - 5 ?> more task<?= ($myTaskCount - 5) > 1 ? 's' : '' ?> in Planner
+          </a>
+        </div>
+      <?php endif; ?>
+    </div>
+  <?php endif; ?>
+</div>
+<?php endif; ?>
+
 <!-- Two Column Layout -->
 <div class="content-grid">
   
@@ -654,8 +794,22 @@ ob_start();
                   </div>
                 </td>
                 <td>
-                  <span class="badge blue">
-                    <?= htmlspecialchars($u['role_display'] ?? 'N/A') ?>
+                  <?php
+                    $roleColors = [
+                      'super_admin' => 'gold',
+                      'admin' => 'red',
+                      'admin_staff' => 'orange',
+                      'seller' => 'blue',
+                      'buyer' => 'green',
+                      'delivery' => 'purple',
+                      'business' => 'teal',
+                      'advertiser' => 'pink',
+                      'affiliate' => 'cyan'
+                    ];
+                    $roleColor = $roleColors[$u['role'] ?? ''] ?? 'gray';
+                  ?>
+                  <span class="badge <?= $roleColor ?>">
+                    <?= htmlspecialchars(ucfirst($u['role'] ?? 'N/A')) ?>
                   </span>
                 </td>
                 <td>
