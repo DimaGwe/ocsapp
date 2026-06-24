@@ -1,0 +1,538 @@
+/**
+ * OCSAPP - Login Page Styles
+ * Extracted from app/Views/auth/login.php (2026-06-15)
+ * Split-panel login layout with role tabs. Font inherits the
+ * global.css default (Segoe UI / system). Pairs with global.css,
+ * components/header.css, components/footer.css.
+ */
+
+/* ── Page wrapper ────────────────────────────────── */
+.login-page {
+  background: #f3f4f6;
+  padding: 48px 20px 64px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: calc(100vh - 180px);
+}
+
+/* ── Split card ──────────────────────────────────── */
+.login-split {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  width: 100%;
+  max-width: 860px;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0,0,0,.13);
+}
+
+/* ── Left brand panel ────────────────────────────── */
+.brand-panel {
+  background: linear-gradient(160deg, #0a2e0c 0%, #0d4010 50%, #007a05 100%);
+  padding: 48px 36px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.brand-panel::before {
+  content: '';
+  position: absolute;
+  width: 340px; height: 340px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,255,100,.12) 0%, transparent 70%);
+  top: -80px; right: -100px;
+  pointer-events: none;
+}
+
+.brand-panel::after {
+  content: '';
+  position: absolute;
+  width: 220px; height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,200,80,.1) 0%, transparent 70%);
+  bottom: 40px; left: -60px;
+  pointer-events: none;
+}
+
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.brand-logo img {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.1);
+  padding: 4px;
+  border: 2px solid rgba(255,255,255,.2);
+}
+
+.brand-logo span {
+  font-size: 24px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.5px;
+}
+
+.brand-body {
+  position: relative;
+  z-index: 1;
+}
+
+.brand-tagline {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.35;
+  margin-bottom: 10px;
+}
+
+.brand-tagline span {
+  color: #4ade80;
+}
+
+.brand-sub {
+  font-size: 14px;
+  color: rgba(255,255,255,.65);
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+
+.trust-list {
+  list-style: none;
+  padding: 0; margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.trust-list li {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  font-size: 13.5px;
+  color: rgba(255,255,255,.85);
+  font-weight: 500;
+}
+
+.trust-list li i {
+  width: 26px; height: 26px;
+  background: rgba(74,222,128,.18);
+  color: #4ade80;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.brand-footer-text {
+  position: relative;
+  z-index: 1;
+  font-size: 12px;
+  color: rgba(255,255,255,.4);
+}
+
+/* ── Right form panel ────────────────────────────── */
+.form-panel {
+  background: #fff;
+  padding: 44px 48px 40px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Role tabs ───────────────────────────────────── */
+.role-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 28px;
+}
+
+.role-tab {
+  background: #f9fafb;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px 6px 9px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 150ms ease;
+  font-family: inherit;
+}
+
+.role-tab:hover {
+  border-color: #00b207;
+  background: #f0fdf4;
+}
+
+.role-tab.active {
+  border-color: #00b207;
+  background: #f0fdf4;
+  box-shadow: 0 0 0 3px rgba(0,178,7,.1);
+}
+
+.role-tab .tab-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  margin: 0 auto 6px;
+  font-size: 14px;
+  color: #6b7280;
+  transition: all 150ms ease;
+}
+
+.role-tab:hover .tab-icon,
+.role-tab.active .tab-icon {
+  background: rgba(0,178,7,.14);
+  color: #00b207;
+}
+
+.role-tab .tab-name {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #374151;
+  line-height: 1.2;
+}
+
+.role-tab.active .tab-name { color: #00b207; }
+
+/* ── Form heading ────────────────────────────────── */
+.form-heading {
+  margin-bottom: 24px;
+}
+
+.form-heading h2 {
+  font-size: 22px;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.form-heading p {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* ── Tab panels ─────────────────────────────────── */
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── Alerts ──────────────────────────────────────── */
+.alert {
+  padding: 13px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.alert-error   { background: #fef2f2; border-left: 4px solid #ef4444; color: #991b1b; }
+.alert-success { background: #f0fdf4; border-left: 4px solid #22c55e; color: #166534; }
+.alert-info    { background: #eff6ff; border-left: 4px solid #3b82f6; color: #1e40af; }
+
+.checkout-notice {
+  background: #f0fdf4;
+  border-left: 4px solid #00b207;
+  padding: 13px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+.checkout-notice-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 14px; font-weight: 700; color: #007a05; margin-bottom: 3px;
+}
+.checkout-notice-desc { font-size: 13px; color: #4b5563; }
+
+/* ── Form fields ─────────────────────────────────── */
+.form-group { margin-bottom: 18px; }
+
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 6px;
+}
+
+.input-wrap { position: relative; }
+
+.input-icon {
+  position: absolute;
+  left: 13px; top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  font-size: 15px;
+  pointer-events: none;
+}
+
+.form-input {
+  width: 100%;
+  padding: 11px 13px 11px 40px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 9px;
+  font-size: 14.5px;
+  font-family: inherit;
+  color: #111827;
+  background: #fafafa;
+  transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #00b207;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(0,178,7,.1);
+}
+
+.form-input::placeholder { color: #9ca3af; }
+
+.pw-toggle {
+  position: absolute;
+  right: 12px; top: 50%;
+  transform: translateY(-50%);
+  background: none; border: none;
+  color: #9ca3af; font-size: 15px;
+  cursor: pointer; padding: 4px;
+  display: flex; align-items: center;
+  transition: color 150ms ease;
+}
+.pw-toggle:hover { color: #00b207; }
+
+/* ── Options row ─────────────────────────────────── */
+.form-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.checkbox-row { display: flex; align-items: center; gap: 7px; }
+
+.form-checkbox {
+  width: 15px; height: 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  accent-color: #00b207;
+}
+
+.checkbox-label {
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+  user-select: none;
+}
+
+.forgot-link {
+  font-size: 13px;
+  color: #00b207;
+  font-weight: 600;
+  text-decoration: none;
+}
+.forgot-link:hover { text-decoration: underline; color: #007a05; }
+
+/* ── Submit button ───────────────────────────────── */
+.btn-submit {
+  width: 100%;
+  padding: 13px;
+  background: #00b207;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15.5px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 150ms ease, transform 120ms ease, box-shadow 150ms ease;
+}
+.btn-submit:hover {
+  background: #009206;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0,178,7,.35);
+}
+.btn-submit:active { transform: none; box-shadow: none; }
+
+/* ── Register / helper link ──────────────────────── */
+.register-row {
+  margin-top: 18px;
+  text-align: center;
+  font-size: 13.5px;
+  color: #6b7280;
+}
+.register-row a {
+  color: #00b207;
+  font-weight: 600;
+  text-decoration: none;
+}
+.register-row a:hover { text-decoration: underline; }
+
+/* ── Quick links ─────────────────────────────────── */
+.quick-section {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.quick-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.quick-links {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.quick-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 8px;
+  background: #f9fafb;
+  color: #374151;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 9px;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 150ms ease;
+}
+.quick-link:hover {
+  background: #00b207;
+  color: #fff;
+  border-color: #00b207;
+}
+.quick-link i { font-size: 13px; }
+
+/* ── Header/footer fix (flush against grey bg) ───── */
+.header { margin-bottom: 0; }
+footer.footer { margin-top: 0; }
+
+/* ── Mobile trust pills (hidden on desktop) ─────── */
+.trust-pills {
+  display: none;
+}
+
+/* ── Responsive ──────────────────────────────────── */
+@media (max-width: 760px) {
+  .login-page {
+    padding: 0 0 48px;
+    align-items: flex-start;
+  }
+
+  .login-split {
+    grid-template-columns: 1fr;
+    border-radius: 0;
+    box-shadow: none;
+    max-width: 100%;
+  }
+
+  .brand-panel {
+    padding: 32px 24px 28px;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0;
+  }
+
+  .brand-panel::before {
+    width: 260px; height: 260px;
+    top: -60px; right: -60px;
+  }
+
+  .brand-panel::after {
+    width: 160px; height: 160px;
+    bottom: 20px; left: -40px;
+  }
+
+  .brand-logo {
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+
+  .brand-logo img { width: 38px; height: 38px; }
+  .brand-logo span { font-size: 22px; }
+
+  .brand-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .brand-tagline {
+    font-size: 20px;
+    margin-bottom: 6px;
+  }
+
+  .brand-sub {
+    display: block;
+    font-size: 13px;
+    color: rgba(255,255,255,.6);
+    margin-bottom: 16px;
+  }
+
+  .trust-list { display: none; }
+
+  .trust-pills {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .trust-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 11.5px;
+    color: rgba(255,255,255,.85);
+    font-weight: 500;
+  }
+
+  .trust-pill i {
+    color: #4ade80;
+    font-size: 10px;
+  }
+
+  .brand-footer-text { display: none; }
+
+  .form-panel {
+    padding: 28px 20px 24px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,.07);
+  }
+}
+
+@media (max-width: 420px) {
+  .brand-panel { padding: 24px 16px 22px; }
+  .brand-tagline { font-size: 18px; }
+  .role-tabs { grid-template-columns: repeat(2, 1fr); }
+  .quick-links { grid-template-columns: 1fr 1fr; }
+  .quick-links .quick-link:last-child { grid-column: span 2; }
+  .form-panel { padding: 24px 16px; }
+}

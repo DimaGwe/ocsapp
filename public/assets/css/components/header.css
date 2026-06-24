@@ -1,0 +1,513 @@
+/**
+ * OCSAPP Marketplace - Header Component Styles
+ * Top banner, main header, search bar, navigation, and location selector
+ * Last Updated: December 18, 2025
+ */
+
+/* ===================================
+   TOP BANNER
+   =================================== */
+.top-banner {
+  background: var(--gray-900);
+  color: #fff;
+  text-align: center;
+  padding: 10px;
+  font-size: 11px;
+  margin-bottom: 12px;
+}
+
+.top-banner a {
+  color: #fff;
+  text-decoration: underline;
+}
+
+/* ===================================
+   HEADER
+   =================================== */
+.header {
+  position: sticky;
+  top: var(--beta-banner-h, 0px);
+  top: calc(var(--beta-banner-h, 0px) + env(safe-area-inset-top, 0px));
+  z-index: var(--z-sticky);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+  gap: var(--spacing-md);
+  margin-bottom: 20px;
+}
+
+/* Logo Section */
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.logo-img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.logo span {
+  font-size: 24px;
+}
+
+/* Location Selector */
+.location-selector {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 13px;
+  background: var(--primary);
+  color: #fff;
+  transition: all var(--transition-base);
+}
+
+.location-selector:hover,
+.location-selector:focus {
+  background: var(--primary-600);
+  border-color: var(--primary-600);
+}
+
+.location-selector span:nth-child(2) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+/* ===================================
+   SEARCH BAR
+   =================================== */
+.search-bar {
+  flex: 1;
+  max-width: 650px;
+  margin: 0 20px;
+  position: relative;
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 12px 120px 12px 14px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  transition: border-color var(--transition-base);
+}
+
+.search-bar input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.search-bar button {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--primary);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  transition: background var(--transition-base);
+}
+
+.search-bar button:hover,
+.search-bar button:focus {
+  background: var(--primary-600);
+}
+
+/* ===================================
+   HEADER ACTIONS
+   =================================== */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Language Selector */
+.language-selector {
+  position: relative;
+}
+
+.language-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  font-size: 13px;
+  transition: border-color var(--transition-base);
+}
+
+.language-btn:hover,
+.language-btn:focus {
+  border-color: var(--primary);
+}
+
+.language-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  min-width: 150px;
+  z-index: var(--z-dropdown);
+  animation: fadeInDown 0.2s ease;
+}
+
+.language-dropdown.active {
+  display: block;
+}
+
+.language-option {
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background var(--transition-base);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.language-option:hover {
+  background: var(--gray-100);
+}
+
+.language-option.selected {
+  background: #e8f5e9;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* Cart Button */
+.btn-cart {
+  position: relative;
+  background: var(--primary);
+  color: #fff;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  font-size: 20px;
+  transition: all var(--transition-base);
+}
+
+.btn-cart:hover,
+.btn-cart:focus {
+  background: var(--primary-600);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-cart .cart-icon {
+  font-size: 20px;
+  color: #fff;
+  filter: brightness(1.2);
+}
+
+.cart-count {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #ea4b48;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: var(--radius-full);
+  padding: 3px 7px;
+  line-height: 1;
+  min-width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  border: 2px solid #fff;
+}
+
+/* Sign In Button */
+.sign-in-btn {
+  background: var(--primary);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  transition: all var(--transition-base);
+  white-space: nowrap;
+}
+
+.sign-in-btn:hover,
+.sign-in-btn:focus {
+  background: var(--primary-600);
+  transform: translateY(-1px);
+}
+
+.sign-in-btn:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px var(--primary);
+}
+
+.desktop-only {
+  display: flex;
+}
+
+/* ===================================
+   MOBILE BOTTOM NAVIGATION
+   =================================== */
+.mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  z-index: var(--z-mobile-nav);
+  padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+}
+
+.mobile-bottom-nav .nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 4px 8px;
+  color: var(--gray-500);
+  transition: color var(--transition-base);
+  position: relative;
+}
+
+.mobile-bottom-nav .nav-item.active,
+.mobile-bottom-nav .nav-item:hover,
+.mobile-bottom-nav .nav-item:focus {
+  color: var(--primary);
+}
+
+.mobile-bottom-nav .nav-icon {
+  font-size: 22px;
+  margin-bottom: 2px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-bottom-nav .nav-label {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.mobile-cart-badge {
+  position: absolute;
+  top: -6px;
+  right: -10px;
+  background: #ea4b48;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: var(--radius-full);
+  padding: 3px 6px;
+  line-height: 1;
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  border: 2px solid #fff;
+}
+
+/* ===================================
+   MOBILE RESPONSIVE STYLES
+   =================================== */
+@media (max-width: 768px) {
+  /* Show mobile bottom navigation */
+  .mobile-bottom-nav {
+    display: flex;
+  }
+
+  /* Hide desktop-only elements on mobile */
+  .desktop-only {
+    display: none !important;
+  }
+
+  /* Adjust header for mobile - enable wrapping */
+  .header {
+    padding: 12px 16px;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  /* Logo section takes flex space (not full width) */
+  .logo-section {
+    flex: 1;
+  }
+
+  .logo {
+    font-size: 18px;
+  }
+
+  .logo-img {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* Location selector stays compact within logo section */
+  .location-selector {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+
+  /* Limit location text width to prevent overflow */
+  .location-selector span:nth-child(2) {
+    max-width: 80px;
+    display: inline-block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Header actions stay on same row (right side) */
+  .header-actions {
+    gap: 8px;
+  }
+
+  /* Hide sign-in button on mobile (use bottom nav instead) */
+  .sign-in-btn {
+    display: none;
+  }
+
+  .language-btn {
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+
+  /* Search bar takes full width on its own row (row 2) */
+  .search-bar {
+    order: 3;
+    flex-basis: 100%;
+    margin: 0;
+    max-width: 100%;
+  }
+
+  .search-bar input {
+    font-size: 14px;
+    padding: 10px 100px 10px 12px;
+  }
+
+  .search-bar button {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+
+  /* Add padding to body for mobile nav */
+  body {
+    padding-bottom: 70px;
+  }
+}
+
+/* Extra small mobile devices */
+@media (max-width: 480px) {
+  .header {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .logo {
+    font-size: 16px;
+  }
+
+  .logo-img {
+    width: 28px;
+    height: 28px;
+  }
+
+  .location-selector {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+
+  .language-btn {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+
+  /* Tighter search bar padding on very small phones */
+  .search-bar input {
+    padding: 10px 80px 10px 12px;
+    font-size: 13px;
+  }
+
+  .search-bar button {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  /* Minimum touch target for mobile nav items */
+  .mobile-bottom-nav .nav-item {
+    min-height: 52px;
+    padding: 6px 8px;
+  }
+
+  /* Cart badge safe clipping on tiny screens */
+  .cart-count {
+    top: -2px;
+    right: 0;
+    min-width: 18px;
+    height: 18px;
+    font-size: 10px;
+    padding: 2px 5px;
+  }
+
+  .mobile-cart-badge {
+    top: -4px;
+    right: -8px;
+    min-width: 16px;
+    height: 16px;
+  }
+}
+
+/* Tablet: give location text more room */
+@media (min-width: 481px) and (max-width: 768px) {
+  .location-selector span:nth-child(2) {
+    max-width: 120px;
+  }
+}
+
+/* ===================================
+   LOCATION MODAL
+   =================================== */
+/* Location modal styles moved to components/location-modal.css
+   for better organization and modern design */

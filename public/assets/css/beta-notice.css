@@ -1,6 +1,6 @@
 /**
  * Beta Notice - Modal & Banner Styles
- * For OCS Marketplace Beta Phase
+ * For OCSAPP Marketplace Beta Phase
  */
 
 /* ===================================
@@ -112,9 +112,12 @@
   border-radius: 16px;
   max-width: 550px;
   width: 100%;
+  max-height: 90vh;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
   overflow: hidden;
   animation: slideUp 0.3s ease;
+  display: flex;
+  flex-direction: column;
 }
 
 @keyframes slideUp {
@@ -133,6 +136,7 @@
   padding: 30px;
   text-align: center;
   color: #fff;
+  flex-shrink: 0;
 }
 
 .beta-modal-icon {
@@ -162,6 +166,28 @@
 
 .beta-modal-body {
   padding: 35px 30px;
+  overflow-y: auto;
+  flex: 1;
+  max-height: calc(90vh - 200px);
+}
+
+/* Custom scrollbar for beta modal body */
+.beta-modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.beta-modal-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.beta-modal-body::-webkit-scrollbar-thumb {
+  background: #00b207;
+  border-radius: 4px;
+}
+
+.beta-modal-body::-webkit-scrollbar-thumb:hover {
+  background: #009206;
 }
 
 .beta-modal-notice {
@@ -222,7 +248,10 @@
 }
 
 .beta-modal-footer {
-  padding: 0 30px 30px;
+  padding: 20px 30px 30px;
+  flex-shrink: 0;
+  background: #fff;
+  border-top: 1px solid #f3f4f6;
 }
 
 .beta-modal-button {
@@ -261,36 +290,48 @@
 /* Mobile responsiveness */
 @media (max-width: 768px) {
   .beta-modal {
-    margin: 20px;
+    margin: 10px;
+    max-height: 95vh;
   }
 
   .beta-modal-header {
-    padding: 25px 20px;
+    padding: 20px 15px;
   }
 
   .beta-modal-icon {
-    font-size: 52px;
+    font-size: 48px;
   }
 
   .beta-modal-title {
-    font-size: 24px;
+    font-size: 22px;
   }
 
   .beta-modal-subtitle {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .beta-modal-body {
-    padding: 25px 20px;
+    padding: 20px 15px;
+    max-height: calc(95vh - 180px);
   }
 
   .beta-modal-footer {
-    padding: 0 20px 25px;
+    padding: 15px 15px 20px;
   }
 
   .beta-modal-button {
-    font-size: 16px;
-    padding: 14px 28px;
+    font-size: 15px;
+    padding: 12px 24px;
+  }
+
+  .beta-modal-notice,
+  .beta-modal-info {
+    padding: 12px 16px;
+  }
+
+  .beta-modal-list li {
+    font-size: 14px;
+    margin-bottom: 10px;
   }
 }
 

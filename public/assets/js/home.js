@@ -136,3 +136,222 @@
   updateSlide();
   startAutoSlide();
 })();
+
+/**
+ * Newsletter Subscription
+ */
+(function() {
+  const newsletterForm = document.querySelector('.newsletter-form');
+
+  if (!newsletterForm) return;
+
+  newsletterForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const emailInput = document.getElementById('newsletterEmail');
+    const submitBtn = this.querySelector('.subscribe-btn');
+    const email = emailInput.value.trim();
+
+    if (!email) {
+      alert('Please enter your email address');
+      return;
+    }
+
+    // Disable button and show loading state
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Subscribing...';
+
+    const consentBox = document.getElementById('newsletterConsent');
+    if (consentBox && !consentBox.checked) {
+      alert('Please check the consent box to subscribe');
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+      return;
+    }
+
+    try {
+      const response = await fetch(window.OCSAPP_CONFIG.urls.newsletter, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, consent: consentBox ? consentBox.checked : true })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert(data.message);
+        emailInput.value = ''; // Clear the input
+      } else {
+        alert(data.message || 'An error occurred. Please try again.');
+      }
+    } catch (error) {
+      console.error('Newsletter subscription error:', error);
+      alert('An error occurred. Please try again later.');
+    } finally {
+      // Re-enable button
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+    }
+  });
+})();
+
+/**
+ * Add to Cart Functionality
+ * Shows auth popup for guests, allows cart add for logged-in users
+ */
+(function() {
+  // Store the last clicked button for use after auth popup
+  let lastClickedBtn = null;
+
+  /**
+   * Direct add to cart function (called after auth popup "Continue as Guest")
+   */
+  window.addToCartDirect = function(productId, quantity = 1) {
+    const cartAddUrl = window.OCSAPP_CONFIG?.urls?.cartAdd || '/cart/add';
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+    fetch(cartAddUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': csrfToken
+      },
+      body: JSON.stringify({
+        product_id: productId,
+        quantity: quantity,
+        _csrf_token: csrfToken
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Update cart count in header
+        const cartCount = document.getElementById('cartCount');
+        const mobileCartCount = document.getElementById('mobileCartCount');
+        if (cartCount) {
+          cartCount.textContent = data.cart_count || (parseInt(cartCount.textContent) + 1);
+          cartCount.style.display = 'flex';
+        }
+        if (mobileCartCount) {
+          mobileCartCount.textContent = data.cart_count || (parseInt(mobileCartCount.textContent) + 1);
+          mobileCartCount.style.display = 'block';
+        }
+
+        // Show brief success message
+        if (lastClickedBtn) {
+          const originalHtml = lastClickedBtn.innerHTML;
+          lastClickedBtn.innerHTML = '<i class="fas fa-check"></i> Added!';
+          lastClickedBtn.style.background = '#16a34a';
+          setTimeout(() => {
+            lastClickedBtn.innerHTML = originalHtml;
+            lastClickedBtn.style.background = '';
+            lastClickedBtn.disabled = false;
+            lastClickedBtn = null;
+          }, 1500);
+        }
+      } else {
+        alert(data.message || 'Error adding to cart');
+        if (lastClickedBtn) {
+          lastClickedBtn.disabled = false;
+          lastClickedBtn = null;
+        }
+      }
+    })
+    .catch(error => {
+      console.error('Add to cart error:', error);
+      alert('Error adding to cart. Please try again.');
+      if (lastClickedBtn) {
+        lastClickedBtn.disabled = false;
+        lastClickedBtn = null;
+      }
+    });
+  };
+
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.add-to-cart');
+    if (!btn || btn.disabled) return;
+
+    const productId = btn.dataset.productId;
+    if (!productId) return;
+
+    // Check if user is logged in
+    const isLoggedIn = window.OCSAPP_CONFIG?.isLoggedIn === true ||
+                       window.OCSAPP_CONFIG?.isLoggedIn === 'true';
+
+    // If not logged in, show auth popup
+    if (!isLoggedIn && typeof showAuthPopup === 'function') {
+      e.preventDefault();
+      e.stopPropagation();
+      lastClickedBtn = btn;
+
+      // Store product info for "Continue as Guest" action
+      window.pendingCartProduct = {
+        productId: productId,
+        quantity: 1
+      };
+
+      showAuthPopup();
+      return;
+    }
+
+    // User is logged in - proceed with add to cart
+    btn.disabled = true;
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+    const cartAddUrl = window.OCSAPP_CONFIG?.urls?.cartAdd || '/cart/add';
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+    fetch(cartAddUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': csrfToken
+      },
+      body: JSON.stringify({
+        product_id: productId,
+        quantity: 1,
+        _csrf_token: csrfToken
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Update cart count in header
+        const cartCount = document.getElementById('cartCount');
+        const mobileCartCount = document.getElementById('mobileCartCount');
+        if (cartCount) {
+          cartCount.textContent = data.cart_count || (parseInt(cartCount.textContent) + 1);
+          cartCount.style.display = 'flex';
+        }
+        if (mobileCartCount) {
+          mobileCartCount.textContent = data.cart_count || (parseInt(mobileCartCount.textContent) + 1);
+          mobileCartCount.style.display = 'block';
+        }
+
+        // Show success feedback
+        btn.innerHTML = '<i class="fas fa-check"></i> Added!';
+        btn.style.background = '#16a34a';
+
+        setTimeout(() => {
+          btn.innerHTML = originalHtml;
+          btn.style.background = '';
+          btn.disabled = false;
+        }, 1500);
+      } else {
+        alert(data.message || 'Error adding to cart');
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+      }
+    })
+    .catch(error => {
+      console.error('Add to cart error:', error);
+      alert('Error adding to cart. Please try again.');
+      btn.innerHTML = originalHtml;
+      btn.disabled = false;
+    });
+  });
+})();
