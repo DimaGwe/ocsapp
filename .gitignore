@@ -51,8 +51,9 @@ app/Views/buyer/test-routing-settings.php
 app/Views/buyer/test_products.php
 app/Views/buyer/verify-controllers.php
 
-# Vendor doc containing an example Stripe key (trips GitHub secret scanning)
-vendor/stripe/stripe-php/README.md
+# Composer dependencies (run `composer install` to restore; avoids vendor
+# doc strings tripping GitHub secret scanning)
+vendor/
 
 # Temporary system files
 nul
