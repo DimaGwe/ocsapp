@@ -339,6 +339,11 @@ class SettingsController {
         }
 
         $provider = post('provider', request('provider', ''));
+        if ($provider === '') {
+            // The Test button posts a JSON body, which PHP does not load into $_POST.
+            $input = json_decode(file_get_contents('php://input'), true);
+            $provider = $input['provider'] ?? '';
+        }
         $result = ['ok' => false, 'message' => 'Unknown provider.'];
 
         if ($provider === 'anthropic') {

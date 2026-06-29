@@ -209,6 +209,17 @@ function post(url, body){
 }
 function toast(m){ const t=document.getElementById('ccToast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._x); t._x=setTimeout(()=>t.classList.remove('show'),2400); }
 function esc(s){ return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+/* Lightweight, XSS-safe markdown for bot replies: escape first, then only ever inject known tags.
+   Line breaks + numbered/bullet lists already render via white-space:pre-wrap. */
+function mdInline(s){
+  let h = esc(s);
+  h = h.replace(/`([^`\n]+)`/g, '<code>$1</code>');                 // `inline code`
+  h = h.replace(/^\s{0,3}#{1,6}\s+(.+)$/gm, '<strong>$1</strong>'); // # heading -> bold line
+  h = h.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');       // **bold**
+  h = h.replace(/__([^_\n]+)__/g, '<strong>$1</strong>');           // __bold__
+  h = h.replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, '$1<em>$2</em>');    // *italic*
+  return h;
+}
 
 /* ---- chat ---- */
 const box = document.getElementById('chatBox');
@@ -222,7 +233,7 @@ function addMsg(role, text){
   const hint = log.querySelector('.chat-hint'); if(hint) hint.remove();
   const d = document.createElement('div');
   d.className = 'msg ' + (role==='user'?'user':'bot');
-  d.innerHTML = esc(text);
+  d.innerHTML = role==='bot' ? mdInline(text) : esc(text);
   if(role==='bot' && /---\s*EN\s*---|TITLE\s*:/i.test(text)){
     const btn = document.createElement('button');
     btn.className='use-draft';
