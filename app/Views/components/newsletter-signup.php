@@ -33,6 +33,7 @@ try {
 if ($nlLists):
     $nlPrechecked = ['general', $nlPortal];
 ?>
+<div class="page nl-band-wrap">
 <section class="nl-band">
   <div class="nl-inner">
     <div class="nl-head">
@@ -74,9 +75,12 @@ if ($nlLists):
     </form>
   </div>
 </section>
+</div>
 
 <style>
-  .nl-band { background: #0b3d2e; color: #fff; padding: 36px 30px; margin: 0 clamp(16px, 4vw, 48px); border-radius: 16px; }
+  /* Wrapper mirrors the page container so the band lines up with page content */
+  .nl-band-wrap { margin: 0 auto 48px; }
+  .nl-band { background: #0b3d2e; color: #fff; padding: 36px 30px; border-radius: 16px; }
   .nl-inner { max-width: 1100px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 24px; justify-content: space-between; }
   .nl-head { display: flex; gap: 14px; align-items: flex-start; max-width: 460px; }
   .nl-icon { background: rgba(255,255,255,.12); border-radius: 12px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
