@@ -317,6 +317,7 @@ return [
     'POST /admin/content/chat'            => ['AdminContentController', 'chat'],
     'POST /admin/content/generate-image'  => ['AdminContentController', 'genImage'],
     'POST /admin/content/generate-video'  => ['AdminContentController', 'genVideo'],
+    'POST /admin/content/upload-image'    => ['AdminContentController', 'uploadImage'],
     'POST /admin/content/save'            => ['AdminContentController', 'save'],
     'POST /admin/content/update-status'   => ['AdminContentController', 'updateStatus'],
     'POST /admin/content/delete'          => ['AdminContentController', 'delete'],

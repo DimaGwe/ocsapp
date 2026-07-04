@@ -5,6 +5,7 @@
  */
 
 require_once __DIR__ . '/../../bootstrap/init.php';
+require_once __DIR__ . '/../../config/database.php';
 
 $db = Database::getConnection();
 

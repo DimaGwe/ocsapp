@@ -229,6 +229,51 @@ PROMPT;
     }
 
     /* ============================================================
+     * AJAX: MANUAL IMAGE UPLOAD (Content Library edit)
+     * ============================================================ */
+
+    public function uploadImage(): void
+    {
+        $this->json();
+        $this->requireCsrf();
+
+        if (empty($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
+            $this->out(['success' => false, 'error' => 'No image uploaded.']);
+        }
+        $file = $_FILES['image'];
+
+        $maxBytes = 8 * 1024 * 1024;
+        if ($file['size'] > $maxBytes) {
+            $this->out(['success' => false, 'error' => 'Image is too large (max 8MB).']);
+        }
+
+        $allowedExt = ['jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp', 'gif' => 'image/gif'];
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        if (!isset($allowedExt[$ext])) {
+            $this->out(['success' => false, 'error' => 'Unsupported file type. Use JPG, PNG, WEBP, or GIF.']);
+        }
+
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $file['tmp_name']);
+        finfo_close($finfo);
+        if (!in_array($mime, ['image/jpeg', 'image/png', 'image/webp', 'image/gif'], true) || !getimagesize($file['tmp_name'])) {
+            $this->out(['success' => false, 'error' => 'File does not look like a valid image.']);
+        }
+
+        $dir = BASE_PATH . '/public/uploads/content';
+        if (!is_dir($dir)) { @mkdir($dir, 0775, true); }
+
+        $filename = 'content_' . date('Ymd_His') . '_' . bin2hex(random_bytes(3)) . '.' . $ext;
+        $path = $dir . '/' . $filename;
+        if (!move_uploaded_file($file['tmp_name'], $path)) {
+            $this->out(['success' => false, 'error' => 'Could not save the uploaded image.']);
+        }
+
+        $rel = 'uploads/content/' . $filename;
+        $this->out(['success' => true, 'path' => $rel, 'url' => asset($rel)]);
+    }
+
+    /* ============================================================
      * AJAX: VIDEO GENERATION (Veo 3) - Phase 2 stub w/ spend gate
      * ============================================================ */
 
@@ -287,10 +332,19 @@ PROMPT;
 
         try {
             if ($id > 0) {
+                $old = $db->prepare("SELECT image_path FROM content_posts WHERE id=?");
+                $old->execute([$id]);
+                $oldImg = $old->fetchColumn();
+
                 $sql = "UPDATE content_posts SET title=?, caption_en=?, caption_fr=?, hashtags=?, platforms=?, status=?, post_date=?, image_path=?, video_path=?, generated_by=? WHERE id=?";
                 $args = array_values($fields);
                 $args[] = $id;
                 $db->prepare($sql)->execute($args);
+
+                if ($oldImg && $oldImg !== $fields['image_path'] && strpos($oldImg, 'uploads/content/') === 0) {
+                    $file = BASE_PATH . '/public/' . $oldImg;
+                    if (is_file($file)) { @unlink($file); }
+                }
             } else {
                 $fields['created_by'] = (int)($_SESSION['user']['id'] ?? 0) ?: null;
                 $cols = implode(',', array_keys($fields));
