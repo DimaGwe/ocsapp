@@ -251,6 +251,17 @@ class SettingsController {
                     ['key' => 'gemini_api_key', 'label' => 'API Key', 'placeholder' => 'AIza...'],
                 ],
             ],
+            'twilio' => [
+                'title' => 'Twilio',
+                'desc'  => 'SMS + calling for the leads CRM communication center.',
+                'icon'  => 'fa-phone',
+                'link'  => 'https://console.twilio.com/',
+                'keys'  => [
+                    ['key' => 'twilio_account_sid', 'label' => 'Account SID', 'placeholder' => 'AC...'],
+                    ['key' => 'twilio_auth_token', 'label' => 'Auth Token', 'placeholder' => ''],
+                    ['key' => 'twilio_phone_number', 'label' => 'Phone Number', 'placeholder' => '+1...'],
+                ],
+            ],
         ];
     }
 
@@ -350,6 +361,8 @@ class SettingsController {
             $result = $this->pingAnthropic(setting('anthropic_api_key', ''));
         } elseif ($provider === 'gemini') {
             $result = $this->pingGemini(setting('gemini_api_key', ''));
+        } elseif ($provider === 'twilio') {
+            $result = $this->pingTwilio(setting('twilio_account_sid', ''), setting('twilio_auth_token', ''));
         }
 
         echo json_encode($result);
@@ -390,5 +403,21 @@ class SettingsController {
         if ($code === 200) return ['ok' => true, 'message' => 'Connected - Gemini key is valid.'];
         $data = json_decode($resp, true);
         return ['ok' => false, 'message' => $data['error']['message'] ?? ('Failed (HTTP ' . $code . ')')];
+    }
+
+    private function pingTwilio(string $sid, string $token): array {
+        if (!$sid || !$token) return ['ok' => false, 'message' => 'No key saved yet.'];
+        $ch = curl_init('https://api.twilio.com/2010-04-01/Accounts/' . urlencode($sid) . '.json');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true, CURLOPT_USERPWD => $sid . ':' . $token, CURLOPT_TIMEOUT => 20,
+        ]);
+        $resp = curl_exec($ch);
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $err  = curl_error($ch);
+        curl_close($ch);
+        if ($err) return ['ok' => false, 'message' => 'Connection error: ' . $err];
+        $data = json_decode($resp, true);
+        if ($code === 200) return ['ok' => true, 'message' => 'Connected - account "' . ($data['friendly_name'] ?? 'active') . '" (' . ($data['status'] ?? 'unknown') . ').'];
+        return ['ok' => false, 'message' => $data['message'] ?? ('Failed (HTTP ' . $code . ')')];
     }
 }

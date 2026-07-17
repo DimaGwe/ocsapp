@@ -21,9 +21,9 @@ class TwilioHelper
     private static function init(): void
     {
         if (self::$accountSid === null) {
-            self::$accountSid = $_ENV['TWILIO_ACCOUNT_SID'] ?? '';
-            self::$authToken = $_ENV['TWILIO_AUTH_TOKEN'] ?? '';
-            self::$phoneNumber = $_ENV['TWILIO_PHONE_NUMBER'] ?? '';
+            self::$accountSid = setting('twilio_account_sid', '');
+            self::$authToken = setting('twilio_auth_token', '');
+            self::$phoneNumber = setting('twilio_phone_number', '');
         }
     }
 
