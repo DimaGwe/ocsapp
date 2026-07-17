@@ -681,15 +681,15 @@ $fr = $currentLang === 'fr';
           <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Publicité &amp; marketing' : 'Advertising &amp; Marketing' ?></li>
           <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Intégration sur mesure &amp; SLA dédié' : 'Custom onboarding &amp; dedicated SLA' ?></li>
         </ul>
-        <a href="mailto:sellers@ocsapp.ca?subject=Enterprise%20Plan%20Inquiry" class="pkg-cta"><?= $fr ? 'Contactez-nous' : 'Contact Us' ?></a>
+        <a href="mailto:suppliers@ocsapp.ca?subject=Enterprise%20Plan%20Inquiry" class="pkg-cta"><?= $fr ? 'Contactez-nous' : 'Contact Us' ?></a>
       </div>
 
     </div>
 
     <div class="plan-note">
       <?= $fr
-        ? '<strong>Remarque :</strong> Tous les nouveaux comptes démarrent sur <strong>Essential</strong> sans frais. Pour changer de forfait, contactez <strong>sellers@ocsapp.ca</strong> ou votre gestionnaire de compte. Les changements prennent effet dans un délai d\'un jour ouvrable.'
-        : '<strong>Note:</strong> All new accounts start on <strong>Essential</strong> at no cost. To upgrade, contact <strong>sellers@ocsapp.ca</strong> or your account manager. Changes take effect within one business day.' ?>
+        ? '<strong>Remarque :</strong> Tous les nouveaux comptes démarrent sur <strong>Essential</strong> sans frais. Pour changer de forfait, contactez <strong>suppliers@ocsapp.ca</strong> ou votre gestionnaire de compte. Les changements prennent effet dans un délai d\'un jour ouvrable.'
+        : '<strong>Note:</strong> All new accounts start on <strong>Essential</strong> at no cost. To upgrade, contact <strong>suppliers@ocsapp.ca</strong> or your account manager. Changes take effect within one business day.' ?>
     </div>
   </div>
 </section>
@@ -709,7 +709,7 @@ $fr = $currentLang === 'fr';
         ['Puis-je utiliser un courriel différent de celui avec lequel j\'ai été invité ?',
          'Oui. Si vous avez reçu une invitation directe, vous pouvez vous inscrire avec n\'importe quel courriel. L\'adresse enregistrée devient votre identifiant de connexion et l\'endroit où toutes les notifications du portail sont envoyées.'],
         ['Combien de temps dure le processus d\'approbation ?',
-         'La plupart des candidatures sont examinées dans un délai de 1 à 3 jours ouvrables. Vous serez informé par courriel. Si vous n\'avez pas eu de nouvelles après 3 jours ouvrables, contactez sellers@ocsapp.ca avec votre numéro de référence.'],
+         'La plupart des candidatures sont examinées dans un délai de 1 à 3 jours ouvrables. Vous serez informé par courriel. Si vous n\'avez pas eu de nouvelles après 3 jours ouvrables, contactez suppliers@ocsapp.ca avec votre numéro de référence.'],
         ['Puis-je me connecter au portail avant d\'être approuvé ?',
          'Oui - immédiatement après avoir soumis votre candidature. L\'accès est limité pendant l\'examen : vous pouvez explorer le portail, mais vous ne pouvez pas lister des produits ni recevoir des bons de commande tant que votre compte n\'est pas pleinement activé.'],
         ['Qu\'est-ce qu\'un code fournisseur et pourquoi en ai-je besoin ?',
@@ -717,12 +717,12 @@ $fr = $currentLang === 'fr';
         ['Comment et quand suis-je payé ?',
          'Les modalités de paiement sont convenues lors de l\'intégration. OCSAPP traite les paiements selon des termes nets (généralement net-30) après confirmation de l\'exécution du bon de commande. Les factures et le statut des paiements sont visibles dans le portail sous Comptes clients.'],
         ['Puis-je changer de forfait à tout moment ?',
-         'Oui. Contactez sellers@ocsapp.ca ou votre gestionnaire de compte. Les changements prennent effet dans un délai d\'un jour ouvrable. Tous les forfaits sont mensuels, sans engagement à long terme.'],
+         'Oui. Contactez suppliers@ocsapp.ca ou votre gestionnaire de compte. Les changements prennent effet dans un délai d\'un jour ouvrable. Tous les forfaits sont mensuels, sans engagement à long terme.'],
       ] : [
         ['Can I use a different email than the one I was invited with?',
          'Yes. If you received a direct invite, you can register with any email. Your registered email becomes your login and where all portal notifications are sent.'],
         ['How long does the approval process take?',
-         'Most applications are reviewed within 1-3 business days. You\'ll be notified by email. If you haven\'t heard back after 3 business days, contact sellers@ocsapp.ca with your reference number.'],
+         'Most applications are reviewed within 1-3 business days. You\'ll be notified by email. If you haven\'t heard back after 3 business days, contact suppliers@ocsapp.ca with your reference number.'],
         ['Can I log in to the portal before I\'m approved?',
          'Yes - immediately after submitting. Access is limited during review: you can explore the portal but cannot list products or receive purchase orders until your account is fully activated.'],
         ['What is a Supplier Code and why do I need it?',
@@ -730,7 +730,7 @@ $fr = $currentLang === 'fr';
         ['How and when do I get paid?',
          'Payment terms are agreed upon during onboarding. OCSAPP processes payments on net terms (typically net-30) after PO fulfillment is confirmed. Invoices and payment status are visible in the portal under Account Receivables.'],
         ['Can I upgrade my plan at any time?',
-         'Yes. Contact sellers@ocsapp.ca or your account manager. Changes take effect within one business day. All plans are month-to-month with no long-term commitment.'],
+         'Yes. Contact suppliers@ocsapp.ca or your account manager. Changes take effect within one business day. All plans are month-to-month with no long-term commitment.'],
       ];
       foreach ($faqs as $faq): ?>
       <div class="faq-item">
@@ -756,7 +756,7 @@ $fr = $currentLang === 'fr';
       <div class="contact-meta">
         <div class="contact-item">
           <div class="c-label"><?= $fr ? 'Support fournisseur' : 'Supplier Support' ?></div>
-          <div class="c-value">sellers@ocsapp.ca</div>
+          <div class="c-value">suppliers@ocsapp.ca</div>
           <div class="c-sub"><?= $fr ? 'Toutes les demandes fournisseur' : 'All supplier inquiries' ?></div>
         </div>
         <div class="contact-item">
@@ -783,7 +783,7 @@ $fr = $currentLang === 'fr';
       <a href="<?= url('supplier/apply') ?>" class="btn-white-lg">
         <i class="fas fa-rocket"></i> <?= $fr ? 'Commencer votre candidature' : 'Start Your Application' ?>
       </a>
-      <a href="mailto:sellers@ocsapp.ca" class="btn-ghost-lg">
+      <a href="mailto:suppliers@ocsapp.ca" class="btn-ghost-lg">
         <i class="fas fa-envelope"></i> <?= $fr ? 'Contacter notre équipe' : 'Contact Our Team' ?>
       </a>
     </div>

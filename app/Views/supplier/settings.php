@@ -664,8 +664,8 @@
                     <?php endforeach; ?>
                 </div>
                 <div style="border-top:1px solid #e5e7eb;padding-top:16px;">
-                    <p style="font-size:13px;color:#6b7280;margin:0 0 12px;"><?= $fr ? 'Vous souhaitez changer de forfait ? Contactez notre équipe de succès fournisseur.' : 'Want to upgrade or change your plan? Contact our seller success team.' ?></p>
-                    <a href="mailto:sellers@ocsapp.ca?subject=Package%20Upgrade%20Request%20-%20<?= urlencode($settingsPkg) ?>" style="display:inline-flex;align-items:center;gap:6px;background:#00b207;color:white;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;">
+                    <p style="font-size:13px;color:#6b7280;margin:0 0 12px;"><?= $fr ? 'Vous souhaitez changer de forfait ? Contactez notre équipe de succès fournisseur.' : 'Want to upgrade or change your plan? Contact our supplier success team.' ?></p>
+                    <a href="mailto:suppliers@ocsapp.ca?subject=Package%20Upgrade%20Request%20-%20<?= urlencode($settingsPkg) ?>" style="display:inline-flex;align-items:center;gap:6px;background:#00b207;color:white;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;">
                         <i class="fas fa-arrow-up"></i> <?= $fr ? 'Demander une mise à niveau' : 'Request Upgrade' ?>
                     </a>
                 </div>
