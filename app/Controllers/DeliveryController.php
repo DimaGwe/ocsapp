@@ -2126,10 +2126,17 @@ class DeliveryController {
         $previousExp = post('previous_experience', 'no');
         $criminalRecord = post('criminal_record', 'no') === 'yes' ? 1 : 0;
         $criminalDetails = $criminalRecord ? sanitize(post('criminal_record_details', '')) : null;
+        $contractorAck = post('contractor_status_acknowledged') ? 1 : 0;
 
         // Validate required fields
         if (!$firstName || !$lastName || !$email || !$phone || !$dob || !$street || !$city || !$province || !$postalCode || !$vehicleType) {
             setFlash('error', 'Please fill in all required fields.');
+            redirect(url('delivery/apply'));
+            return;
+        }
+
+        if (!$contractorAck) {
+            setFlash('error', 'You must acknowledge the independent contractor status to apply.');
             redirect(url('delivery/apply'));
             return;
         }
@@ -2274,6 +2281,7 @@ class DeliveryController {
                 'previous_exp'  => $previousExp,
                 'criminal_record' => $criminalRecord,
                 'criminal_details' => $criminalDetails,
+                'contractor_ack'  => $contractorAck,
             ];
             $_SESSION['driver_verification_attempts'] = 0;
 
@@ -2519,8 +2527,8 @@ class DeliveryController {
             INSERT INTO driver_applications
             (user_id, lead_id, first_name, last_name, email, phone, date_of_birth, street_address, city, province, postal_code,
              vehicle_type, license_number, license_expiry, available_days, preferred_shift, motivation, previous_experience,
-             criminal_record, criminal_record_details, status, pipeline_stage)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'submitted')
+             criminal_record, criminal_record_details, contractor_status_acknowledged, status, pipeline_stage)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'submitted')
         ");
         $stmt->execute([
             $pending['user_id'], $leadId,
@@ -2528,7 +2536,7 @@ class DeliveryController {
             $pending['street'], $pending['city'], $pending['province'], $pending['postal_code'],
             $pending['vehicle_type'], $pending['license_number'] ?: null, $pending['license_expiry'],
             $pending['days_str'], $pending['preferred_shift'], $pending['motivation'] ?: null, $pending['previous_exp'],
-            $pending['criminal_record'], $pending['criminal_details'],
+            $pending['criminal_record'], $pending['criminal_details'], $pending['contractor_ack'] ?? 0,
         ]);
         $applicationId = $this->db->lastInsertId();
 

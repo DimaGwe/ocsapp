@@ -22,6 +22,8 @@ $at = [
         's5_desc'         => 'Optional details that help our team review your application.',
         's6_title'        => 'Background Check Declaration',
         's6_desc'         => 'All drivers must obtain a criminal background check before going active.',
+        's7_title'        => 'Independent Contractor Status',
+        's7_desc'         => 'Please read and acknowledge how OCSAPP drivers are engaged.',
         // Fields
         'lbl_first'       => 'First Name',
         'lbl_last'        => 'Last Name',
@@ -72,6 +74,8 @@ $at = [
         'ph_cr_details'   => 'Type of offence, approximate date, and any relevant context...',
         'cr_hint'         => 'This information is confidential and reviewed by OCSAPP staff only. Disclosure does not automatically disqualify you.',
         'bgcheck_ack'     => 'I understand that a criminal background check is required before I can go active as an OCSAPP driver. I agree to self-obtain and upload it through my driver portal after my application is approved.',
+        'contractor_info' => '<strong><i class="fas fa-info-circle"></i> What this means:</strong> OCSAPP drivers are engaged as <strong>independent contractors</strong>, not employees. You set your own schedule and availability, use your own vehicle, and are responsible for your own income taxes, CPP/QPP contributions, and vehicle/liability insurance. OCSAPP does not withhold taxes or provide employee benefits (vacation pay, EI, group insurance, etc.).',
+        'contractor_ack'  => 'I understand and agree that I am applying to work with OCSAPP as an independent contractor, not as an employee, and that I am responsible for my own taxes, insurance, and equipment.',
         'btn_submit'      => 'Submit Application',
         'already_driver'  => 'Already a driver?',
         'sign_in'         => 'Sign In',
@@ -105,6 +109,8 @@ $at = [
         's5_desc'         => 'Détails optionnels qui aident notre équipe à évaluer votre candidature.',
         's6_title'        => 'Déclaration de vérification des antécédents',
         's6_desc'         => "Tous les livreurs doivent obtenir une vérification des antécédents judiciaires avant d'être actifs.",
+        's7_title'        => 'Statut de travailleur autonome',
+        's7_desc'         => 'Veuillez lire et reconnaître la façon dont les livreurs OCSAPP sont engagés.',
         // Fields
         'lbl_first'       => 'Prénom',
         'lbl_last'        => 'Nom de famille',
@@ -155,6 +161,8 @@ $at = [
         'ph_cr_details'   => "Type d'infraction, date approximative et tout contexte pertinent...",
         'cr_hint'         => "Ces informations sont confidentielles et examinées uniquement par le personnel d'OCSAPP. La divulgation ne vous disqualifie pas automatiquement.",
         'bgcheck_ack'     => "Je comprends qu'une vérification des antécédents judiciaires est requise avant que je puisse être actif en tant que livreur OCSAPP. Je m'engage à l'obtenir moi-même et à la télécharger via mon portail livreur après approbation de ma candidature.",
+        'contractor_info' => "<strong><i class=\"fas fa-info-circle\"></i> Ce que cela signifie :</strong> Les livreurs OCSAPP sont engagés à titre de <strong>travailleurs autonomes</strong>, et non d'employés. Vous établissez votre propre horaire et disponibilité, utilisez votre propre véhicule et êtes responsable de vos propres impôts sur le revenu, de vos cotisations au RRQ/RPC et de votre assurance véhicule/responsabilité civile. OCSAPP ne retient aucun impôt à la source et n'offre aucun avantage social d'employé (paie de vacances, assurance-emploi, assurance collective, etc.).",
+        'contractor_ack'  => "Je comprends et j'accepte de poser ma candidature auprès d'OCSAPP à titre de travailleur autonome, et non d'employé, et d'être responsable de mes propres impôts, assurances et équipement.",
         'btn_submit'      => 'Soumettre la candidature',
         'already_driver'  => 'Déjà livreur ?',
         'sign_in'         => 'Connectez-vous',
@@ -484,6 +492,27 @@ $at = $at[$currentLang] ?? $at['en'];
                     <input type="checkbox" name="bgcheck_acknowledged" id="bgcheck_acknowledged" required
                         <?= !empty($old['bgcheck_acknowledged']) ? 'checked' : '' ?>>
                     <span><?= $at['bgcheck_ack'] ?></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Independent Contractor Status -->
+        <div class="form-section">
+            <div class="form-section-title">
+                <i class="fa-solid fa-file-signature"></i>
+                <?= $at['s7_title'] ?>
+            </div>
+            <p class="form-section-desc"><?= $at['s7_desc'] ?></p>
+
+            <div class="info-box">
+                <?= $at['contractor_info'] ?>
+            </div>
+
+            <div class="form-group">
+                <label class="terms-label">
+                    <input type="checkbox" name="contractor_status_acknowledged" id="contractor_status_acknowledged" required
+                        <?= !empty($old['contractor_status_acknowledged']) ? 'checked' : '' ?>>
+                    <span><?= $at['contractor_ack'] ?></span>
                 </label>
             </div>
 
