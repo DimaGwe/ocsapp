@@ -361,7 +361,7 @@ ob_start();
 
         <?php
         $editPkg = $supplier['subscription_package'] ?? 'Essential';
-        $editCommission = $supplier['commission_rate'] ?? '12.00';
+        $editCommission = $supplier['commission_rate'] ?? '8.00';
         ?>
         <div class="form-group">
           <label for="subscription_package" class="form-label">Subscription Package</label>
@@ -567,7 +567,7 @@ $hasBanking = !empty($supplier['payment_preference'])
 <?php endif; ?>
 
 <script>
-const commissionDefaults = { Essential: 12, Experience: 10, Prestige: 8, Enterprise: 6 };
+const commissionDefaults = { Essential: 8, Experience: 6, Prestige: 5, Enterprise: 6 };
 function syncCommission(pkg) {
   const field = document.getElementById('commission_rate');
   if (field && commissionDefaults[pkg] !== undefined) {

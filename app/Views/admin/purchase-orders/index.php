@@ -145,9 +145,6 @@ ob_start();
 
 <div class="page-header">
   <h1 class="page-title">Purchase Orders</h1>
-  <a href="<?= url('admin/purchase-orders/create') ?>" class="btn-primary">
-    <i class="fas fa-plus"></i> Create Purchase Order
-  </a>
 </div>
 
 <!-- Filters -->

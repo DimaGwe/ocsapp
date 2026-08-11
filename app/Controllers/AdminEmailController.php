@@ -183,7 +183,7 @@ class AdminEmailController
 
         $current_stock = 5;
         $seller = $user;
-        $shop = ['name' => 'OCS Store'];
+        $shop = ['name' => 'Sample Shop'];
         $old_status = 'processing';
         $new_status = 'shipped';
         $reason = 'Customer requested cancellation';
@@ -243,7 +243,7 @@ class AdminEmailController
 
         $current_stock = 5;
         $seller = $user;
-        $shop = ['name' => 'OCS Store'];
+        $shop = ['name' => 'Sample Shop'];
         $old_status = 'processing';
         $new_status = 'shipped';
         $reason = 'Customer requested cancellation';

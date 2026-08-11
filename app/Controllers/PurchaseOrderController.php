@@ -64,211 +64,6 @@ class PurchaseOrderController {
         }
     }
 
-    public function create(): void {
-        try {
-            $db = \Database::getConnection();
-
-            // Get active suppliers with contact info for info card
-            $stmt = $db->query("SELECT id, name, company_name, contact_person, email, phone, address, city, province, postal_code, payment_terms FROM suppliers WHERE status = 'active' ORDER BY name ASC");
-            $suppliers = $stmt->fetchAll();
-
-            // Get supplier products with supplier info — always use unit_price (single price across all platforms)
-            $stmt = $db->query("
-                SELECT sp.id, sp.supplier_id, sp.product_name, sp.sku,
-                       sp.unit_price as cost_price,
-                       sp.unit_price, sp.unit, sp.minimum_order_quantity, sp.stock_quantity, sp.lead_time_days,
-                       s.name as supplier_name, s.company_name
-                FROM supplier_products sp
-                LEFT JOIN suppliers s ON sp.supplier_id = s.id
-                WHERE sp.is_available = 1 AND s.status = 'active'
-                ORDER BY s.name ASC, sp.product_name ASC
-            ");
-            $supplierProducts = $stmt->fetchAll();
-
-            // Generate next PO number
-            $stmt = $db->query("SELECT po_number FROM purchase_orders ORDER BY id DESC LIMIT 1");
-            $lastPO = $stmt->fetch();
-            $nextNumber = 1;
-
-            if ($lastPO && preg_match('/PO-(\d+)/', $lastPO['po_number'], $matches)) {
-                $nextNumber = intval($matches[1]) + 1;
-            }
-
-            $nextPONumber = 'PO-' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
-
-            view('admin.purchase-orders.create', [
-                'suppliers' => $suppliers,
-                'supplierProducts' => $supplierProducts,
-                'nextPONumber' => $nextPONumber,
-                'currentPage' => 'purchase-orders',
-            ]);
-        } catch (\PDOException $e) {
-            logger("Purchase order create page error: " . $e->getMessage(), 'error');
-            setFlash('error', 'Error loading purchase order form');
-            redirect(url('admin/purchase-orders'));
-        }
-    }
-
-    public function store(): void {
-        if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
-            setFlash('error', 'Invalid request');
-            back();
-        }
-
-        try {
-            $db = \Database::getConnection();
-            $db->beginTransaction();
-
-            // Validate items
-            $supplierProductIds = post('supplier_product_ids', []);
-            $quantities = post('quantities', []);
-            $unitCosts = post('unit_costs', []);
-
-            if (empty($supplierProductIds) || count($supplierProductIds) === 0) {
-                throw new \Exception('Please add at least one product to the purchase order');
-            }
-
-            // Validate stock availability
-            foreach ($supplierProductIds as $index => $productId) {
-                if (!empty($productId) && !empty($quantities[$index])) {
-                    $qty = (int)$quantities[$index];
-                    $stockStmt = $db->prepare("SELECT product_name, stock_quantity FROM supplier_products WHERE id = ?");
-                    $stockStmt->execute([(int)$productId]);
-                    $sp = $stockStmt->fetch(\PDO::FETCH_ASSOC);
-                    if ($sp && (int)$sp['stock_quantity'] > 0 && $qty > (int)$sp['stock_quantity']) {
-                        throw new \Exception("Cannot order {$qty} of \"{$sp['product_name']}\" — only {$sp['stock_quantity']} in stock.");
-                    }
-                }
-            }
-
-            // Calculate totals
-            $subtotal = 0;
-            foreach ($supplierProductIds as $index => $productId) {
-                if (!empty($productId) && !empty($quantities[$index]) && !empty($unitCosts[$index])) {
-                    $qty = (int)$quantities[$index];
-                    $cost = (float)$unitCosts[$index];
-                    $subtotal += ($qty * $cost);
-                }
-            }
-
-            $shippingCost = (float)post('shipping_cost', 0);
-            $taxGst = round($subtotal * 0.05, 2);
-            $taxQst = round($subtotal * 0.09975, 2);
-            $taxAmount = $taxGst + $taxQst;
-            $totalAmount = $subtotal + $shippingCost + $taxAmount;
-
-            // Insert purchase order
-            $stmt = $db->prepare("
-                INSERT INTO purchase_orders (
-                    po_number, supplier_id, order_date, expected_delivery_date,
-                    status, subtotal, tax_gst, tax_qst, tax_amount, shipping_cost, total_amount, notes, created_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ");
-
-            $stmt->execute([
-                post('po_number'),
-                post('supplier_id'),
-                post('order_date'),
-                post('expected_delivery_date') ?: null,
-                post('status', 'draft'),
-                $subtotal,
-                $taxGst,
-                $taxQst,
-                $taxAmount,
-                $shippingCost,
-                $totalAmount,
-                post('notes'),
-                $_SESSION['user']['id'] ?? 0
-            ]);
-
-            $poId = $db->lastInsertId();
-
-            // Insert purchase order items (product_id references supplier_products table)
-            $itemNotes = post('item_notes', []);
-            $itemStmt = $db->prepare("
-                INSERT INTO purchase_order_items (
-                    purchase_order_id, product_id, quantity_ordered, unit_cost, total_cost, notes
-                ) VALUES (?, ?, ?, ?, ?, ?)
-            ");
-
-            foreach ($supplierProductIds as $index => $productId) {
-                if (!empty($productId) && !empty($quantities[$index]) && !empty($unitCosts[$index])) {
-                    $qty = (int)$quantities[$index];
-                    $cost = (float)$unitCosts[$index];
-                    $total = $qty * $cost;
-                    $note = sanitize($itemNotes[$index] ?? '');
-
-                    $itemStmt->execute([$poId, $productId, $qty, $cost, $total, $note ?: null]);
-                }
-            }
-
-            $db->commit();
-
-            // Only send email + notifications when PO is sent (not draft)
-            $poStatus = post('status', 'draft');
-            if ($poStatus === 'sent') {
-                try {
-                    // Get full PO details for email
-                    $stmt = $db->prepare("SELECT * FROM purchase_orders WHERE id = ?");
-                    $stmt->execute([$poId]);
-                    $po = $stmt->fetch();
-
-                    // Get supplier details
-                    $stmt = $db->prepare("SELECT * FROM suppliers WHERE id = ?");
-                    $stmt->execute([$po['supplier_id']]);
-                    $supplier = $stmt->fetch();
-
-                    // Get items with details
-                    $stmt = $db->prepare("
-                        SELECT poi.*, sp.product_name, sp.sku
-                        FROM purchase_order_items poi
-                        LEFT JOIN supplier_products sp ON poi.product_id = sp.id
-                        WHERE poi.purchase_order_id = ?
-                    ");
-                    $stmt->execute([$poId]);
-                    $items = $stmt->fetchAll();
-
-                    // Send email notification
-                    \App\Helpers\EmailHelper::sendPurchaseOrderCreated($po, $supplier, $items);
-
-                    // Admin bell notification
-                    \App\Helpers\NotificationHelper::add(
-                        'new_order',
-                        'Purchase Order Sent',
-                        "PO #{$po['po_number']} sent to " . ($supplier['company_name'] ?? 'supplier') . " — $" . number_format($po['total_amount'], 2),
-                        [
-                            'link' => '/admin/purchase-orders/view?id=' . $poId,
-                            'icon' => 'file-invoice',
-                            'priority' => 'normal',
-                        ]
-                    );
-
-                    // Supplier bell notification
-                    \App\Helpers\NotificationHelper::addSupplierNotification(
-                        (int)$po['supplier_id'],
-                        'purchase_order',
-                        'New Purchase Order',
-                        "PO #{$po['po_number']} has been sent to you — $" . number_format($po['total_amount'], 2) . ". Please review and accept or decline.",
-                        '/supplier/orders',
-                        'file-invoice',
-                        'Nouveau bon de commande',
-                        "BC #{$po['po_number']} vous a été envoyé — " . number_format($po['total_amount'], 2) . ' $. Veuillez l\'examiner et l\'accepter ou le refuser.'
-                    );
-                } catch (\Exception $emailError) {
-                    logger("Failed to send PO creation email: " . $emailError->getMessage(), 'error');
-                }
-            }
-
-            setFlash('success', 'Purchase order created successfully');
-            redirect(url('admin/purchase-orders/view?id=' . $poId));
-        } catch (\Exception $e) {
-            $db->rollBack();
-            logger("Purchase order create error: " . $e->getMessage(), 'error');
-            setFlash('error', $e->getMessage());
-            back();
-        }
-    }
-
     public function view(): void {
         try {
             $id = (int) get('id');
@@ -430,17 +225,13 @@ class PurchaseOrderController {
             $db = \Database::getConnection();
             $db->beginTransaction();
 
-            // Get PO items with supplier product info and marketplace product mapping
+            // Get PO items with supplier product info
             $stmt = $db->prepare("
                 SELECT poi.*,
                        sp.product_name,
-                       sp.sku,
-                       sp.marketplace_product_id,
-                       p.name as marketplace_product_name,
-                       p.total_stock as current_stock
+                       sp.sku
                 FROM purchase_order_items poi
                 LEFT JOIN supplier_products sp ON poi.product_id = sp.id
-                LEFT JOIN products p ON sp.marketplace_product_id = p.id
                 WHERE poi.purchase_order_id = ?
             ");
             $stmt->execute([$poId]);
@@ -457,29 +248,6 @@ class PurchaseOrderController {
                     // Update received quantity
                     $stmt = $db->prepare("UPDATE purchase_order_items SET quantity_received = ? WHERE id = ?");
                     $stmt->execute([$newReceived, $itemId]);
-
-                    // Update stock if supplier product is linked to marketplace product
-                    if ($item['marketplace_product_id']) {
-                        $marketplaceProductId = $item['marketplace_product_id'];
-
-                        // Update product stock
-                        $newStock = ($item['current_stock'] ?? 0) + $receivedQty;
-                        $stmt = $db->prepare("UPDATE products SET total_stock = ? WHERE id = ?");
-                        $stmt->execute([$newStock, $marketplaceProductId]);
-
-                        // Update shop_inventory for OCS Store (shop_id = 1)
-                        $stmt = $db->prepare("
-                            UPDATE shop_inventory
-                            SET stock_quantity = stock_quantity + ?,
-                                allocated_quantity = allocated_quantity + ?
-                            WHERE shop_id = 1 AND product_id = ?
-                        ");
-                        $stmt->execute([$receivedQty, $receivedQty, $marketplaceProductId]);
-
-                        logger("Stock updated for product #{$marketplaceProductId}: added {$receivedQty} units (new total: {$newStock})", 'info');
-                    } else {
-                        logger("Supplier product '{$item['product_name']}' is not linked to a marketplace product - stock not updated", 'warning');
-                    }
                 }
 
                 // Check if this item is fully received

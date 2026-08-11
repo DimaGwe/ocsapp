@@ -2117,11 +2117,9 @@ class AdminDeliveryController {
                 $oRow = $oStmt->fetch(\PDO::FETCH_ASSOC);
                 if ($oRow && (float)($oRow['driver_payout'] ?? 0) <= 0) {
                     $basePay    = (float)(getenv('DRIVER_BASE_PAY')     ?: 5.00);
-                    $perKmRate  = (float)(getenv('DRIVER_PER_KM_RATE')  ?: 0.50);
-                    $platCut    = (float)(getenv('DRIVER_PLATFORM_CUT') ?: 0.20);
+                    $platCut    = (float)(getenv('DRIVER_PLATFORM_CUT') ?: 0.30);
                     $base       = max($basePay, (float)($oRow['delivery_fee'] ?? 0));
-                    $gross      = $base + round((float)($oRow['distance_km'] ?? 0) * $perKmRate, 2);
-                    $payout     = round($gross * (1 - $platCut), 2);
+                    $payout     = round($base * (1 - $platCut), 2);
                     $this->db->prepare("UPDATE orders SET driver_payout = ? WHERE id = ?")
                              ->execute([$payout, $delivery['order_id']]);
                 }

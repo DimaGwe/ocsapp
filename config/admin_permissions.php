@@ -36,7 +36,6 @@ return [
         'delivery' => ['super_admin', 'admin', 'admin_staff'],
         'driver-activity' => ['super_admin', 'admin'],
         'shops' => ['super_admin', 'admin', 'admin_staff'],
-        'ocs-store' => ['super_admin', 'admin'],
         'waitlist'       => ['super_admin', 'admin'],
         'leads'          => ['super_admin', 'admin'],
         'marketing'      => ['super_admin', 'admin'],
@@ -47,11 +46,8 @@ return [
         'call-log'       => ['super_admin', 'admin', 'admin_staff'],
 
         // Catalog
-        'products' => ['super_admin', 'admin', 'admin_staff'],
-        'stock' => ['super_admin', 'admin', 'admin_staff'],
         'suppliers' => ['super_admin', 'admin'],
         'purchase-orders' => ['super_admin', 'admin'],
-        'supplier-catalog' => ['super_admin', 'admin'],
         'payables' => ['super_admin', 'admin'],
         'receivables' => ['super_admin', 'admin'],
         'categories' => ['super_admin', 'admin'],
@@ -108,7 +104,6 @@ return [
         '/admin/business-accounts' => ['super_admin', 'admin'],
         '/admin/suppliers' => ['super_admin', 'admin'],
         '/admin/purchase-orders' => ['super_admin', 'admin'],
-        '/admin/supplier-catalog' => ['super_admin', 'admin'],
         '/admin/distribution' => ['super_admin', 'admin'],
         '/admin/receivables' => ['super_admin', 'admin'],
 
@@ -128,9 +123,6 @@ return [
         '/admin/categories' => ['super_admin', 'admin'],
         '/admin/sales' => ['super_admin', 'admin'],
         '/admin/reports' => ['super_admin', 'admin'],
-
-        // OCS Store - admin+ only
-        '/admin/ocs-store' => ['super_admin', 'admin'],
 
         // Leads CRM - admin+ only
         '/admin/leads' => ['super_admin', 'admin'],
@@ -167,7 +159,6 @@ return [
             'dashboard', 'planner', 'notifications',
             'sellers', 'shops',
             'orders', 'shipments', 'delivery', 'distribution',
-            'products', 'stock', 'supplier-catalog',
             'support', 'agent-dashboard', 'call-log',
         ],
         'finance' => [
@@ -207,11 +198,11 @@ return [
         ],
         'catalog' => [
             'label' => 'Catalog',
-            'items' => ['products', 'stock', 'categories', 'ocs-store'],
+            'items' => ['categories'],
         ],
         'procurement' => [
             'label' => 'Procurement',
-            'items' => ['suppliers', 'purchase-orders', 'supplier-catalog'],
+            'items' => ['suppliers', 'purchase-orders'],
         ],
         'sales_marketing' => [
             'label' => 'Sales & Marketing',

@@ -204,6 +204,28 @@ $cartCount = $cartCount ?? 0;
       </ul>
     </section>
 
+    <?php
+      // True once at least one shop-backed section has something to show.
+      // All of Most Selling / Best Sellers / Top Shops / the 4 Virtual Mall
+      // rows depend on active+approved shops, so they go empty together.
+      $hasVirtualMalls = !empty($groceryStoreShops) || !empty($foodCourtShops) || !empty($storesShops) || !empty($productsShops);
+      $hasMarketplaceContent = !empty($mostSellingProducts) || !empty($featuredProducts) || !empty($topVendors) || $hasVirtualMalls;
+    ?>
+
+    <!-- Empty Marketplace State (shown when no seller shops are active yet) -->
+    <?php if (!$hasMarketplaceContent): ?>
+    <section class="marketplace-empty-state">
+      <div class="marketplace-empty-content">
+        <div class="marketplace-empty-icon">🏪</div>
+        <h2><?= $t['empty_marketplace_title'] ?? 'New shops joining soon!' ?></h2>
+        <p><?= $t['empty_marketplace_desc'] ?? "We're onboarding independent local sellers right now. Check back soon, or if you run a local business, join OCSAPP and be one of our first sellers." ?></p>
+        <a href="<?= url('seller-central') ?>" class="marketplace-empty-cta">
+          <?= $t['empty_marketplace_cta'] ?? 'Become a Seller' ?> →
+        </a>
+      </div>
+    </section>
+    <?php endif; ?>
+
     <!-- Most Selling Products -->
     <?php if (!empty($mostSellingProducts)): ?>
 <section class="section">
@@ -510,12 +532,14 @@ $cartCount = $cartCount ?? 0;
 <!-- ============================================ -->
 
 <!-- Virtual Mall Main Header -->
+<?php if ($hasVirtualMalls): ?>
 <section class="malls-header">
   <div class="malls-header-content">
     <h2><?= $t['virtual_mall'] ?? 'OCSAPP Virtual Mall' ?></h2>
     <p><?= $t['virtual_mall_desc'] ?? 'Discover more than groceries! Explore restaurants, stores, and specialty shops. All in one place.' ?></p>
   </div>
 </section>
+<?php endif; ?>
 
 <!-- VIRTUAL MALL: Grocery Stores (NEW!) -->
 <?php if (!empty($groceryStoreShops)): ?>

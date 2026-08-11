@@ -170,6 +170,58 @@ $fr = $currentLang === 'fr';
     .feature-card h4 { font-size: 15px; font-weight: 700; color: #111827; margin-bottom: 8px; }
     .feature-card p  { font-size: 13px; color: var(--muted); line-height: 1.7; }
 
+    /* ── PRICING ── */
+    .price-free-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-top: 48px; }
+    .price-free-card {
+      background: white; border: 1px solid var(--border); border-radius: 14px;
+      padding: 26px 20px; text-align: center; transition: transform .2s, box-shadow .2s;
+    }
+    .price-free-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,.07); }
+    .price-free-icon {
+      width: 46px; height: 46px; border-radius: 12px; background: rgba(0,178,7,.1);
+      display: flex; align-items: center; justify-content: center; font-size: 20px; margin: 0 auto 16px;
+    }
+    .price-free-badge {
+      display: inline-block; font-size: 20px; font-weight: 900; color: var(--green); margin-bottom: 10px;
+    }
+    .price-free-title { font-size: 14px; font-weight: 700; color: #111827; margin-bottom: 8px; line-height: 1.4; }
+    .price-free-note { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+    .price-delivery-block {
+      margin-top: 20px; background: linear-gradient(135deg, #0c1a0e 0%, #0d3010 100%);
+      border-radius: 20px; padding: 44px 40px; color: white; position: relative; overflow: hidden;
+    }
+    .price-delivery-block::before {
+      content: ''; position: absolute; top: -50px; right: -50px;
+      width: 260px; height: 260px; border-radius: 50%; background: rgba(0,178,7,.14);
+    }
+    .price-delivery-inner { position: relative; z-index: 1; }
+    .price-delivery-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .price-delivery-header i { color: #86efac; font-size: 20px; }
+    .price-delivery-header h3 { font-size: 21px; font-weight: 800; }
+    .price-delivery-sub { font-size: 14px; color: rgba(255,255,255,.65); margin-bottom: 30px; max-width: 620px; line-height: 1.7; }
+    .price-zones { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+    .price-zone-card { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 22px 18px; text-align: center; }
+    .price-zone-badge {
+      display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+      padding: 3px 11px; border-radius: 999px; background: rgba(255,255,255,.15); color: rgba(255,255,255,.8); margin-bottom: 12px;
+    }
+    .price-zone-badge.live { background: rgba(0,255,136,.2); color: #86efac; }
+    .price-zone-amount { font-size: 30px; font-weight: 800; margin-bottom: 4px; }
+    .price-zone-name { font-size: 13px; font-weight: 700; opacity: .85; }
+    .price-tip-note {
+      margin-top: 24px; font-size: 13px; color: rgba(255,255,255,.6); font-style: italic;
+      text-align: center;
+    }
+    .price-tip-note i { color: #86efac; margin-right: 6px; font-style: normal; }
+
+    .price-summary {
+      display: flex; align-items: flex-start; gap: 10px; max-width: 760px; margin: 28px auto 0;
+      padding: 18px 24px; background: rgba(0,178,7,.06); border: 1px solid rgba(0,178,7,.2);
+      border-radius: 12px; font-size: 14px; color: var(--text); line-height: 1.7;
+    }
+    .price-summary i { color: var(--green); margin-top: 3px; flex-shrink: 0; }
+
     /* ── TRUST / CATEGORY CHIPS ── */
     .category-chips { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 40px; }
     .category-chip {
@@ -250,6 +302,7 @@ $fr = $currentLang === 'fr';
       .how-arrow { transform: rotate(90deg); padding: 0; margin: 4px 0; }
       .how-step { padding: 20px 0; }
       .contact-meta { grid-template-columns: 1fr; }
+      .price-free-grid { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 620px) {
       .pillars-grid, .features-grid { grid-template-columns: 1fr; }
@@ -259,6 +312,9 @@ $fr = $currentLang === 'fr';
       .hero-ctas { flex-direction: column; align-items: center; }
       .contact-box { padding: 36px 24px; }
       .quote-card { padding: 28px 24px; }
+      .price-free-grid { grid-template-columns: 1fr; }
+      .price-delivery-block { padding: 32px 24px; }
+      .price-zones { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -278,8 +334,8 @@ $fr = $currentLang === 'fr';
     </h1>
     <p class="hero-sub">
       <?= $fr
-        ? 'Explorez des milliers de produits locaux au Grand Montréal. Commandez en ligne, suivez votre livraison en temps réel, et recevez vos achats à domicile — sans effort.'
-        : 'Explore thousands of local products across Greater Montréal. Order online, track delivery in real time, and get your purchases delivered to your door — effortlessly.' ?>
+        ? 'Explorez des milliers de produits locaux, en pleine croissance dans le West Island, avec Laval et le centre-ville de Montréal à venir bientôt. Commandez en ligne, suivez votre livraison en temps réel, et recevez vos achats à domicile — sans effort.'
+        : 'Explore thousands of local products growing in the West Island, with Laval and Montreal core coming soon. Order online, track delivery in real time, and get your purchases delivered to your door — effortlessly.' ?>
     </p>
     <div class="hero-badges">
       <span class="hero-badge"><i class="fas fa-leaf"></i> <?= $fr ? 'Livraison zéro émission' : 'Zero-Emission Delivery' ?></span>
@@ -490,6 +546,93 @@ $fr = $currentLang === 'fr';
   </div>
 </section>
 
+<!-- ═══════════════ WHAT YOU PAY ═══════════════ -->
+<section class="section-light">
+  <div class="container">
+    <div class="section-label">
+      <span class="eyebrow eyebrow-green"><?= $fr ? 'Tarification transparente' : 'Transparent Pricing' ?></span>
+    </div>
+    <h2 class="section-title"><?= $fr ? 'Ce que vous payez, sans surprise' : 'What You Pay, No Surprises' ?></h2>
+    <p class="section-sub"><?= $fr
+      ? 'Votre compte est gratuit, pour toujours. Vous payez le prix affiché par le vendeur, plus - seulement si vous choisissez la livraison - un seul frais de zone divulgué avant le paiement.'
+      : 'Your account is free, forever. You pay the seller\'s listed price, plus - only if you choose delivery - one disclosed zone fee shown before checkout.' ?></p>
+
+    <div class="price-free-grid">
+      <div class="price-free-card">
+        <div class="price-free-icon">👤</div>
+        <div class="price-free-badge">$0</div>
+        <div class="price-free-title"><?= $fr ? 'Frais de compte / abonnement' : 'Account / membership fee' ?></div>
+        <div class="price-free-note"><?= $fr
+          ? 'Aucun palier, aucun frais d\'inscription.'
+          : 'No tier, no signup cost.' ?></div>
+      </div>
+      <div class="price-free-card">
+        <div class="price-free-icon">🏷️</div>
+        <div class="price-free-badge">$0</div>
+        <div class="price-free-title"><?= $fr ? 'Majoration sur le prix du produit' : 'Markup on product price' ?></div>
+        <div class="price-free-note"><?= $fr
+          ? 'Vous payez le prix exact du vendeur - la commission lui est facturée, jamais à vous.'
+          : 'You pay the seller\'s exact price - commission is charged to them, never to you.' ?></div>
+      </div>
+      <div class="price-free-card">
+        <div class="price-free-icon">🏪</div>
+        <div class="price-free-badge">$0</div>
+        <div class="price-free-title"><?= $fr ? 'Ramassage en boutique' : 'Pickup / click-&amp;-collect' ?></div>
+        <div class="price-free-note"><?= $fr
+          ? 'Aucun service de livraison utilisé, aucun frais.'
+          : 'No delivery service used, no fee applies.' ?></div>
+      </div>
+      <div class="price-free-card">
+        <div class="price-free-icon">💳</div>
+        <div class="price-free-badge"><?= $fr ? 'Aucun' : 'None' ?></div>
+        <div class="price-free-title"><?= $fr ? 'Frais de traitement de paiement' : 'Payment processing line' ?></div>
+        <div class="price-free-note"><?= $fr
+          ? 'Absorbé par le vendeur - jamais facturé séparément, interdit au Québec.'
+          : 'Absorbed by the seller - never itemized to you, illegal to surcharge in Quebec.' ?></div>
+      </div>
+    </div>
+
+    <div class="price-delivery-block">
+      <div class="price-delivery-inner">
+        <div class="price-delivery-header">
+          <i class="fas fa-truck"></i>
+          <h3><?= $fr ? 'Le seul frais possible : la livraison' : 'The only possible fee: delivery' ?></h3>
+        </div>
+        <p class="price-delivery-sub"><?= $fr
+          ? 'Frais fixe par zone, affiché avant le paiement - jamais calculé de façon algorithmique, jamais de majoration selon la demande.'
+          : 'A fixed, zone-based fee, shown before checkout - never algorithmic, never surge-priced.' ?></p>
+        <div class="price-zones">
+          <div class="price-zone-card">
+            <span class="price-zone-badge live"><?= $fr ? 'En service' : 'Live Now' ?></span>
+            <div class="price-zone-amount">$7.99</div>
+            <div class="price-zone-name">West Island</div>
+          </div>
+          <div class="price-zone-card">
+            <span class="price-zone-badge"><?= $fr ? 'Bientôt disponible' : 'Coming Soon' ?></span>
+            <div class="price-zone-amount">$8.99</div>
+            <div class="price-zone-name">Laval</div>
+          </div>
+          <div class="price-zone-card">
+            <span class="price-zone-badge"><?= $fr ? 'Bientôt disponible' : 'Coming Soon' ?></span>
+            <div class="price-zone-amount">$9.99</div>
+            <div class="price-zone-name"><?= $fr ? 'Montréal (centre)' : 'Montreal Core' ?></div>
+          </div>
+        </div>
+        <p class="price-tip-note"><i class="fas fa-hand-holding-heart"></i> <?= $fr
+          ? '100% du pourboire que vous laissez revient directement à votre chauffeur - nous ne prenons jamais de commission.'
+          : '100% of any tip you leave goes straight to your driver - we never take a cut.' ?></p>
+      </div>
+    </div>
+
+    <div class="price-summary">
+      <i class="fas fa-circle-info"></i>
+      <span><?= $fr
+        ? 'Concrètement : votre coût total est le prix du produit, plus - seulement si vous choisissez la livraison - un seul frais de zone divulgué. Comparé à la concurrence, le frais de livraison d\'OCSAPP se situe dans la moyenne du marché, mais reste parmi les plus prévisibles : pas de majoration selon la demande, pas d\'algorithme, aucune surprise.'
+        : 'In practice, your total cost is the product price, plus - only if you choose delivery - one disclosed zone fee. Benchmarked against competitors, OCSAPP\'s delivery fee is mid-pack on price but best-in-class on predictability - no surge pricing, no algorithm, no surprises.' ?></span>
+    </div>
+  </div>
+</section>
+
 <!-- ═══════════════ TRUST / SOCIAL PROOF ═══════════════ -->
 <section class="section-light">
   <div class="container">
@@ -542,7 +685,7 @@ $fr = $currentLang === 'fr';
         ['Est-ce que c\'est gratuit de créer un compte acheteur ?',
          'Oui, entièrement gratuit. La création d\'un compte acheteur OCSAPP ne coûte rien. Vous ne payez que les produits que vous achetez, plus les frais de livraison affichés au moment de la commande.'],
         ['Dans quelles zones livrez-vous ?',
-         'OCSAPP livre actuellement dans la région du Grand Montréal, y compris West Island et les zones environnantes. Les zones de livraison disponibles s\'affichent automatiquement lors de la saisie de votre adresse.'],
+         'OCSAPP livre actuellement dans le West Island. Laval et le centre-ville de Montréal sont publiés et s\'activeront au fur et à mesure de notre expansion. Les zones de livraison disponibles s\'affichent automatiquement lors de la saisie de votre adresse.'],
         ['Comment puis-je suivre ma commande ?',
          'Dès qu\'un chauffeur ODA prend en charge votre commande, vous recevez un lien de suivi en temps réel. Vous pouvez suivre la progression sur une carte directement depuis votre téléphone ou votre navigateur.'],
         ['Puis-je programmer une livraison à l\'avance ?',
@@ -555,7 +698,7 @@ $fr = $currentLang === 'fr';
         ['Is it free to create a buyer account?',
          'Yes, completely free. Creating an OCSAPP buyer account costs nothing. You only pay for the products you purchase, plus any delivery fees shown at checkout.'],
         ['Which areas do you deliver to?',
-         'OCSAPP currently delivers across Greater Montréal, including West Island and surrounding areas. Available delivery zones are shown automatically when you enter your address.'],
+         'OCSAPP currently delivers in the West Island. Laval and Montreal core are published and will activate as we expand. Available delivery zones are shown automatically when you enter your address.'],
         ['How do I track my order?',
          'As soon as an ODA driver picks up your order, you receive a real-time tracking link. You can follow the progress on a live map directly from your phone or browser.'],
         ['Can I schedule a delivery in advance?',

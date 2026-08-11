@@ -360,7 +360,7 @@ class SupplierController {
             $validPkgs = ['Essential', 'Experience', 'Prestige', 'Enterprise'];
             $pkg = post('subscription_package', 'Essential');
             if (!in_array($pkg, $validPkgs)) $pkg = 'Essential';
-            $commissionMap = ['Essential' => 12.00, 'Experience' => 10.00, 'Prestige' => 8.00, 'Enterprise' => 6.00];
+            $commissionMap = ['Essential' => 8.00, 'Experience' => 6.00, 'Prestige' => 5.00, 'Enterprise' => 6.00];
             $commissionRate = (float) post('commission_rate', $commissionMap[$pkg]);
 
             $stmt = $db->prepare("
@@ -422,7 +422,7 @@ class SupplierController {
             return;
         }
 
-        $commissionMap = ['Essential' => 12.00, 'Experience' => 10.00, 'Prestige' => 8.00, 'Enterprise' => 6.00];
+        $commissionMap = ['Essential' => 8.00, 'Experience' => 6.00, 'Prestige' => 5.00, 'Enterprise' => 6.00];
         $commissionRate = $commissionMap[$pkg];
 
         try {

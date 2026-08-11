@@ -179,7 +179,7 @@ class HomeController {
             // 1. MOST SELLING PRODUCTS (Data-Driven by Actual Sales)
             // ============================================
             // Get products with highest sales volume from last 30 days
-            // Filtered to show only OCS Store (Shop ID 1) - ALL products regardless of seller
+            // Aggregated across all active, approved seller shops
             $stmt = $db->query("
                 SELECT p.*,
                        p.base_price as price,
@@ -193,7 +193,8 @@ class HomeController {
                        COALESCE(SUM(oi.quantity), 0) as total_sold,
                        0 as average_rating
                 FROM products p
-                INNER JOIN shop_inventory si ON p.id = si.product_id AND si.shop_id = 1
+                INNER JOIN shop_inventory si ON p.id = si.product_id
+                INNER JOIN shops s ON si.shop_id = s.id AND s.is_active = 1 AND s.is_approved = 1
                 LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
                 LEFT JOIN brands b ON p.brand_id = b.id
                 LEFT JOIN product_categories pc ON p.id = pc.product_id AND pc.is_primary = 1
@@ -240,7 +241,7 @@ class HomeController {
             // 2. BEST SELLERS (Admin-Curated Featured Products)
             // ============================================
             // Products manually selected by admin via "Show on Home" checkbox
-            // Filtered to show only OCS Store (Shop ID 1) - ALL products regardless of seller
+            // Aggregated across all active, approved seller shops
             $stmt = $db->query("
                 SELECT p.*,
                        p.base_price as price,
@@ -252,7 +253,8 @@ class HomeController {
                        si.stock_quantity,
                        0 as average_rating
                 FROM products p
-                INNER JOIN shop_inventory si ON p.id = si.product_id AND si.shop_id = 1
+                INNER JOIN shop_inventory si ON p.id = si.product_id
+                INNER JOIN shops s ON si.shop_id = s.id AND s.is_active = 1 AND s.is_approved = 1
                 LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
                 LEFT JOIN brands b ON p.brand_id = b.id
                 LEFT JOIN product_categories pc ON p.id = pc.product_id AND pc.is_primary = 1
@@ -307,7 +309,7 @@ class HomeController {
                 LEFT JOIN brands b ON p.brand_id = b.id
                 LEFT JOIN product_categories pc ON p.id = pc.product_id AND pc.is_primary = 1
                 LEFT JOIN categories c ON pc.category_id = c.id
-                LEFT JOIN shop_inventory si ON p.id = si.product_id AND si.shop_id = 1
+                LEFT JOIN shop_inventory si ON p.id = si.product_id
                 WHERE p.is_on_sale = 1
                   AND p.sale_price IS NOT NULL
                   AND p.status = 'active'
@@ -646,9 +648,241 @@ view('buyer.home', [
     }
 
     /**
-     * Best Sellers page (dedicated page for OCS Store featured products)
-     * Shows same products as homepage Best Sellers section
-     * Filtered to show only OCS Store (shop_id = 1) products - ALL products regardless of seller
+     * Marketplace Home Redesign Preview (LOCAL CONCEPT ONLY)
+     *
+     * Not linked from nav, doesn't touch buyer.home. Reworks the homepage
+     * for the post-OCS-Store facilitator model: shop-type navigation is
+     * promoted to a primary tile row (it's the whole marketplace now, not
+     * a bonus section), "Most Selling" is replaced by "New Arrivals" so it
+     * works with zero order history, and a "Featured Shops" section is
+     * scaffolded as the future home for paid/sponsored placement.
+     */
+    public function homeRedesign(): void {
+        try {
+            $db = \Database::getConnection();
+
+            $cartCount = 0;
+            if (isset($_SESSION['cart']) && is_array($_SESSION['cart'])) {
+                foreach ($_SESSION['cart'] as $item) {
+                    $cartCount += $item['quantity'] ?? 0;
+                }
+            }
+
+            $currentLocation = $_SESSION['user_location'] ?? env('DEFAULT_LOCATION', 'Kirkland, QC');
+
+            // Hero sliders (same source as the live homepage)
+            $stmt = $db->query("
+                SELECT id, title, description, button_text, button_url, image_path
+                FROM hero_sliders
+                WHERE status = 'active'
+                ORDER BY sort_order ASC, id ASC
+            ");
+            $heroSliders = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            // Category taxonomy (9-category goods + services taxonomy). Drives the
+            // "Popular Categories" section - each card links to /shops?type=X with
+            // a real, live shop count. Service categories (home_services,
+            // wellness_beauty, events_catering) use the same shops/products data
+            // model as everything else - no real booking system behind them yet.
+            $typeCounts = $this->getShopCounts($db);
+            $shopTypeTiles = [
+                ['type' => 'food_dining', 'label_en' => 'Food & Dining', 'label_fr' => 'Restauration', 'icon' => '🍽️',
+                    'desc_en' => 'Restaurants, cafes, ghost kitchens, meal prep, bakeries', 'desc_fr' => 'Restaurants, cafes, cuisines fantomes, repas prets, boulangeries',
+                    'fulfill_en' => 'On-demand, ODA driver network', 'fulfill_fr' => 'Sur demande, reseau de livreurs ODA', 'count' => $typeCounts['food_dining']],
+                ['type' => 'grocery', 'label_en' => 'Grocery', 'label_fr' => 'Epicerie', 'icon' => '🛒',
+                    'desc_en' => 'Local grocers, specialty/ethnic markets, butchers, fishmongers', 'desc_fr' => 'Epiciers locaux, marches specialises/ethniques, bouchers, poissonniers',
+                    'fulfill_en' => 'On-demand or scheduled', 'fulfill_fr' => 'Sur demande ou planifie', 'count' => $typeCounts['grocery']],
+                ['type' => 'health_pharmacy', 'label_en' => 'Health & Pharmacy', 'label_fr' => 'Sante & Pharmacie', 'icon' => '💊',
+                    'desc_en' => 'Pharmacies, health & wellness products, personal care', 'desc_fr' => 'Pharmacies, produits de sante et bien-etre, soins personnels',
+                    'fulfill_en' => 'On-demand', 'fulfill_fr' => 'Sur demande', 'count' => $typeCounts['health_pharmacy']],
+                ['type' => 'home_everyday', 'label_en' => 'Home & Everyday Goods', 'label_fr' => 'Maison & Quotidien', 'icon' => '🏠',
+                    'desc_en' => 'Hardware, household items, pet supplies, convenience retail', 'desc_fr' => 'Quincaillerie, articles menagers, fournitures pour animaux, depanneur',
+                    'fulfill_en' => 'On-demand or next-day', 'fulfill_fr' => 'Sur demande ou le lendemain', 'count' => $typeCounts['home_everyday']],
+                ['type' => 'boutique', 'label_en' => 'Fashion & Local Boutiques', 'label_fr' => 'Mode & Boutiques', 'icon' => '👗',
+                    'desc_en' => 'Clothing, accessories, gifts, local independent shops', 'desc_fr' => 'Vetements, accessoires, cadeaux, boutiques locales independantes',
+                    'fulfill_en' => 'Next-day/scheduled', 'fulfill_fr' => 'Le lendemain ou planifie', 'count' => $typeCounts['boutique']],
+                ['type' => 'home_services', 'label_en' => 'Home Services', 'label_fr' => 'Services a domicile', 'icon' => '🧹',
+                    'desc_en' => 'Cleaning, handyman, landscaping, appliance repair', 'desc_fr' => 'Menage, bricolage, amenagement paysager, reparation d\'electromenagers',
+                    'fulfill_en' => 'Scheduled booking', 'fulfill_fr' => 'Reservation planifiee', 'count' => $typeCounts['home_services']],
+                ['type' => 'wellness_beauty', 'label_en' => 'Wellness & Beauty', 'label_fr' => 'Bien-etre & Beaute', 'icon' => '💆',
+                    'desc_en' => 'Salons, spas, personal trainers, estheticians', 'desc_fr' => 'Salons, spas, entraineurs personnels, esthetitiennes',
+                    'fulfill_en' => 'Scheduled booking', 'fulfill_fr' => 'Reservation planifiee', 'count' => $typeCounts['wellness_beauty']],
+                ['type' => 'events_catering', 'label_en' => 'Events & Catering', 'label_fr' => 'Evenements & Traiteur', 'icon' => '🎉',
+                    'desc_en' => 'Catering, party supplies, event rentals', 'desc_fr' => 'Traiteur, fournitures pour evenements, location d\'equipement',
+                    'fulfill_en' => 'Scheduled, larger-order logistics', 'fulfill_fr' => 'Planifie, logistique de grandes commandes', 'count' => $typeCounts['events_catering']],
+                ['type' => 'local_gems', 'label_en' => 'Local Gems', 'label_fr' => 'Artisans locaux', 'icon' => '💎',
+                    'desc_en' => 'Your under-digitized independents directory - a good fit as a discovery category', 'desc_fr' => 'Notre repertoire d\'independants encore peu numerises - ideal pour la decouverte',
+                    'fulfill_en' => 'Mixed', 'fulfill_fr' => 'Mixte', 'count' => $typeCounts['local_gems']],
+            ];
+
+            // Featured Shops - ad-placement-ready section. For now: active/approved
+            // shops ordered by rating then recency. Once a sponsorship mechanism
+            // exists, this query gains an "ORDER BY is_sponsored DESC" and stays
+            // the same shape otherwise.
+            $stmt = $db->query("
+                SELECT s.*,
+                       COALESCE(s.average_rating, 0) as rating,
+                       s.reviews_count,
+                       COUNT(DISTINCT si.id) as product_count
+                FROM shops s
+                LEFT JOIN shop_inventory si ON s.id = si.shop_id AND si.status = 'active' AND si.stock_quantity > 0
+                WHERE s.is_active = 1 AND s.is_approved = 1
+                GROUP BY s.id
+                HAVING product_count > 0
+                ORDER BY s.average_rating DESC, s.created_at DESC
+                LIMIT 8
+            ");
+            $featuredShops = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            foreach ($featuredShops as &$shop) {
+                $shop['display_logo'] = !empty($shop['logo']) ? asset($shop['logo']) : null;
+            }
+            unset($shop);
+
+            // New Arrivals - replaces "Most Selling" until there's real order
+            // history to rank by. Same card markup, just sorted by recency.
+            $stmt = $db->query("
+                SELECT p.*,
+                       p.base_price as price,
+                       p.compare_at_price,
+                       pi.image_path as image,
+                       c.name as category_name,
+                       si.stock_quantity,
+                       0 as average_rating
+                FROM products p
+                INNER JOIN shop_inventory si ON p.id = si.product_id
+                INNER JOIN shops s ON si.shop_id = s.id AND s.is_active = 1 AND s.is_approved = 1
+                LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
+                LEFT JOIN product_categories pc ON p.id = pc.product_id AND pc.is_primary = 1
+                LEFT JOIN categories c ON pc.category_id = c.id
+                WHERE p.status = 'active'
+                  AND si.status = 'active'
+                GROUP BY p.id
+                ORDER BY p.created_at DESC
+                LIMIT 12
+            ");
+            $newArrivals = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            foreach ($newArrivals as &$product) {
+                $product['image'] = $this->normalizeImagePath($product['image']);
+                $product['discount_percentage'] = (!empty($product['compare_at_price']) && $product['compare_at_price'] > $product['price'])
+                    ? round((($product['compare_at_price'] - $product['price']) / $product['compare_at_price']) * 100)
+                    : 0;
+            }
+            unset($product);
+
+            // Best Sellers - unchanged, still admin-curated via show_on_home
+            $stmt = $db->query("
+                SELECT p.*,
+                       p.base_price as price,
+                       p.compare_at_price,
+                       pi.image_path as image,
+                       c.name as category_name,
+                       si.stock_quantity,
+                       0 as average_rating
+                FROM products p
+                INNER JOIN shop_inventory si ON p.id = si.product_id
+                INNER JOIN shops s ON si.shop_id = s.id AND s.is_active = 1 AND s.is_approved = 1
+                LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
+                LEFT JOIN product_categories pc ON p.id = pc.product_id AND pc.is_primary = 1
+                LEFT JOIN categories c ON pc.category_id = c.id
+                WHERE p.show_on_home = 1
+                  AND p.status = 'active'
+                  AND si.status = 'active'
+                ORDER BY p.sort_order DESC, p.created_at DESC
+                LIMIT 12
+            ");
+            $featuredProducts = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            foreach ($featuredProducts as &$product) {
+                $product['image'] = $this->normalizeImagePath($product['image']);
+                $product['discount_percentage'] = (!empty($product['compare_at_price']) && $product['compare_at_price'] > $product['price'])
+                    ? round((($product['compare_at_price'] - $product['price']) / $product['compare_at_price']) * 100)
+                    : 0;
+            }
+            unset($product);
+
+            // Categories
+            $stmt = $db->query("
+                SELECT c.*,
+                       COUNT(DISTINCT pc.product_id) as product_count,
+                       (SELECT pi.image_path
+                        FROM product_images pi
+                        INNER JOIN product_categories pc2 ON pc2.product_id = pi.product_id
+                        WHERE pc2.category_id = c.id
+                          AND pi.is_primary = 1
+                        LIMIT 1) as sample_image
+                FROM categories c
+                LEFT JOIN product_categories pc ON c.id = pc.category_id
+                LEFT JOIN products p ON pc.product_id = p.id AND p.status = 'active'
+                WHERE c.is_active = 1
+                  AND c.parent_id IS NULL
+                GROUP BY c.id
+                ORDER BY product_count DESC, c.sort_order ASC
+                LIMIT 12
+            ");
+            $categories = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            foreach ($categories as &$category) {
+                if (!empty($category['image'])) {
+                    $category['display_image'] = asset($category['image']);
+                } elseif (!empty($category['sample_image'])) {
+                    $category['display_image'] = asset($category['sample_image']);
+                } else {
+                    $category['display_image'] = null;
+                }
+            }
+            unset($category);
+
+            // The 4 shop-type showcase rows (same shape as the live homepage)
+            $shopSections = [];
+            foreach (['grocery_store', 'food_court', 'store', 'products'] as $dbType) {
+                $stmt = $db->prepare("
+                    SELECT s.*,
+                           COALESCE(s.average_rating, 0) as rating,
+                           s.reviews_count,
+                           COUNT(DISTINCT si.id) as product_count,
+                           s.packaging_time as delivery_time
+                    FROM shops s
+                    LEFT JOIN shop_inventory si ON s.id = si.shop_id AND si.status = 'active' AND si.stock_quantity > 0
+                    WHERE s.is_active = 1
+                      AND s.is_approved = 1
+                      AND s.shop_type = ?
+                    GROUP BY s.id
+                    HAVING product_count > 0
+                    ORDER BY s.average_rating DESC, s.reviews_count DESC, s.total_orders DESC
+                    LIMIT 6
+                ");
+                $stmt->execute([$dbType]);
+                $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+                foreach ($rows as &$shop) {
+                    $shop['display_logo'] = !empty($shop['logo']) ? asset($shop['logo']) : null;
+                    $shop['formatted_delivery_time'] = ($shop['delivery_time'] ?? 30) . ' mins';
+                }
+                unset($shop);
+                $shopSections[$dbType] = $rows;
+            }
+
+            view('buyer.home-redesign', [
+                'heroSliders' => $heroSliders,
+                'shopTypeTiles' => $shopTypeTiles,
+                'featuredShops' => $featuredShops,
+                'newArrivals' => $newArrivals,
+                'featuredProducts' => $featuredProducts,
+                'categories' => $categories,
+                'groceryStoreShops' => $shopSections['grocery_store'],
+                'foodCourtShops' => $shopSections['food_court'],
+                'storesShops' => $shopSections['store'],
+                'productsShops' => $shopSections['products'],
+                'currentLocation' => $currentLocation,
+                'cartCount' => $cartCount,
+            ]);
+        } catch (\PDOException $e) {
+            logger("Home redesign preview error: " . $e->getMessage(), 'error');
+            setFlash('error', 'Error loading preview page');
+            redirect(url('home'));
+        }
+    }
+
+    /**
+     * Best Sellers page (dedicated page for admin-curated featured products)
+     * Shows same products as homepage Best Sellers section, across all active seller shops
      */
     public function bestSellers(): void {
         try {
@@ -658,11 +892,12 @@ view('buyer.home', [
             $perPage = 24;
             $offset = ($page - 1) * $perPage;
 
-            // Get total count - OCS Store products with "show on home" flag
+            // Get total count - products with "show on home" flag, across all active shops
             $stmt = $db->query("
                 SELECT COUNT(DISTINCT p.id) as count
                 FROM products p
-                INNER JOIN shop_inventory si ON p.id = si.product_id AND si.shop_id = 1
+                INNER JOIN shop_inventory si ON p.id = si.product_id
+                INNER JOIN shops s ON si.shop_id = s.id AND s.is_active = 1 AND s.is_approved = 1
                 WHERE p.show_on_home = 1
                   AND p.status = 'active'
                   AND si.status = 'active'
@@ -681,7 +916,8 @@ view('buyer.home', [
                        si.stock_quantity,
                        0 as average_rating
                 FROM products p
-                INNER JOIN shop_inventory si ON p.id = si.product_id AND si.shop_id = 1
+                INNER JOIN shop_inventory si ON p.id = si.product_id
+                INNER JOIN shops s ON si.shop_id = s.id AND s.is_active = 1 AND s.is_approved = 1
                 LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
                 LEFT JOIN brands b ON p.brand_id = b.id
                 LEFT JOIN product_categories pc ON p.id = pc.product_id AND pc.is_primary = 1
@@ -880,8 +1116,8 @@ view('buyer.home', [
 
     /**
      * Map URL-friendly type names to database enum values
-     * URL: grocery, food_court, stores, products
-     * DB:  grocery_store, food_court, store, products
+     * URL: grocery, food_court, stores, products, + new types below (url == db value)
+     * DB:  grocery_store, food_court, store, products, + new types below
      */
     private function mapUrlTypeToDbType(string $urlType): string {
         $mapping = [
@@ -889,6 +1125,23 @@ view('buyer.home', [
             'food_court' => 'food_court',
             'stores' => 'store',
             'products' => 'products',
+            'bakery' => 'bakery',
+            'butcher' => 'butcher',
+            'pharmacy' => 'pharmacy',
+            'bookstore' => 'bookstore',
+            'hardware' => 'hardware',
+            'boutique' => 'boutique',
+            'electronics' => 'electronics',
+            'health_beauty' => 'health_beauty',
+            'food_drink' => 'food_drink',
+            'automotive' => 'automotive',
+            'food_dining' => 'food_dining',
+            'health_pharmacy' => 'health_pharmacy',
+            'home_everyday' => 'home_everyday',
+            'home_services' => 'home_services',
+            'wellness_beauty' => 'wellness_beauty',
+            'events_catering' => 'events_catering',
+            'local_gems' => 'local_gems',
         ];
         return $mapping[$urlType] ?? 'grocery_store';
     }
@@ -902,10 +1155,27 @@ view('buyer.home', [
             'food_court' => 'food_court',
             'store' => 'stores',
             'products' => 'products',
+            'bakery' => 'bakery',
+            'butcher' => 'butcher',
+            'pharmacy' => 'pharmacy',
+            'bookstore' => 'bookstore',
+            'hardware' => 'hardware',
+            'boutique' => 'boutique',
+            'electronics' => 'electronics',
+            'health_beauty' => 'health_beauty',
+            'food_drink' => 'food_drink',
+            'automotive' => 'automotive',
+            'food_dining' => 'food_dining',
+            'health_pharmacy' => 'health_pharmacy',
+            'home_everyday' => 'home_everyday',
+            'home_services' => 'home_services',
+            'wellness_beauty' => 'wellness_beauty',
+            'events_catering' => 'events_catering',
+            'local_gems' => 'local_gems',
         ];
         return $mapping[$dbType] ?? 'grocery';
     }
-    
+
     /**
      * Get counts for all shop types
      * This runs ALWAYS, regardless of filter
@@ -917,6 +1187,23 @@ view('buyer.home', [
             'food_court' => 0,
             'stores' => 0,
             'products' => 0,
+            'bakery' => 0,
+            'butcher' => 0,
+            'pharmacy' => 0,
+            'bookstore' => 0,
+            'hardware' => 0,
+            'boutique' => 0,
+            'electronics' => 0,
+            'health_beauty' => 0,
+            'food_drink' => 0,
+            'automotive' => 0,
+            'food_dining' => 0,
+            'health_pharmacy' => 0,
+            'home_everyday' => 0,
+            'home_services' => 0,
+            'wellness_beauty' => 0,
+            'events_catering' => 0,
+            'local_gems' => 0,
         ];
         
         // Get total count

@@ -11,9 +11,9 @@ $text = [
         'page_title'         => 'Driver Central - Deliver with OCSAPP',
         'eyebrow'            => 'Driver Program',
         'hero_headline'      => 'Deliver with <span>OCSAPP</span>',
-        'hero_sub'           => 'Earn on your schedule. Choose your hours. Get paid weekly. Join our growing fleet of drivers across Canada.',
+        'hero_sub'           => 'Earn on your schedule. Choose your hours. Get paid weekly. Join our growing fleet of drivers in the West Island, with Laval and Montreal core coming soon.',
         'badge_emission'     => 'Zero-Emission Delivery',
-        'badge_zone'         => 'West Island · Grand Montréal',
+        'badge_zone'         => 'West Island · Expanding Soon',
         'badge_payout'       => 'Weekly Payouts',
         'badge_flex'         => 'Flexible Hours',
         'apply_btn'          => 'Apply to Drive',
@@ -28,7 +28,7 @@ $text = [
         'b1_title'           => 'Flexible Hours',
         'b1_text'            => 'Work when it fits your life. Set your own schedule and toggle your availability on and off from your driver dashboard at any time.',
         'b2_title'           => 'Competitive Pay',
-        'b2_text'            => 'Earn a delivery fee on every completed run plus keep 100% of any tips. Earnings are tracked in real time in your portal.',
+        'b2_text'            => 'Earn a zone-based delivery fee on every completed run - you keep 70% of every fee, plus 100% of any tip. Earnings are tracked in real time in your portal.',
         'b3_title'           => 'Zone-Based Routes',
         'b3_text'            => 'Deliveries are matched to your zone so you\'re never driving across the city for a single drop. Short, efficient routes mean more runs per hour.',
         'b4_title'           => 'Variety of Work',
@@ -37,6 +37,21 @@ $text = [
         'b5_text'            => 'Your driver dashboard works on any mobile browser. Accept jobs, update statuses, and track your earnings - all from your phone.',
         'b6_title'           => 'Admin Support',
         'b6_text'            => 'Our operations team is available to help with any issues. You\'re never on your own - support is just a message away.',
+        'pay_title'          => 'How Driver Pay Works',
+        'pay_sub'            => 'A zone-based delivery fee on every run - no surprises',
+        'pay_status_live'    => 'Live Now',
+        'pay_status_soon'    => 'Coming Soon',
+        'pay_group_marche'      => 'Customer Orders (B2C) - Retail Rate',
+        'pay_group_fournisseur' => 'Business Distributions (B2B) - Business Rate',
+        'pay_wi_title'       => 'West Island',
+        'pay_wi_text'        => 'Kirkland, Pointe-Claire, DDO, Beaconsfield, Dorval & more',
+        'pay_lav_title'      => 'Laval',
+        'pay_lav_text'       => 'City of Laval',
+        'pay_mtl_title'      => 'Montreal Core',
+        'pay_mtl_text'       => 'Downtown Montreal & surrounding boroughs',
+        'pay_note'           => 'The same 70/30 split applies to both rates above - you keep 70% of every delivery fee (a 30% platform fee covers insurance, support, and app operations), tracked in real time and paid out weekly. Laval and Montreal core rates are published now and will activate as we expand dispatch to those zones.',
+        'tip_title'          => 'Tips',
+        'tip_b2b'            => '100% of any tip goes straight to you - we never take a cut. Suggested amounts (15%, 18%, 20%, or custom) are calculated on the pre-tax subtotal and shown at checkout.',
         'types_title'        => 'What You\'ll Deliver',
         'types_sub'          => 'Three distinct delivery types - one driver portal',
         't1_title'           => 'Customer Orders (B2C)',
@@ -60,13 +75,13 @@ $text = [
         'r1_title'           => 'Age 18+',
         'r1_text'            => 'Must be at least 18 years old at the time of application.',
         'r2_title'           => 'Valid Driver\'s Licence',
-        'r2_text'            => 'Full, valid Canadian licence (or equivalent). Cyclists & e-bike riders welcome too.',
-        'r3_title'           => 'Vehicle Insurance',
-        'r3_text'            => 'Your vehicle must be insured. We\'ll verify this during onboarding.',
+        'r2_text'            => 'Full, valid Canadian licence (or equivalent), of the class appropriate to your vehicle. E-bike riders welcome too.',
+        'r3_title'           => 'Registration & Commercial Insurance',
+        'r3_text'            => 'Valid vehicle registration and insurance that covers commercial delivery use - a standard personal-use policy usually doesn\'t. You\'ll provide proof upon request and at renewal.',
         'r4_title'           => 'Smartphone',
         'r4_text'            => 'Any modern phone with a browser is all you need to access your dashboard.',
         'r5_title'           => 'Reliable Vehicle',
-        'r5_text'            => 'Car, van, motorcycle, bicycle, or e-bike - we work with all vehicle types.',
+        'r5_text'            => 'Car, van, SUV, motorcycle, or e-bike - we work with all eligible vehicle types.',
         'r6_title'           => 'Good Standing',
         'r6_text'            => 'Clean record preferred. A background check is part of our approval process.',
         'cta_title'          => 'Ready to Start Earning?',
@@ -79,9 +94,9 @@ $text = [
         'page_title'         => 'Chauffeur Central - Livrez avec OCSAPP',
         'eyebrow'            => 'Programme Chauffeur',
         'hero_headline'      => 'Livrez avec <span>OCSAPP</span>',
-        'hero_sub'           => 'Gagnez selon votre horaire. Choisissez vos heures. Soyez payé chaque semaine. Rejoignez notre flotte de chauffeurs en pleine croissance à travers le Canada.',
+        'hero_sub'           => 'Gagnez selon votre horaire. Choisissez vos heures. Soyez payé chaque semaine. Rejoignez notre flotte de chauffeurs grandissante dans le West Island, avec Laval et le centre-ville de Montréal à venir bientôt.',
         'badge_emission'     => 'Livraison zéro émission',
-        'badge_zone'         => 'West Island · Grand Montréal',
+        'badge_zone'         => 'West Island · Expansion à venir',
         'badge_payout'       => 'Paie hebdomadaire',
         'badge_flex'         => 'Horaire flexible',
         'apply_btn'          => 'Postuler comme chauffeur',
@@ -96,7 +111,7 @@ $text = [
         'b1_title'           => 'Horaires flexibles',
         'b1_text'            => 'Travaillez quand ça vous convient. Définissez votre propre horaire et activez ou désactivez votre disponibilité depuis votre tableau de bord à tout moment.',
         'b2_title'           => 'Rémunération compétitive',
-        'b2_text'            => 'Gagnez des frais de livraison pour chaque course complétée et gardez 100% des pourboires. Vos gains sont suivis en temps réel dans votre portail.',
+        'b2_text'            => 'Gagnez des frais de livraison par zone à chaque course complétée - vous gardez 70% de chaque frais, plus 100% de tout pourboire. Vos gains sont suivis en temps réel dans votre portail.',
         'b3_title'           => 'Trajets par zone',
         'b3_text'            => 'Les livraisons sont associées à votre zone, donc vous ne traversez jamais toute la ville pour une seule livraison. Des trajets courts et efficaces permettent plus de courses par heure.',
         'b4_title'           => 'Variété de travail',
@@ -105,6 +120,21 @@ $text = [
         'b5_text'            => 'Votre tableau de bord chauffeur fonctionne sur n\'importe quel navigateur mobile. Acceptez des missions, mettez à jour les statuts et suivez vos gains - tout depuis votre téléphone.',
         'b6_title'           => 'Support administratif',
         'b6_text'            => 'Notre équipe opérationnelle est disponible pour vous aider. Vous n\'êtes jamais seul - le support est à portée d\'un message.',
+        'pay_title'          => 'Comment fonctionne la rémunération',
+        'pay_sub'            => 'Des frais de livraison par zone à chaque course - sans surprise',
+        'pay_status_live'    => 'En service',
+        'pay_status_soon'    => 'Bientôt disponible',
+        'pay_group_marche'      => 'Commandes clients (B2C) - Tarif Marché',
+        'pay_group_fournisseur' => 'Distributions aux entreprises (B2B) - Tarif Fournisseur',
+        'pay_wi_title'       => 'West Island',
+        'pay_wi_text'        => 'Kirkland, Pointe-Claire, DDO, Beaconsfield, Dorval et plus',
+        'pay_lav_title'      => 'Laval',
+        'pay_lav_text'       => 'Ville de Laval',
+        'pay_mtl_title'      => 'Montréal (centre)',
+        'pay_mtl_text'       => 'Centre-ville de Montréal et arrondissements environnants',
+        'pay_note'           => 'Le même partage 70/30 s\'applique aux deux tarifs ci-dessus - vous gardez 70% de chaque frais de livraison (des frais de plateforme de 30% couvrent l\'assurance, le support et les opérations de l\'application), suivi en temps réel et versé chaque semaine. Les tarifs de Laval et du centre-ville de Montréal sont déjà publiés et seront activés au fur et à mesure de l\'expansion de notre service.',
+        'tip_title'          => 'Pourboires',
+        'tip_b2b'            => '100% du pourboire vous revient directement - nous ne prenons jamais de commission. Les montants suggérés (15%, 18%, 20% ou personnalisé) sont calculés sur le sous-total avant taxes et affichés lors du paiement.',
         'types_title'        => 'Ce que vous livrerez',
         'types_sub'          => 'Trois types de livraison distincts - un seul portail chauffeur',
         't1_title'           => 'Commandes clients (B2C)',
@@ -128,13 +158,13 @@ $text = [
         'r1_title'           => '18 ans et plus',
         'r1_text'            => 'Vous devez avoir au moins 18 ans au moment de la candidature.',
         'r2_title'           => 'Permis de conduire valide',
-        'r2_text'            => 'Permis canadien complet et valide (ou équivalent). Cyclistes et vélos électriques aussi bienvenus.',
-        'r3_title'           => 'Assurance véhicule',
-        'r3_text'            => 'Votre véhicule doit être assuré. Nous le vérifierons lors de l\'intégration.',
+        'r2_text'            => 'Permis canadien complet et valide (ou équivalent), de la classe appropriée à votre véhicule. Conducteurs de vélos électriques aussi bienvenus.',
+        'r3_title'           => 'Immatriculation et assurance',
+        'r3_text'            => 'Immatriculation valide et assurance couvrant l\'usage commercial de livraison - une police à usage personnel standard l\'exclut habituellement. Une preuve sera requise sur demande et lors du renouvellement.',
         'r4_title'           => 'Téléphone intelligent',
         'r4_text'            => 'N\'importe quel téléphone moderne avec un navigateur suffit pour accéder à votre tableau de bord.',
         'r5_title'           => 'Véhicule fiable',
-        'r5_text'            => 'Voiture, camionnette, moto, vélo ou vélo électrique - nous travaillons avec tous les types de véhicules.',
+        'r5_text'            => 'Voiture, camionnette, VUS, moto ou vélo électrique - nous travaillons avec tous les types de véhicules admissibles.',
         'r6_title'           => 'Bonne réputation',
         'r6_text'            => 'Un dossier vierge est préférable. Une vérification des antécédents fait partie de notre processus d\'approbation.',
         'cta_title'          => 'Prêt à commencer à gagner?',
@@ -262,6 +292,69 @@ $dc = $text[$currentLang] ?? $text['en'];
                 <p><?= htmlspecialchars($dc['b6_text']) ?></p>
             </div>
         </div>
+    </div>
+
+    <!-- Pay breakdown -->
+    <div class="dc-section">
+            <h2 class="dc-section-title"><?= htmlspecialchars($dc['pay_title']) ?></h2>
+            <p class="dc-section-sub"><?= htmlspecialchars($dc['pay_sub']) ?></p>
+
+            <h3 class="dc-pay-group-title"><?= htmlspecialchars($dc['pay_group_marche']) ?></h3>
+            <div class="dc-types">
+                <div class="dc-type-card" style="background:linear-gradient(135deg,#166534,#16a34a);">
+                    <span class="dc-pay-badge live"><?= htmlspecialchars($dc['pay_status_live']) ?></span>
+                    <span class="dc-type-icon">📍</span>
+                    <div class="dc-pay-amount">$7.99</div>
+                    <h3><?= htmlspecialchars($dc['pay_wi_title']) ?></h3>
+                    <p><?= htmlspecialchars($dc['pay_wi_text']) ?></p>
+                </div>
+                <div class="dc-type-card" style="background:linear-gradient(135deg,#065f46,#10b981);">
+                    <span class="dc-pay-badge soon"><?= htmlspecialchars($dc['pay_status_soon']) ?></span>
+                    <span class="dc-type-icon">📍</span>
+                    <div class="dc-pay-amount">$8.99</div>
+                    <h3><?= htmlspecialchars($dc['pay_lav_title']) ?></h3>
+                    <p><?= htmlspecialchars($dc['pay_lav_text']) ?></p>
+                </div>
+                <div class="dc-type-card" style="background:linear-gradient(135deg,#92400e,#f59e0b);">
+                    <span class="dc-pay-badge soon"><?= htmlspecialchars($dc['pay_status_soon']) ?></span>
+                    <span class="dc-type-icon">📍</span>
+                    <div class="dc-pay-amount">$9.99</div>
+                    <h3><?= htmlspecialchars($dc['pay_mtl_title']) ?></h3>
+                    <p><?= htmlspecialchars($dc['pay_mtl_text']) ?></p>
+                </div>
+            </div>
+
+            <h3 class="dc-pay-group-title dc-pay-group-title-b2b"><?= htmlspecialchars($dc['pay_group_fournisseur']) ?></h3>
+            <div class="dc-types">
+                <div class="dc-type-card" style="background:linear-gradient(135deg,#166534,#16a34a);">
+                    <span class="dc-pay-badge live"><?= htmlspecialchars($dc['pay_status_live']) ?></span>
+                    <span class="dc-type-icon">🏢</span>
+                    <div class="dc-pay-amount">$19.00</div>
+                    <h3><?= htmlspecialchars($dc['pay_wi_title']) ?></h3>
+                    <p><?= htmlspecialchars($dc['pay_wi_text']) ?></p>
+                </div>
+                <div class="dc-type-card" style="background:linear-gradient(135deg,#065f46,#10b981);">
+                    <span class="dc-pay-badge soon"><?= htmlspecialchars($dc['pay_status_soon']) ?></span>
+                    <span class="dc-type-icon">🏢</span>
+                    <div class="dc-pay-amount">$21.00</div>
+                    <h3><?= htmlspecialchars($dc['pay_lav_title']) ?></h3>
+                    <p><?= htmlspecialchars($dc['pay_lav_text']) ?></p>
+                </div>
+                <div class="dc-type-card" style="background:linear-gradient(135deg,#92400e,#f59e0b);">
+                    <span class="dc-pay-badge soon"><?= htmlspecialchars($dc['pay_status_soon']) ?></span>
+                    <span class="dc-type-icon">🏢</span>
+                    <div class="dc-pay-amount">$24.00</div>
+                    <h3><?= htmlspecialchars($dc['pay_mtl_title']) ?></h3>
+                    <p><?= htmlspecialchars($dc['pay_mtl_text']) ?></p>
+                </div>
+            </div>
+
+            <p class="dc-pay-note"><i class="fas fa-circle-info"></i> <?= htmlspecialchars($dc['pay_note']) ?></p>
+
+            <div class="dc-tip-card">
+                <h3><i class="fas fa-hand-holding-heart"></i> <?= htmlspecialchars($dc['tip_title']) ?></h3>
+                <p><?= htmlspecialchars($dc['tip_b2b']) ?></p>
+            </div>
     </div>
 
     <!-- Delivery types -->

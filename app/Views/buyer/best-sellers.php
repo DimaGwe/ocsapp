@@ -1,6 +1,6 @@
 <?php
 /**
- * Best Sellers Page - OCS Store Featured Products
+ * Best Sellers Page - Admin-Curated Featured Products
  * Shows same products as homepage Best Sellers section (show_on_home = 1)
  */
 

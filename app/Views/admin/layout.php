@@ -1128,9 +1128,9 @@ $t = $translations[$currentLang] ?? $translations['en'];
         <?php
         $sectionPages = [
             'admin'      => ['dashboard', 'planner', 'users', 'deleted-users'],
-            'marketplace'=> ['buyers', 'sellers', 'shops', 'ocs-store', 'products', 'stock', 'categories'],
+            'marketplace'=> ['buyers', 'sellers', 'shops', 'categories'],
             'drivers'    => ['delivery', 'drivers-list', 'pickup-requests', 'training', 'route-replay', 'driver-activity', 'driver-earnings', 'vehicles', 'live-map', 'route-optimizer', 'zones'],
-            'suppliers'  => ['suppliers', 'purchase-orders', 'supplier-catalog', 'payables', 'receivables'],
+            'suppliers'  => ['suppliers', 'purchase-orders', 'payables', 'receivables'],
             'business'   => ['business-accounts', 'distribution'],
             'operations' => ['orders', 'shipments'],
             'crm'        => ['leads', 'support', 'agent-dashboard', 'call-log', 'waitlist'],
@@ -1181,7 +1181,7 @@ $t = $translations[$currentLang] ?? $translations['en'];
 
         <!-- MARKETPLACE -->
         <?php
-        $mktItems = ['sellers', 'shops', 'ocs-store', 'products', 'stock', 'categories'];
+        $mktItems = ['sellers', 'shops', 'categories'];
         $hasMktAccess = false;
         foreach ($mktItems as $item) {
             if (AdminPermissionHelper::canAccessMenu($item, $userRole)) { $hasMktAccess = true; break; }
@@ -1210,24 +1210,6 @@ $t = $translations[$currentLang] ?? $translations['en'];
           <a href="<?= url('admin/shops') ?>" class="nav-link <?= ($currentPage ?? '') === 'shops' ? 'active' : '' ?>">
             <i class="fa-solid fa-shop"></i>
             <span><?= $t['shops'] ?></span>
-          </a>
-          <?php endif; ?>
-          <?php if (AdminPermissionHelper::canAccessMenu('ocs-store', $userRole)): ?>
-          <a href="<?= url('admin/ocs-store/edit') ?>" class="nav-link <?= ($currentPage ?? '') === 'ocs-store' ? 'active' : '' ?>">
-            <i class="fa-solid fa-store"></i>
-            <span>OCSAPP Store</span>
-          </a>
-          <?php endif; ?>
-          <?php if (AdminPermissionHelper::canAccessMenu('products', $userRole)): ?>
-          <a href="<?= url('admin/products') ?>" class="nav-link <?= ($currentPage ?? '') === 'products' ? 'active' : '' ?>">
-            <i class="fa-solid fa-box"></i>
-            <span><?= $t['products'] ?></span>
-          </a>
-          <?php endif; ?>
-          <?php if (AdminPermissionHelper::canAccessMenu('stock', $userRole)): ?>
-          <a href="<?= url('admin/products/stock') ?>" class="nav-link <?= ($currentPage ?? '') === 'stock' ? 'active' : '' ?>">
-            <i class="fa-solid fa-warehouse"></i>
-            <span><?= $t['stock_management'] ?></span>
           </a>
           <?php endif; ?>
           <?php if (AdminPermissionHelper::canAccessMenu('categories', $userRole)): ?>
@@ -1295,7 +1277,7 @@ $t = $translations[$currentLang] ?? $translations['en'];
 
         <!-- SUPPLIERS -->
         <?php
-        $suppliersItems = ['suppliers', 'purchase-orders', 'supplier-catalog', 'payables', 'receivables'];
+        $suppliersItems = ['suppliers', 'purchase-orders', 'payables', 'receivables'];
         $hasSuppliersAccess = false;
         foreach ($suppliersItems as $item) {
             if (AdminPermissionHelper::canAccessMenu($item, $userRole)) { $hasSuppliersAccess = true; break; }
@@ -1317,12 +1299,6 @@ $t = $translations[$currentLang] ?? $translations['en'];
           <a href="<?= url('admin/purchase-orders') ?>" class="nav-link <?= ($currentPage ?? '') === 'purchase-orders' ? 'active' : '' ?>">
             <i class="fa-solid fa-file-invoice"></i>
             <span><?= $t['purchase_orders'] ?></span>
-          </a>
-          <?php endif; ?>
-          <?php if (AdminPermissionHelper::canAccessMenu('supplier-catalog', $userRole)): ?>
-          <a href="<?= url('admin/supplier-catalog') ?>" class="nav-link <?= ($currentPage ?? '') === 'supplier-catalog' ? 'active' : '' ?>">
-            <i class="fa-solid fa-book"></i>
-            <span><?= $t['supplier_catalog'] ?></span>
           </a>
           <?php endif; ?>
           <?php if (AdminPermissionHelper::canAccessMenu('payables', $userRole)): ?>

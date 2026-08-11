@@ -540,7 +540,7 @@ class PaymentController
     private function autoAssignDelivery(int $orderId): void
     {
         // Get order shop info
-        $stmt = $this->db->prepare("SELECT shop_id, total FROM orders WHERE id = ?");
+        $stmt = $this->db->prepare("SELECT shop_id, total, delivery_fee FROM orders WHERE id = ?");
         $stmt->execute([$orderId]);
         $order = $stmt->fetch(\PDO::FETCH_ASSOC);
 
@@ -566,8 +566,13 @@ class PaymentController
         $driver = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         if ($driver) {
-            $appConfig = require BASE_PATH . '/config/app.php';
-            $assignDeliveryFee = (float)($appConfig['delivery_fee'] ?? 5.00);
+            // Reuse the zone-based fee already set on the order at checkout,
+            // so the assignment stays consistent with what the driver gets paid on.
+            $assignDeliveryFee = (float)($order['delivery_fee'] ?? 0);
+            if ($assignDeliveryFee <= 0) {
+                $appConfig = require BASE_PATH . '/config/app.php';
+                $assignDeliveryFee = (float)($appConfig['delivery_fee'] ?? 5.00);
+            }
             $stmt = $this->db->prepare("
                 INSERT INTO delivery_assignments
                 (order_id, driver_id, shop_id, status, delivery_fee, assigned_at, created_at)

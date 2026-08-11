@@ -50,6 +50,8 @@ class SupplierAuthController {
         $validPackages = ['Essential', 'Experience', 'Prestige', 'Enterprise'];
         $rawPackage = trim(post('subscription_package', 'Essential'));
         $package = in_array($rawPackage, $validPackages) ? $rawPackage : 'Essential';
+        $commissionMap = ['Essential' => 8.00, 'Experience' => 6.00, 'Prestige' => 5.00, 'Enterprise' => 6.00];
+        $commissionRate = $commissionMap[$package];
 
         $data = [
             'first_name' => trim(post('first_name', '')),
@@ -270,8 +272,8 @@ class SupplierAuthController {
                     name, supplier_code, company_name, contact_person, email, phone,
                     address, city, province, postal_code, country,
                     tax_number, password_hash, can_login, status, password_changed_at,
-                    verification_deadline, subscription_package
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Canada', ?, ?, 1, 'unverified', NOW(), DATE_ADD(NOW(), INTERVAL 30 DAY), ?)
+                    verification_deadline, subscription_package, commission_rate
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Canada', ?, ?, 1, 'unverified', NOW(), DATE_ADD(NOW(), INTERVAL 30 DAY), ?, ?)
             ");
             $contactPerson = trim($data['first_name'] . ' ' . $data['last_name']);
             $supplierStmt->execute([
@@ -288,6 +290,7 @@ class SupplierAuthController {
                 $data['neq_number'],
                 $passwordHash,
                 $data['subscription_package'],
+                $commissionRate,
             ]);
             $supplierId = $db->lastInsertId();
 
@@ -1043,6 +1046,8 @@ class SupplierAuthController {
         $validPackages = ['Essential', 'Experience', 'Prestige', 'Enterprise'];
         $rawPackage    = trim(post('subscription_package', 'Essential'));
         $package       = in_array($rawPackage, $validPackages) ? $rawPackage : 'Essential';
+        $commissionMap = ['Essential' => 8.00, 'Experience' => 6.00, 'Prestige' => 5.00, 'Enterprise' => 6.00];
+        $commissionRate = $commissionMap[$package];
 
         $data = [
             'email'                       => trim(post('email', '')),
@@ -1253,15 +1258,15 @@ class SupplierAuthController {
                     name, supplier_code, company_name, contact_person, email, phone,
                     address, city, province, postal_code, country,
                     tax_number, password_hash, can_login, status, password_changed_at, verification_deadline,
-                    subscription_package
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Canada', ?, ?, 1, 'pending_verification', NOW(), DATE_ADD(NOW(), INTERVAL 30 DAY), ?)
+                    subscription_package, commission_rate
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Canada', ?, ?, 1, 'pending_verification', NOW(), DATE_ADD(NOW(), INTERVAL 30 DAY), ?, ?)
             ")->execute([
                 $companyName, $supplierCode, $companyName, $contactPerson,
                 $registeredEmail, $data['phone'],
                 $data['registered_address_street'], $data['registered_address_city'],
                 $data['registered_address_province'], $data['registered_address_postal'],
                 $data['neq_number'], $passwordHash,
-                $data['subscription_package'],
+                $data['subscription_package'], $commissionRate,
             ]);
             $supplierId = (int) $db->lastInsertId();
 

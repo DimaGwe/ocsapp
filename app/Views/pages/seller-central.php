@@ -210,12 +210,26 @@ $fr = $currentLang === 'fr';
     .pkg-name { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
     .pkg-desc { font-size: 12px; color: rgba(255,255,255,.55); margin-bottom: 12px; line-height: 1.5; }
     .pkg-price { margin: 14px 0 0; }
-    .pkg-price-num { font-size: 38px; font-weight: 900; line-height: 1; display: block; }
+    .pkg-price-num { font-size: 26px; font-weight: 900; line-height: 30px; display: block; }
     .pkg-price-lbl { font-size: 11px; color: rgba(255,255,255,.45); font-weight: 600; text-transform: uppercase; letter-spacing: .8px; margin-top: 3px; display: block; }
     .pkg-ess .pkg-price-num { color: #4ade80; }
     .pkg-exp .pkg-price-num { color: #93c5fd; }
     .pkg-pre .pkg-price-num { color: #c084fc; }
     .pkg-ent .pkg-price-num { color: #94a3b8; }
+    .pkg-rate { margin: 10px 0 0; }
+    .pkg-rate-num { font-size: 26px; font-weight: 900; line-height: 30px; display: block; }
+    .pkg-rate-lbl { font-size: 11px; color: rgba(255,255,255,.45); font-weight: 600; text-transform: uppercase; letter-spacing: .8px; margin-top: 3px; display: block; }
+    .pkg-ess .pkg-rate-num { color: #4ade80; }
+    .pkg-exp .pkg-rate-num { color: #93c5fd; }
+    .pkg-pre .pkg-rate-num { color: #c084fc; }
+    .pkg-ent .pkg-rate-num { color: #94a3b8; }
+    .pkg-pickup { margin: 10px 0 0; }
+    .pkg-pickup-num { font-size: 26px; font-weight: 900; line-height: 30px; display: block; }
+    .pkg-pickup-lbl { font-size: 11px; color: rgba(255,255,255,.45); font-weight: 600; text-transform: uppercase; letter-spacing: .8px; margin-top: 3px; display: block; }
+    .pkg-ess .pkg-pickup-num { color: #4ade80; }
+    .pkg-exp .pkg-pickup-num { color: #93c5fd; }
+    .pkg-pre .pkg-pickup-num { color: #c084fc; }
+    .pkg-ent .pkg-pickup-num { color: #94a3b8; }
     .pkg-divider { border: none; border-top: 1px solid rgba(255,255,255,.12); margin: 18px 0; }
     .pkg-features { list-style: none; flex: 1; }
     .pkg-features li { font-size: 12.5px; padding: 5px 0; display: flex; gap: 8px; align-items: flex-start; line-height: 1.5; color: rgba(255,255,255,.85); }
@@ -349,8 +363,8 @@ $fr = $currentLang === 'fr';
     </h1>
     <p class="hero-sub">
       <?= $fr
-        ? 'Rejoignez le marché hyperlocal du Grand Montréal. Listez vos produits, gérez vos commandes, et laissez OCSAPP s\'occuper de la livraison — depuis un seul tableau de bord.'
-        : 'Reach customers across Greater Montréal and beyond. List your products, manage orders, and let OCSAPP handle delivery — all from one seller dashboard.' ?>
+        ? 'Rejoignez le marché hyperlocal, en pleine croissance dans le West Island, avec Laval et le centre-ville de Montréal à venir bientôt. Listez vos produits, gérez vos commandes, et laissez OCSAPP s\'occuper de la livraison — depuis un seul tableau de bord.'
+        : 'Reach customers growing in the West Island, with Laval and Montreal core coming soon. List your products, manage orders, and let OCSAPP handle delivery — all from one seller dashboard.' ?>
     </p>
     <div class="hero-badges">
       <span class="hero-badge"><i class="fas fa-leaf"></i> <?= $fr ? 'Livraison zéro émission' : 'Zero-Emission Delivery' ?></span>
@@ -616,6 +630,14 @@ $fr = $currentLang === 'fr';
           <span class="pkg-price-num"><?= $fr ? 'Gratuit' : 'Free' ?></span>
           <span class="pkg-price-lbl"><?= $fr ? 'pour commencer' : 'to start' ?></span>
         </div>
+        <div class="pkg-rate">
+          <span class="pkg-rate-num">15%</span>
+          <span class="pkg-rate-lbl"><?= $fr ? 'commission livraison' : 'delivery commission' ?></span>
+        </div>
+        <div class="pkg-pickup">
+          <span class="pkg-pickup-num">8%</span>
+          <span class="pkg-pickup-lbl"><?= $fr ? 'commission ramassage' : 'pickup commission' ?></span>
+        </div>
         <hr class="pkg-divider">
         <ul class="pkg-features">
           <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Jusqu\'à 30 produits actifs' : 'Up to 30 active listings' ?></li>
@@ -635,8 +657,16 @@ $fr = $currentLang === 'fr';
         <div class="pkg-name">Experience</div>
         <div class="pkg-desc"><?= $fr ? 'Pour les boutiques en croissance' : 'For growing stores' ?></div>
         <div class="pkg-price">
-          <span class="pkg-price-num" style="font-size:22px;opacity:.7"><?= $fr ? 'Bientôt' : 'Coming Soon' ?></span>
-          <span class="pkg-price-lbl"><?= $fr ? 'tarif à confirmer' : 'pricing to be confirmed' ?></span>
+          <span class="pkg-price-num">$39</span>
+          <span class="pkg-price-lbl"><?= $fr ? 'par mois' : 'per month' ?></span>
+        </div>
+        <div class="pkg-rate">
+          <span class="pkg-rate-num">12%</span>
+          <span class="pkg-rate-lbl"><?= $fr ? 'commission livraison' : 'delivery commission' ?></span>
+        </div>
+        <div class="pkg-pickup">
+          <span class="pkg-pickup-num">6%</span>
+          <span class="pkg-pickup-lbl"><?= $fr ? 'commission ramassage' : 'pickup commission' ?></span>
         </div>
         <hr class="pkg-divider">
         <ul class="pkg-features">
@@ -654,8 +684,16 @@ $fr = $currentLang === 'fr';
         <div class="pkg-name">Prestige</div>
         <div class="pkg-desc"><?= $fr ? 'Pour les vendeurs établis' : 'For established sellers' ?></div>
         <div class="pkg-price">
-          <span class="pkg-price-num" style="font-size:22px;opacity:.7"><?= $fr ? 'Bientôt' : 'Coming Soon' ?></span>
-          <span class="pkg-price-lbl"><?= $fr ? 'tarif à confirmer' : 'pricing to be confirmed' ?></span>
+          <span class="pkg-price-num">$89</span>
+          <span class="pkg-price-lbl"><?= $fr ? 'par mois' : 'per month' ?></span>
+        </div>
+        <div class="pkg-rate">
+          <span class="pkg-rate-num">10%</span>
+          <span class="pkg-rate-lbl"><?= $fr ? 'commission livraison' : 'delivery commission' ?></span>
+        </div>
+        <div class="pkg-pickup">
+          <span class="pkg-pickup-num">5%</span>
+          <span class="pkg-pickup-lbl"><?= $fr ? 'commission ramassage' : 'pickup commission' ?></span>
         </div>
         <hr class="pkg-divider">
         <ul class="pkg-features">
@@ -673,8 +711,16 @@ $fr = $currentLang === 'fr';
         <div class="pkg-name">Enterprise</div>
         <div class="pkg-desc"><?= $fr ? 'Solutions sur mesure, grande échelle' : 'Custom solutions, large scale' ?></div>
         <div class="pkg-price">
-          <span class="pkg-price-num" style="font-size:22px;opacity:.7"><?= $fr ? 'Bientôt' : 'Coming Soon' ?></span>
-          <span class="pkg-price-lbl"><?= $fr ? 'tarif à confirmer' : 'pricing to be confirmed' ?></span>
+          <span class="pkg-price-num" style="font-size:18px;white-space:nowrap"><?= $fr ? 'Sur devis' : 'Custom quote' ?></span>
+          <span class="pkg-price-lbl"><?= $fr ? 'par mois' : 'per month' ?></span>
+        </div>
+        <div class="pkg-rate">
+          <span class="pkg-rate-num" style="font-size:16px;white-space:nowrap"><?= $fr ? 'Prix sur demande' : 'Price upon request' ?></span>
+          <span class="pkg-rate-lbl"><?= $fr ? 'commission livraison' : 'delivery commission' ?></span>
+        </div>
+        <div class="pkg-pickup">
+          <span class="pkg-pickup-num" style="font-size:16px;white-space:nowrap"><?= $fr ? 'Prix sur demande' : 'Price upon request' ?></span>
+          <span class="pkg-pickup-lbl"><?= $fr ? 'commission ramassage' : 'pickup commission' ?></span>
         </div>
         <hr class="pkg-divider">
         <ul class="pkg-features">
@@ -692,8 +738,12 @@ $fr = $currentLang === 'fr';
 
     <div class="plan-note">
       <?= $fr
-        ? '<strong>Remarque :</strong> Tous les nouveaux comptes démarrent sur <strong>Essential</strong> sans frais. Pour passer à niveau, contactez <strong>sellers@ocsapp.ca</strong> ou votre gestionnaire de compte. Les changements prennent effet dans un délai d\'un jour ouvrable.'
-        : '<strong>Note:</strong> All new seller accounts start on the <strong>Essential</strong> plan at no cost. To upgrade, contact <strong>sellers@ocsapp.ca</strong> or your account manager. Changes take effect within one business day.' ?>
+        ? '<strong>Remarque :</strong> Tous les nouveaux comptes démarrent sur <strong>Essential</strong> sans frais. Les forfaits <strong>Experience</strong> (39$/mois) et <strong>Prestige</strong> (89$/mois) sont facturés mensuellement, en plus du taux de commission réduit. Pour passer à niveau, contactez <strong>sellers@ocsapp.ca</strong> ou votre gestionnaire de compte. Les changements prennent effet dans un délai d\'un jour ouvrable.'
+        : '<strong>Note:</strong> All new seller accounts start on the <strong>Essential</strong> plan at no cost. <strong>Experience</strong> ($39/mo) and <strong>Prestige</strong> ($89/mo) are billed monthly, in addition to their reduced commission rate. To upgrade, contact <strong>sellers@ocsapp.ca</strong> or your account manager. Changes take effect within one business day.' ?>
+      <br><br>
+      <?= $fr
+        ? '<strong>Frais de traitement des paiements :</strong> Les frais standards de traitement (2,9 % + 0,30 $ CAD) sont absorbés par le vendeur et déduits du montant net avant paiement, aux côtés de la commission - ils ne sont jamais ajoutés comme frais séparés à la facture de l\'acheteur.'
+        : '<strong>Payment processing fee:</strong> The standard processing fee (2.9% + $0.30 CAD) is absorbed by the seller and deducted from net proceeds before payout, alongside commission - it is never added as a separate line on the buyer\'s invoice.' ?>
     </div>
   </div>
 </section>
@@ -711,7 +761,7 @@ $fr = $currentLang === 'fr';
       <?php
       $faqs = $fr ? [
         ['Combien ça coûte d\'ouvrir une boutique sur OCSAPP ?',
-         'Rien. Le forfait Essential est entièrement gratuit. Vous payez seulement lorsque vous vendez — OCSAPP prélève une petite commission par vente complétée. Les forfaits payants (Experience à 50$/mois, Prestige à 100$/mois) offrent des produits illimités, un taux de commission réduit et des outils supplémentaires.'],
+         'Rien. Le forfait Essential est entièrement gratuit. Vous payez seulement lorsque vous vendez - OCSAPP prélève une petite commission par vente complétée. Les forfaits payants (Experience à 39$/mois, Prestige à 89$/mois) offrent des produits illimités, un taux de commission réduit et des outils supplémentaires.'],
         ['Combien de temps dure l\'approbation ?',
          'La plupart des candidatures sont examinées dans un délai de 2 à 5 jours ouvrables. Vous serez notifié par courriel. Si vous n\'avez pas eu de nouvelles après 5 jours, contactez sellers@ocsapp.ca avec votre courriel d\'inscription.'],
         ['Comment fonctionne la livraison ? Est-ce que j\'envoie les commandes moi-même ?',
@@ -724,7 +774,7 @@ $fr = $currentLang === 'fr';
          'Oui — vous pouvez passer à niveau à tout moment. Contactez sellers@ocsapp.ca ou votre gestionnaire de compte. Les changements prennent effet dans un délai d\'un jour ouvrable. Tous les forfaits payants sont au mois, sans engagement à long terme.'],
       ] : [
         ['Is there a cost to open a store on OCSAPP?',
-         'No. The Essential plan is completely free to start. You only pay when you sell — OCSAPP takes a small commission per completed order. Paid plans (Experience at $50/month, Prestige at $100/month) offer unlimited listings, lower commission rates, and additional tools.'],
+         'No. The Essential plan is completely free to start. You only pay when you sell - OCSAPP takes a small commission per completed order. Paid plans (Experience at $39/month, Prestige at $89/month) offer unlimited listings, lower commission rates, and additional tools.'],
         ['How long does seller approval take?',
          'Most seller applications are reviewed within 2–5 business days. You\'ll receive a decision by email. If you haven\'t heard back after 5 business days, email sellers@ocsapp.ca with your registration email and we\'ll follow up.'],
         ['How does delivery work? Do I ship orders myself?',

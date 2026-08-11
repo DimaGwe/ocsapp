@@ -31,7 +31,24 @@ $shopCounts = $shopCounts ?? [
     'grocery' => 0,
     'food_court' => 0,
     'stores' => 0,
-    'products' => 0
+    'products' => 0,
+    'bakery' => 0,
+    'butcher' => 0,
+    'pharmacy' => 0,
+    'bookstore' => 0,
+    'hardware' => 0,
+    'boutique' => 0,
+    'electronics' => 0,
+    'health_beauty' => 0,
+    'food_drink' => 0,
+    'automotive' => 0,
+    'food_dining' => 0,
+    'health_pharmacy' => 0,
+    'home_everyday' => 0,
+    'home_services' => 0,
+    'wellness_beauty' => 0,
+    'events_catering' => 0,
+    'local_gems' => 0,
 ];
 ?>
 <!DOCTYPE html>
@@ -245,10 +262,24 @@ $shopCounts = $shopCounts ?? [
             text-transform: uppercase;
         }
         
-        .shop-type-badge.grocery { background: #4caf50; }
+        .shop-type-badge.grocery_store { background: #4caf50; }
         .shop-type-badge.food_court { background: #ff9800; }
-        .shop-type-badge.stores { background: #2196f3; }
+        .shop-type-badge.store { background: #2196f3; }
         .shop-type-badge.products { background: #9c27b0; }
+        .shop-type-badge.bookstore { background: #6d4c41; }
+        .shop-type-badge.hardware { background: #607d8b; }
+        .shop-type-badge.boutique { background: #e91e63; }
+        .shop-type-badge.electronics { background: #3f51b5; }
+        .shop-type-badge.health_beauty { background: #00acc1; }
+        .shop-type-badge.food_drink { background: #c9862d; }
+        .shop-type-badge.automotive { background: #455a64; }
+        .shop-type-badge.food_dining { background: #ff9800; }
+        .shop-type-badge.health_pharmacy { background: #00acc1; }
+        .shop-type-badge.home_everyday { background: #607d8b; }
+        .shop-type-badge.home_services { background: #8d6e63; }
+        .shop-type-badge.wellness_beauty { background: #ec407a; }
+        .shop-type-badge.events_catering { background: #7e57c2; }
+        .shop-type-badge.local_gems { background: #26a69a; }
         
         .shop-logo {
             width: 100px;
@@ -549,35 +580,75 @@ $shopCounts = $shopCounts ?? [
                 </div>
             </a>
             
+            <a href="<?= url('shops?type=food_dining') ?>" class="shop-type-tab <?= $filterType === 'food_dining' ? 'active' : '' ?>">
+                <span class="shop-type-icon">🍽️</span>
+                <div class="shop-type-label">
+                    <span class="shop-type-name"><?= $t['food_dining'] ?? 'Food & Dining' ?></span>
+                    <span class="shop-type-count"><?= $shopCounts['food_dining'] ?> <?= $t['shops'] ?? 'shops' ?></span>
+                </div>
+            </a>
+
             <a href="<?= url('shops?type=grocery') ?>" class="shop-type-tab <?= $filterType === 'grocery' ? 'active' : '' ?>">
                 <span class="shop-type-icon">🛒</span>
                 <div class="shop-type-label">
-                    <span class="shop-type-name"><?= $t['grocery_store'] ?? 'Grocery Store' ?></span>
+                    <span class="shop-type-name"><?= $t['grocery_store'] ?? 'Grocery' ?></span>
                     <span class="shop-type-count"><?= $shopCounts['grocery'] ?> <?= $t['shops'] ?? 'shops' ?></span>
                 </div>
             </a>
-            
-            <a href="<?= url('shops?type=food_court') ?>" class="shop-type-tab <?= $filterType === 'food_court' ? 'active' : '' ?>">
-                <span class="shop-type-icon">🍽️</span>
+
+            <a href="<?= url('shops?type=health_pharmacy') ?>" class="shop-type-tab <?= $filterType === 'health_pharmacy' ? 'active' : '' ?>">
+                <span class="shop-type-icon">💊</span>
                 <div class="shop-type-label">
-                    <span class="shop-type-name"><?= $t['food_court'] ?? 'Food Court' ?></span>
-                    <span class="shop-type-count"><?= $shopCounts['food_court'] ?> <?= $t['shops'] ?? 'shops' ?></span>
+                    <span class="shop-type-name"><?= $t['health_pharmacy'] ?? 'Health & Pharmacy' ?></span>
+                    <span class="shop-type-count"><?= $shopCounts['health_pharmacy'] ?> <?= $t['shops'] ?? 'shops' ?></span>
                 </div>
             </a>
-            
-            <a href="<?= url('shops?type=stores') ?>" class="shop-type-tab <?= $filterType === 'stores' ? 'active' : '' ?>">
-                <span class="shop-type-icon">🛍️</span>
+
+            <a href="<?= url('shops?type=home_everyday') ?>" class="shop-type-tab <?= $filterType === 'home_everyday' ? 'active' : '' ?>">
+                <span class="shop-type-icon">🏠</span>
                 <div class="shop-type-label">
-                    <span class="shop-type-name"><?= $t['stores'] ?? 'Stores' ?></span>
-                    <span class="shop-type-count"><?= $shopCounts['stores'] ?> <?= $t['shops'] ?? 'shops' ?></span>
+                    <span class="shop-type-name"><?= $t['home_everyday'] ?? 'Home & Everyday Goods' ?></span>
+                    <span class="shop-type-count"><?= $shopCounts['home_everyday'] ?> <?= $t['shops'] ?? 'shops' ?></span>
                 </div>
             </a>
-            
-            <a href="<?= url('shops?type=products') ?>" class="shop-type-tab <?= $filterType === 'products' ? 'active' : '' ?>">
-                <span class="shop-type-icon">🎁</span>
+
+            <a href="<?= url('shops?type=boutique') ?>" class="shop-type-tab <?= $filterType === 'boutique' ? 'active' : '' ?>">
+                <span class="shop-type-icon">👗</span>
                 <div class="shop-type-label">
-                    <span class="shop-type-name"><?= $t['more_products'] ?? 'Products' ?></span>
-                    <span class="shop-type-count"><?= $shopCounts['products'] ?> <?= $t['shops'] ?? 'shops' ?></span>
+                    <span class="shop-type-name"><?= $t['boutique'] ?? 'Fashion & Local Boutiques' ?></span>
+                    <span class="shop-type-count"><?= $shopCounts['boutique'] ?> <?= $t['shops'] ?? 'shops' ?></span>
+                </div>
+            </a>
+
+            <a href="<?= url('shops?type=home_services') ?>" class="shop-type-tab <?= $filterType === 'home_services' ? 'active' : '' ?>">
+                <span class="shop-type-icon">🧹</span>
+                <div class="shop-type-label">
+                    <span class="shop-type-name"><?= $t['home_services'] ?? 'Home Services' ?></span>
+                    <span class="shop-type-count"><?= $shopCounts['home_services'] ?> <?= $t['shops'] ?? 'shops' ?></span>
+                </div>
+            </a>
+
+            <a href="<?= url('shops?type=wellness_beauty') ?>" class="shop-type-tab <?= $filterType === 'wellness_beauty' ? 'active' : '' ?>">
+                <span class="shop-type-icon">💆</span>
+                <div class="shop-type-label">
+                    <span class="shop-type-name"><?= $t['wellness_beauty'] ?? 'Wellness & Beauty' ?></span>
+                    <span class="shop-type-count"><?= $shopCounts['wellness_beauty'] ?> <?= $t['shops'] ?? 'shops' ?></span>
+                </div>
+            </a>
+
+            <a href="<?= url('shops?type=events_catering') ?>" class="shop-type-tab <?= $filterType === 'events_catering' ? 'active' : '' ?>">
+                <span class="shop-type-icon">🎉</span>
+                <div class="shop-type-label">
+                    <span class="shop-type-name"><?= $t['events_catering'] ?? 'Events & Catering' ?></span>
+                    <span class="shop-type-count"><?= $shopCounts['events_catering'] ?> <?= $t['shops'] ?? 'shops' ?></span>
+                </div>
+            </a>
+
+            <a href="<?= url('shops?type=local_gems') ?>" class="shop-type-tab <?= $filterType === 'local_gems' ? 'active' : '' ?>">
+                <span class="shop-type-icon">💎</span>
+                <div class="shop-type-label">
+                    <span class="shop-type-name"><?= $t['local_gems'] ?? 'Local Gems' ?></span>
+                    <span class="shop-type-count"><?= $shopCounts['local_gems'] ?> <?= $t['shops'] ?? 'shops' ?></span>
                 </div>
             </a>
         </div>
@@ -594,21 +665,38 @@ $shopCounts = $shopCounts ?? [
             <div class="shops-grid">
                 <?php foreach ($shops as $shop): ?>
                     <?php
-                    $shopType = $shop['shop_type'] ?? 'grocery';
-                    
-                    // Shop type labels
+                    $shopType = $shop['shop_type'] ?? 'grocery_store';
+
+                    // Shop type labels (keyed by the raw DB enum value)
                     $typeLabels = [
-                        'grocery_store' => 'Grocery',
-                        'food_court' => 'Food Court',
-                        'store' => 'Store',
-                        'products' => 'Products'
+                        'grocery_store' => $t['grocery_store'] ?? 'Grocery',
+                        'food_court' => $t['food_court'] ?? 'Restaurant',
+                        'store' => $t['stores'] ?? 'Store',
+                        'products' => $t['more_products'] ?? 'Products',
+                        'bakery' => $t['bakery'] ?? 'Bakery',
+                        'butcher' => $t['butcher'] ?? 'Butcher Shop',
+                        'pharmacy' => $t['pharmacy'] ?? 'Pharmacy',
+                        'bookstore' => $t['bookstore'] ?? 'Bookstore',
+                        'hardware' => $t['hardware'] ?? 'Hardware',
+                        'boutique' => $t['boutique'] ?? 'Fashion & Local Boutiques',
+                        'electronics' => $t['electronics'] ?? 'Electronics',
+                        'health_beauty' => $t['health_beauty'] ?? 'Health & Beauty',
+                        'food_drink' => $t['food_drink'] ?? 'Food & Drink',
+                        'automotive' => $t['automotive'] ?? 'Automotive & Industrial',
+                        'food_dining' => $t['food_dining'] ?? 'Food & Dining',
+                        'health_pharmacy' => $t['health_pharmacy'] ?? 'Health & Pharmacy',
+                        'home_everyday' => $t['home_everyday'] ?? 'Home & Everyday Goods',
+                        'home_services' => $t['home_services'] ?? 'Home Services',
+                        'wellness_beauty' => $t['wellness_beauty'] ?? 'Wellness & Beauty',
+                        'events_catering' => $t['events_catering'] ?? 'Events & Catering',
+                        'local_gems' => $t['local_gems'] ?? 'Local Gems',
                     ];
                     ?>
                     <a href="<?= url('shops/' . $shop['slug']) ?>" class="shop-card">
                         <span class="shop-type-badge <?= $shopType ?>">
                             <?= $typeLabels[$shopType] ?? 'Shop' ?>
                         </span>
-                        
+
                         <div class="shop-logo">
                             <?php if (!empty($shop['logo'])): ?>
                                 <img src="<?= url($shop['logo']) ?>" alt="<?= htmlspecialchars($shop['name']) ?>">
@@ -616,10 +704,27 @@ $shopCounts = $shopCounts ?? [
                                 <span style="font-size: 48px;">
                                     <?php
                                     $icons = [
-                                        'grocery' => '🛒',
+                                        'grocery_store' => '🛒',
                                         'food_court' => '🍽️',
-                                        'stores' => '🛍️',
-                                        'products' => '🎁'
+                                        'store' => '🛍️',
+                                        'products' => '🎁',
+                                        'bakery' => '🥐',
+                                        'butcher' => '🥩',
+                                        'pharmacy' => '💊',
+                                        'bookstore' => '📚',
+                                        'hardware' => '🔧',
+                                        'boutique' => '👗',
+                                        'electronics' => '🔌',
+                                        'health_beauty' => '💄',
+                                        'food_drink' => '🥖',
+                                        'automotive' => '🚗',
+                                        'food_dining' => '🍽️',
+                                        'health_pharmacy' => '💊',
+                                        'home_everyday' => '🏠',
+                                        'home_services' => '🧹',
+                                        'wellness_beauty' => '💆',
+                                        'events_catering' => '🎉',
+                                        'local_gems' => '💎',
                                     ];
                                     echo $icons[$shopType] ?? '🏪';
                                     ?>

@@ -148,7 +148,7 @@
                             </h2>
 
                             <p style="margin: 0 0 24px; color: #4b5563; font-size: 16px; line-height: 1.6;">
-                                Great news! Your vendor application has been reviewed and approved by our team. You're now an official OCSAPP vendor and can start selling your products across Canada!
+                                Great news! Your vendor application has been reviewed and approved by our team. You're now an official OCSAPP vendor and can start selling your products to buyers across the West Island, with Laval and Montreal core coming soon!
                             </p>
 
                             <!-- Status Box -->

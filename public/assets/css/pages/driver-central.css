@@ -297,6 +297,72 @@ body { color: #1f2937; }
     display: block;
 }
 
+/* ── Pay breakdown ── */
+.dc-pay-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.28);
+    margin-bottom: 12px;
+}
+.dc-pay-badge.soon {
+    background: rgba(255,255,255,0.15);
+    opacity: 0.85;
+}
+.dc-pay-amount {
+    font-size: 34px;
+    font-weight: 800;
+    margin-bottom: 6px;
+}
+.dc-pay-note {
+    max-width: 800px;
+    margin: 28px auto 0;
+    padding: 16px 20px;
+    background: white;
+    border-radius: 12px;
+    text-align: center;
+    font-size: 14px;
+    color: #374151;
+    line-height: 1.6;
+}
+.dc-pay-note i { color: #00b207; margin-right: 6px; }
+
+.dc-pay-group-title {
+    font-size: 18px;
+    font-weight: 700;
+    text-align: center;
+    margin: 8px 0 20px;
+    color: #111827;
+}
+.dc-pay-group-title-b2b { margin-top: 48px; }
+
+.dc-tip-card {
+    max-width: 800px;
+    margin: 20px auto 0;
+    padding: 20px 24px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 12px;
+    text-align: center;
+}
+.dc-tip-card h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0 0 10px;
+    color: #065f46;
+}
+.dc-tip-card h3 i { margin-right: 6px; }
+.dc-tip-card p {
+    font-size: 14px;
+    color: #374151;
+    line-height: 1.6;
+    margin: 0 0 8px;
+}
+
 /* ── Requirements ── */
 .dc-reqs {
     display: grid;

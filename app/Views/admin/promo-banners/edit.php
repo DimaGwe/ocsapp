@@ -376,7 +376,7 @@ ob_start();
       <label class="form-label">
         Select Products <span id="selectedCount" class="selected-count">0 selected</span>
       </label>
-      <div class="form-description">Choose products from OCS store to display in the banner carousel</div>
+      <div class="form-description">Choose products to display in the banner carousel</div>
 
       <div class="product-select-container" id="productSelectContainer">
         <?php if (!empty($ocsProducts)): ?>
@@ -414,7 +414,7 @@ ob_start();
           <?php endforeach; ?>
         <?php else: ?>
           <p style="text-align: center; color: var(--text-muted); padding: 20px;">
-            No OCS store products available
+            No products available
           </p>
         <?php endif; ?>
       </div>

@@ -263,7 +263,6 @@ ob_start();
         <tr>
           <th>Product</th>
           <th style="text-align: center;">SKU</th>
-          <th style="text-align: center;">Current Stock</th>
           <th style="text-align: center;">Ordered</th>
           <th style="text-align: center;">Previously Received</th>
           <th style="text-align: center;">Remaining</th>
@@ -280,31 +279,10 @@ ob_start();
           <tr>
             <td>
               <strong><?= htmlspecialchars($item['product_name']) ?></strong>
-              <?php if ($item['marketplace_product_id']): ?>
-                <div class="stock-info" style="color: #10b981;">
-                  <i class="fas fa-link"></i> Linked to: <?= htmlspecialchars($item['marketplace_product_name'] ?? 'Unknown') ?>
-                </div>
-                <div class="stock-info">
-                  Will update: <strong><?= number_format($item['current_stock'] ?? 0) ?></strong> →
-                  <strong id="new-stock-<?= $item['id'] ?>"><?= number_format($item['current_stock'] ?? 0) ?></strong> units
-                </div>
-              <?php else: ?>
-                <div class="stock-info" style="color: #f59e0b;">
-                  <i class="fas fa-exclamation-triangle"></i> Not linked to marketplace product - stock will not be updated
-                </div>
-              <?php endif; ?>
             </td>
 
             <td style="text-align: center;">
               <?= htmlspecialchars($item['product_sku'] ?? 'N/A') ?>
-            </td>
-
-            <td style="text-align: center;">
-              <?php if ($item['marketplace_product_id']): ?>
-                <strong><?= number_format($item['current_stock'] ?? 0) ?></strong>
-              <?php else: ?>
-                <span style="color: var(--gray-400);">N/A</span>
-              <?php endif; ?>
             </td>
 
             <td style="text-align: center;">
@@ -331,9 +309,6 @@ ob_start();
                 max="<?= $remaining ?>"
                 value="<?= $remaining ?>"
                 data-item-id="<?= $item['id'] ?>"
-                data-current-stock="<?= $item['current_stock'] ?? 0 ?>"
-                data-has-link="<?= $item['marketplace_product_id'] ? '1' : '0' ?>"
-                onchange="updateStockPreview(this)"
               >
               <div style="margin-top: 8px;">
                 <span class="quick-action" onclick="setQty(<?= $item['id'] ?>, <?= $remaining ?>)">Fill All</span>
@@ -367,29 +342,6 @@ ob_start();
 function setQty(itemId, qty) {
   const input = document.getElementById('qty-' + itemId);
   input.value = qty;
-  updateStockPreview(input);
-}
-
-function updateStockPreview(input) {
-  const itemId = input.dataset.itemId;
-  const hasLink = input.dataset.hasLink === '1';
-
-  // Only update preview for products linked to marketplace
-  if (!hasLink) return;
-
-  const currentStock = parseInt(input.dataset.currentStock);
-  const receiveQty = parseInt(input.value) || 0;
-  const newStock = currentStock + receiveQty;
-
-  const stockDisplay = document.getElementById('new-stock-' + itemId);
-  if (stockDisplay) {
-    stockDisplay.textContent = number_format(newStock);
-    stockDisplay.style.color = receiveQty > 0 ? '#10b981' : 'inherit';
-  }
-}
-
-function number_format(number) {
-  return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
 // Confirm before submission

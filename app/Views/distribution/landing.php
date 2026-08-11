@@ -450,6 +450,87 @@ $pageTitle = $fr ? 'Portail Distribution - OCSAPP' : 'Business Central - OCSAPP'
             .bc-contact-box { padding: 36px 24px; }
         }
 
+        /* ── Pricing (matches Supplier/Seller Central card system) ── */
+        .packages-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 20px; margin-top: 20px; }
+        .pkg-card {
+            border-radius: 16px; border: 2px solid #e5e7eb;
+            padding: 28px 22px; background: white; position: relative;
+            transition: transform .2s, box-shadow .2s;
+            display: flex; flex-direction: column;
+        }
+        .pkg-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,.15); }
+        .pkg-popular {
+            position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+            color: white; font-size: 10px; font-weight: 700;
+            padding: 3px 14px; border-radius: 20px; white-space: nowrap; letter-spacing: .5px;
+        }
+        .pkg-name { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+        .pkg-desc { font-size: 12px; color: rgba(255,255,255,.55); margin-bottom: 12px; line-height: 1.5; min-height: 34px; }
+        .pkg-price { margin: 14px 0 0; }
+        .pkg-price-num { font-size: 26px; font-weight: 900; line-height: 30px; display: block; }
+        .pkg-price-lbl { font-size: 11px; color: rgba(255,255,255,.45); font-weight: 600; text-transform: uppercase; letter-spacing: .8px; margin-top: 3px; display: block; }
+        .pkg-ess .pkg-price-num { color: #4ade80; }
+        .pkg-exp .pkg-price-num { color: #93c5fd; }
+        .pkg-pre .pkg-price-num { color: #c084fc; }
+        .pkg-ent .pkg-price-num { color: #94a3b8; }
+        .pkg-rate { margin: 10px 0 0; }
+        .pkg-rate-num { font-size: 26px; font-weight: 900; line-height: 30px; display: block; }
+        .pkg-rate-lbl { font-size: 11px; color: rgba(255,255,255,.45); font-weight: 600; text-transform: uppercase; letter-spacing: .8px; margin-top: 3px; display: block; }
+        .pkg-ess .pkg-rate-num { color: #4ade80; }
+        .pkg-exp .pkg-rate-num { color: #93c5fd; }
+        .pkg-pre .pkg-rate-num { color: #c084fc; }
+        .pkg-ent .pkg-rate-num { color: #94a3b8; }
+        .pkg-divider { border: none; border-top: 1px solid rgba(255,255,255,.12); margin: 18px 0; }
+        .pkg-features { list-style: none; flex: 1; }
+        .pkg-features li { font-size: 12.5px; padding: 5px 0; display: flex; gap: 8px; align-items: flex-start; line-height: 1.5; color: rgba(255,255,255,.85); }
+        .pkg-features li i { font-size: 11px; flex-shrink: 0; margin-top: 2px; }
+        .pkg-features li.inherited { color: rgba(255,255,255,.35); }
+        .pkg-features li.inherited i { color: rgba(255,255,255,.35); }
+        .pkg-cta {
+            display: flex; align-items: center; justify-content: center;
+            margin-top: 28px; padding: 10px 20px;
+            border-radius: 8px; font-size: 13px; font-weight: 700;
+            transition: opacity .2s, transform .15s; color: white; text-decoration: none;
+        }
+        .pkg-cta:hover { opacity: .88; transform: translateY(-1px); }
+        .pkg-cta.outline { background: rgba(255,255,255,.08) !important; border: 1px solid rgba(255,255,255,.2); }
+        .pkg-cta.outline:hover { background: rgba(255,255,255,.15) !important; }
+
+        /* Per-tier card colors */
+        .pkg-ess { background: #14532d; border-color: #16a34a; }
+        .pkg-ess .pkg-name { color: #4ade80; }
+        .pkg-ess .pkg-features li:not(.inherited) i { color: #4ade80; }
+        .pkg-ess .pkg-cta { background: #16a34a; }
+        .pkg-ess .pkg-divider { border-color: rgba(74,222,128,.2); }
+
+        .pkg-exp { background: #1e3a8a; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59,130,246,.2); }
+        .pkg-exp .pkg-name { color: #93c5fd; }
+        .pkg-exp .pkg-popular { background: #3b82f6; }
+        .pkg-exp .pkg-features li:not(.inherited) i { color: #93c5fd; }
+        .pkg-exp .pkg-cta { background: #3b82f6; }
+        .pkg-exp .pkg-divider { border-color: rgba(147,197,253,.2); }
+
+        .pkg-pre { background: #3b0764; border-color: #9333ea; box-shadow: 0 0 0 4px rgba(147,51,234,.2); }
+        .pkg-pre .pkg-name { color: #c084fc; }
+        .pkg-pre .pkg-popular { background: #9333ea; }
+        .pkg-pre .pkg-features li:not(.inherited) i { color: #c084fc; }
+        .pkg-pre .pkg-cta { background: #9333ea; }
+        .pkg-pre .pkg-divider { border-color: rgba(192,132,252,.2); }
+
+        .pkg-ent { background: #0f172a; border-color: #475569; }
+        .pkg-ent .pkg-name { color: #94a3b8; }
+        .pkg-ent .pkg-features li:not(.inherited) i { color: #94a3b8; }
+        .pkg-ent .pkg-cta { background: #334155; }
+        .pkg-ent .pkg-divider { border-color: rgba(148,163,184,.15); }
+
+        .bc-price-note {
+            background: #f0fdf4; border-left: 4px solid #00b207; border-radius: 0 12px 12px 0;
+            padding: 16px 22px; font-size: 13.5px; color: #374151; line-height: 1.7; margin-top: 32px;
+        }
+        .bc-price-note strong { color: #0a1628; }
+        @media (max-width: 900px) { .packages-grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 640px) { .packages-grid { grid-template-columns: 1fr; } }
+
         /* suppress global header spacing against dark hero */
         .header { margin-bottom: 0; }
     </style>
@@ -464,12 +545,12 @@ $pageTitle = $fr ? 'Portail Distribution - OCSAPP' : 'Business Central - OCSAPP'
             <?= $fr ? 'Livraison d\'entreprise zéro carbone' : 'Zero Carbon Business Delivery' ?>
         </div>
         <h1>
-            <?= $fr ? 'Approvisionnement &amp; Livraison<br>pour <span>Votre Entreprise</span>' : 'Procurement &amp; Delivery<br>for <span>Your Business</span>' ?>
+            <?= $fr ? 'Approvisionnement, Expéditions &amp; Distribution récurrente<br>pour <span>Votre Entreprise</span>' : 'Procurement, Shipments &amp; Recurring Distribution<br>for <span>Your Business</span>' ?>
         </h1>
         <p>
             <?= $fr
-                ? 'Laissez-nous gérer vos achats et livraisons. Du Costco aux fournitures de bureau - nous récupérons ce dont vous avez besoin et le livrons à votre porte.'
-                : 'Let us handle your shopping and delivery. From Costco runs to office supplies - we pick up what you need and deliver it right to your door.' ?>
+                ? 'Soumettez des demandes d\'approvisionnement multi-fournisseurs, suivez vos expéditions par GPS et automatisez vos routes de livraison récurrentes - le tout depuis un seul tableau de bord.'
+                : 'Submit multi-supplier procurement requests, track GPS-verified shipments, and automate recurring delivery routes - all from one business dashboard.' ?>
         </p>
         <div class="bc-hero-btns">
             <a href="<?= url('distribution/register') ?>" class="bc-btn-primary">
@@ -509,19 +590,19 @@ $pageTitle = $fr ? 'Portail Distribution - OCSAPP' : 'Business Central - OCSAPP'
         <p class="bc-section-sub"><?= $fr ? 'Tout ce dont votre entreprise a besoin, livré.' : 'Everything your business needs, delivered.' ?></p>
         <div class="bc-pillars">
             <div class="bc-pillar">
-                <div class="bc-pillar-icon"><i class="fas fa-shopping-cart"></i></div>
-                <h3><?= $fr ? 'On fait vos achats' : 'We Shop for You' ?></h3>
-                <p><?= $fr ? 'Envoyez votre liste et nous récupérons vos articles dans n\'importe quel magasin - Costco, Walmart, pharmacie et plus.' : 'Send your list and we\'ll pick up from any store - Costco, Walmart, pharmacy, and more.' ?></p>
+                <div class="bc-pillar-icon"><i class="fas fa-clipboard-list"></i></div>
+                <h3><?= $fr ? 'Demandes d\'approvisionnement' : 'Procurement Requests' ?></h3>
+                <p><?= $fr ? 'Soumettez une demande couvrant plusieurs fournisseurs à la fois - OCSAPP coordonne l\'approvisionnement et consolide la livraison.' : 'Submit one request across multiple suppliers at once - OCSAPP coordinates sourcing and consolidates delivery.' ?></p>
             </div>
             <div class="bc-pillar">
-                <div class="bc-pillar-icon"><i class="fas fa-truck"></i></div>
-                <h3><?= $fr ? 'Livraison ponctuelle' : 'On-Time Delivery' ?></h3>
-                <p><?= $fr ? 'Livraison le jour même disponible. Vos fournitures arrivent quand vous en avez besoin, sans surprises.' : 'Same-day delivery available. Your supplies arrive when you need them, no surprises.' ?></p>
+                <div class="bc-pillar-icon"><i class="fas fa-route"></i></div>
+                <h3><?= $fr ? 'Expéditions suivies par GPS' : 'GPS-Tracked Shipments' ?></h3>
+                <p><?= $fr ? 'Chaque expédition est suivie de bout en bout par notre réseau de chauffeurs ODA, de la collecte à la preuve de livraison.' : 'Every shipment is tracked door-to-door through our ODA driver network, from pickup to proof of delivery.' ?></p>
             </div>
             <div class="bc-pillar">
-                <div class="bc-pillar-icon"><i class="fas fa-receipt"></i></div>
-                <h3><?= $fr ? 'Tarification transparente' : 'Transparent Pricing' ?></h3>
-                <p><?= $fr ? 'Payez par commande. Voyez le coût des articles et nos frais de service à l\'avance. Aucun frais caché.' : 'Pay per order. See item costs and our service fee upfront. Zero hidden fees.' ?></p>
+                <div class="bc-pillar-icon"><i class="fas fa-repeat"></i></div>
+                <h3><?= $fr ? 'Routes récurrentes' : 'Recurring Routes' ?></h3>
+                <p><?= $fr ? 'Configurez des routes de livraison récurrentes pour votre réapprovisionnement régulier - sans devoir soumettre une nouvelle demande à chaque fois.' : 'Set up recurring delivery routes for regular resupply - no need to submit a new request every time.' ?></p>
             </div>
         </div>
     </div>
@@ -535,17 +616,17 @@ $pageTitle = $fr ? 'Portail Distribution - OCSAPP' : 'Business Central - OCSAPP'
                 <div class="bc-step">
                     <div class="bc-step-num">1</div>
                     <h3><?= $fr ? 'Inscrivez-vous' : 'Register' ?></h3>
-                    <p><?= $fr ? 'Créez votre compte entreprise gratuit en quelques minutes.' : 'Create your free business account in minutes.' ?></p>
+                    <p><?= $fr ? 'Créez votre compte entreprise vérifié par NEQ en quelques minutes.' : 'Create your NEQ-verified business account in minutes.' ?></p>
                 </div>
                 <div class="bc-step">
                     <div class="bc-step-num">2</div>
-                    <h3><?= $fr ? 'Soumettez une demande' : 'Submit a Request' ?></h3>
-                    <p><?= $fr ? 'Envoyez votre liste d\'achats avec les magasins préférés et les détails de livraison.' : 'Send your shopping list with preferred stores and delivery details.' ?></p>
+                    <h3><?= $fr ? 'Demandez ou automatisez' : 'Request or Automate' ?></h3>
+                    <p><?= $fr ? 'Soumettez une demande d\'approvisionnement ponctuelle ou configurez une route récurrente avec vos fournisseurs et votre calendrier de livraison.' : 'Submit a one-time procurement request, or set up a recurring route with your suppliers and delivery schedule.' ?></p>
                 </div>
                 <div class="bc-step">
                     <div class="bc-step-num">3</div>
-                    <h3><?= $fr ? 'Recevez votre livraison' : 'Get Delivered' ?></h3>
-                    <p><?= $fr ? 'Nous achetons et livrons. Suivez votre commande en temps réel.' : 'We shop and deliver. Track your order in real time.' ?></p>
+                    <h3><?= $fr ? 'Suivez et recevez' : 'Track & Receive' ?></h3>
+                    <p><?= $fr ? 'Suivez votre expédition en direct par GPS, recevez vos documents (BC, BL, facture) et payez en ligne en toute sécurité.' : 'Track your shipment live via GPS, receive your PO/SO/invoice documents, and pay securely online.' ?></p>
                 </div>
             </div>
         </div>
@@ -557,35 +638,136 @@ $pageTitle = $fr ? 'Portail Distribution - OCSAPP' : 'Business Central - OCSAPP'
         <p class="bc-section-sub"><?= $fr ? 'Des outils conçus pour les entreprises modernes' : 'Tools built for modern businesses' ?></p>
         <div class="bc-features">
             <div class="bc-feature">
-                <div class="bc-feature-icon" style="background:#dcfce7;color:#15803d;"><i class="fas fa-shopping-bag"></i></div>
-                <h3><?= $fr ? 'Achats personnalisés' : 'Personal Shopping' ?></h3>
-                <p><?= $fr ? 'Nous achetons exactement ce que vous demandez - marque, taille et quantité précisées.' : 'We buy exactly what you ask for - specific brand, size, and quantity.' ?></p>
+                <div class="bc-feature-icon" style="background:#dcfce7;color:#15803d;"><i class="fas fa-boxes-stacked"></i></div>
+                <h3><?= $fr ? 'Approvisionnement multi-fournisseurs' : 'Multi-Supplier Procurement' ?></h3>
+                <p><?= $fr ? 'Soumettez une seule demande couvrant plusieurs fournisseurs - OCSAPP coordonne l\'approvisionnement et consolide la livraison.' : 'Submit one request across multiple suppliers - OCSAPP coordinates sourcing and consolidates delivery.' ?></p>
             </div>
             <div class="bc-feature">
-                <div class="bc-feature-icon" style="background:#dbeafe;color:#1d4ed8;"><i class="fas fa-bolt"></i></div>
-                <h3><?= $fr ? 'Livraison le jour même' : 'Same-Day Delivery' ?></h3>
-                <p><?= $fr ? 'Commandez avant midi, recevez avant la fin de journée. Urgent? Nous nous adaptons.' : 'Order by noon, receive before end of day. Urgent? We\'ll make it work.' ?></p>
-            </div>
-            <div class="bc-feature">
-                <div class="bc-feature-icon" style="background:#d1fae5;color:#065f46;"><i class="fas fa-leaf"></i></div>
-                <h3><?= $fr ? 'Livraison écologique' : 'Eco-Friendly Delivery' ?></h3>
-                <p><?= $fr ? 'Notre réseau minimise l\'empreinte carbone. Logistique durable pour des entreprises responsables.' : 'Our network minimizes carbon footprint. Sustainable logistics for conscious businesses.' ?></p>
-            </div>
-            <div class="bc-feature">
-                <div class="bc-feature-icon" style="background:#fef3c7;color:#b45309;"><i class="fas fa-chart-line"></i></div>
-                <h3><?= $fr ? 'Tableau de bord entreprise' : 'Business Dashboard' ?></h3>
-                <p><?= $fr ? 'Suivez toutes vos commandes, historique et dépenses depuis votre portail en ligne.' : 'Track all your orders, history, and spending from your online portal.' ?></p>
+                <div class="bc-feature-icon" style="background:#dbeafe;color:#1d4ed8;"><i class="fas fa-repeat"></i></div>
+                <h3><?= $fr ? 'Routes de livraison récurrentes' : 'Recurring Delivery Routes' ?></h3>
+                <p><?= $fr ? 'Automatisez votre réapprovisionnement régulier avec des routes récurrentes - mettez en pause, reprenez ou ajustez à tout moment.' : 'Automate regular resupply with scheduled recurring routes - pause, resume, or adjust anytime.' ?></p>
             </div>
             <div class="bc-feature">
                 <div class="bc-feature-icon" style="background:#ede9fe;color:#7c3aed;"><i class="fas fa-map-marker-alt"></i></div>
-                <h3><?= $fr ? 'Suivi en temps réel' : 'Real-Time Tracking' ?></h3>
-                <p><?= $fr ? 'Sachez exactement où est votre livraison à chaque étape du processus.' : 'Know exactly where your delivery is at every step of the process.' ?></p>
+                <h3><?= $fr ? 'Expéditions suivies par GPS' : 'GPS-Tracked Shipments' ?></h3>
+                <p><?= $fr ? 'Suivez chaque expédition en direct, de la collecte à la livraison, avec confirmation de preuve de livraison.' : 'Track every shipment live from pickup to delivery, with proof-of-delivery confirmation.' ?></p>
+            </div>
+            <div class="bc-feature">
+                <div class="bc-feature-icon" style="background:#fef3c7;color:#b45309;"><i class="fas fa-file-invoice"></i></div>
+                <h3><?= $fr ? 'Documents BC, BL &amp; facture' : 'PO, SO &amp; Invoice Documents' ?></h3>
+                <p><?= $fr ? 'Bons de commande, bons de livraison et factures générés automatiquement - prêts en PDF pour vos dossiers.' : 'Purchase orders, sales orders, and invoices generated automatically - PDF-ready for your records.' ?></p>
+            </div>
+            <div class="bc-feature">
+                <div class="bc-feature-icon" style="background:#d1fae5;color:#065f46;"><i class="fas fa-credit-card"></i></div>
+                <h3><?= $fr ? 'Paiements en ligne sécurisés' : 'Secure Online Payments' ?></h3>
+                <p><?= $fr ? 'Payez en toute sécurité par carte via Stripe, avec une facturation détaillée claire - aucun frais caché.' : 'Pay securely by card via Stripe, with clear itemized invoicing - no hidden fees.' ?></p>
             </div>
             <div class="bc-feature">
                 <div class="bc-feature-icon" style="background:#fee2e2;color:#dc2626;"><i class="fas fa-headset"></i></div>
-                <h3><?= $fr ? 'Support dédié' : 'Dedicated Support' ?></h3>
-                <p><?= $fr ? 'Une équipe dédiée pour répondre à vos questions et résoudre tout problème rapidement.' : 'A dedicated team to answer questions and resolve any issues quickly.' ?></p>
+                <h3><?= $fr ? 'Support de compte dédié' : 'Dedicated Account Support' ?></h3>
+                <p><?= $fr ? 'Une équipe dédiée et une messagerie intégrée pour répondre à vos questions et résoudre tout problème rapidement.' : 'A dedicated team and built-in messaging to answer questions and resolve any issues quickly.' ?></p>
             </div>
+        </div>
+    </div>
+
+    <!-- Pricing -->
+    <div class="bc-section">
+        <h2 class="bc-section-title"><?= $fr ? 'Deux façons de travailler avec nous' : 'Two Ways to Work With Us' ?></h2>
+        <p class="bc-section-sub"><?= $fr ? 'Approvisionnez-vous auprès de notre réseau de fournisseurs, ou utilisez notre réseau de livraison pour vos propres produits - ou les deux.' : 'Source products through our supplier network, or use our delivery network for goods you already have - or both.' ?></p>
+
+        <div class="packages-grid">
+
+            <div class="pkg-card pkg-ess">
+                <div class="pkg-name"><?= $fr ? 'Approvisionnement' : 'Procurement' ?></div>
+                <div class="pkg-desc"><?= $fr ? 'Inclus gratuitement avec tout compte entreprise' : 'Included free with every business account' ?></div>
+                <div class="pkg-price">
+                    <span class="pkg-price-num"><?= $fr ? 'Gratuit' : 'Free' ?></span>
+                    <span class="pkg-price-lbl"><?= $fr ? 'pour commencer' : 'to start' ?></span>
+                </div>
+                <div class="pkg-rate">
+                    <span class="pkg-rate-num">1%</span>
+                    <span class="pkg-rate-lbl"><?= $fr ? 'frais approvisionnement' : 'procurement fee' ?></span>
+                </div>
+                <hr class="pkg-divider">
+                <ul class="pkg-features">
+                    <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Demandes multi-fournisseurs' : 'Multi-supplier procurement requests' ?></li>
+                    <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Documents BC, BL &amp; facture' : 'PO, SO &amp; invoice documents' ?></li>
+                    <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Paiements en ligne sécurisés' : 'Secure online payments' ?></li>
+                    <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Tableau de bord &amp; messagerie' : 'Dashboard &amp; messaging' ?></li>
+                </ul>
+                <a href="<?= url('distribution/register') ?>" class="pkg-cta outline"><?= $fr ? 'Inscription gratuite' : 'Sign Up Free' ?></a>
+            </div>
+
+            <div class="pkg-card pkg-exp">
+                <div class="pkg-name"><?= $fr ? 'Débutant' : 'Starter' ?></div>
+                <div class="pkg-desc"><?= $fr ? 'Distribution pour vos propres produits' : 'Distribution for your own products' ?></div>
+                <div class="pkg-price">
+                    <span class="pkg-price-num">$49</span>
+                    <span class="pkg-price-lbl"><?= $fr ? 'par mois' : 'per month' ?></span>
+                </div>
+                <div class="pkg-rate">
+                    <span class="pkg-rate-num">5%</span>
+                    <span class="pkg-rate-lbl"><?= $fr ? 'frais distribution' : 'distribution fee' ?></span>
+                </div>
+                <hr class="pkg-divider">
+                <ul class="pkg-features">
+                    <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Expéditions suivies par GPS' : 'GPS-tracked shipments' ?></li>
+                    <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Intégration livraison locale' : 'Local delivery integration' ?></li>
+                </ul>
+                <a href="<?= url('distribution/register') ?>" class="pkg-cta"><?= $fr ? 'Commencer' : 'Get Started' ?></a>
+            </div>
+
+            <div class="pkg-card pkg-pre">
+                <div class="pkg-popular"><?= $fr ? 'Le plus populaire' : 'Most Popular' ?></div>
+                <div class="pkg-name">Pro</div>
+                <div class="pkg-desc"><?= $fr ? 'Distribution pour PME en croissance' : 'Distribution for growing SMEs' ?></div>
+                <div class="pkg-price">
+                    <span class="pkg-price-num">$179</span>
+                    <span class="pkg-price-lbl"><?= $fr ? 'par mois' : 'per month' ?></span>
+                </div>
+                <div class="pkg-rate">
+                    <span class="pkg-rate-num">7%</span>
+                    <span class="pkg-rate-lbl"><?= $fr ? 'frais distribution' : 'distribution fee' ?></span>
+                </div>
+                <hr class="pkg-divider">
+                <ul class="pkg-features">
+                    <li class="inherited"><i class="fas fa-layer-group"></i> <?= $fr ? 'Tout ce que Débutant inclut' : 'Everything in Starter' ?></li>
+                    <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Routes de livraison récurrentes' : 'Recurring delivery routes' ?></li>
+                    <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Support multi-emplacements' : 'Multi-location support' ?></li>
+                    <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Routage dédié' : 'Dedicated routing' ?></li>
+                    <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Analytiques avancées' : 'Advanced analytics' ?></li>
+                </ul>
+                <a href="<?= url('distribution/register') ?>" class="pkg-cta"><?= $fr ? 'Commencer' : 'Get Started' ?></a>
+            </div>
+
+            <div class="pkg-card pkg-ent">
+                <div class="pkg-name">Enterprise</div>
+                <div class="pkg-desc"><?= $fr ? 'Distribution sur mesure, grande échelle' : 'Custom distribution, large scale' ?></div>
+                <div class="pkg-price">
+                    <span class="pkg-price-num" style="font-size:18px;white-space:nowrap"><?= $fr ? 'Sur devis' : 'Custom quote' ?></span>
+                    <span class="pkg-price-lbl"><?= $fr ? 'par mois' : 'per month' ?></span>
+                </div>
+                <div class="pkg-rate">
+                    <span class="pkg-rate-num" style="font-size:16px;white-space:nowrap"><?= $fr ? 'Prix sur demande' : 'Price upon request' ?></span>
+                    <span class="pkg-rate-lbl"><?= $fr ? 'frais distribution' : 'distribution fee' ?></span>
+                </div>
+                <hr class="pkg-divider">
+                <ul class="pkg-features">
+                    <li class="inherited"><i class="fas fa-layer-group"></i> <?= $fr ? 'Tout ce que Pro inclut' : 'Everything in Pro' ?></li>
+                    <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Accès API complet' : 'Full API access' ?></li>
+                    <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Support logistique dédié' : 'Dedicated logistics support' ?></li>
+                    <li><i class="fas fa-check-circle"></i> <?= $fr ? 'SLA personnalisés' : 'Custom SLAs' ?></li>
+                    <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Équipe de compte dédiée' : 'Dedicated account team' ?></li>
+                </ul>
+                <a href="mailto:info@ocsapp.ca?subject=Enterprise%20Distribution%20Inquiry" class="pkg-cta"><?= $fr ? 'Nous contacter' : 'Contact Us' ?></a>
+            </div>
+
+        </div>
+
+        <div class="bc-price-note">
+            <?= $fr
+                ? '<strong>Remarque :</strong> Vous pouvez utiliser Approvisionnement seul, Distribution seul, ou les deux ensemble sur le même compte entreprise. Une livraison forfaitaire de 19$ (Île de Montréal Ouest), 21$ (Laval) ou 24$ (noyau du Grand Montréal), selon la zone, est incluse avec tous les forfaits. Le frais distribution est le taux de base (Île de Montréal Ouest); il est ajusté selon la zone de livraison (+12,5 % à Laval, +25 % dans le noyau du Grand Montréal). Pour Distribution, les frais de traitement des paiements (2,9 % + 0,30 $ CAD) sont absorbés par le compte entreprise et déduits du montant net avant versement.'
+                : '<strong>Note:</strong> You can use Procurement alone, Distribution alone, or both together on the same business account. A flat delivery fee of $19 (West Island), $21 (Laval), or $24 (Greater Montreal core), depending on zone, is included with all packages. The distribution fee shown is the base (West Island) rate; it is zone-adjusted upward in Laval (+12.5%) and Greater Montreal core (+25%). For Distribution, payment processing fees (2.9% + $0.30 CAD) are absorbed by the business account and deducted from net proceeds before payout.' ?>
         </div>
     </div>
 
@@ -593,7 +775,7 @@ $pageTitle = $fr ? 'Portail Distribution - OCSAPP' : 'Business Central - OCSAPP'
     <div class="bc-alt-bg">
         <div class="bc-section">
             <h2 class="bc-section-title"><?= $fr ? 'Des entreprises qui nous font confiance' : 'Businesses That Trust Us' ?></h2>
-            <p class="bc-section-sub"><?= $fr ? 'De tous les secteurs, à travers le Canada' : 'Across all industries, across Canada' ?></p>
+            <p class="bc-section-sub"><?= $fr ? 'De tous les secteurs, dans le West Island et en expansion' : 'Across all industries, in the West Island and expanding' ?></p>
             <div class="bc-chips">
                 <span class="bc-chip"><i class="fas fa-utensils" style="color:#00b207;margin-right:6px;"></i><?= $fr ? 'Restaurants' : 'Restaurants' ?></span>
                 <span class="bc-chip"><i class="fas fa-briefcase" style="color:#00b207;margin-right:6px;"></i><?= $fr ? 'Bureaux' : 'Offices' ?></span>
@@ -603,7 +785,7 @@ $pageTitle = $fr ? 'Portail Distribution - OCSAPP' : 'Business Central - OCSAPP'
                 <span class="bc-chip"><i class="fas fa-graduation-cap" style="color:#00b207;margin-right:6px;"></i><?= $fr ? 'Éducation' : 'Education' ?></span>
             </div>
             <div class="bc-quote">
-                <p>"<?= $fr ? 'OCSAPP gère toutes nos courses chez Costco. Ça nous fait gagner des heures chaque semaine et la livraison est toujours ponctuelle.' : 'OCSAPP handles all our Costco runs. It saves us hours every week and the delivery is always on time.' ?>"</p>
+                <p>"<?= $fr ? 'OCSAPP consolide nos commandes auprès de plusieurs fournisseurs en une seule expédition, et nous pouvons tout suivre de la collecte à la livraison. Ça a coupé notre temps d\'administration d\'approvisionnement de moitié.' : 'OCSAPP consolidates our supplier orders into one shipment, and we can track everything from pickup to delivery. It has cut our procurement admin time in half.' ?>"</p>
                 <span><?= $fr ? '- Responsable des opérations, Restaurant local' : '- Operations Manager, Local Restaurant' ?></span>
             </div>
         </div>
@@ -618,27 +800,35 @@ $pageTitle = $fr ? 'Portail Distribution - OCSAPP' : 'Business Central - OCSAPP'
             $faqs = [
                 [
                     'q' => $fr ? 'Comment puis-je inscrire mon entreprise?' : 'How do I register my business?',
-                    'a' => $fr ? 'Cliquez sur "Inscrire votre entreprise", remplissez le formulaire en quelques minutes et votre compte est actif immédiatement.' : 'Click "Register Your Business", fill out the form in a few minutes, and your account is active right away.',
+                    'a' => $fr ? 'Cliquez sur "Inscrire votre entreprise", complétez la vérification NEQ et votre compte est activé une fois approuvé.' : 'Click "Register Your Business", complete NEQ verification, and your account is active once approved.',
                 ],
                 [
-                    'q' => $fr ? 'Dans quels magasins faites-vous les achats?' : 'Which stores do you shop at?',
-                    'a' => $fr ? 'Nous travaillons avec Costco, Walmart, épiceries, pharmacies, quincailleries et pratiquement tout autre commerce de détail selon votre demande.' : 'We work with Costco, Walmart, grocery stores, pharmacies, hardware stores, and virtually any retail store on request.',
+                    'q' => $fr ? 'Comment fonctionne l\'approvisionnement?' : 'How does procurement work?',
+                    'a' => $fr ? 'Soumettez une demande listant les produits et quantités dont vous avez besoin. OCSAPP s\'approvisionne auprès de vos fournisseurs, consolide la commande et confirme les prix avant l\'expédition.' : 'Submit a request listing the products and quantities you need. OCSAPP sources from your suppliers, consolidates the order, and confirms pricing before anything ships.',
+                ],
+                [
+                    'q' => $fr ? 'Puis-je configurer des livraisons récurrentes?' : 'Can I set up recurring deliveries?',
+                    'a' => $fr ? 'Oui, avec le forfait Distribution Pro ou supérieur - configurez une route récurrente pour automatiser votre réapprovisionnement selon le calendrier de votre choix. Mettez en pause, reprenez ou annulez à tout moment depuis votre tableau de bord.' : 'Yes, with the Distribution Pro plan or higher - set up a recurring route to automate resupply on a schedule you choose. Pause, resume, or cancel anytime from your dashboard.',
                 ],
                 [
                     'q' => $fr ? 'Combien ça coûte?' : 'How much does it cost?',
-                    'a' => $fr ? 'Vous payez le coût des articles plus des frais de service transparents - aucun abonnement mensuel, aucun frais caché. Le détail des frais vous est communiqué avant confirmation.' : 'You pay the item cost plus transparent service fees - no monthly subscription, no hidden charges. Fee details are shown before you confirm.',
+                    'a' => $fr ? 'Approvisionnement est gratuit (1 % de frais d\'approvisionnement, aucun abonnement mensuel) - nous nous approvisionnons auprès de nos fournisseurs pour vous. Distribution est un service séparé pour vos propres produits, avec des forfaits Débutant, Pro et Enterprise - consultez la section Forfaits ci-dessus pour les frais exacts. Utilisez l\'un, l\'autre, ou les deux. Aucune majoration cachée sur les produits.' : 'Procurement is free (1% procurement fee, no monthly subscription) - we source products from our suppliers on your behalf. Distribution is a separate service for delivering your own products, with Starter, Pro, and Enterprise plans - see the Plans section above for exact fees. Use one, the other, or both. There is no hidden markup on goods.',
                 ],
                 [
-                    'q' => $fr ? 'Puis-je suivre ma commande en temps réel?' : 'Can I track my order in real time?',
-                    'a' => $fr ? 'Oui. Votre tableau de bord affiche les mises à jour en direct de chaque étape - achats, transit, livraison.' : 'Yes. Your dashboard shows live updates at every stage - shopping, transit, delivery.',
+                    'q' => $fr ? 'Puis-je suivre mon expédition en temps réel?' : 'Can I track my shipment in real time?',
+                    'a' => $fr ? 'Oui. Chaque expédition est suivie par GPS de la collecte à la livraison, avec des mises à jour en direct dans votre tableau de bord.' : 'Yes. Every shipment is GPS-tracked from pickup to delivery, with live status updates in your dashboard.',
                 ],
                 [
-                    'q' => $fr ? 'Que se passe-t-il si un article est indisponible?' : 'What if an item is out of stock?',
-                    'a' => $fr ? 'Nous vous contactons immédiatement pour proposer un substitut ou annuler l\'article. Vous avez toujours le dernier mot.' : 'We contact you immediately to suggest a substitute or remove the item. You always have the final say.',
+                    'q' => $fr ? 'Comment fonctionne le paiement?' : 'How do I pay for orders?',
+                    'a' => $fr ? 'Payez en toute sécurité en ligne via Stripe une fois votre expédition confirmée. Vous recevez un bon de commande, un bon de livraison et une facture pour chaque transaction.' : 'Pay securely online via Stripe once your shipment is confirmed. You will receive a PO, sales order, and invoice for every transaction.',
+                ],
+                [
+                    'q' => $fr ? 'Que se passe-t-il si un fournisseur ne peut pas fournir un article?' : 'What if a supplier can\'t fulfill an item?',
+                    'a' => $fr ? 'Nous vous contactons immédiatement pour approuver un substitut ou ajuster la commande avant l\'expédition. Vous avez toujours le dernier mot.' : 'We contact you immediately so you can approve a substitute or adjust the order before it ships. You always have the final say.',
                 ],
                 [
                     'q' => $fr ? 'Quelles zones sont desservies?' : 'Which areas do you serve?',
-                    'a' => $fr ? 'Nous desservons actuellement les zones métropolitaines canadiennes. Contactez-nous pour vérifier la disponibilité dans votre région.' : 'We currently serve Canadian metropolitan areas. Contact us to verify availability in your region.',
+                    'a' => $fr ? 'Nous desservons actuellement l\'Île de Montréal Ouest, avec une expansion prévue à Laval et au noyau du Grand Montréal. Contactez-nous pour vérifier la disponibilité dans votre région.' : 'We currently serve the West Island, with expansion planned to Laval and the Greater Montreal core. Contact us to verify availability in your area.',
                 ],
             ];
             foreach ($faqs as $i => $faq): ?>
@@ -668,8 +858,8 @@ $pageTitle = $fr ? 'Portail Distribution - OCSAPP' : 'Business Central - OCSAPP'
 
     <!-- CTA -->
     <section class="bc-cta">
-        <h2><?= $fr ? 'Prêt à simplifier votre approvisionnement?' : 'Ready to Simplify Your Procurement?' ?></h2>
-        <p><?= $fr ? 'Rejoignez les entreprises canadiennes qui font confiance à OCSAPP. Créez votre compte gratuitement dès aujourd\'hui.' : 'Join Canadian businesses that trust OCSAPP. Create your free account today.' ?></p>
+        <h2><?= $fr ? 'Prêt à simplifier votre distribution?' : 'Ready to Simplify Your Distribution?' ?></h2>
+        <p><?= $fr ? 'Rejoignez les entreprises canadiennes qui font confiance à OCSAPP pour leur approvisionnement, leurs expéditions et leurs routes récurrentes.' : 'Join Canadian businesses that trust OCSAPP for procurement, shipments, and recurring routes.' ?></p>
         <div class="bc-cta-btns">
             <a href="<?= url('distribution/register') ?>" class="bc-cta-btn-primary">
                 <i class="fas fa-building"></i>

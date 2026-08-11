@@ -75,33 +75,11 @@ class SupplierProductController {
     }
 
     public function create(): void {
-        $supplierId = $this->checkAuth();
+        $this->checkAuth();
 
-        try {
-            $db = \Database::getConnection();
-
-            // Get marketplace products this supplier has previously supplied
-            $stmt = $db->prepare("
-                SELECT DISTINCT p.id, p.name, p.sku
-                FROM products p
-                INNER JOIN supplier_products sp ON sp.marketplace_product_id = p.id
-                WHERE sp.supplier_id = ? AND p.status = 'active'
-                ORDER BY p.name ASC
-            ");
-            $stmt->execute([$supplierId]);
-            $marketplaceProducts = $stmt->fetchAll();
-
-            view('supplier.products.create', [
-                'pageTitle' => 'Add New Product',
-                'marketplaceProducts' => $marketplaceProducts
-            ]);
-        } catch (\PDOException $e) {
-            logger("Supplier product create page error: " . $e->getMessage(), 'error');
-            view('supplier.products.create', [
-                'pageTitle' => 'Add New Product',
-                'marketplaceProducts' => []
-            ]);
-        }
+        view('supplier.products.create', [
+            'pageTitle' => 'Add New Product'
+        ]);
     }
 
     public function store(): void {
@@ -114,9 +92,6 @@ class SupplierProductController {
 
         try {
             $db = \Database::getConnection();
-
-            $marketplaceProductId = post('marketplace_product_id');
-            $marketplaceProductId = $marketplaceProductId ? (int)$marketplaceProductId : null;
 
             // Handle image upload
             $imagePath = null;
@@ -157,14 +132,13 @@ class SupplierProductController {
 
             $stmt = $db->prepare("
                 INSERT INTO supplier_products (
-                    supplier_id, marketplace_product_id, product_name, image, sku, description, unit_price,
+                    supplier_id, product_name, image, sku, description, unit_price,
                     weight_kg, unit, minimum_order_quantity, stock_quantity, lead_time_days, is_available, notes
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
 
             $stmt->execute([
                 $supplierId,
-                $marketplaceProductId,
                 post('product_name'),
                 $imagePath,
                 post('sku'),
@@ -212,20 +186,8 @@ class SupplierProductController {
                 redirect(url('supplier/products'));
             }
 
-            // Get marketplace products this supplier has previously supplied
-            $stmt = $db->prepare("
-                SELECT DISTINCT p.id, p.name, p.sku
-                FROM products p
-                INNER JOIN supplier_products sp ON sp.marketplace_product_id = p.id
-                WHERE sp.supplier_id = ? AND p.status = 'active'
-                ORDER BY p.name ASC
-            ");
-            $stmt->execute([$supplierId]);
-            $marketplaceProducts = $stmt->fetchAll();
-
             view('supplier.products.edit', [
                 'product' => $product,
-                'marketplaceProducts' => $marketplaceProducts,
                 'pageTitle' => 'Edit Product'
             ]);
 
@@ -263,9 +225,6 @@ class SupplierProductController {
             if (!$currentProduct) {
                 throw new \Exception('Product not found');
             }
-
-            $marketplaceProductId = post('marketplace_product_id');
-            $marketplaceProductId = $marketplaceProductId ? (int)$marketplaceProductId : null;
 
             // Handle image upload
             $imagePath = $currentProduct['image']; // Keep current image by default
@@ -313,7 +272,6 @@ class SupplierProductController {
 
             $stmt = $db->prepare("
                 UPDATE supplier_products SET
-                    marketplace_product_id = ?,
                     product_name = ?,
                     image = ?,
                     sku = ?,
@@ -330,7 +288,6 @@ class SupplierProductController {
             ");
 
             $stmt->execute([
-                $marketplaceProductId,
                 post('product_name'),
                 $imagePath,
                 post('sku'),

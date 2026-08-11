@@ -383,10 +383,7 @@ class DriverApiController
             // Calculate payout if not already set by admin
             $payout = (float)($order['driver_payout'] ?? 0);
             if ($payout <= 0) {
-                $payout = $this->calculatePayout(
-                    (float)($order['delivery_fee'] ?? 0),
-                    (float)($order['distance_km'] ?? 0)
-                );
+                $payout = $this->calculatePayout((float)($order['delivery_fee'] ?? 0));
             }
 
             $this->db->prepare(
@@ -2614,20 +2611,16 @@ class DriverApiController
      *
      * Rates (configurable via env):
      *   DRIVER_BASE_PAY      — minimum base pay per delivery (default $5.00)
-     *   DRIVER_PER_KM_RATE   — bonus per km (default $0.50)
-     *   DRIVER_PLATFORM_CUT  — platform commission 0–1 (default 0.20 = 20%)
+     *   DRIVER_PLATFORM_CUT  — platform commission 0–1 (default 0.30 = 30%)
      */
-    private function calculatePayout(float $orderDeliveryFee, float $distanceKm): float
+    private function calculatePayout(float $orderDeliveryFee): float
     {
         $basePay      = (float)(getenv('DRIVER_BASE_PAY')     ?: 5.00);
-        $perKmRate    = (float)(getenv('DRIVER_PER_KM_RATE')  ?: 0.50);
-        $platformCut  = (float)(getenv('DRIVER_PLATFORM_CUT') ?: 0.20);
+        $platformCut  = (float)(getenv('DRIVER_PLATFORM_CUT') ?: 0.30);
 
         // Use whichever is higher: configured base or the order's own delivery_fee
-        $base         = max($basePay, $orderDeliveryFee);
-        $distanceBonus = round($distanceKm * $perKmRate, 2);
-        $gross         = $base + $distanceBonus;
-        $net           = round($gross * (1 - $platformCut), 2);
+        $base = max($basePay, $orderDeliveryFee);
+        $net  = round($base * (1 - $platformCut), 2);
 
         return max($net, $basePay * (1 - $platformCut)); // floor at base minus commission
     }
@@ -2669,7 +2662,7 @@ class DriverApiController
 
             if ($daRow) {
                 $basePay     = (float)(getenv('DRIVER_BASE_PAY')    ?: 5.00);
-                $platformCut = (float)(getenv('DRIVER_PLATFORM_CUT') ?: 0.20);
+                $platformCut = (float)(getenv('DRIVER_PLATFORM_CUT') ?: 0.30);
                 $commission  = round($payout / (1 - $platformCut) * $platformCut, 2);
                 $gross       = round($payout + $commission, 2);
 

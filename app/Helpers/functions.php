@@ -670,3 +670,62 @@ function getBackupSupplierProduct(int $supplierProductId, array $excludeIds = []
         return null;
     }
 }
+
+/**
+ * Resolve the retail delivery fee for a buyer's city.
+ *
+ * West Island is a region, not a single municipality, so it's matched against
+ * a fixed list of its member towns. Falls back to the flat config delivery_fee
+ * if the city doesn't match a known zone, or the zone lookup fails.
+ *
+ * @return array{fee: float, zone_code: ?string}
+ */
+function resolveDeliveryZoneFee(?string $city): array {
+    $appConfig = require BASE_PATH . '/config/app.php';
+    $fallback  = (float)($appConfig['delivery_fee'] ?? 5.00);
+
+    if (!$city) {
+        return ['fee' => $fallback, 'zone_code' => null];
+    }
+
+    $city = trim($city);
+
+    $westIslandTowns = [
+        'west island', 'kirkland', 'pointe-claire', 'pointe claire',
+        'dollard-des-ormeaux', 'dollard des ormeaux', 'ddo',
+        'beaconsfield', "baie-d'urfe", "baie-d'urfé", 'baie d\'urfe',
+        'sainte-anne-de-bellevue', 'ste-anne-de-bellevue', 'senneville',
+        'dorval', "l'ile-bizard", "l'île-bizard",
+    ];
+
+    $zoneCode = null;
+    $cityLower = mb_strtolower($city);
+
+    if (in_array($cityLower, $westIslandTowns, true)) {
+        $zoneCode = 'WI';
+    } elseif (str_contains($cityLower, 'laval')) {
+        $zoneCode = 'LAV';
+    } elseif (str_contains($cityLower, 'montreal') || str_contains($cityLower, 'montréal')) {
+        $zoneCode = 'MTL';
+    }
+
+    if (!$zoneCode) {
+        return ['fee' => $fallback, 'zone_code' => null];
+    }
+
+    try {
+        $db = \Database::getConnection();
+        $stmt = $db->prepare("SELECT base_fee FROM delivery_zones WHERE code = ? AND is_active = 1 LIMIT 1");
+        $stmt->execute([$zoneCode]);
+        $fee = $stmt->fetchColumn();
+
+        if ($fee === false) {
+            return ['fee' => $fallback, 'zone_code' => null];
+        }
+
+        return ['fee' => (float)$fee, 'zone_code' => $zoneCode];
+    } catch (\Exception $e) {
+        logger("resolveDeliveryZoneFee error: " . $e->getMessage(), 'error');
+        return ['fee' => $fallback, 'zone_code' => null];
+    }
+}

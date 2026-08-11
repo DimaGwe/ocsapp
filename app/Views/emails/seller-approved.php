@@ -249,7 +249,7 @@
                                     <td style="padding: 12px 0;">
                                         <span style="display: inline-block; width: 32px; height: 32px; background: linear-gradient(135deg, #00b207 0%, #009206 100%); color: white; border-radius: 50%; text-align: center; line-height: 32px; font-weight: 700; margin-right: 12px;">4</span>
                                         <strong style="color: #1f2937;">Start selling!</strong>
-                                        <p style="margin: 4px 0 0 44px; color: #6b7280; font-size: 14px;">Your products will be visible to thousands of buyers across Canada</p>
+                                        <p style="margin: 4px 0 0 44px; color: #6b7280; font-size: 14px;">Your products will be visible to thousands of buyers across the West Island, with Laval and Montreal core coming soon</p>
                                     </td>
                                 </tr>
                             </table>

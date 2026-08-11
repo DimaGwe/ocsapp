@@ -6,7 +6,7 @@ require_once __DIR__ . '/../Helpers/AdminPermissionHelper.php';
 
 /**
  * AdminShopController - Shop Management for Admin Panel
- * Handles shop approvals, status changes, and OCS Store management
+ * Handles shop approvals and status changes
  */
 class AdminShopController
 {
@@ -298,13 +298,6 @@ class AdminShopController
                 return;
             }
 
-            // Don't allow deletion of OCS Store (ID 1)
-            if ($shopId == 1) {
-                setFlash('error', 'Cannot delete OCS Store');
-                back();
-                return;
-            }
-
             // Delete shop inventory first
             $stmt = $this->db->prepare("DELETE FROM shop_inventory WHERE shop_id = ?");
             $stmt->execute([$shopId]);
@@ -323,128 +316,4 @@ class AdminShopController
         }
     }
 
-    /**
-     * Edit OCS Store (Shop ID 1)
-     */
-    public function editOcsStore(): void
-    {
-        try {
-            $stmt = $this->db->prepare("SELECT * FROM shops WHERE id = 1");
-            $stmt->execute();
-            $shop = $stmt->fetch(\PDO::FETCH_ASSOC);
-
-            if (!$shop) {
-                setFlash('error', 'OCS Store not found');
-                redirect('admin/shops');
-                return;
-            }
-
-            // Get inventory count
-            $stmt = $this->db->prepare("SELECT COUNT(*) as count FROM shop_inventory WHERE shop_id = 1");
-            $stmt->execute();
-            $inventoryCount = $stmt->fetch(\PDO::FETCH_ASSOC)['count'] ?? 0;
-
-            view('admin.shops.edit-ocs-store', compact('shop', 'inventoryCount'));
-
-        } catch (\Exception $e) {
-            error_log('Edit OCS Store Error: ' . $e->getMessage());
-            setFlash('error', 'Failed to load OCS Store');
-            redirect('admin/shops');
-        }
-    }
-
-    /**
-     * Update OCS Store
-     */
-    public function updateOcsStore(): void
-    {
-        if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
-            setFlash('error', 'Invalid request');
-            back();
-            return;
-        }
-
-        try {
-            $name = sanitize(post('name'));
-            $description = sanitize(post('description'));
-            $phone = sanitize(post('phone'));
-            $email = sanitize(post('email'));
-            $address = sanitize(post('address'));
-
-            // Handle file uploads
-            $logoPath = null;
-            $coverPath = null;
-
-            // Handle logo upload
-            if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
-                $uploadDir = __DIR__ . '/../../public/uploads/shops/';
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0755, true);
-                }
-
-                $extension = pathinfo($_FILES['logo']['name'], PATHINFO_EXTENSION);
-                $filename = 'ocs-store-logo-' . time() . '.' . $extension;
-                $filepath = $uploadDir . $filename;
-
-                if (move_uploaded_file($_FILES['logo']['tmp_name'], $filepath)) {
-                    $logoPath = 'uploads/shops/' . $filename;
-                }
-            }
-
-            // Handle cover image upload
-            if (isset($_FILES['cover_image']) && $_FILES['cover_image']['error'] === UPLOAD_ERR_OK) {
-                $uploadDir = __DIR__ . '/../../public/uploads/shops/';
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0755, true);
-                }
-
-                $extension = pathinfo($_FILES['cover_image']['name'], PATHINFO_EXTENSION);
-                $filename = 'ocs-store-cover-' . time() . '.' . $extension;
-                $filepath = $uploadDir . $filename;
-
-                if (move_uploaded_file($_FILES['cover_image']['tmp_name'], $filepath)) {
-                    $coverPath = 'uploads/shops/' . $filename;
-                }
-            }
-
-            // Build update query
-            if ($logoPath && $coverPath) {
-                $stmt = $this->db->prepare("
-                    UPDATE shops
-                    SET name = ?, description = ?, phone = ?, email = ?, address = ?, logo = ?, cover_image = ?
-                    WHERE id = 1
-                ");
-                $stmt->execute([$name, $description, $phone, $email, $address, $logoPath, $coverPath]);
-            } elseif ($logoPath) {
-                $stmt = $this->db->prepare("
-                    UPDATE shops
-                    SET name = ?, description = ?, phone = ?, email = ?, address = ?, logo = ?
-                    WHERE id = 1
-                ");
-                $stmt->execute([$name, $description, $phone, $email, $address, $logoPath]);
-            } elseif ($coverPath) {
-                $stmt = $this->db->prepare("
-                    UPDATE shops
-                    SET name = ?, description = ?, phone = ?, email = ?, address = ?, cover_image = ?
-                    WHERE id = 1
-                ");
-                $stmt->execute([$name, $description, $phone, $email, $address, $coverPath]);
-            } else {
-                $stmt = $this->db->prepare("
-                    UPDATE shops
-                    SET name = ?, description = ?, phone = ?, email = ?, address = ?
-                    WHERE id = 1
-                ");
-                $stmt->execute([$name, $description, $phone, $email, $address]);
-            }
-
-            setFlash('success', 'OCS Store updated successfully');
-            redirect('admin/ocs-store/edit');
-
-        } catch (\Exception $e) {
-            error_log('Update OCS Store Error: ' . $e->getMessage());
-            setFlash('error', 'Failed to update OCS Store');
-            back();
-        }
-    }
 }

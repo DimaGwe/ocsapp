@@ -1,0 +1,150 @@
+/* Marketplace Home Redesign - PREVIEW ONLY, additive to home.css */
+
+.preview-ribbon {
+  background: #1a1a1a;
+  color: #ffd54a;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  padding: 8px 12px;
+}
+
+/* Shop by Type - primary nav tiles */
+.shop-type-tiles {
+  margin: 30px auto;
+  max-width: 1280px;
+  padding: 0 20px;
+}
+
+.shop-type-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 16px;
+}
+
+.shop-type-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-decoration: none;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 24px 16px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.shop-type-tile:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  border-color: var(--primary);
+}
+
+.shop-type-icon {
+  font-size: 36px;
+  line-height: 1;
+}
+
+.shop-type-label {
+  font-weight: 700;
+  color: var(--gray-900);
+  font-size: 16px;
+  text-align: center;
+}
+
+.shop-type-count {
+  color: var(--gray-500);
+  font-size: 13px;
+}
+
+@media (max-width: 768px) {
+  .shop-type-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Featured Shops - ad-placement-ready section */
+.featured-shops-section {
+  background: linear-gradient(180deg, rgba(0, 178, 7, 0.04) 0%, rgba(0, 178, 7, 0) 100%);
+  border-radius: var(--radius-xl);
+  padding: 20px;
+}
+
+.featured-shop-card {
+  position: relative;
+}
+
+.shop-badge.featured-badge {
+  background: #f5a623;
+}
+
+/* New Arrivals badge */
+.product-badge.new-badge {
+  background: var(--primary);
+}
+
+/* Category taxonomy cards (goods + service verticals) - circular icon
+   treatment reused from .category-icon/.category-icon-placeholder */
+.taxonomy-card {
+  height: 100%;
+  background: transparent;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 16px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.taxonomy-card:hover .category-icon {
+  box-shadow: 0 12px 32px rgba(0, 178, 7, 0.35);
+  transform: scale(1.1);
+}
+
+.taxonomy-title {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--gray-900);
+}
+
+.taxonomy-desc {
+  font-size: 13px;
+  color: var(--gray-600);
+  line-height: 1.4;
+  margin: 0;
+  flex-grow: 1;
+}
+
+.taxonomy-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+}
+
+.taxonomy-fulfillment {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--primary-700);
+  background: rgba(0, 178, 7, 0.1);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  display: inline-block;
+  width: fit-content;
+}
+
+.taxonomy-count {
+  font-size: 12px;
+  color: var(--gray-500);
+  white-space: nowrap;
+}

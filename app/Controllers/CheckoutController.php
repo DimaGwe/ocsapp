@@ -157,8 +157,17 @@ class CheckoutController
             logger("Error fetching addresses: " . $e->getMessage(), 'error');
         }
         
-        $appConfig = require BASE_PATH . '/config/app.php';
-        $displayDeliveryFee = (float)($appConfig['delivery_fee'] ?? 5.00);
+        $defaultAddressCity = null;
+        foreach ($addresses as $addr) {
+            if ($addr['is_default']) {
+                $defaultAddressCity = $addr['city'];
+                break;
+            }
+        }
+        if ($defaultAddressCity === null && !empty($addresses)) {
+            $defaultAddressCity = $addresses[0]['city'];
+        }
+        $displayDeliveryFee = resolveDeliveryZoneFee($defaultAddressCity)['fee'];
 
         view('buyer/checkout', [
             'cartItems' => $cartItems,
@@ -269,8 +278,7 @@ class CheckoutController
                 $subtotal += $item['price'] * $item['quantity'];
             }
 
-            $config = require BASE_PATH . '/config/app.php';
-            $deliveryFee = (float)($config['delivery_fee'] ?? 5.00);
+            $deliveryFee = resolveDeliveryZoneFee($selectedAddress['city'] ?? null)['fee'];
             // Canadian tax: GST 5% + QST 9.975% = 14.975% (Quebec)
             $gstRate  = 0.05;
             $qstRate  = 0.09975;

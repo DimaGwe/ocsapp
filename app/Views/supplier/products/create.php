@@ -308,24 +308,6 @@ require dirname(__DIR__) . '/layout-header.php';
       </div>
     </div>
 
-    <div class="form-group">
-      <label for="marketplace_product_id" class="form-label">
-        <?= $fr ? 'Lier à un produit de la marketplace (optionnel)' : 'Link to Marketplace Product (Optional)' ?>
-      </label>
-      <select id="marketplace_product_id" name="marketplace_product_id" class="form-select">
-        <option value=""><?= $fr ? '-- Non lié --' : '-- Not Linked --' ?></option>
-        <?php if (!empty($marketplaceProducts)): ?>
-          <?php foreach ($marketplaceProducts as $mp): ?>
-            <option value="<?= $mp['id'] ?>">
-              <?= htmlspecialchars($mp['name']) ?>
-              <?= $mp['sku'] ? ' (' . htmlspecialchars($mp['sku']) . ')' : '' ?>
-            </option>
-          <?php endforeach; ?>
-        <?php endif; ?>
-      </select>
-      <p class="form-hint"><?= $fr ? 'Liez ce produit à un article de la marketplace pour activer les mises à jour automatiques du stock lors de la réception des bons de commande' : 'Link this to a product in the marketplace to enable automatic stock updates when purchase orders are received' ?></p>
-    </div>
-
     <div class="form-grid">
       <div class="form-group">
         <label for="sku" class="form-label">SKU</label>

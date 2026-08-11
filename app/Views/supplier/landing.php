@@ -209,8 +209,15 @@ $fr = $currentLang === 'fr';
     }
     .pkg-name { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
     .pkg-desc { font-size: 12px; color: rgba(255,255,255,.55); margin-bottom: 12px; line-height: 1.5; }
-    .pkg-rate { margin: 14px 0 0; }
-    .pkg-rate-num { font-size: 38px; font-weight: 900; line-height: 1; display: block; }
+    .pkg-price { margin: 14px 0 0; }
+    .pkg-price-num { font-size: 26px; font-weight: 900; line-height: 30px; display: block; }
+    .pkg-price-lbl { font-size: 11px; color: rgba(255,255,255,.45); font-weight: 600; text-transform: uppercase; letter-spacing: .8px; margin-top: 3px; display: block; }
+    .pkg-ess .pkg-price-num { color: #4ade80; }
+    .pkg-exp .pkg-price-num { color: #93c5fd; }
+    .pkg-pre .pkg-price-num { color: #c084fc; }
+    .pkg-ent .pkg-price-num { color: #94a3b8; }
+    .pkg-rate { margin: 10px 0 0; }
+    .pkg-rate-num { font-size: 26px; font-weight: 900; line-height: 30px; display: block; }
     .pkg-rate-lbl { font-size: 11px; color: rgba(255,255,255,.45); font-weight: 600; text-transform: uppercase; letter-spacing: .8px; margin-top: 3px; display: block; }
     .pkg-ess .pkg-rate-num { color: #4ade80; }
     .pkg-exp .pkg-rate-num { color: #93c5fd; }
@@ -352,8 +359,8 @@ $fr = $currentLang === 'fr';
     </h1>
     <p class="hero-sub">
       <?= $fr
-        ? 'Listez votre catalogue une fois. Laissez notre réseau de distribution et de vendeurs vous trouver. Recevez des bons de commande directement dans votre tableau de bord - la livraison prise en charge pour vous.'
-        : 'List your catalog once. Let our distribution and seller network find you. Receive purchase orders directly to your dashboard - with every delivery handled for you.' ?>
+        ? 'Listez votre catalogue une fois. Laissez notre réseau de distribution vous trouver. Recevez des bons de commande directement dans votre tableau de bord - la livraison prise en charge pour vous.'
+        : 'List your catalog once. Let our distribution network find you. Receive purchase orders directly to your dashboard - with every delivery handled for you.' ?>
     </p>
     <div class="hero-badges">
       <span class="hero-badge"><i class="fas fa-leaf"></i> <?= $fr ? 'Livraison zéro émission' : 'Zero-Emission Delivery' ?></span>
@@ -432,8 +439,8 @@ $fr = $currentLang === 'fr';
         <div class="pillar-icon">📦</div>
         <h3><?= $fr ? 'Listez une fois, vendez en continu' : 'List Once, Sell Continuously' ?></h3>
         <p><?= $fr
-          ? 'Ajoutez vos produits au catalogue OCSAPP une seule fois. Notre réseau de distribution et de vendeurs les trouve quand ils en ont besoin - et les bons de commande arrivent automatiquement dans votre tableau de bord.'
-          : 'Add your products to the OCSAPP catalog once. Our distribution and seller network finds them when they need them - and purchase orders land automatically in your dashboard.' ?></p>
+          ? 'Ajoutez vos produits au catalogue OCSAPP une seule fois. Notre réseau de distribution les trouve quand il en a besoin - et les bons de commande arrivent automatiquement dans votre tableau de bord.'
+          : 'Add your products to the OCSAPP catalog once. Our distribution network finds them when they need them - and purchase orders land automatically in your dashboard.' ?></p>
       </div>
       <div class="pillar-card b">
         <div class="pillar-num">2</div>
@@ -609,8 +616,12 @@ $fr = $currentLang === 'fr';
       <div class="pkg-card pkg-ess">
         <div class="pkg-name">Essential</div>
         <div class="pkg-desc"><?= $fr ? 'Tout ce qu\'il faut pour démarrer' : 'Everything you need to get started' ?></div>
+        <div class="pkg-price">
+          <span class="pkg-price-num"><?= $fr ? 'Gratuit' : 'Free' ?></span>
+          <span class="pkg-price-lbl"><?= $fr ? 'pour commencer' : 'to start' ?></span>
+        </div>
         <div class="pkg-rate">
-          <span class="pkg-rate-num">12%</span>
+          <span class="pkg-rate-num">8%</span>
           <span class="pkg-rate-lbl"><?= $fr ? 'taux de commission' : 'commission rate' ?></span>
         </div>
         <hr class="pkg-divider">
@@ -633,8 +644,12 @@ $fr = $currentLang === 'fr';
         <div class="pkg-popular"><?= $fr ? 'Le plus populaire' : 'Most Popular' ?></div>
         <div class="pkg-name">Experience</div>
         <div class="pkg-desc"><?= $fr ? 'Optimisez votre catalogue et votre équipe' : 'Optimize your catalog and team' ?></div>
+        <div class="pkg-price">
+          <span class="pkg-price-num">$49</span>
+          <span class="pkg-price-lbl"><?= $fr ? 'par mois' : 'per month' ?></span>
+        </div>
         <div class="pkg-rate">
-          <span class="pkg-rate-num">10%</span>
+          <span class="pkg-rate-num">6%</span>
           <span class="pkg-rate-lbl"><?= $fr ? 'taux de commission' : 'commission rate' ?></span>
         </div>
         <hr class="pkg-divider">
@@ -651,8 +666,12 @@ $fr = $currentLang === 'fr';
       <div class="pkg-card pkg-pre">
         <div class="pkg-name">Prestige</div>
         <div class="pkg-desc"><?= $fr ? 'Pour les fournisseurs à fort volume' : 'For high-volume suppliers' ?></div>
+        <div class="pkg-price">
+          <span class="pkg-price-num">$79</span>
+          <span class="pkg-price-lbl"><?= $fr ? 'par mois' : 'per month' ?></span>
+        </div>
         <div class="pkg-rate">
-          <span class="pkg-rate-num">8%</span>
+          <span class="pkg-rate-num">5%</span>
           <span class="pkg-rate-lbl"><?= $fr ? 'taux de commission' : 'commission rate' ?></span>
         </div>
         <hr class="pkg-divider">
@@ -669,8 +688,12 @@ $fr = $currentLang === 'fr';
       <div class="pkg-card pkg-ent">
         <div class="pkg-name"><?= $fr ? 'Entreprise' : 'Enterprise' ?></div>
         <div class="pkg-desc"><?= $fr ? 'Solutions sur mesure à grande échelle' : 'Custom solutions, large scale' ?></div>
+        <div class="pkg-price">
+          <span class="pkg-price-num" style="font-size:18px;white-space:nowrap"><?= $fr ? 'Sur devis' : 'Custom quote' ?></span>
+          <span class="pkg-price-lbl"><?= $fr ? 'par mois' : 'per month' ?></span>
+        </div>
         <div class="pkg-rate">
-          <span class="pkg-rate-num">6%</span>
+          <span class="pkg-rate-num" style="font-size:16px;white-space:nowrap"><?= $fr ? 'Prix sur demande' : 'Price upon request' ?></span>
           <span class="pkg-rate-lbl"><?= $fr ? 'taux de commission' : 'commission rate' ?></span>
         </div>
         <hr class="pkg-divider">
@@ -688,8 +711,12 @@ $fr = $currentLang === 'fr';
 
     <div class="plan-note">
       <?= $fr
-        ? '<strong>Remarque :</strong> Tous les nouveaux comptes démarrent sur <strong>Essential</strong> sans frais. Pour changer de forfait, contactez <strong>suppliers@ocsapp.ca</strong> ou votre gestionnaire de compte. Les changements prennent effet dans un délai d\'un jour ouvrable.'
-        : '<strong>Note:</strong> All new accounts start on <strong>Essential</strong> at no cost. To upgrade, contact <strong>suppliers@ocsapp.ca</strong> or your account manager. Changes take effect within one business day.' ?>
+        ? '<strong>Remarque :</strong> Tous les nouveaux comptes démarrent sur <strong>Essential</strong> sans frais. Les forfaits <strong>Experience</strong> (49$/mois) et <strong>Prestige</strong> (79$/mois) sont facturés mensuellement, en plus du taux de commission réduit. Pour changer de forfait, contactez <strong>suppliers@ocsapp.ca</strong> ou votre gestionnaire de compte. Les changements prennent effet dans un délai d\'un jour ouvrable.'
+        : '<strong>Note:</strong> All new accounts start on <strong>Essential</strong> at no cost. <strong>Experience</strong> ($49/mo) and <strong>Prestige</strong> ($79/mo) are billed monthly, in addition to their reduced commission rate. To upgrade, contact <strong>suppliers@ocsapp.ca</strong> or your account manager. Changes take effect within one business day.' ?>
+      <br><br>
+      <?= $fr
+        ? '<strong>Frais de traitement des paiements :</strong> Les frais standards de traitement (2,9 % + 0,30 $ CAD) sont absorbés par le fournisseur et déduits du montant net avant paiement, aux côtés de la commission - ils ne sont jamais ajoutés comme frais séparés à la facture de l\'acheteur.'
+        : '<strong>Payment processing fee:</strong> The standard processing fee (2.9% + $0.30 CAD) is absorbed by the supplier and deducted from net proceeds before payout, alongside commission - it is never added as a separate line on the buyer\'s invoice.' ?>
     </div>
   </div>
 </section>

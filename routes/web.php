@@ -19,6 +19,9 @@ return [
     // Marketplace Home
     'GET /home' => ['HomeController', 'index'],
 
+    // Marketplace Home Redesign Preview (local-only concept, not linked from nav)
+    'GET /home-redesign' => ['HomeController', 'homeRedesign'],
+
     // SEO - Sitemap & Robots
     'GET /sitemap.xml' => ['SeoController', 'sitemap'],
     'GET /robots.txt' => ['SeoController', 'robots'],
@@ -222,10 +225,6 @@ return [
     'POST /admin/shops/delete' => ['AdminShopController', 'delete'],
     'POST /admin/shops/toggle-status' => ['AdminShopController', 'toggleStatus'],
 
-    // OCS Store Management (Shop ID 1)
-    'GET /admin/ocs-store/edit' => ['AdminShopController', 'editOcsStore'],
-    'POST /admin/ocs-store/update' => ['AdminShopController', 'updateOcsStore'],
-
     // Categories Management
     'GET /admin/categories' => ['CategoryController', 'index'],
     'GET /admin/categories/create' => ['CategoryController', 'create'],
@@ -244,14 +243,6 @@ return [
     'GET /admin/email-log' => ['AdminEmailLogController', 'index'],
     'GET /admin/email-log/view' => ['AdminEmailLogController', 'view'],
 
-    // Products Management
-    'GET /admin/products' => ['ProductController', 'index'],
-    'GET /admin/products/create' => ['ProductController', 'create'],
-    'POST /admin/products/store' => ['ProductController', 'store'],
-    'GET /admin/products/edit' => ['ProductController', 'edit'],
-    'POST /admin/products/update' => ['ProductController', 'update'],
-    'POST /admin/products/delete' => ['ProductController', 'delete'],
-
     // Sales Management
     'GET /admin/sales' => ['AdminSalesController', 'index'],
     'GET /admin/sales/create' => ['AdminSalesController', 'create'],
@@ -260,22 +251,6 @@ return [
     'POST /admin/sales/update' => ['AdminSalesController', 'update'],
     'POST /admin/sales/end' => ['AdminSalesController', 'endSale'],
     'GET /admin/sales/process-scheduled' => ['AdminSalesController', 'processScheduledSales'],
-    'POST /admin/products/upload-images' => ['ProductController', 'uploadImages'],
-    'POST /admin/products/delete-image' => ['ProductController', 'deleteImage'],
-    'POST /admin/products/toggle-feature' => ['ProductController', 'toggleFeature'],
-
-    // Bulk Upload
-    'GET /admin/products/bulk-upload' => ['ProductController', 'bulkUpload'],
-    'GET /admin/products/bulk-upload/template' => ['ProductController', 'downloadTemplate'],
-    'POST /admin/products/bulk-upload/process' => ['ProductController', 'processBulkUpload'],
-
-    // Stock Management
-    'GET /admin/products/stock' => ['ProductController', 'stock'],
-    'POST /admin/products/update-stock' => ['ProductController', 'updateStock'],
-    'POST /admin/products/restock' => ['ProductController', 'restock'],
-    'GET /admin/products/stock/export' => ['ProductController', 'exportStock'],
-    'GET /admin/products/allocations' => ['ProductController', 'allocations'],
-    'GET /admin/products/stock-movements' => ['ProductController', 'stockMovements'],
 
     // Business Accounts Management (Distribution Portal)
     'GET /admin/business-accounts' => ['AdminBusinessController', 'index'],
@@ -362,10 +337,8 @@ return [
     'POST /admin/suppliers/reset-password' => ['SupplierController', 'resetPassword'],
     'POST /admin/suppliers/update-package' => ['SupplierController', 'updatePackage'],
 
-    // Purchase Orders
+    // Purchase Orders (driven by Distribution's auto-created supplier POs)
     'GET /admin/purchase-orders' => ['PurchaseOrderController', 'index'],
-    'GET /admin/purchase-orders/create' => ['PurchaseOrderController', 'create'],
-    'POST /admin/purchase-orders/store' => ['PurchaseOrderController', 'store'],
     'GET /admin/purchase-orders/view' => ['PurchaseOrderController', 'view'],
     'GET /admin/purchase-orders/receive' => ['PurchaseOrderController', 'receive'],
     'POST /admin/purchase-orders/process-receiving' => ['PurchaseOrderController', 'processReceiving'],
@@ -374,21 +347,6 @@ return [
     'POST /admin/purchase-orders/mark-picked-up' => ['PurchaseOrderController', 'markPickedUp'],
     'POST /admin/purchase-orders/update-tax' => ['PurchaseOrderController', 'updateTax'],
     'POST /admin/purchase-orders/{id}/notify-driver' => ['PurchaseOrderController', 'notifyPickupDriver'],
-
-    // Supplier Catalog Browser
-    'GET /admin/supplier-catalog' => ['SupplierCatalogController', 'browse'],
-    'POST /admin/supplier-catalog/add-to-draft' => ['SupplierCatalogController', 'addToDraft'],
-    'GET /admin/supplier-catalog/draft' => ['SupplierCatalogController', 'viewDraft'],
-    'POST /admin/supplier-catalog/update-draft-item' => ['SupplierCatalogController', 'updateDraftItem'],
-    'POST /admin/supplier-catalog/remove-draft-item' => ['SupplierCatalogController', 'removeDraftItem'],
-    'POST /admin/supplier-catalog/clear-draft' => ['SupplierCatalogController', 'clearDraft'],
-    'POST /admin/supplier-catalog/create-po-from-draft' => ['SupplierCatalogController', 'createPOFromDraft'],
-    'GET /admin/supplier-catalog/create-pos' => ['SupplierCatalogController', 'createPOs'],
-    'POST /admin/supplier-catalog/create-all-pos' => ['SupplierCatalogController', 'storeAllFromDraft'],
-    'GET /admin/supplier-catalog/alternatives'          => ['SupplierCatalogController', 'getAlternatives'],
-    'POST /admin/supplier-catalog/alternatives/add'     => ['SupplierCatalogController', 'addAlternative'],
-    'POST /admin/supplier-catalog/alternatives/remove'  => ['SupplierCatalogController', 'removeAlternative'],
-    'POST /admin/supplier-catalog/alternatives/reorder' => ['SupplierCatalogController', 'reorderAlternatives'],
 
     // Supplier Payables (Admin)
     'GET /admin/payables' => ['AdminPayablesController', 'index'],
