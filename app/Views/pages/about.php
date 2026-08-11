@@ -2,6 +2,8 @@
 /**
  * OCSAPP About Us Page
  * Bilingual: EN / FR
+ * Rebuilt 2026-08 from the approved "About Page Final" package (Updates.zip):
+ * ecosystem/six-Centrals positioning + "Where your data lives" disclosure.
  */
 $currentLang = $_SESSION['language'] ?? 'fr';
 $fr = ($currentLang === 'fr');
@@ -11,518 +13,328 @@ $fr = ($currentLang === 'fr');
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><?= $fr ? 'À propos - OCSAPP' : 'About Us - OCSAPP' ?></title>
+  <title><?= $fr ? "À propos d'OCSAPP - Achetez local, livré durablement" : "About OCSAPP - Shop Smart, Delivered Sustainably" ?></title>
   <meta name="description" content="<?= $fr
-    ? 'Découvrez OCSAPP - la marketplace locale qui connecte acheteurs, vendeurs, fournisseurs et chauffeurs au Québec.'
-    : 'Discover OCSAPP - the local marketplace connecting buyers, sellers, suppliers, and drivers across Quebec.' ?>">
+    ? "OCSAPP est une plateforme bilingue de commerce numérique et de logistique, née et bâtie au Québec - un écosystème, six Centrales connectées."
+    : "OCSAPP is a bilingual digital commerce and logistics platform, born and built in Québec - one ecosystem, six connected Centrals." ?>">
   <link rel="icon" type="image/png" href="<?= asset('images/logo.png') ?>">
   <meta name="theme-color" content="#00b207">
   <?= csrfMeta() ?>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="<?= asset('css/global.css') ?>">
   <link rel="stylesheet" href="<?= asset('css/components/header.css') ?>">
   <link rel="stylesheet" href="<?= asset('css/components/footer.css') ?>">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-  <style>
-    :root {
-      --green:      #00b207;
-      --green-dark: #007a05;
-      --neon:       #00ff88;
-      --text:       #374151;
-      --muted:      #6b7280;
-      --border:     #e5e7eb;
-      --light:      #f9fafb;
-    }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; color: var(--text); line-height: 1.65; }
-    a { text-decoration: none; }
-    .container { max-width: 1160px; margin: 0 auto; padding: 0 24px; }
-
-    /* ── HERO ── */
-    .hero {
-      background: linear-gradient(140deg, #060a1a 0%, #0a1a0c 55%, #0c2e10 100%);
-      padding: 100px 24px 96px; text-align: center; position: relative; overflow: hidden;
-    }
-    .hero::before {
-      content: ''; position: absolute; border-radius: 50%; pointer-events: none;
-      width: 700px; height: 700px; top: -200px; right: -150px;
-      background: radial-gradient(circle, rgba(0,178,7,.16) 0%, transparent 65%);
-    }
-    .hero::after {
-      content: ''; position: absolute; border-radius: 50%; pointer-events: none;
-      width: 500px; height: 500px; bottom: -120px; left: -80px;
-      background: radial-gradient(circle, rgba(0,255,136,.08) 0%, transparent 65%);
-    }
-    .hero-inner { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; }
-    .eyebrow {
-      display: inline-block; font-size: 11px; font-weight: 700;
-      letter-spacing: 1.8px; text-transform: uppercase;
-      padding: 5px 16px; border-radius: 20px; margin-bottom: 20px;
-      background: rgba(0,255,136,.12); border: 1px solid rgba(0,255,136,.25); color: var(--neon);
-    }
-    .hero h1 {
-      font-size: clamp(38px, 6vw, 62px); font-weight: 900; color: white;
-      line-height: 1.05; letter-spacing: -1.5px; margin-bottom: 22px;
-    }
-    .hero h1 span { color: var(--neon); }
-    .hero p {
-      font-size: 18px; color: rgba(255,255,255,.72);
-      max-width: 600px; margin: 0 auto; line-height: 1.75;
-    }
-
-    /* ── STATS BAR ── */
-    .stats-bar { background: white; padding: 52px 24px; border-bottom: 1px solid var(--border); }
-    .stats-grid {
-      display: grid; grid-template-columns: repeat(4, 1fr);
-      gap: 0; text-align: center;
-    }
-    .stat-item {
-      padding: 8px 24px;
-      border-right: 1px solid var(--border);
-    }
-    .stat-item:last-child { border-right: none; }
-    .stat-num {
-      font-size: clamp(32px, 4vw, 44px); font-weight: 900;
-      color: var(--green); line-height: 1; margin-bottom: 8px;
-    }
-    .stat-label { font-size: 13px; color: var(--muted); font-weight: 500; }
-    @media (max-width: 640px) {
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
-      .stat-item { border-right: none; border-bottom: 1px solid var(--border); padding: 20px; }
-      .stat-item:last-child { border-bottom: none; }
-    }
-
-    /* ── SECTION HELPERS ── */
-    .section-white { background: white; padding: 88px 24px; }
-    .section-light { background: var(--light); padding: 88px 24px; }
-    .section-dark  {
-      background: linear-gradient(140deg, #060a1a 0%, #0a1a0c 55%, #0c2e10 100%);
-      padding: 88px 24px; position: relative; overflow: hidden;
-    }
-    .section-dark::before {
-      content: ''; position: absolute; border-radius: 50%; pointer-events: none;
-      width: 600px; height: 600px; top: -160px; right: -100px;
-      background: radial-gradient(circle, rgba(0,178,7,.14) 0%, transparent 65%);
-    }
-    .section-dark .container { position: relative; z-index: 1; }
-
-    .eyebrow-green {
-      display: inline-block; font-size: 11px; font-weight: 700;
-      letter-spacing: 1.8px; text-transform: uppercase;
-      padding: 5px 16px; border-radius: 20px; margin-bottom: 16px;
-      background: rgba(0,178,7,.1); color: var(--green);
-    }
-    .section-label { text-align: center; }
-    h2.section-title {
-      text-align: center; font-size: clamp(26px, 4vw, 38px);
-      font-weight: 800; color: #111827; line-height: 1.2; margin-bottom: 14px;
-    }
-    h2.section-title.light { color: white; }
-    p.section-sub {
-      text-align: center; font-size: 17px; color: var(--muted);
-      max-width: 620px; margin: 0 auto 56px; line-height: 1.7;
-    }
-    p.section-sub.light { color: rgba(255,255,255,.65); }
-
-    /* ── MISSION / STORY ── */
-    .story-layout {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: center;
-    }
-    @media (max-width: 860px) { .story-layout { grid-template-columns: 1fr; gap: 40px; } }
-
-    .story-text h2 {
-      font-size: clamp(26px, 3.5vw, 36px); font-weight: 800; color: #111827;
-      line-height: 1.2; margin-bottom: 20px;
-    }
-    .story-text h2 span { color: var(--green); }
-    .story-text p { font-size: 16px; color: var(--muted); line-height: 1.8; margin-bottom: 18px; }
-    .story-text p:last-child { margin-bottom: 0; }
-
-    .story-visual {
-      background: linear-gradient(135deg, rgba(0,178,7,.08) 0%, rgba(0,255,136,.05) 100%);
-      border: 1px solid rgba(0,178,7,.15); border-radius: 24px;
-      padding: 48px 40px; text-align: center;
-    }
-    .story-visual .big-icon {
-      font-size: 64px; color: var(--green); margin-bottom: 24px; display: block;
-    }
-    .story-visual h3 { font-size: 22px; font-weight: 800; color: #111827; margin-bottom: 12px; }
-    .story-visual p { font-size: 15px; color: var(--muted); line-height: 1.7; }
-
-    /* ── VALUES ── */
-    .values-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px;
-    }
-    .value-card {
-      background: white; border: 1px solid var(--border);
-      border-radius: 16px; padding: 32px 28px;
-      transition: box-shadow .2s, transform .2s;
-    }
-    .value-card:hover { box-shadow: 0 8px 32px rgba(0,178,7,.1); transform: translateY(-3px); }
-    .value-icon {
-      width: 52px; height: 52px; border-radius: 14px;
-      background: rgba(0,178,7,.1); color: var(--green);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px; margin-bottom: 18px;
-    }
-    .value-card h3 { font-size: 16px; font-weight: 700; color: #111827; margin-bottom: 10px; }
-    .value-card p { font-size: 14px; color: var(--muted); line-height: 1.7; }
-
-    /* ── HOW IT WORKS ── */
-    .ecosystem-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px;
-    }
-    .eco-card {
-      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
-      border-radius: 16px; padding: 32px 24px; text-align: center;
-      transition: background .2s, border-color .2s;
-    }
-    .eco-card:hover { background: rgba(0,178,7,.1); border-color: rgba(0,178,7,.3); }
-    .eco-icon {
-      font-size: 36px; color: var(--neon); margin-bottom: 18px; display: block;
-    }
-    .eco-card h3 { font-size: 16px; font-weight: 700; color: white; margin-bottom: 10px; }
-    .eco-card p { font-size: 14px; color: rgba(255,255,255,.6); line-height: 1.7; }
-
-    /* ── MILESTONES ── */
-    .timeline {
-      max-width: 720px; margin: 0 auto; position: relative;
-    }
-    .timeline::before {
-      content: ''; position: absolute; left: 50%; top: 0; bottom: 0;
-      width: 2px; background: var(--border); transform: translateX(-50%);
-    }
-    @media (max-width: 600px) {
-      .timeline::before { left: 20px; }
-    }
-    .tl-item {
-      display: flex; gap: 32px; margin-bottom: 44px; position: relative;
-    }
-    .tl-item:nth-child(odd) { flex-direction: row-reverse; text-align: right; }
-    @media (max-width: 600px) {
-      .tl-item, .tl-item:nth-child(odd) { flex-direction: row; text-align: left; padding-left: 48px; }
-    }
-    .tl-dot {
-      position: absolute; left: 50%; top: 4px; transform: translateX(-50%);
-      width: 14px; height: 14px; border-radius: 50%;
-      background: var(--green); border: 3px solid white;
-      box-shadow: 0 0 0 2px var(--green); flex-shrink: 0;
-    }
-    @media (max-width: 600px) { .tl-dot { left: 14px; } }
-    .tl-content { width: calc(50% - 32px); }
-    @media (max-width: 600px) { .tl-content { width: 100%; } }
-    .tl-year { font-size: 12px; font-weight: 700; color: var(--green); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
-    .tl-content h4 { font-size: 16px; font-weight: 700; color: #111827; margin-bottom: 6px; }
-    .tl-content p { font-size: 14px; color: var(--muted); line-height: 1.65; }
-
-    /* ── CTA ── */
-    .cta-section {
-      background: linear-gradient(140deg, #060a1a 0%, #0a1a0c 55%, #0c2e10 100%);
-      padding: 88px 24px; text-align: center; position: relative; overflow: hidden;
-    }
-    .cta-section::before {
-      content: ''; position: absolute; border-radius: 50%; pointer-events: none;
-      width: 500px; height: 500px; top: -120px; right: -80px;
-      background: radial-gradient(circle, rgba(0,178,7,.15) 0%, transparent 65%);
-    }
-    .cta-inner { position: relative; z-index: 1; }
-    .cta-section h2 { font-size: clamp(28px, 4vw, 44px); font-weight: 900; color: white; margin-bottom: 16px; }
-    .cta-section p { font-size: 17px; color: rgba(255,255,255,.7); max-width: 540px; margin: 0 auto 40px; line-height: 1.7; }
-    .cta-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
-    .btn-primary {
-      display: inline-flex; align-items: center; gap: 10px;
-      background: var(--green); color: white;
-      padding: 15px 36px; border-radius: 10px; font-size: 16px; font-weight: 700;
-      transition: background .2s, transform .15s;
-    }
-    .btn-primary:hover { background: var(--green-dark); transform: translateY(-2px); }
-    .btn-outline {
-      display: inline-flex; align-items: center; gap: 10px;
-      background: transparent; color: white;
-      border: 1.5px solid rgba(255,255,255,.35);
-      padding: 15px 36px; border-radius: 10px; font-size: 16px; font-weight: 600;
-      transition: border-color .2s, background .2s, transform .15s;
-    }
-    .btn-outline:hover { border-color: white; background: rgba(255,255,255,.07); transform: translateY(-2px); }
-
-    footer.footer { margin-top: 0; }
-  </style>
+  <link rel="stylesheet" href="<?= asset('css/pages/about.css') ?>">
 </head>
-<body>
+<body class="about-page">
 <?php include __DIR__ . '/../components/header.php'; ?>
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-inner">
-    <span class="eyebrow"><?= $fr ? 'Notre histoire' : 'Our story' ?></span>
-    <h1><?= $fr
-      ? 'Construire le commerce local de <span>demain</span>'
-      : 'Building the local commerce of <span>tomorrow</span>' ?></h1>
+  <div class="wrap">
+    <span class="eyebrow"><?= $fr ? "QUÉBEC · BILINGUE · ZÉRO ÉMISSION" : "QUEBEC · BILINGUAL · ZERO EMISSIONS" ?></span>
+    <h1><?= $fr ? "Achetez local, livré <span>durablement</span>" : "Shop smart, delivered <span>sustainably</span>" ?></h1>
+    <p class="hero-sub"><?= $fr
+      ? "Un écosystème. Six Centrales connectées. Commerce local, approvisionnement, outils d’affaires, acheteurs et livraison — réunis dans un seul système."
+      : "One ecosystem. Six connected Centrals. Local commerce, sourcing, business tools, buyers and delivery — working as one system." ?></p>
+    <a class="btn" href="#services"><?= $fr ? "Découvrir l’écosystème OCSAPP →" : "Explore the OCSAPP ecosystem →" ?></a>
+    <div class="hero-proof-row">
+      <div class="hero-proof-item"><strong>6</strong><span><?= $fr ? "Centrales connectées" : "connected Centrals" ?></span></div>
+      <div class="hero-proof-item"><strong>1</strong><span><?= $fr ? "écosystème local partagé" : "shared local ecosystem" ?></span></div>
+      <div class="hero-proof-item"><strong>100%</strong><span><?= $fr ? "tarifs affichés avant engagement" : "rates shown before commitment" ?></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- POSITIONING STRIP -->
+<section class="positioning-strip">
+  <div class="wrap">
+    <p class="positioning-copy"><?= $fr
+      ? "La <span>seule</span> plateforme québécoise qui vous indique votre tarif avant que vous disiez oui — sans qu’un algorithme décide à votre place."
+      : "The <span>only</span> Québec platform that tells you your rate before you say yes — not an algorithm deciding for you." ?></p>
+  </div>
+</section>
+
+<!-- INTRO -->
+<section class="intro">
+  <div class="wrap">
+    <h2><?= $fr ? "Le commerce local devrait être connecté, pas fragmenté." : "Local commerce should feel connected, not fragmented." ?></h2>
     <p><?= $fr
-      ? 'OCSAPP est une marketplace locale 100% canadienne qui connecte les communautés du Québec avec des vendeurs, fournisseurs et chauffeurs de confiance.'
-      : 'OCSAPP is a 100% Canadian local marketplace connecting Quebec communities with trusted sellers, suppliers, and drivers.' ?></p>
+      ? "OCSAPP est une plateforme bilingue de commerce numérique et de logistique, née et bâtie au Québec. Nous lançons d’abord dans l’Ouest-de-l’Île, puis bientôt à Laval et dans le cœur du Grand Montréal — en reliant commerces locaux, fournisseurs, entreprises et livreurs dans un même écosystème pour simplifier l’achat local, l’approvisionnement et la livraison durable."
+      : "OCSAPP is a bilingual digital commerce and logistics platform, born and built in Québec. We're launching in the West Island, with Laval and the Greater Montreal core coming soon — connecting local shops, suppliers, businesses, and drivers on one ecosystem, so it's simple to shop local, source smarter, and deliver sustainably." ?></p>
   </div>
 </section>
 
-<!-- STATS BAR -->
-<section class="stats-bar">
-  <div class="container">
-    <div class="stats-grid">
-      <div class="stat-item">
-        <div class="stat-num">4</div>
-        <div class="stat-label"><?= $fr ? 'Types de membres' : 'Member types' ?></div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">100%</div>
-        <div class="stat-label"><?= $fr ? 'Canadien' : 'Canadian' ?></div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">0</div>
-        <div class="stat-label"><?= $fr ? 'Émissions - livraisons' : 'Emission deliveries' ?></div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">2</div>
-        <div class="stat-label"><?= $fr ? 'Langues officielles' : 'Official languages' ?></div>
-      </div>
+<!-- WHY OCSAPP -->
+<section class="why-ocsapp">
+  <div class="wrap">
+    <div class="section-eyebrow"><?= $fr ? "POURQUOI OCSAPP" : "WHY OCSAPP" ?></div>
+    <h2><?= $fr ? "Une infrastructure. Différents rôles. Une valeur partagée." : "One infrastructure. Different roles. Shared value." ?></h2>
+    <p class="section-lead"><?= $fr
+      ? "Les meilleures plateformes de commerce rendent le système simple pour l’utilisateur. OCSAPP applique cette approche localement en reliant chaque rôle à une même couche de tarification, de logistique et de commerce."
+      : "The strongest commerce platforms make the system feel simple from the outside. OCSAPP does that locally by connecting each role to the same pricing, logistics and commerce layer." ?></p>
+    <div class="why-grid">
+      <article class="why-card">
+        <div class="why-num">01</div>
+        <h3><?= $fr ? "Un seul système connecté" : "One connected system" ?></h3>
+        <p><?= $fr
+          ? "Les expériences Marché, Vendeur, Fournisseur, Entreprise, Acheteur et Livreur sont conçues pour fonctionner ensemble — et non comme des outils séparés assemblés après coup."
+          : "Marketplace, seller, supplier, business, buyer and driver experiences are designed to work together — not as separate tools stitched together." ?></p>
+      </article>
+      <article class="why-card">
+        <div class="why-num">02</div>
+        <h3><?= $fr ? "Les entreprises locales restent visibles" : "Local businesses stay visible" ?></h3>
+        <p><?= $fr
+          ? "L’expérience est organisée autour de la découverte locale et des besoins concrets des entreprises, afin que les commerces indépendants et les fournisseurs soient plus faciles à trouver et à soutenir."
+          : "The experience is organized around local discovery and practical business needs, so independent shops and suppliers are easier to find and support." ?></p>
+      </article>
+      <article class="why-card">
+        <div class="why-num">03</div>
+        <h3><?= $fr ? "Tarification claire + livraison" : "Clear economics + delivery" ?></h3>
+        <p><?= $fr
+          ? "La tarification et la livraison font partie du même modèle d’exploitation, avec des tarifs divulgués avant tout engagement et la livraison OCSAPP intégrée au réseau."
+          : "Pricing and delivery are presented as part of the same operating model, with rates disclosed before users commit and OCSAPP delivery underneath the network." ?></p>
+      </article>
     </div>
   </div>
 </section>
 
-<!-- MISSION / STORY -->
-<section class="section-white">
-  <div class="container">
-    <div class="story-layout">
-      <div class="story-text">
-        <span class="eyebrow-green"><?= $fr ? 'Notre mission' : 'Our mission' ?></span>
-        <h2><?= $fr
-          ? 'Une plateforme bâtie pour les <span>communautés locales</span>'
-          : 'A platform built for <span>local communities</span>' ?></h2>
-        <p><?= $fr
-          ? 'OCSAPP est née d\'une conviction simple : le commerce local mérite une infrastructure numérique aussi puissante que celle des géants mondiaux - mais conçue pour les réalités québécoises.'
-          : 'OCSAPP was born from a simple belief: local commerce deserves digital infrastructure as powerful as global giants - but built for Quebec realities.' ?></p>
-        <p><?= $fr
-          ? 'Nous connectons les acheteurs avec des vendeurs de leur région, nous donnons aux fournisseurs un canal de distribution efficace, et nous offrons aux chauffeurs un emploi flexible avec des livraisons à zéro émission.'
-          : 'We connect buyers with sellers in their region, give suppliers an efficient distribution channel, and offer drivers flexible work with zero-emission deliveries.' ?></p>
-        <p><?= $fr
-          ? 'Notre vision : un écosystème où chaque transaction renforce l\'économie locale et réduit l\'empreinte carbone du commerce au Québec.'
-          : 'Our vision: an ecosystem where every transaction strengthens the local economy and reduces the carbon footprint of commerce in Quebec.' ?></p>
-      </div>
-      <div class="story-visual">
-        <span class="big-icon"><i class="fas fa-leaf"></i></span>
-        <h3><?= $fr ? 'Zéro émission, 100% impact' : 'Zero emissions, 100% impact' ?></h3>
-        <p><?= $fr
-          ? 'Toutes nos livraisons sont effectuées par des chauffeurs utilisant des véhicules à faibles émissions ou zéro émission. Commerce local, impact global.'
-          : 'All our deliveries are made by drivers using low or zero-emission vehicles. Local commerce, global impact.' ?></p>
-      </div>
-    </div>
+<!-- VALUE PANEL -->
+<div class="value-panel">
+  <h2><?= $fr ? "Le commerce local, <span>réinventé.</span>" : "Local commerce, <span>reinvented.</span>" ?></h2>
+  <p class="sub"><?= $fr ? "Livraison zéro émission partout où nous sommes présents." : "Zero-emission delivery, everywhere we launch." ?></p>
+  <div class="value-grid">
+    <div class="value-row"><div class="value-tick">✓</div><p><?= $fr ? "Magasinez gratuitement — aucuns frais de compte" : "Free to shop — no account fees, ever" ?></p></div>
+    <div class="value-row"><div class="value-tick">✓</div><p><?= $fr ? "Vendeurs locaux de confiance, vérifiés avant leur mise en ligne" : "Trusted local sellers, verified before they go live" ?></p></div>
+    <div class="value-row"><div class="value-tick">✓</div><p><?= $fr ? "Livraison zéro émission pour chaque commande" : "Zero-emission delivery on every single order" ?></p></div>
+    <div class="value-row"><div class="value-tick">✓</div><p><?= $fr ? "Bâti et exploité au Québec" : "Built and operated in Québec" ?></p></div>
   </div>
-</section>
+</div>
 
-<!-- VALUES -->
-<section class="section-light">
-  <div class="container">
-    <div class="section-label"><span class="eyebrow-green"><?= $fr ? 'Nos valeurs' : 'Our values' ?></span></div>
-    <h2 class="section-title"><?= $fr ? 'Ce qui nous guide' : 'What guides us' ?></h2>
-    <p class="section-sub"><?= $fr
-      ? 'Chaque décision que nous prenons est ancrée dans ces principes fondamentaux.'
-      : 'Every decision we make is grounded in these core principles.' ?></p>
-
-    <div class="values-grid">
-      <div class="value-card">
-        <div class="value-icon"><i class="fas fa-handshake"></i></div>
-        <h3><?= $fr ? 'Confiance' : 'Trust' ?></h3>
-        <p><?= $fr
-          ? 'Chaque vendeur, fournisseur et chauffeur est vérifié par notre équipe. Vous pouvez acheter et vendre en toute confiance.'
-          : 'Every seller, supplier, and driver is verified by our team. Buy and sell with complete confidence.' ?></p>
-      </div>
-      <div class="value-card">
-        <div class="value-icon"><i class="fas fa-users"></i></div>
-        <h3><?= $fr ? 'Communauté' : 'Community' ?></h3>
-        <p><?= $fr
-          ? 'Nous construisons des liens durables entre les membres de la communauté locale, pas seulement des transactions.'
-          : 'We build lasting bonds between local community members, not just transactions.' ?></p>
-      </div>
-      <div class="value-card">
-        <div class="value-icon"><i class="fas fa-leaf"></i></div>
-        <h3><?= $fr ? 'Durabilité' : 'Sustainability' ?></h3>
-        <p><?= $fr
-          ? 'La livraison à zéro émission n\'est pas une option - c\'est notre engagement fondamental envers l\'environnement.'
-          : 'Zero-emission delivery isn\'t an option - it\'s our core commitment to the environment.' ?></p>
-      </div>
-      <div class="value-card">
-        <div class="value-icon"><i class="fas fa-balance-scale"></i></div>
-        <h3><?= $fr ? 'Équité' : 'Fairness' ?></h3>
-        <p><?= $fr
-          ? 'Des frais transparents, des règles claires et un traitement égal pour tous les membres de notre écosystème.'
-          : 'Transparent fees, clear rules, and equal treatment for every member of our ecosystem.' ?></p>
-      </div>
-      <div class="value-card">
-        <div class="value-icon"><i class="fas fa-bolt"></i></div>
-        <h3><?= $fr ? 'Innovation' : 'Innovation' ?></h3>
-        <p><?= $fr
-          ? 'Nous améliorons constamment notre plateforme pour rester à la pointe des besoins du commerce local.'
-          : 'We continuously improve our platform to stay ahead of local commerce needs.' ?></p>
-      </div>
-      <div class="value-card">
-        <div class="value-icon"><i class="fas fa-map-marker-alt"></i></div>
-        <h3><?= $fr ? 'Local d\'abord' : 'Local first' ?></h3>
-        <p><?= $fr
-          ? 'Nous privilégions toujours les solutions qui bénéficient directement aux commerces et résidents de nos régions.'
-          : 'We always prioritize solutions that directly benefit businesses and residents in our regions.' ?></p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ECOSYSTEM -->
-<section class="section-dark">
-  <div class="container">
-    <div class="section-label"><span class="eyebrow"><?= $fr ? 'Notre écosystème' : 'Our ecosystem' ?></span></div>
-    <h2 class="section-title light"><?= $fr ? 'Quatre acteurs, une plateforme' : 'Four players, one platform' ?></h2>
-    <p class="section-sub light"><?= $fr
-      ? 'OCSAPP réunit quatre types de membres en un écosystème fluide et interconnecté.'
-      : 'OCSAPP brings together four types of members in a seamless, interconnected ecosystem.' ?></p>
-
-    <div class="ecosystem-grid">
-      <div class="eco-card">
-        <span class="eco-icon"><i class="fas fa-shopping-bag"></i></span>
-        <h3><?= $fr ? 'Acheteurs' : 'Buyers' ?></h3>
-        <p><?= $fr
-          ? 'Commandez des produits locaux, livrés rapidement à votre porte par nos chauffeurs certifiés.'
-          : 'Order local products, delivered quickly to your door by our certified drivers.' ?></p>
-      </div>
-      <div class="eco-card">
-        <span class="eco-icon"><i class="fas fa-store"></i></span>
-        <h3><?= $fr ? 'Vendeurs' : 'Sellers' ?></h3>
-        <p><?= $fr
-          ? 'Ouvrez votre boutique en ligne et atteignez des milliers de clients locaux sans infrastructure technique complexe.'
-          : 'Open your online store and reach thousands of local customers without complex technical infrastructure.' ?></p>
-      </div>
-      <div class="eco-card">
-        <span class="eco-icon"><i class="fas fa-warehouse"></i></span>
-        <h3><?= $fr ? 'Fournisseurs' : 'Suppliers' ?></h3>
-        <p><?= $fr
-          ? 'Distribuez vos produits aux vendeurs et entreprises de votre région via notre réseau logistique.'
-          : 'Distribute your products to sellers and businesses in your region via our logistics network.' ?></p>
-      </div>
-      <div class="eco-card">
-        <span class="eco-icon"><i class="fas fa-truck"></i></span>
-        <h3><?= $fr ? 'Chauffeurs' : 'Drivers' ?></h3>
-        <p><?= $fr
-          ? 'Livrez des commandes B2C et B2B selon votre horaire, avec des revenus hebdomadaires transparents.'
-          : 'Deliver B2C and B2B orders on your schedule, with transparent weekly earnings.' ?></p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- MILESTONES -->
-<section class="section-white">
-  <div class="container">
-    <div class="section-label"><span class="eyebrow-green"><?= $fr ? 'Notre parcours' : 'Our journey' ?></span></div>
-    <h2 class="section-title"><?= $fr ? 'Les grandes étapes' : 'Key milestones' ?></h2>
-    <p class="section-sub"><?= $fr
-      ? 'De l\'idée au lancement - les moments qui ont défini OCSAPP.'
-      : 'From idea to launch - the moments that defined OCSAPP.' ?></p>
-
-    <div class="timeline">
-      <div class="tl-item">
-        <div class="tl-dot"></div>
-        <div class="tl-content">
-          <div class="tl-year">2023</div>
-          <h4><?= $fr ? 'L\'idée prend forme' : 'The idea takes shape' ?></h4>
-          <p><?= $fr
-            ? 'Constatant le manque d\'une marketplace locale vraiment adaptée au Québec, l\'équipe fondatrice commence à concevoir OCSAPP.'
-            : 'Noticing the lack of a truly Quebec-adapted local marketplace, the founding team begins designing OCSAPP.' ?></p>
-        </div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-dot"></div>
-        <div class="tl-content">
-          <div class="tl-year">2024</div>
-          <h4><?= $fr ? 'Développement de la plateforme' : 'Platform development' ?></h4>
-          <p><?= $fr
-            ? 'Construction de l\'infrastructure complète : marketplace, portail vendeur, portail fournisseur, portail chauffeur et application mobile.'
-            : 'Building the complete infrastructure: marketplace, seller portal, supplier portal, driver portal, and mobile app.' ?></p>
-        </div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-dot"></div>
-        <div class="tl-content">
-          <div class="tl-year">2025</div>
-          <h4><?= $fr ? 'Lancement bêta' : 'Beta launch' ?></h4>
-          <p><?= $fr
-            ? 'Lancement sur le West Island de Montréal avec les premiers vendeurs, fournisseurs et chauffeurs. Les premiers clients reçoivent leur commande.'
-            : 'Launch in Montreal\'s West Island with the first sellers, suppliers, and drivers. First customers receive their orders.' ?></p>
-        </div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-dot"></div>
-        <div class="tl-content">
-          <div class="tl-year">2026</div>
-          <h4><?= $fr ? 'Expansion en cours' : 'Expansion underway' ?></h4>
-          <p><?= $fr
-            ? 'Déploiement des offres distribution B2B, renforcement du réseau de chauffeurs et extension des zones de livraison à travers le Grand Montréal.'
-            : 'Rollout of B2B distribution offerings, strengthening the driver network, and extending delivery zones across Greater Montreal.' ?></p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- LOCATION / REGION -->
-<section class="section-light">
-  <div class="container">
-    <div class="section-label"><span class="eyebrow-green"><?= $fr ? 'Notre région' : 'Our region' ?></span></div>
-    <h2 class="section-title"><?= $fr ? 'Fièrement enracinés au Québec' : 'Proudly rooted in Quebec' ?></h2>
-    <p class="section-sub"><?= $fr
-      ? 'OCSAPP opère dans la région de Montréal et du West Island - une des communautés les plus dynamiques et diversifiées du Canada.'
-      : 'OCSAPP operates in the Montreal and West Island region - one of Canada\'s most dynamic and diverse communities.' ?></p>
-
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px;">
-      <div style="background: white; border: 1px solid var(--border); border-radius: 16px; padding: 32px 28px; display: flex; gap: 20px; align-items: flex-start;">
-        <div style="width:48px; height:48px; border-radius:12px; background:rgba(0,178,7,.1); color:var(--green); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;"><i class="fas fa-flag"></i></div>
-        <div>
-          <h3 style="font-size:15px; font-weight:700; color:#111827; margin-bottom:8px;"><?= $fr ? '100% Canadien' : '100% Canadian' ?></h3>
-          <p style="font-size:14px; color:var(--muted); line-height:1.7;"><?= $fr ? 'Fondé, développé et opéré au Canada. Nos données restent sur des serveurs canadiens.' : 'Founded, developed, and operated in Canada. Our data stays on Canadian servers.' ?></p>
-        </div>
-      </div>
-      <div style="background: white; border: 1px solid var(--border); border-radius: 16px; padding: 32px 28px; display: flex; gap: 20px; align-items: flex-start;">
-        <div style="width:48px; height:48px; border-radius:12px; background:rgba(0,178,7,.1); color:var(--green); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;"><i class="fas fa-language"></i></div>
-        <div>
-          <h3 style="font-size:15px; font-weight:700; color:#111827; margin-bottom:8px;"><?= $fr ? 'Bilingue de naissance' : 'Bilingual by design' ?></h3>
-          <p style="font-size:14px; color:var(--muted); line-height:1.7;"><?= $fr ? 'Interface complète en français et en anglais. Nous respectons les deux langues officielles du Québec.' : 'Full interface in French and English. We respect both of Quebec\'s official languages.' ?></p>
-        </div>
-      </div>
-      <div style="background: white; border: 1px solid var(--border); border-radius: 16px; padding: 32px 28px; display: flex; gap: 20px; align-items: flex-start;">
-        <div style="width:48px; height:48px; border-radius:12px; background:rgba(0,178,7,.1); color:var(--green); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;"><i class="fas fa-map-marker-alt"></i></div>
-        <div>
-          <h3 style="font-size:15px; font-weight:700; color:#111827; margin-bottom:8px;"><?= $fr ? 'Montréal & West Island' : 'Montreal & West Island' ?></h3>
-          <p style="font-size:14px; color:var(--muted); line-height:1.7;"><?= $fr ? 'Notre zone de lancement couvre l\'une des régions les plus actives et commerçantes du Québec.' : 'Our launch zone covers one of Quebec\'s most active and commercially vibrant regions.' ?></p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- CTA -->
-<section class="cta-section">
-  <div class="container">
-    <div class="cta-inner">
-      <h2><?= $fr ? 'Rejoignez l\'écosystème OCSAPP' : 'Join the OCSAPP ecosystem' ?></h2>
+<!-- SERVICES / SIX CENTRALS -->
+<section class="services" id="services">
+  <div class="wrap">
+    <div class="services-head">
+      <h2><?= $fr ? "Un écosystème, six façons d’y entrer" : "One ecosystem, six ways in" ?></h2>
       <p><?= $fr
-        ? 'Que vous soyez acheteur, vendeur, fournisseur ou chauffeur, votre place est ici. Créez votre compte gratuitement aujourd\'hui.'
-        : 'Whether you\'re a buyer, seller, supplier, or driver - your place is here. Create your free account today.' ?></p>
-      <div class="cta-buttons">
-        <a href="<?= url('/register') ?>" class="btn-primary">
-          <i class="fas fa-user-plus"></i>
-          <?= $fr ? 'Créer un compte' : 'Create an account' ?>
-        </a>
-        <a href="<?= url('/contact') ?>" class="btn-outline">
-          <i class="fas fa-envelope"></i>
-          <?= $fr ? 'Nous contacter' : 'Contact us' ?>
-        </a>
+        ? "Peu importe la porte qui vous convient, la même tarification fixe et le même réseau zéro émission se trouvent derrière."
+        : "Whichever door fits you, the same fixed pricing and zero-emission network is underneath it." ?></p>
+      <p class="service-architecture-note"><?= $fr
+        ? "Commencez avec le rôle qui vous convient aujourd’hui. Le reste de l’écosystème est déjà connecté lorsque vous en avez besoin."
+        : "Start with the role that fits you today. The rest of the ecosystem is already connected when you need it." ?></p>
+    </div>
+
+    <div class="ecosystem-flow">
+      <div class="flow-kicker"><?= $fr ? "UN SEUL SYSTÈME, PAS SIX SILOS" : "ONE SYSTEM, NOT SIX SILOS" ?></div>
+      <h3 class="flow-title"><?= $fr ? "Chaque rôle se connecte à la même infrastructure OCSAPP." : "Every role connects through the same OCSAPP infrastructure." ?></h3>
+      <div class="flow-row">
+        <span class="flow-badge"><?= $fr ? "Centrale Vendeur" : "Seller Central" ?></span>
+        <span class="flow-badge"><?= $fr ? "Centrale Fournisseur" : "Supplier Central" ?></span>
+        <span class="flow-badge"><?= $fr ? "Centrale Entreprise" : "Business Central" ?></span>
+      </div>
+      <div class="flow-arrow-down">↓</div>
+      <div class="flow-row"><span class="flow-badge flow-badge-hub"><?= $fr ? "Centrale Marché" : "Marketplace Central" ?></span></div>
+      <div class="flow-arrow-down">↓</div>
+      <div class="flow-row"><span class="flow-badge"><?= $fr ? "Centrale Acheteur" : "Buyer Central" ?></span></div>
+      <div class="flow-arrow-down">↓</div>
+      <div class="flow-row"><span class="flow-badge flow-badge-livreur"><?= $fr
+        ? "Centrale Livreur — la couche de livraison derrière toutes les commandes ci-dessus"
+        : "Driver Central — the delivery layer underneath every order above" ?></span></div>
+      <p class="flow-explainer"><?= $fr
+        ? "OCSAPP n’est pas un assemblage de six applications distinctes — c’est un seul système connecté. Les vendeurs affichent leurs produits dans la <strong>Centrale Vendeur</strong>, les fournisseurs proposent leurs produits en gros dans la <strong>Centrale Fournisseur</strong>, et les entreprises s’approvisionnent ou distribuent par la <strong>Centrale Entreprise</strong> — le tout se retrouve dans la <strong>Centrale Marché</strong>, où les acheteurs magasinent avec la <strong>Centrale Acheteur</strong>. Et chacune de ces commandes passe par la <strong>Centrale Livreur</strong>, notre propre réseau de livreurs zéro émission. Les mêmes principes de tarification, les mêmes livreurs et la même plateforme, peu importe votre point d’entrée."
+        : "OCSAPP isn't six separate apps stitched together — it's one connected system. Sellers list on <strong>Seller Central</strong>, suppliers list wholesale goods on <strong>Supplier Central</strong>, and businesses source or distribute through <strong>Business Central</strong> — all of it surfaces on <strong>Marketplace Central</strong>, where buyers shop through <strong>Buyer Central</strong>. And every one of those orders moves through <strong>Driver Central</strong>, our own zero-emission driver network. Same pricing principles, same drivers, same platform, however you come in." ?></p>
+    </div>
+
+    <!-- 01 Marketplace Central -->
+    <div class="service-card">
+      <div class="service-index">01</div>
+      <div class="service-top">
+        <img alt="<?= $fr ? "Centrale Marché" : "Marketplace Central" ?>" class="service-icon-img" src="<?= asset('images/about/central-marketplace.png') ?>">
+        <div class="service-tag"><?= $fr ? "Centrale Marché" : "Marketplace Central" ?></div>
+      </div>
+      <h3><?= $fr ? "Votre marché local, livré en quelques minutes" : "Your local marketplace, delivered in minutes" ?></h3>
+      <p class="service-tagline"><?= $fr
+        ? "Commerces locaux, aire de restauration et restaurants populaires, épiceries locales à bas prix"
+        : "Local shops, food court and top restaurants, local groceries at low prices" ?></p>
+      <p class="desc"><?= $fr
+        ? "Nous développons la Centrale Marché un commerce local à la fois — organisée selon ce dont vous avez réellement besoin maintenant, plutôt que selon qu’il s’agisse techniquement d’un produit ou d’un service. Chaque commande est à prix fixe, affiché avant le paiement, avec livraison express par notre propre réseau de livreurs zéro émission."
+        : "We're growing Marketplace Central one local shop at a time — organized by what you actually need right now, not by whether it's technically a product or a service. Every order is fixed-price and disclosed before you check out, with express delivery through our own zero-emission drivers." ?></p>
+      <div class="chips">
+        <span class="chip"><img alt="" class="chip-icon" src="<?= asset('images/about/chip-restauration.png') ?>">Restauration</span>
+        <span class="chip"><img alt="" class="chip-icon" src="<?= asset('images/about/chip-epicerie.png') ?>">Épicerie</span>
+        <span class="chip"><img alt="" class="chip-icon" src="<?= asset('images/about/chip-sante.png') ?>">Santé &amp; Pharmacie</span>
+        <span class="chip"><img alt="" class="chip-icon" src="<?= asset('images/about/chip-maison.png') ?>">Maison &amp; Quotidien</span>
+        <span class="chip"><img alt="" class="chip-icon" src="<?= asset('images/about/chip-mode.png') ?>">Mode &amp; Boutiques</span>
+        <span class="chip"><img alt="" class="chip-icon" src="<?= asset('images/about/chip-saveurs.png') ?>">Saveurs du Monde</span>
+        <span class="chip"><img alt="" class="chip-icon" src="<?= asset('images/about/chip-artisans.png') ?>">Artisans locaux</span>
+        <span class="chip"><img alt="" class="chip-icon" src="<?= asset('images/about/chip-evenements.png') ?>">Événements &amp; Traiteur</span>
+      </div>
+      <a class="service-cta" href="<?= url('/shops') ?>"><?= $fr ? "Explorer la Centrale Marché →" : "Browse Marketplace Central →" ?></a>
+    </div>
+
+    <!-- 02 Seller Central -->
+    <div class="service-card">
+      <div class="service-index">02</div>
+      <div class="service-top">
+        <img alt="<?= $fr ? "Centrale Vendeur" : "Seller Central" ?>" class="service-icon-img" src="<?= asset('images/about/central-seller.png') ?>">
+        <div class="service-tag"><?= $fr ? "Centrale Vendeur" : "Seller Central" ?></div>
+      </div>
+      <h3><?= $fr ? "Affichez votre commerce, gardez une plus grande part de chaque vente" : "List your shop, keep more of every sale" ?></h3>
+      <p class="service-tagline"><?= $fr
+        ? "Joignez des acheteurs locaux, contrôlez votre inventaire et lancez votre vitrine en quelques minutes"
+        : "Reach local buyers, control your own stock, launch a storefront in minutes" ?></p>
+      <p class="desc"><?= $fr
+        ? "La Centrale Vendeur met votre vitrine en ligne en quelques minutes, vous donne un véritable contrôle sur les commandes et l’inventaire et vous aide à promouvoir votre marque auprès d’acheteurs qui magasinent déjà à proximité."
+        : "Seller Central gets your storefront live in minutes, gives you real order and stock control, and helps you promote your brand to buyers already shopping nearby." ?></p>
+      <p class="quote"><?= $fr
+        ? "« Toutes les plateformes annoncent un petit chiffre. Nous sommes les seuls à vous montrer la facture complète avant votre inscription — commission, traitement et frais de livraison, tous séparés et clairement divulgués. »"
+        : "\"Every platform advertises a low number. We're the only one that shows you the whole invoice before you sign up — commission, processing, and delivery fee, all separate, all disclosed.\"" ?></p>
+      <a class="service-cta" href="<?= url('/seller-central') ?>"><?= $fr ? "Devenir vendeur fondateur →" : "Become a founding seller →" ?></a>
+    </div>
+
+    <!-- 03 Buyer Central -->
+    <div class="service-card">
+      <div class="service-index">03</div>
+      <div class="service-top">
+        <img alt="<?= $fr ? "Centrale Acheteur" : "Buyer Central" ?>" class="service-icon-img" src="<?= asset('images/about/central-buyer.png') ?>">
+        <div class="service-tag"><?= $fr ? "Centrale Acheteur" : "Buyer Central" ?></div>
+      </div>
+      <h3><?= $fr ? "Magasinez local et suivez chaque commande en temps réel" : "Shop local, track every order in real time" ?></h3>
+      <p class="service-tagline"><?= $fr
+        ? "Parcourez les produits locaux, choisissez la livraison rapide ou planifiée et profitez d’offres exclusives"
+        : "Browse local products, ASAP or scheduled delivery, exclusive deals" ?></p>
+      <p class="desc"><?= $fr
+        ? "La Centrale Acheteur est gratuite, avec suivi de commande en temps réel du paiement jusqu’à votre porte — ainsi que des offres réservées aux acheteurs OCSAPP."
+        : "Buyer Central is free to use, with real-time order tracking from the moment you check out to the moment it's at your door — plus deals only available to OCSAPP buyers." ?></p>
+      <p class="quote"><?= $fr
+        ? "« Aucun frais caché. Aucun calcul surprise. Seulement le prix que vous avez vu. »"
+        : "\"No hidden fees. No surprise math. Just the price you saw.\"" ?></p>
+      <a class="service-cta" href="<?= url('/buyer-central') ?>"><?= $fr ? "Commencer à magasiner →" : "Start shopping →" ?></a>
+    </div>
+
+    <!-- 04 Supplier Central -->
+    <div class="service-card">
+      <div class="service-index">04</div>
+      <div class="service-top">
+        <img alt="<?= $fr ? "Centrale Fournisseur" : "Supplier Central" ?>" class="service-icon-img" src="<?= asset('images/about/central-supplier.png') ?>">
+        <div class="service-tag"><?= $fr ? "Centrale Fournisseur" : "Supplier Central" ?></div>
+      </div>
+      <h3><?= $fr ? "Un réseau de fournisseurs conçu pour le commerce de gros, pas seulement le détail" : "A supplier network built for wholesale, not just retail" ?></h3>
+      <p class="service-tagline"><?= $fr
+        ? "Tarification de gros flexible, traitement et suivi en temps réel"
+        : "Flexible wholesale pricing, live fulfillment and tracking" ?></p>
+      <p class="desc"><?= $fr
+        ? "Si vous fournissez en gros, la Centrale Fournisseur vous relie directement au réseau d’entreprises OCSAPP — avec des forfaits flexibles, une commission transparente et aucune majoration cachée ajoutée à vos prix."
+        : "If you supply in bulk, Supplier Central connects you directly to OCSAPP's business network — flexible plans, transparent commission, and no hidden markup added on top of what you charge." ?></p>
+      <p class="quote"><?= $fr
+        ? "« Une seule commission. Pas des frais de marché en plus d’un contrat de logistique. »"
+        : "\"One commission. Not a marketplace fee and a logistics contract.\"" ?></p>
+      <a class="service-cta" href="<?= url('/supplier-central') ?>"><?= $fr ? "Devenir fournisseur fondateur →" : "Become a founding supplier →" ?></a>
+    </div>
+
+    <!-- 05 Business Central -->
+    <div class="service-card">
+      <div class="service-index">05</div>
+      <div class="service-top">
+        <img alt="<?= $fr ? "Centrale Entreprise" : "Business Central" ?>" class="service-icon-img" src="<?= asset('images/about/central-business.png') ?>">
+        <div class="service-tag"><?= $fr ? "Centrale Entreprise" : "Business Central" ?></div>
+      </div>
+      <h3><?= $fr ? "Approvisionnement, distribution et solutions de bureau pour les entreprises en croissance" : "Procurement, distribution, and office solutions for growing businesses" ?></h3>
+      <p class="service-tagline"><?= $fr
+        ? "Approvisionnement et distribution, solutions de bureau et d’aire de repos, gestion de compte"
+        : "Procurement &amp; distribution, office &amp; breakroom solutions, account management" ?></p>
+      <p class="desc"><?= $fr
+        ? "La Centrale Entreprise regroupe plusieurs fournisseurs en une seule livraison avec des frais fixes de 1 % et aucune majoration, intègre vos propres expéditions à notre réseau calibré par zone et couvre l’approvisionnement du bureau et de l’aire de repos — avec des forfaits adaptés aux entreprises de toutes tailles."
+        : "Business Central consolidates multiple suppliers into a single delivery at a flat 1% fee with zero markup, puts your own shipments on our zone-calibrated network, and covers office and breakroom sourcing — with plans built for businesses of every size." ?></p>
+      <p class="quote"><?= $fr
+        ? "« Accès complet à l’API, soutien logistique dédié, une seule facture — pas cinq fournisseurs qui prétendent former un seul système. »"
+        : "\"Full API access, dedicated logistics support, one bill — not five vendors pretending to be one system.\"" ?></p>
+      <a class="service-cta" href="<?= url('/distribution') ?>"><?= $fr ? "Obtenir un compte entreprise →" : "Get a business account →" ?></a>
+    </div>
+
+    <!-- 06 Driver Central -->
+    <div class="service-card">
+      <div class="service-index">06</div>
+      <div class="service-top">
+        <img alt="<?= $fr ? "Centrale Livreur" : "Driver Central" ?>" class="service-icon-img" src="<?= asset('images/about/central-driver.png') ?>">
+        <div class="service-tag"><?= $fr ? "Centrale Livreur" : "Driver Central" ?></div>
+      </div>
+      <h3><?= $fr ? "Livraison zéro émission pour chaque commande" : "Zero-emission delivery, on every order" ?></h3>
+      <p class="service-tagline"><?= $fr
+        ? "Choisissez vos heures, revenus de base hebdomadaires, objectif zéro émission"
+        : "Set your own hours, weekly base earnings, zero-emission goal" ?></p>
+      <p class="desc"><?= $fr
+        ? "Chaque livraison OCSAPP — détail, fournisseur ou entreprise — passe par notre propre réseau de livreurs travailleurs autonomes, avec l’objectif d’une flotte entièrement zéro ou faible émission. La rémunération est fixe et affichée avant l’acceptation, et 100 % de chaque pourboire va directement au livreur."
+        : "Every OCSAPP delivery — retail, supplier, or business — runs through our own network of independent-contractor drivers, working toward a fully zero and low-emission fleet. Pay is fixed and shown before you accept, and 100% of every tip goes straight to the driver." ?></p>
+      <p class="quote"><?= $fr
+        ? "« Connaissez votre tarif avant de dire oui. Pas après, et pas selon la demande du moment. »"
+        : "\"Know your rate before you say yes. Not after, not 'it depends on demand right now.'\"" ?></p>
+      <a class="service-cta" href="<?= url('/driver-central') ?>"><?= $fr ? "Livrer avec OCSAPP →" : "Drive with OCSAPP →" ?></a>
+    </div>
+  </div>
+</section>
+
+<!-- EXPLORE -->
+<section class="explore">
+  <div class="wrap">
+    <h2><?= $fr ? "Voyez par vous-même" : "See it for yourself" ?></h2>
+    <p class="explore-sub"><?= $fr
+      ? "Choisissez le rôle qui correspond à ce que vous voulez faire. Chaque parcours mène au même réseau local."
+      : "Choose the role that matches what you want to do. Each path leads into the same local network." ?></p>
+    <div class="explore-grid">
+      <a class="explore-card" href="<?= url('/shops') ?>">
+        <span class="explore-label"><?= $fr ? "Magasiner" : "Shop" ?></span>
+        <span class="explore-desc"><?= $fr ? "Parcourir les commerces locaux dans la Centrale Marché" : "Browse local shops on Marketplace Central" ?></span>
+      </a>
+      <a class="explore-card" href="<?= url('/seller-central') ?>">
+        <span class="explore-label"><?= $fr ? "Vendre" : "Sell" ?></span>
+        <span class="explore-desc"><?= $fr ? "Affichez votre entreprise, les 5 premières livraisons sont gratuites" : "List your business, first 5 deliveries free" ?></span>
+      </a>
+      <a class="explore-card" href="<?= url('/supplier-central') ?>">
+        <span class="explore-label"><?= $fr ? "Fournir" : "Supply" ?></span>
+        <span class="explore-desc"><?= $fr ? "Une seule commission, aucun contrat logistique distinct" : "One commission, no separate logistics contract" ?></span>
+      </a>
+      <a class="explore-card" href="<?= url('/driver-central') ?>">
+        <span class="explore-label"><?= $fr ? "Livrer" : "Drive" ?></span>
+        <span class="explore-desc"><?= $fr ? "Connaissez votre tarif avant d’accepter" : "Know your rate before you accept" ?></span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST / DATA RESIDENCY -->
+<section class="trust">
+  <div class="wrap">
+    <h3><?= $fr ? "Où sont hébergées vos données" : "Where your data lives" ?></h3>
+    <p><?= $fr
+      ? "La plateforme et l’infrastructure propres à OCSAPP sont basées au Canada. Certains partenaires de traitement des paiements auxquels nous faisons appel — notamment Stripe et PayPal — peuvent traiter des données de transaction à l’extérieur du Canada, y compris aux États-Unis, dans le cadre de leurs opérations normales de sécurité et de conformité. Tous les détails se trouvent dans notre <a href=\"" . url('/privacy') . "\">Politique de confidentialité</a>."
+      : "OCSAPP's own platform and infrastructure are based in Canada. Certain payment processing partners we rely on — including Stripe and PayPal — may process payment transaction data outside Canada, including in the United States, as part of their own standard security and compliance operations. Full details are in our <a href=\"" . url('/privacy') . "\">Privacy Policy</a>." ?></p>
+    <div class="trust-grid">
+      <div class="trust-card">
+        <h4><?= $fr ? "Plateforme basée au Canada" : "Canadian-based platform" ?></h4>
+        <p><?= $fr
+          ? "La plateforme et l’infrastructure propres à OCSAPP sont basées au Canada."
+          : "OCSAPP's own platform and infrastructure are based in Canada." ?></p>
+      </div>
+      <div class="trust-card">
+        <h4><?= $fr ? "Transparence sur les tiers" : "Clear third-party disclosure" ?></h4>
+        <p><?= $fr
+          ? "Des partenaires de paiement comme Stripe et PayPal peuvent traiter des données de transaction à l’extérieur du Canada; cette relation est clairement indiquée sur la page."
+          : "Payment partners such as Stripe and PayPal may process transaction data outside Canada; the page discloses that relationship directly." ?></p>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- LEGAL IDENTITY -->
+<section class="legal-identity">
+  <div class="wrap">
+    <p class="foot-tagline"><?= $fr ? "L’infrastructure numérique tout-en-un du commerce local." : "The all-in-one digital infrastructure for local commerce." ?></p>
+    <p><?= $fr
+      ? "OCSAPP Inc. · Constituée sous le régime fédéral de la Loi canadienne sur les sociétés par actions (n° de société 1750354-7) · Numéro d’entreprise du Québec (NEQ) 1181584997"
+      : "OCSAPP Inc. · Federally incorporated under the Canada Business Corporations Act (Corp. No. 1750354-7) · Québec enterprise number (NEQ) 1181584997" ?></p>
+    <p><?= $fr ? "Siège social : Laval, Québec (H7H)" : "Registered office: Laval, Québec (H7H)" ?></p>
   </div>
 </section>
 
