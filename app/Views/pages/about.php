@@ -36,8 +36,8 @@ $fr = ($currentLang === 'fr');
     <span class="eyebrow"><?= $fr ? "QUÉBEC · BILINGUE · ZÉRO ÉMISSION" : "QUEBEC · BILINGUAL · ZERO EMISSIONS" ?></span>
     <h1><?= $fr ? "Achetez local, livré <span>durablement</span>" : "Shop smart, delivered <span>sustainably</span>" ?></h1>
     <p class="hero-sub"><?= $fr
-      ? "Un écosystème. Six Centrales connectées. Commerce local, approvisionnement, outils d’affaires, acheteurs et livraison — réunis dans un seul système."
-      : "One ecosystem. Six connected Centrals. Local commerce, sourcing, business tools, buyers and delivery — working as one system." ?></p>
+      ? "Un écosystème. Six Centrales connectées. Commerce local, approvisionnement, outils d’affaires, acheteurs et livraison - réunis dans un seul système."
+      : "One ecosystem. Six connected Centrals. Local commerce, sourcing, business tools, buyers and delivery - working as one system." ?></p>
     <a class="btn" href="#services"><?= $fr ? "Découvrir l’écosystème OCSAPP →" : "Explore the OCSAPP ecosystem →" ?></a>
     <div class="hero-proof-row">
       <div class="hero-proof-item"><strong>6</strong><span><?= $fr ? "Centrales connectées" : "connected Centrals" ?></span></div>
@@ -51,8 +51,8 @@ $fr = ($currentLang === 'fr');
 <section class="positioning-strip">
   <div class="wrap">
     <p class="positioning-copy"><?= $fr
-      ? "La <span>seule</span> plateforme québécoise qui vous indique votre tarif avant que vous disiez oui — sans qu’un algorithme décide à votre place."
-      : "The <span>only</span> Québec platform that tells you your rate before you say yes — not an algorithm deciding for you." ?></p>
+      ? "La <span>seule</span> plateforme québécoise qui vous indique votre tarif avant que vous disiez oui - sans qu’un algorithme décide à votre place."
+      : "The <span>only</span> Québec platform that tells you your rate before you say yes - not an algorithm deciding for you." ?></p>
   </div>
 </section>
 
@@ -61,8 +61,8 @@ $fr = ($currentLang === 'fr');
   <div class="wrap">
     <h2><?= $fr ? "Le commerce local devrait être connecté, pas fragmenté." : "Local commerce should feel connected, not fragmented." ?></h2>
     <p><?= $fr
-      ? "OCSAPP est une plateforme bilingue de commerce numérique et de logistique, née et bâtie au Québec. Nous lançons d’abord dans l’Ouest-de-l’Île, puis bientôt à Laval et dans le cœur du Grand Montréal — en reliant commerces locaux, fournisseurs, entreprises et livreurs dans un même écosystème pour simplifier l’achat local, l’approvisionnement et la livraison durable."
-      : "OCSAPP is a bilingual digital commerce and logistics platform, born and built in Québec. We're launching in the West Island, with Laval and the Greater Montreal core coming soon — connecting local shops, suppliers, businesses, and drivers on one ecosystem, so it's simple to shop local, source smarter, and deliver sustainably." ?></p>
+      ? "OCSAPP est une plateforme bilingue de commerce numérique et de logistique, née et bâtie au Québec. Nous lançons d’abord dans l’Ouest-de-l’Île, puis bientôt à Laval et dans le cœur du Grand Montréal - en reliant commerces locaux, fournisseurs, entreprises et livreurs dans un même écosystème pour simplifier l’achat local, l’approvisionnement et la livraison durable."
+      : "OCSAPP is a bilingual digital commerce and logistics platform, born and built in Québec. We're launching in the West Island, with Laval and the Greater Montreal core coming soon - connecting local shops, suppliers, businesses, and drivers on one ecosystem, so it's simple to shop local, source smarter, and deliver sustainably." ?></p>
   </div>
 </section>
 
@@ -79,8 +79,8 @@ $fr = ($currentLang === 'fr');
         <div class="why-num">01</div>
         <h3><?= $fr ? "Un seul système connecté" : "One connected system" ?></h3>
         <p><?= $fr
-          ? "Les expériences Marché, Vendeur, Fournisseur, Entreprise, Acheteur et Livreur sont conçues pour fonctionner ensemble — et non comme des outils séparés assemblés après coup."
-          : "Marketplace, seller, supplier, business, buyer and driver experiences are designed to work together — not as separate tools stitched together." ?></p>
+          ? "Les expériences Marché, Vendeur, Fournisseur, Entreprise, Acheteur et Livreur sont conçues pour fonctionner ensemble - et non comme des outils séparés assemblés après coup."
+          : "Marketplace, seller, supplier, business, buyer and driver experiences are designed to work together - not as separate tools stitched together." ?></p>
       </article>
       <article class="why-card">
         <div class="why-num">02</div>
@@ -105,7 +105,7 @@ $fr = ($currentLang === 'fr');
   <h2><?= $fr ? "Le commerce local, <span>réinventé.</span>" : "Local commerce, <span>reinvented.</span>" ?></h2>
   <p class="sub"><?= $fr ? "Livraison zéro émission partout où nous sommes présents." : "Zero-emission delivery, everywhere we launch." ?></p>
   <div class="value-grid">
-    <div class="value-row"><div class="value-tick">✓</div><p><?= $fr ? "Magasinez gratuitement — aucuns frais de compte" : "Free to shop — no account fees, ever" ?></p></div>
+    <div class="value-row"><div class="value-tick">✓</div><p><?= $fr ? "Magasinez gratuitement - aucuns frais de compte" : "Free to shop - no account fees, ever" ?></p></div>
     <div class="value-row"><div class="value-tick">✓</div><p><?= $fr ? "Vendeurs locaux de confiance, vérifiés avant leur mise en ligne" : "Trusted local sellers, verified before they go live" ?></p></div>
     <div class="value-row"><div class="value-tick">✓</div><p><?= $fr ? "Livraison zéro émission pour chaque commande" : "Zero-emission delivery on every single order" ?></p></div>
     <div class="value-row"><div class="value-tick">✓</div><p><?= $fr ? "Bâti et exploité au Québec" : "Built and operated in Québec" ?></p></div>
@@ -139,11 +139,11 @@ $fr = ($currentLang === 'fr');
       <div class="flow-row"><span class="flow-badge"><?= $fr ? "Centrale Acheteur" : "Buyer Central" ?></span></div>
       <div class="flow-arrow-down">↓</div>
       <div class="flow-row"><span class="flow-badge flow-badge-livreur"><?= $fr
-        ? "Centrale Livreur — la couche de livraison derrière toutes les commandes ci-dessus"
-        : "Driver Central — the delivery layer underneath every order above" ?></span></div>
+        ? "Centrale Livreur - la couche de livraison derrière toutes les commandes ci-dessus"
+        : "Driver Central - the delivery layer underneath every order above" ?></span></div>
       <p class="flow-explainer"><?= $fr
-        ? "OCSAPP n’est pas un assemblage de six applications distinctes — c’est un seul système connecté. Les vendeurs affichent leurs produits dans la <strong>Centrale Vendeur</strong>, les fournisseurs proposent leurs produits en gros dans la <strong>Centrale Fournisseur</strong>, et les entreprises s’approvisionnent ou distribuent par la <strong>Centrale Entreprise</strong> — le tout se retrouve dans la <strong>Centrale Marché</strong>, où les acheteurs magasinent avec la <strong>Centrale Acheteur</strong>. Et chacune de ces commandes passe par la <strong>Centrale Livreur</strong>, notre propre réseau de livreurs zéro émission. Les mêmes principes de tarification, les mêmes livreurs et la même plateforme, peu importe votre point d’entrée."
-        : "OCSAPP isn't six separate apps stitched together — it's one connected system. Sellers list on <strong>Seller Central</strong>, suppliers list wholesale goods on <strong>Supplier Central</strong>, and businesses source or distribute through <strong>Business Central</strong> — all of it surfaces on <strong>Marketplace Central</strong>, where buyers shop through <strong>Buyer Central</strong>. And every one of those orders moves through <strong>Driver Central</strong>, our own zero-emission driver network. Same pricing principles, same drivers, same platform, however you come in." ?></p>
+        ? "OCSAPP n’est pas un assemblage de six applications distinctes - c’est un seul système connecté. Les vendeurs affichent leurs produits dans la <strong>Centrale Vendeur</strong>, les fournisseurs proposent leurs produits en gros dans la <strong>Centrale Fournisseur</strong>, et les entreprises s’approvisionnent ou distribuent par la <strong>Centrale Entreprise</strong> - le tout se retrouve dans la <strong>Centrale Marché</strong>, où les acheteurs magasinent avec la <strong>Centrale Acheteur</strong>. Et chacune de ces commandes passe par la <strong>Centrale Livreur</strong>, notre propre réseau de livreurs zéro émission. Les mêmes principes de tarification, les mêmes livreurs et la même plateforme, peu importe votre point d’entrée."
+        : "OCSAPP isn't six separate apps stitched together - it's one connected system. Sellers list on <strong>Seller Central</strong>, suppliers list wholesale goods on <strong>Supplier Central</strong>, and businesses source or distribute through <strong>Business Central</strong> - all of it surfaces on <strong>Marketplace Central</strong>, where buyers shop through <strong>Buyer Central</strong>. And every one of those orders moves through <strong>Driver Central</strong>, our own zero-emission driver network. Same pricing principles, same drivers, same platform, however you come in." ?></p>
     </div>
 
     <!-- 01 Marketplace Central -->
@@ -158,8 +158,8 @@ $fr = ($currentLang === 'fr');
         ? "Commerces locaux, aire de restauration et restaurants populaires, épiceries locales à bas prix"
         : "Local shops, food court and top restaurants, local groceries at low prices" ?></p>
       <p class="desc"><?= $fr
-        ? "Nous développons la Centrale Marché un commerce local à la fois — organisée selon ce dont vous avez réellement besoin maintenant, plutôt que selon qu’il s’agisse techniquement d’un produit ou d’un service. Chaque commande est à prix fixe, affiché avant le paiement, avec livraison express par notre propre réseau de livreurs zéro émission."
-        : "We're growing Marketplace Central one local shop at a time — organized by what you actually need right now, not by whether it's technically a product or a service. Every order is fixed-price and disclosed before you check out, with express delivery through our own zero-emission drivers." ?></p>
+        ? "Nous développons la Centrale Marché un commerce local à la fois - organisée selon ce dont vous avez réellement besoin maintenant, plutôt que selon qu’il s’agisse techniquement d’un produit ou d’un service. Chaque commande est à prix fixe, affiché avant le paiement, avec livraison express par notre propre réseau de livreurs zéro émission."
+        : "We're growing Marketplace Central one local shop at a time - organized by what you actually need right now, not by whether it's technically a product or a service. Every order is fixed-price and disclosed before you check out, with express delivery through our own zero-emission drivers." ?></p>
       <div class="chips">
         <span class="chip"><img alt="" class="chip-icon" src="<?= asset('images/about/chip-restauration.png') ?>">Restauration</span>
         <span class="chip"><img alt="" class="chip-icon" src="<?= asset('images/about/chip-epicerie.png') ?>">Épicerie</span>
@@ -188,8 +188,8 @@ $fr = ($currentLang === 'fr');
         ? "La Centrale Vendeur met votre vitrine en ligne en quelques minutes, vous donne un véritable contrôle sur les commandes et l’inventaire et vous aide à promouvoir votre marque auprès d’acheteurs qui magasinent déjà à proximité."
         : "Seller Central gets your storefront live in minutes, gives you real order and stock control, and helps you promote your brand to buyers already shopping nearby." ?></p>
       <p class="quote"><?= $fr
-        ? "« Toutes les plateformes annoncent un petit chiffre. Nous sommes les seuls à vous montrer la facture complète avant votre inscription — commission, traitement et frais de livraison, tous séparés et clairement divulgués. »"
-        : "\"Every platform advertises a low number. We're the only one that shows you the whole invoice before you sign up — commission, processing, and delivery fee, all separate, all disclosed.\"" ?></p>
+        ? "« Toutes les plateformes annoncent un petit chiffre. Nous sommes les seuls à vous montrer la facture complète avant votre inscription - commission, traitement et frais de livraison, tous séparés et clairement divulgués. »"
+        : "\"Every platform advertises a low number. We're the only one that shows you the whole invoice before you sign up - commission, processing, and delivery fee, all separate, all disclosed.\"" ?></p>
       <a class="service-cta" href="<?= url('/seller-central') ?>"><?= $fr ? "Devenir vendeur fondateur →" : "Become a founding seller →" ?></a>
     </div>
 
@@ -205,8 +205,8 @@ $fr = ($currentLang === 'fr');
         ? "Parcourez les produits locaux, choisissez la livraison rapide ou planifiée et profitez d’offres exclusives"
         : "Browse local products, ASAP or scheduled delivery, exclusive deals" ?></p>
       <p class="desc"><?= $fr
-        ? "La Centrale Acheteur est gratuite, avec suivi de commande en temps réel du paiement jusqu’à votre porte — ainsi que des offres réservées aux acheteurs OCSAPP."
-        : "Buyer Central is free to use, with real-time order tracking from the moment you check out to the moment it's at your door — plus deals only available to OCSAPP buyers." ?></p>
+        ? "La Centrale Acheteur est gratuite, avec suivi de commande en temps réel du paiement jusqu’à votre porte - ainsi que des offres réservées aux acheteurs OCSAPP."
+        : "Buyer Central is free to use, with real-time order tracking from the moment you check out to the moment it's at your door - plus deals only available to OCSAPP buyers." ?></p>
       <p class="quote"><?= $fr
         ? "« Aucun frais caché. Aucun calcul surprise. Seulement le prix que vous avez vu. »"
         : "\"No hidden fees. No surprise math. Just the price you saw.\"" ?></p>
@@ -225,8 +225,8 @@ $fr = ($currentLang === 'fr');
         ? "Tarification de gros flexible, traitement et suivi en temps réel"
         : "Flexible wholesale pricing, live fulfillment and tracking" ?></p>
       <p class="desc"><?= $fr
-        ? "Si vous fournissez en gros, la Centrale Fournisseur vous relie directement au réseau d’entreprises OCSAPP — avec des forfaits flexibles, une commission transparente et aucune majoration cachée ajoutée à vos prix."
-        : "If you supply in bulk, Supplier Central connects you directly to OCSAPP's business network — flexible plans, transparent commission, and no hidden markup added on top of what you charge." ?></p>
+        ? "Si vous fournissez en gros, la Centrale Fournisseur vous relie directement au réseau d’entreprises OCSAPP - avec des forfaits flexibles, une commission transparente et aucune majoration cachée ajoutée à vos prix."
+        : "If you supply in bulk, Supplier Central connects you directly to OCSAPP's business network - flexible plans, transparent commission, and no hidden markup added on top of what you charge." ?></p>
       <p class="quote"><?= $fr
         ? "« Une seule commission. Pas des frais de marché en plus d’un contrat de logistique. »"
         : "\"One commission. Not a marketplace fee and a logistics contract.\"" ?></p>
@@ -245,11 +245,11 @@ $fr = ($currentLang === 'fr');
         ? "Approvisionnement et distribution, solutions de bureau et d’aire de repos, gestion de compte"
         : "Procurement &amp; distribution, office &amp; breakroom solutions, account management" ?></p>
       <p class="desc"><?= $fr
-        ? "La Centrale Entreprise regroupe plusieurs fournisseurs en une seule livraison avec des frais fixes de 1 % et aucune majoration, intègre vos propres expéditions à notre réseau calibré par zone et couvre l’approvisionnement du bureau et de l’aire de repos — avec des forfaits adaptés aux entreprises de toutes tailles."
-        : "Business Central consolidates multiple suppliers into a single delivery at a flat 1% fee with zero markup, puts your own shipments on our zone-calibrated network, and covers office and breakroom sourcing — with plans built for businesses of every size." ?></p>
+        ? "La Centrale Entreprise regroupe plusieurs fournisseurs en une seule livraison avec des frais fixes de 1 % et aucune majoration, intègre vos propres expéditions à notre réseau calibré par zone et couvre l’approvisionnement du bureau et de l’aire de repos - avec des forfaits adaptés aux entreprises de toutes tailles."
+        : "Business Central consolidates multiple suppliers into a single delivery at a flat 1% fee with zero markup, puts your own shipments on our zone-calibrated network, and covers office and breakroom sourcing - with plans built for businesses of every size." ?></p>
       <p class="quote"><?= $fr
-        ? "« Accès complet à l’API, soutien logistique dédié, une seule facture — pas cinq fournisseurs qui prétendent former un seul système. »"
-        : "\"Full API access, dedicated logistics support, one bill — not five vendors pretending to be one system.\"" ?></p>
+        ? "« Accès complet à l’API, soutien logistique dédié, une seule facture - pas cinq fournisseurs qui prétendent former un seul système. »"
+        : "\"Full API access, dedicated logistics support, one bill - not five vendors pretending to be one system.\"" ?></p>
       <a class="service-cta" href="<?= url('/distribution') ?>"><?= $fr ? "Obtenir un compte entreprise →" : "Get a business account →" ?></a>
     </div>
 
@@ -265,8 +265,8 @@ $fr = ($currentLang === 'fr');
         ? "Choisissez vos heures, revenus de base hebdomadaires, objectif zéro émission"
         : "Set your own hours, weekly base earnings, zero-emission goal" ?></p>
       <p class="desc"><?= $fr
-        ? "Chaque livraison OCSAPP — détail, fournisseur ou entreprise — passe par notre propre réseau de livreurs travailleurs autonomes, avec l’objectif d’une flotte entièrement zéro ou faible émission. La rémunération est fixe et affichée avant l’acceptation, et 100 % de chaque pourboire va directement au livreur."
-        : "Every OCSAPP delivery — retail, supplier, or business — runs through our own network of independent-contractor drivers, working toward a fully zero and low-emission fleet. Pay is fixed and shown before you accept, and 100% of every tip goes straight to the driver." ?></p>
+        ? "Chaque livraison OCSAPP - détail, fournisseur ou entreprise - passe par notre propre réseau de livreurs travailleurs autonomes, avec l’objectif d’une flotte entièrement zéro ou faible émission. La rémunération est fixe et affichée avant l’acceptation, et 100 % de chaque pourboire va directement au livreur."
+        : "Every OCSAPP delivery - retail, supplier, or business - runs through our own network of independent-contractor drivers, working toward a fully zero and low-emission fleet. Pay is fixed and shown before you accept, and 100% of every tip goes straight to the driver." ?></p>
       <p class="quote"><?= $fr
         ? "« Connaissez votre tarif avant de dire oui. Pas après, et pas selon la demande du moment. »"
         : "\"Know your rate before you say yes. Not after, not 'it depends on demand right now.'\"" ?></p>
@@ -308,8 +308,8 @@ $fr = ($currentLang === 'fr');
   <div class="wrap">
     <h3><?= $fr ? "Où sont hébergées vos données" : "Where your data lives" ?></h3>
     <p><?= $fr
-      ? "La plateforme et l’infrastructure propres à OCSAPP sont basées au Canada. Certains partenaires de traitement des paiements auxquels nous faisons appel — notamment Stripe et PayPal — peuvent traiter des données de transaction à l’extérieur du Canada, y compris aux États-Unis, dans le cadre de leurs opérations normales de sécurité et de conformité. Tous les détails se trouvent dans notre <a href=\"" . url('/privacy') . "\">Politique de confidentialité</a>."
-      : "OCSAPP's own platform and infrastructure are based in Canada. Certain payment processing partners we rely on — including Stripe and PayPal — may process payment transaction data outside Canada, including in the United States, as part of their own standard security and compliance operations. Full details are in our <a href=\"" . url('/privacy') . "\">Privacy Policy</a>." ?></p>
+      ? "La plateforme et l’infrastructure propres à OCSAPP sont basées au Canada. Certains partenaires de traitement des paiements auxquels nous faisons appel - notamment Stripe et PayPal - peuvent traiter des données de transaction à l’extérieur du Canada, y compris aux États-Unis, dans le cadre de leurs opérations normales de sécurité et de conformité. Tous les détails se trouvent dans notre <a href=\"" . url('/privacy') . "\">Politique de confidentialité</a>."
+      : "OCSAPP's own platform and infrastructure are based in Canada. Certain payment processing partners we rely on - including Stripe and PayPal - may process payment transaction data outside Canada, including in the United States, as part of their own standard security and compliance operations. Full details are in our <a href=\"" . url('/privacy') . "\">Privacy Policy</a>." ?></p>
     <div class="trust-grid">
       <div class="trust-card">
         <h4><?= $fr ? "Plateforme basée au Canada" : "Canadian-based platform" ?></h4>
