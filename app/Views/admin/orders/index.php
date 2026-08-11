@@ -518,7 +518,20 @@ ob_start();
       <div class="stat-label">Total Revenue</div>
       <div class="stat-value"><?= currency($stats['total_revenue'] ?? 0) ?></div>
     </div>
+
+    <a href="<?= url('admin/orders') ?>?stalled=1" class="stat-card red" style="text-decoration:none;color:inherit;" title="Orders sitting in pending/confirmed/processing for 2+ hours - review manually">
+      <div class="stat-label">Stalled (2h+)</div>
+      <div class="stat-value"><?= number_format($stats['stalled'] ?? 0) ?></div>
+    </a>
   </div>
+
+  <?php if (!empty($filters['stalled'])): ?>
+    <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 16px;margin-bottom:16px;font-size:13px;color:#991b1b;">
+      <i class="fas fa-exclamation-triangle"></i>
+      Showing stalled orders only - in pending, confirmed, or processing with no movement for 2+ hours.
+      <a href="<?= url('admin/orders') ?>" style="color:#991b1b;font-weight:600;">Clear filter</a>
+    </div>
+  <?php endif; ?>
 
   <!-- Filters -->
   <div class="filters-card">
@@ -615,6 +628,11 @@ ob_start();
               <span class="status-badge status-<?= $order['status'] ?? 'pending' ?>">
                 <?= ucfirst($order['status'] ?? 'Pending') ?>
               </span>
+              <?php if (!empty($order['stalled_hours'])): ?>
+                <br><span style="display:inline-block;margin-top:4px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:600;" title="No status movement for <?= (int)$order['stalled_hours'] ?> hours">
+                  <i class="fas fa-clock"></i> Stalled <?= (int)$order['stalled_hours'] ?>h
+                </span>
+              <?php endif; ?>
             </td>
 
             <td>

@@ -211,5 +211,31 @@ foreach ($todayStats as $ts) {
 </div>
 
 <?php include __DIR__ . '/../../components/footer.php'; ?>
+
+<script>
+// Submit status updates via fetch so the seller stays on this page
+// (the endpoint returns JSON, not a redirect)
+document.querySelectorAll('form[action*="update-status"]').forEach(function (form) {
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var btn = form.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        fetch(form.action, { method: 'POST', body: new FormData(form) })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert(data.message || 'Update failed.');
+                    btn.disabled = false;
+                }
+            })
+            .catch(function () {
+                alert('Update failed. Please try again.');
+                btn.disabled = false;
+            });
+    });
+});
+</script>
 </body>
 </html>

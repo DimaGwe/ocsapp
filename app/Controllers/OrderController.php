@@ -636,6 +636,8 @@ class OrderController
             $statusField = '';
             if ($newStatus === 'confirmed') {
                 $statusField = ', confirmed_at = NOW()';
+            } elseif ($newStatus === 'processing') {
+                $statusField = ', processing_at = NOW()';
             } elseif ($newStatus === 'ready') {
                 $statusField = ', ready_at = NOW()';
             } elseif ($newStatus === 'cancelled') {
@@ -727,6 +729,13 @@ class OrderController
         $dateFrom = sanitize(get('date_from', ''));
         $dateTo = sanitize(get('date_to', ''));
         $search = sanitize(get('search', ''));
+        $stalled = get('stalled', '') === '1';
+
+        // An order is "stalled" when it sits in a pre-pickup state (pending/
+        // confirmed/processing) with no movement for 2+ hours - flagged for
+        // manual review, never an automatic penalty (Backend Requirements Sec. 9)
+        $stalledExpr = "(o.status IN ('pending','confirmed','processing')
+            AND TIMESTAMPDIFF(HOUR, COALESCE(o.processing_at, o.confirmed_at, o.updated_at), NOW()) >= 2)";
         
         try {
             // Build query
@@ -757,9 +766,13 @@ class OrderController
                 $where .= " AND (o.order_number LIKE :search OR u.first_name LIKE :search OR u.last_name LIKE :search)";
                 $params['search'] = "%$search%";
             }
-            
+
+            if ($stalled) {
+                $where .= " AND $stalledExpr";
+            }
+
             // Get total count
-            $countQuery = "SELECT COUNT(*) as total FROM orders o $where";
+            $countQuery = "SELECT COUNT(*) as total FROM orders o LEFT JOIN users u ON o.user_id = u.id $where";
             $stmt = $this->db->prepare($countQuery);
             $stmt->execute($params);
             $totalOrders = $stmt->fetch(\PDO::FETCH_ASSOC)['total'];
@@ -772,7 +785,10 @@ class OrderController
                     u.first_name,
                     u.last_name,
                     u.email as customer_email,
-                    (SELECT COUNT(*) FROM order_items WHERE order_id = o.id) as items_count
+                    (SELECT COUNT(*) FROM order_items WHERE order_id = o.id) as items_count,
+                    CASE WHEN $stalledExpr
+                        THEN TIMESTAMPDIFF(HOUR, COALESCE(o.processing_at, o.confirmed_at, o.updated_at), NOW())
+                        ELSE NULL END as stalled_hours
                 FROM orders o
                 LEFT JOIN shops s ON o.shop_id = s.id
                 LEFT JOIN users u ON o.user_id = u.id
@@ -804,7 +820,10 @@ class OrderController
                     SUM(CASE WHEN status = 'delivered' THEN 1 ELSE 0 END) as delivered,
                     SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled,
                     SUM(CASE WHEN DATE(created_at) = CURDATE() THEN total ELSE 0 END) as today_revenue,
-                    SUM(total) as total_revenue
+                    SUM(total) as total_revenue,
+                    SUM(CASE WHEN status IN ('pending','confirmed','processing')
+                        AND TIMESTAMPDIFF(HOUR, COALESCE(processing_at, confirmed_at, updated_at), NOW()) >= 2
+                        THEN 1 ELSE 0 END) as stalled
                 FROM orders
             ");
             
@@ -824,7 +843,8 @@ class OrderController
                     'shop' => $shop,
                     'date_from' => $dateFrom,
                     'date_to' => $dateTo,
-                    'search' => $search
+                    'search' => $search,
+                    'stalled' => $stalled
                 ]
             ]);
             

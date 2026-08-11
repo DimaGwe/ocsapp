@@ -391,5 +391,29 @@ $sc = $statusColors[$order['status'] ?? ''] ?? ['bg'=>'#f5f5f5','color'=>'#555']
 </div>
 
 <?php include __DIR__ . '/../../components/footer.php'; ?>
+
+<?php if (!in_array($order['status'] ?? '', ['delivered', 'cancelled', 'refunded'])): ?>
+<script>
+// Live status tracking: poll while the order is active, reload on any change
+(function () {
+    const orderId = <?= (int)($order['id'] ?? 0) ?>;
+    const currentStatus = <?= json_encode($order['status'] ?? '') ?>;
+    const currentDriverStatus = <?= json_encode($order['driver_status'] ?? null) ?>;
+    if (!orderId) return;
+
+    setInterval(function () {
+        fetch('<?= url('api/buyer/order/status') ?>?id=' + orderId, { cache: 'no-store' })
+            .then(r => r.ok ? r.json() : null)
+            .then(data => {
+                if (!data || !data.success) return;
+                if (data.status !== currentStatus || data.driver_status !== currentDriverStatus) {
+                    window.location.reload();
+                }
+            })
+            .catch(() => {});
+    }, 15000);
+})();
+</script>
+<?php endif; ?>
 </body>
 </html>

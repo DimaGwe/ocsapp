@@ -1033,5 +1033,6 @@ return [
     'POST /api/distribution/{id}/step'        => ['Api\\DriverApiController', 'recordDistributionStep'],
     'GET /api/distribution/request/status'   => ['Api\\DistributionStatusController', 'status'],
     'GET /api/supplier/order/status'         => ['Api\\SupplierOrderStatusController', 'status'],
+    'GET /api/buyer/order/status'            => ['Api\\BuyerOrderStatusController', 'status'],
     'GET /api/admin/distribution/status'     => ['Api\\AdminDistributionStatusController', 'status'],
 ];
