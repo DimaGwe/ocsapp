@@ -1,867 +1,457 @@
 <?php
 /**
- * OCSAPP Seller Central - Landing Page
- * Marketing-first: persuasion over documentation - EN/FR bilingual
+ * OCSAPP Seller Central - marketing landing page
+ * Bilingual: EN / FR
+ * Rebuilt 2026-08 from the approved "seller-central FINAL PACKAGE UPDATE"
+ * (Updates.zip): weight-field messaging, buyer-paid surcharge disclosure,
+ * Monday payout terms, expanded FAQ.
  */
 $currentLang = $_SESSION['language'] ?? 'fr';
-$t  = function_exists('getTranslations') ? getTranslations($currentLang) : [];
-$fr = $currentLang === 'fr';
+$fr = ($currentLang === 'fr');
 ?>
 <!DOCTYPE html>
 <html lang="<?= htmlspecialchars($currentLang) ?>">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><?= $fr ? 'Vendeur Central - Ouvrez Votre Boutique sur OCSAPP' : 'Seller Central - Open Your Store on OCSAPP' ?></title>
-  <?= csrfMeta() ?>
+  <title><?= $fr ? "Espace Vendeur - Ouvrez votre boutique - OCSAPP" : "Seller Central - Open Your Shop - OCSAPP" ?></title>
+  <meta name="description" content="<?= $fr
+    ? "Ouvrez votre boutique sur la Marketplace OCSAPP : 4 forfaits dès 0 $, commission fixe et affichée, livraison zéro émission incluse."
+    : "Open your shop on the OCSAPP Marketplace: 4 plans starting at $0, fixed disclosed commission, zero-emission delivery included." ?>">
   <link rel="icon" type="image/png" href="<?= asset('images/logo.png') ?>">
   <meta name="theme-color" content="#00b207">
+  <?= csrfMeta() ?>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="<?= asset('css/global.css') ?>">
   <link rel="stylesheet" href="<?= asset('css/components/header.css') ?>">
   <link rel="stylesheet" href="<?= asset('css/components/footer.css') ?>">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-  <style>
-    :root {
-      --green:      #00b207;
-      --green-dark: #007a05;
-      --neon:       #00ff88;
-      --text:       #374151;
-      --muted:      #6b7280;
-      --border:     #e5e7eb;
-      --light:      #f9fafb;
-      --blue:       #3b82f6;
-      --purple:     #7c3aed;
-      --orange:     #f97316;
-    }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; color: var(--text); line-height: 1.65; }
-    a { text-decoration: none; }
-    .container { max-width: 1160px; margin: 0 auto; padding: 0 24px; }
-
-    .eyebrow {
-      display: inline-block; font-size: 11px; font-weight: 700;
-      letter-spacing: 1.8px; text-transform: uppercase;
-      padding: 5px 16px; border-radius: 20px; margin-bottom: 16px;
-    }
-    .eyebrow-green { background: rgba(0,178,7,.12); color: var(--green); }
-    .eyebrow-neon  { background: rgba(0,255,136,.12); border: 1px solid rgba(0,255,136,.25); color: var(--neon); }
-
-    .section-label { text-align: center; margin-bottom: 12px; }
-    h2.section-title {
-      text-align: center; font-size: clamp(26px,4vw,38px);
-      font-weight: 800; color: #111827; line-height: 1.2; margin-bottom: 14px;
-    }
-    h2.section-title.light { color: white; }
-    p.section-sub {
-      text-align: center; font-size: 17px; color: var(--muted);
-      max-width: 640px; margin: 0 auto 52px; line-height: 1.7;
-    }
-    p.section-sub.light { color: rgba(255,255,255,.65); }
-
-    /* ── SECTION WRAPPERS ── */
-    .section-white { background: white;        padding: 88px 24px; }
-    .section-light { background: var(--light); padding: 88px 24px; }
-    .section-dark  {
-      background: linear-gradient(140deg, #060a1a 0%, #0a1a0c 55%, #0c2e10 100%);
-      padding: 88px 24px; position: relative; overflow: hidden;
-    }
-    .section-dark::before {
-      content: ''; position: absolute; border-radius: 50%; pointer-events: none;
-      width: 600px; height: 600px; top: -160px; right: -100px;
-      background: radial-gradient(circle, rgba(0,178,7,.14) 0%, transparent 65%);
-    }
-    .section-dark::after {
-      content: ''; position: absolute; border-radius: 50%; pointer-events: none;
-      width: 400px; height: 400px; bottom: -100px; left: -60px;
-      background: radial-gradient(circle, rgba(0,255,136,.07) 0%, transparent 65%);
-    }
-    .section-dark .container { position: relative; z-index: 1; }
-
-    /* ── HERO ── */
-    .hero {
-      background: linear-gradient(140deg, #060a1a 0%, #0a1a0c 55%, #0c2e10 100%);
-      padding: 100px 24px 96px; text-align: center; position: relative; overflow: hidden;
-    }
-    .hero::before {
-      content: ''; position: absolute; border-radius: 50%; pointer-events: none;
-      width: 700px; height: 700px; top: -200px; right: -150px;
-      background: radial-gradient(circle, rgba(0,178,7,.16) 0%, transparent 65%);
-    }
-    .hero::after {
-      content: ''; position: absolute; border-radius: 50%; pointer-events: none;
-      width: 500px; height: 500px; bottom: -120px; left: -80px;
-      background: radial-gradient(circle, rgba(0,255,136,.08) 0%, transparent 65%);
-    }
-    .hero-inner { position: relative; z-index: 1; max-width: 820px; margin: 0 auto; }
-    .hero h1 {
-      font-size: clamp(38px,6vw,66px); font-weight: 900; color: white;
-      line-height: 1.0; letter-spacing: -2px; margin-bottom: 24px;
-    }
-    .hero h1 .accent { color: var(--neon); }
-    .hero-sub {
-      font-size: 19px; color: rgba(255,255,255,.7); max-width: 580px;
-      margin: 0 auto 44px; line-height: 1.7;
-    }
-    .hero-badges { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 44px; }
-    .hero-badge {
-      background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12);
-      color: rgba(255,255,255,.75); font-size: 12px; font-weight: 600;
-      padding: 6px 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px;
-    }
-    .hero-ctas { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
-    .btn-primary-lg {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: var(--green); color: white; font-weight: 700; font-size: 15px;
-      padding: 15px 34px; border-radius: 10px; transition: background .2s, transform .15s;
-    }
-    .btn-primary-lg:hover { background: var(--green-dark); transform: translateY(-2px); }
-    .btn-outline-lg {
-      display: inline-flex; align-items: center; gap: 8px;
-      border: 2px solid rgba(255,255,255,.25); color: rgba(255,255,255,.85);
-      font-weight: 600; font-size: 15px; padding: 13px 28px; border-radius: 10px;
-      transition: border-color .2s, color .2s;
-    }
-    .btn-outline-lg:hover { border-color: rgba(255,255,255,.55); color: white; }
-
-    /* ── STATS BAR ── */
-    .stats-bar { background: white; border-bottom: 1px solid var(--border); padding: 20px 0; }
-    .stats-inner { display: flex; justify-content: center; flex-wrap: wrap; }
-    .stat-pill { display: flex; align-items: center; gap: 12px; padding: 12px 32px; border-right: 1px solid var(--border); }
-    .stat-pill:last-child { border-right: none; }
-    .stat-pill-icon { width: 36px; height: 36px; border-radius: 8px; background: rgba(0,178,7,.1); color: var(--green); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
-    .stat-pill-val { font-size: 20px; font-weight: 800; color: #111827; line-height: 1; }
-    .stat-pill-lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
-
-    /* ── 3 PILLARS ── */
-    .pillars-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; margin-top: 48px; }
-    .pillar-card { border-radius: 16px; padding: 36px 28px; border: 2px solid transparent; position: relative; overflow: hidden; }
-    .pillar-card.g { background: #f0fdf4; border-color: #86efac; }
-    .pillar-card.b { background: #eff6ff; border-color: #bfdbfe; }
-    .pillar-card.p { background: #f5f3ff; border-color: #ddd6fe; }
-    .pillar-num { position: absolute; top: 16px; right: 20px; font-size: 64px; font-weight: 900; opacity: .06; line-height: 1; }
-    .pillar-icon { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 26px; margin-bottom: 20px; }
-    .pillar-card.g .pillar-icon { background: #d1fae5; }
-    .pillar-card.b .pillar-icon { background: #dbeafe; }
-    .pillar-card.p .pillar-icon { background: #ede9fe; }
-    .pillar-card h3 { font-size: 19px; font-weight: 700; color: #111827; margin-bottom: 10px; }
-    .pillar-card p  { font-size: 14px; color: var(--muted); line-height: 1.75; }
-
-    /* ── HOW IT WORKS - 3 horizontal steps ── */
-    .how-3 { display: flex; align-items: flex-start; gap: 0; margin-top: 56px; }
-    .how-step { flex: 1; text-align: center; padding: 0 28px; }
-    .how-arrow { font-size: 26px; color: var(--green); padding-top: 36px; flex-shrink: 0; opacity: .35; font-weight: 900; }
-    .how-num {
-      width: 48px; height: 48px; border-radius: 50%; background: var(--green);
-      color: white; font-size: 20px; font-weight: 900;
-      display: inline-flex; align-items: center; justify-content: center; margin-bottom: 18px;
-    }
-    .how-icon { font-size: 38px; margin-bottom: 14px; display: block; }
-    .how-step h3 { font-size: 17px; font-weight: 700; color: #111827; margin-bottom: 10px; }
-    .how-step p  { font-size: 14px; color: var(--muted); line-height: 1.7; }
-    .how-time {
-      display: inline-block; margin-top: 16px; font-size: 12px; font-weight: 700;
-      color: var(--green); background: rgba(0,178,7,.1); padding: 5px 14px; border-radius: 20px;
-    }
-
-    /* ── FEATURES ── */
-    .features-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; margin-top: 48px; }
-    .feature-card { border-radius: 14px; padding: 26px; border: 1px solid var(--border); background: white; }
-    .feature-icon { font-size: 28px; margin-bottom: 14px; display: block; }
-    .feature-card h4 { font-size: 15px; font-weight: 700; color: #111827; margin-bottom: 8px; }
-    .feature-card p  { font-size: 13px; color: var(--muted); line-height: 1.7; }
-
-    /* ── TRUST / CATEGORY CHIPS ── */
-    .category-chips { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 40px; }
-    .category-chip {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: white; border: 1px solid var(--border);
-      padding: 10px 20px; border-radius: 40px; font-size: 14px; font-weight: 600; color: var(--text);
-      box-shadow: 0 1px 4px rgba(0,0,0,.06);
-    }
-    .quote-card {
-      background: white; border-radius: 16px; border: 1px solid var(--border);
-      padding: 36px 40px; max-width: 680px; margin: 52px auto 0;
-      position: relative; box-shadow: 0 4px 24px rgba(0,0,0,.06);
-    }
-    .quote-card::before {
-      content: '"'; position: absolute; top: -18px; left: 36px;
-      font-size: 80px; color: var(--green); font-family: Georgia, serif; line-height: 1; opacity: .25;
-    }
-    .quote-text { font-size: 17px; color: #111827; line-height: 1.8; font-style: italic; margin-bottom: 20px; }
-    .quote-author { display: flex; align-items: center; gap: 14px; }
-    .quote-avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #d1fae5, #86efac); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-    .quote-name { font-size: 14px; font-weight: 700; color: #111827; }
-    .quote-role { font-size: 12px; color: var(--muted); margin-top: 2px; }
-
-    /* ── PACKAGES ── */
-    .packages-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 20px; margin-top: 48px; }
-    .pkg-card {
-      border-radius: 16px; border: 2px solid var(--border);
-      padding: 28px 22px; background: white; position: relative;
-      transition: transform .2s, box-shadow .2s;
-      display: flex; flex-direction: column;
-    }
-    .pkg-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,.15); }
-    .pkg-popular {
-      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-      color: white; font-size: 10px; font-weight: 700;
-      padding: 3px 14px; border-radius: 20px; white-space: nowrap; letter-spacing: .5px;
-    }
-    .pkg-name { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
-    .pkg-desc { font-size: 12px; color: rgba(255,255,255,.55); margin-bottom: 12px; line-height: 1.5; }
-    .pkg-price { margin: 14px 0 0; }
-    .pkg-price-num { font-size: 26px; font-weight: 900; line-height: 30px; display: block; }
-    .pkg-price-lbl { font-size: 11px; color: rgba(255,255,255,.45); font-weight: 600; text-transform: uppercase; letter-spacing: .8px; margin-top: 3px; display: block; }
-    .pkg-ess .pkg-price-num { color: #4ade80; }
-    .pkg-exp .pkg-price-num { color: #93c5fd; }
-    .pkg-pre .pkg-price-num { color: #c084fc; }
-    .pkg-ent .pkg-price-num { color: #94a3b8; }
-    .pkg-rate { margin: 10px 0 0; }
-    .pkg-rate-num { font-size: 26px; font-weight: 900; line-height: 30px; display: block; }
-    .pkg-rate-lbl { font-size: 11px; color: rgba(255,255,255,.45); font-weight: 600; text-transform: uppercase; letter-spacing: .8px; margin-top: 3px; display: block; }
-    .pkg-ess .pkg-rate-num { color: #4ade80; }
-    .pkg-exp .pkg-rate-num { color: #93c5fd; }
-    .pkg-pre .pkg-rate-num { color: #c084fc; }
-    .pkg-ent .pkg-rate-num { color: #94a3b8; }
-    .pkg-pickup { margin: 10px 0 0; }
-    .pkg-pickup-num { font-size: 26px; font-weight: 900; line-height: 30px; display: block; }
-    .pkg-pickup-lbl { font-size: 11px; color: rgba(255,255,255,.45); font-weight: 600; text-transform: uppercase; letter-spacing: .8px; margin-top: 3px; display: block; }
-    .pkg-ess .pkg-pickup-num { color: #4ade80; }
-    .pkg-exp .pkg-pickup-num { color: #93c5fd; }
-    .pkg-pre .pkg-pickup-num { color: #c084fc; }
-    .pkg-ent .pkg-pickup-num { color: #94a3b8; }
-    .pkg-divider { border: none; border-top: 1px solid rgba(255,255,255,.12); margin: 18px 0; }
-    .pkg-features { list-style: none; flex: 1; }
-    .pkg-features li { font-size: 12.5px; padding: 5px 0; display: flex; gap: 8px; align-items: flex-start; line-height: 1.5; color: rgba(255,255,255,.85); }
-    .pkg-features li i { font-size: 11px; flex-shrink: 0; margin-top: 2px; }
-    .pkg-features li.inherited { color: rgba(255,255,255,.35); }
-    .pkg-features li.inherited i { color: rgba(255,255,255,.35); }
-    .pkg-cta {
-      display: flex; align-items: center; justify-content: center;
-      margin-top: 28px; padding: 10px 20px;
-      border-radius: 8px; font-size: 13px; font-weight: 700;
-      transition: opacity .2s, transform .15s; color: white;
-    }
-    .pkg-cta:hover { opacity: .88; transform: translateY(-1px); }
-    .pkg-cta.outline { background: rgba(255,255,255,.08) !important; border: 1px solid rgba(255,255,255,.2); }
-    .pkg-cta.outline:hover { background: rgba(255,255,255,.15) !important; }
-
-    .pkg-ess { background: #14532d; border-color: #16a34a; }
-    .pkg-ess .pkg-name { color: #4ade80; }
-    .pkg-ess .pkg-features li:not(.inherited) i { color: #4ade80; }
-    .pkg-ess .pkg-cta { background: #16a34a; }
-    .pkg-ess .pkg-divider { border-color: rgba(74,222,128,.2); }
-
-    .pkg-exp { background: #1e3a8a; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59,130,246,.2); }
-    .pkg-exp .pkg-name { color: #93c5fd; }
-    .pkg-exp .pkg-popular { background: #3b82f6; }
-    .pkg-exp .pkg-features li:not(.inherited) i { color: #93c5fd; }
-    .pkg-exp .pkg-cta { background: #3b82f6; }
-    .pkg-exp .pkg-divider { border-color: rgba(147,197,253,.2); }
-
-    .pkg-pre { background: #3b0764; border-color: #9333ea; }
-    .pkg-pre .pkg-name { color: #c084fc; }
-    .pkg-pre .pkg-features li:not(.inherited) i { color: #c084fc; }
-    .pkg-pre .pkg-cta { background: #9333ea; }
-    .pkg-pre .pkg-divider { border-color: rgba(192,132,252,.2); }
-
-    .pkg-ent { background: #0f172a; border-color: #475569; }
-    .pkg-ent .pkg-name { color: #94a3b8; }
-    .pkg-ent .pkg-features li:not(.inherited) i { color: #94a3b8; }
-    .pkg-ent .pkg-cta { background: #334155; }
-    .pkg-ent .pkg-divider { border-color: rgba(148,163,184,.15); }
-
-    .plan-note {
-      background: rgba(251,146,60,.08); border-left: 4px solid var(--orange);
-      border-radius: 0 12px 12px 0; padding: 16px 22px;
-      font-size: 14px; color: #fed7aa; line-height: 1.7; margin-top: 32px;
-    }
-    .plan-note strong { color: #fdba74; }
-
-    /* ── FAQ ── */
-    .faq { margin-top: 48px; }
-    .faq-item { border-bottom: 1px solid var(--border); }
-    .faq-item:last-child { border-bottom: none; }
-    .faq-q {
-      width: 100%; text-align: left; background: none; border: none; cursor: pointer;
-      font-size: 15px; font-weight: 700; color: #111827; padding: 20px 0;
-      display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    }
-    .faq-q:hover { color: var(--green); }
-    .faq-q i { font-size: 12px; color: var(--muted); transition: transform .25s; flex-shrink: 0; }
-    .faq-q.open i { transform: rotate(180deg); color: var(--green); }
-    .faq-a { font-size: 14px; color: var(--muted); line-height: 1.8; padding: 0 0 20px 0; display: none; }
-    .faq-a.open { display: block; }
-
-    /* ── CONTACT BOX ── */
-    .contact-box {
-      background: linear-gradient(135deg, #0c1a0e 0%, #0d3010 100%);
-      border-radius: 20px; padding: 52px 48px; color: white; position: relative; overflow: hidden;
-    }
-    .contact-box::before {
-      content: ''; position: absolute; top: -40px; right: -40px;
-      width: 280px; height: 280px; border-radius: 50%; background: rgba(0,178,7,.12);
-    }
-    .contact-box h3 { font-size: 26px; font-weight: 800; margin-bottom: 12px; position: relative; }
-    .contact-box p  { font-size: 15px; opacity: .8; line-height: 1.8; max-width: 560px; margin-bottom: 36px; position: relative; }
-    .contact-meta { display: grid; grid-template-columns: repeat(3,1fr); gap: 28px; position: relative; }
-    .contact-item .c-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: .5; margin-bottom: 4px; }
-    .contact-item .c-value { font-size: 16px; font-weight: 700; color: #86efac; }
-    .contact-item .c-sub   { font-size: 12px; opacity: .55; margin-top: 2px; }
-
-    /* ── CTA SECTION ── */
-    .cta-section { background: var(--green); padding: 80px 24px; text-align: center; }
-    .cta-section h2 { font-size: clamp(28px,4vw,42px); font-weight: 900; color: white; margin-bottom: 16px; line-height: 1.2; }
-    .cta-section p  { font-size: 17px; color: rgba(255,255,255,.8); margin-bottom: 36px; max-width: 520px; margin-left: auto; margin-right: auto; }
-    .btn-white-lg {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: white; color: var(--green); font-weight: 800; font-size: 15px;
-      padding: 15px 36px; border-radius: 10px; margin: 0 8px;
-      transition: box-shadow .2s, transform .15s;
-    }
-    .btn-white-lg:hover { box-shadow: 0 8px 24px rgba(0,0,0,.2); transform: translateY(-2px); }
-    .btn-ghost-lg {
-      display: inline-flex; align-items: center; gap: 8px;
-      border: 2px solid rgba(255,255,255,.5); color: white; font-weight: 700; font-size: 15px;
-      padding: 13px 28px; border-radius: 10px; margin: 0 8px; transition: border-color .2s;
-    }
-    .btn-ghost-lg:hover { border-color: white; }
-
-    footer.footer { margin-top: 0; }
-
-    @media (max-width: 900px) {
-      .pillars-grid, .packages-grid, .features-grid { grid-template-columns: 1fr 1fr; }
-      .how-3 { flex-direction: column; align-items: center; }
-      .how-arrow { transform: rotate(90deg); padding: 0; margin: 4px 0; }
-      .how-step { padding: 20px 0; }
-      .contact-meta { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 620px) {
-      .pillars-grid, .packages-grid, .features-grid { grid-template-columns: 1fr; }
-      .stats-inner { flex-direction: column; align-items: center; }
-      .stat-pill { border-right: none; border-bottom: 1px solid var(--border); width: 100%; justify-content: center; }
-      .stat-pill:last-child { border-bottom: none; }
-      .hero-ctas { flex-direction: column; align-items: center; }
-      .contact-box { padding: 36px 24px; }
-      .quote-card { padding: 28px 24px; }
-    }
-  </style>
+  <link rel="stylesheet" href="<?= asset('css/pages/seller-central.css') ?>">
 </head>
-<body>
+<body class="seller-central-page<?= $fr ? ' lang-fr' : '' ?>">
+<?php include __DIR__ . '/../components/header.php'; ?>
 
-<?php require __DIR__ . '/../components/header.php'; ?>
+<div class="beta-strip"><p><?= $fr
+  ? "⚠️ Version bêta - veuillez ne pas effectuer d'achats réels pour le moment"
+  : "⚠️ Beta version - please do not make real purchases at this time" ?></p></div>
 
-<!-- ═══════════════ HERO ═══════════════ -->
+<!-- HERO -->
 <section class="hero">
-  <div class="hero-inner">
-    <div class="section-label">
-      <span class="eyebrow eyebrow-neon"><i class="fas fa-store"></i> <?= $fr ? 'Programme Vendeur' : 'Seller Program' ?></span>
+  <div class="wrap">
+    <span class="eyebrow"><?= $fr ? "PROGRAMME VENDEUR" : "SELLER PROGRAM" ?></span>
+    <h1><?= $fr ? "Ouvrez votre boutique sur la <span>Marketplace OCSAPP</span>" : "Open Your Shop on the <span>OCSAPP Marketplace</span>" ?></h1>
+    <p class="hero-sub"><?= $fr
+      ? "Rejoignez le marché hyperlocal en pleine croissance dans l'Ouest-de-l'Île, avec Laval et le centre-ville de Montréal à venir bientôt. Listez vos produits, gérez vos commandes, et laissez OCSAPP s'occuper de la livraison - depuis un seul tableau de bord."
+      : "Join the growing hyperlocal marketplace in the West Island, with Laval and downtown Montreal coming soon. List your products, manage your orders, and let OCSAPP handle delivery - from a single dashboard." ?></p>
+    <div class="hero-actions">
+      <a class="btn" href="<?= url('register') ?>?role=seller"><?= $fr ? "Ouvrir ma boutique - c'est gratuit →" : "Open My Shop - It's Free →" ?></a>
+      <a class="btn-secondary" href="<?= url('seller/login') ?>"><?= $fr ? "Connexion vendeur" : "Seller Login" ?></a>
     </div>
-    <h1>
-      <?= $fr ? 'Ouvrez Votre Boutique sur' : 'Open Your Store on the' ?><br>
-      <span class="accent"><?= $fr ? 'la Marketplace OCSAPP' : 'OCSAPP Marketplace' ?></span>
-    </h1>
-    <p class="hero-sub">
-      <?= $fr
-        ? 'Rejoignez le marché hyperlocal, en pleine croissance dans le West Island, avec Laval et le centre-ville de Montréal à venir bientôt. Listez vos produits, gérez vos commandes, et laissez OCSAPP s\'occuper de la livraison — depuis un seul tableau de bord.'
-        : 'Reach customers growing in the West Island, with Laval and Montreal core coming soon. List your products, manage orders, and let OCSAPP handle delivery — all from one seller dashboard.' ?>
-    </p>
-    <div class="hero-badges">
-      <span class="hero-badge"><i class="fas fa-leaf"></i> <?= $fr ? 'Livraison zéro émission' : 'Zero-Emission Delivery' ?></span>
-      <span class="hero-badge"><i class="fas fa-map-marker-alt"></i> West Island · Grand Montréal</span>
-      <span class="hero-badge"><i class="fas fa-store"></i> <?= $fr ? 'Votre boutique de marque' : 'Your Branded Storefront' ?></span>
-      <span class="hero-badge"><i class="fas fa-mobile-alt"></i> <?= $fr ? 'Gérez depuis mobile' : 'Manage from Mobile' ?></span>
-    </div>
-    <div class="hero-ctas">
-      <?php if (function_exists('isLoggedIn') && isLoggedIn() && function_exists('userRole') && userRole() === 'seller'): ?>
-        <a href="<?= url('seller/dashboard') ?>" class="btn-primary-lg">
-          <i class="fas fa-tachometer-alt"></i> <?= $fr ? 'Tableau de bord vendeur' : 'Go to Seller Dashboard' ?>
-        </a>
-      <?php else: ?>
-        <a href="<?= url('register') ?>?role=seller" class="btn-primary-lg">
-          <i class="fas fa-rocket"></i> <?= $fr ? 'Ouvrir ma boutique — C\'est gratuit' : 'Open Your Store — It\'s Free' ?>
-        </a>
-        <a href="<?= url('seller/login') ?>" class="btn-outline-lg">
-          <i class="fas fa-sign-in-alt"></i> <?= $fr ? 'Connexion vendeur' : 'Seller Login' ?>
-        </a>
-      <?php endif; ?>
+    <div class="hero-proof-row">
+      <div class="hero-proof-item"><strong><?= $fr ? "2–5 jours" : "2–5 days" ?></strong><span><?= $fr ? "délai d'approbation" : "approval time" ?></span></div>
+      <div class="hero-proof-item"><strong><?= $fr ? "4 forfaits" : "4 plans" ?></strong><span><?= $fr ? "dès 0$, sans engagement" : "starting at $0, no commitment" ?></span></div>
+      <div class="hero-proof-item"><strong>100%</strong><span><?= $fr ? "des livraisons assurées par OCSAPP" : "of deliveries handled by OCSAPP" ?></span></div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════ STATS BAR ═══════════════ -->
-<div class="stats-bar">
-  <div class="stats-inner">
-    <div class="stat-pill">
-      <div class="stat-pill-icon"><i class="fas fa-clock"></i></div>
-      <div>
-        <div class="stat-pill-val">2–5</div>
-        <div class="stat-pill-lbl"><?= $fr ? 'jours d\'approbation' : 'Day review time' ?></div>
-      </div>
+<!-- POSITIONING STRIP -->
+<section class="positioning-strip">
+  <div class="wrap">
+    <p><?= $fr
+      ? "Votre commission est <span>fixe et affichée avant votre inscription</span> - jamais un pourcentage caché derrière un forfait « à partir de »."
+      : "Your commission is <span>fixed and disclosed before you sign up</span> - never a percentage hidden behind a \"starting at\" plan." ?></p>
+  </div>
+</section>
+
+<!-- INTRO -->
+<section class="intro">
+  <div class="wrap">
+    <h2><?= $fr ? "Vendre localement ne devrait pas coûter 30 % de commission." : "Selling locally shouldn't cost you 30% in commission." ?></h2>
+    <p><?= $fr
+      ? "Sur les grandes plateformes de livraison, une commission de 15 à 30 % ampute chaque vente avant même de couvrir vos frais. OCSAPP a été bâti pour les commerces indépendants du Québec : des forfaits qui commencent à 15 % et descendent jusqu'à 10 %, une commission toujours affichée avant votre inscription, et un réseau de livraison zéro émission inclus - jamais facturé en double."
+      : "On the big delivery platforms, a 15–30% commission eats into every sale before you've even covered your own costs. OCSAPP was built for independent Quebec businesses: plans that start at 15% and drop as low as 10%, a commission that's always disclosed before you sign up, and a zero-emission delivery network included - never billed twice." ?></p>
+  </div>
+</section>
+
+<!-- WHY OCSAPP -->
+<section class="card-section">
+  <div class="wrap">
+    <div class="section-eyebrow"><?= $fr ? "POURQUOI OCSAPP" : "WHY OCSAPP" ?></div>
+    <h2><?= $fr ? "Vendre sur OCSAPP, c'est simple." : "Selling on OCSAPP is simple." ?></h2>
+    <p class="section-lead"><?= $fr
+      ? "OCSAPP est un écosystème numérique tout-en-un québécois connectant vendeurs et acheteurs à travers un réseau de livraison hyperlocal à objectif zéro émission."
+      : "OCSAPP is an all-in-one Quebec digital ecosystem connecting sellers and buyers through a hyperlocal, zero-emission delivery network." ?></p>
+    <div class="why-grid">
+      <article class="why-card">
+        <div class="why-num">01</div>
+        <h3><?= $fr ? "Listez vos produits" : "List your products" ?></h3>
+        <p><?= $fr
+          ? "Créez votre boutique de marque en quelques minutes. Téléversez vos produits, fixez vos prix, ajoutez vos photos - et le poids de chaque article, un champ obligatoire utilisé pour calculer automatiquement les frais de livraison."
+          : "Create your branded storefront in minutes. Upload your products, set your prices, add your photos - and each item's weight, a required field used to automatically calculate delivery fees." ?></p>
+      </article>
+      <article class="why-card">
+        <div class="why-num">02</div>
+        <h3><?= $fr ? "Les acheteurs vous découvrent" : "Buyers discover you" ?></h3>
+        <p><?= $fr
+          ? "Les clients qui naviguent sur la marketplace trouvent votre boutique, ajoutent au panier et passent commande. Vous êtes notifié dès qu'une commande arrive - confirmez et préparez pour le ramassage."
+          : "Customers browsing the marketplace find your shop, add to cart, and place an order. You're notified the moment an order comes in - confirm it and prepare it for pickup." ?></p>
+      </article>
+      <article class="why-card">
+        <div class="why-num">03</div>
+        <h3><?= $fr ? "OCSAPP livre pour vous" : "OCSAPP delivers for you" ?></h3>
+        <p><?= $fr
+          ? "Notre réseau de chauffeurs ODA passe chez vous et livre aux acheteurs - 100 % des livraisons, sans exception. Vous gérez le produit, nous gérons le dernier kilomètre, avec suivi en direct."
+          : "Our network of ODA drivers picks up from your shop and delivers to buyers - 100% of deliveries, no exceptions. You handle the product, we handle the last mile, with live tracking throughout." ?></p>
+      </article>
     </div>
-    <div class="stat-pill">
-      <div class="stat-pill-icon"><i class="fas fa-layer-group"></i></div>
-      <div>
-        <div class="stat-pill-val"><?= $fr ? '4 forfaits' : '4 Plans' ?></div>
-        <div class="stat-pill-lbl"><?= $fr ? 'Sans frais pour commencer' : 'Free to start' ?></div>
-      </div>
-    </div>
-    <div class="stat-pill">
-      <div class="stat-pill-icon"><i class="fas fa-percent"></i></div>
-      <div>
-        <div class="stat-pill-val"><?= $fr ? 'Commission' : 'Commission' ?></div>
-        <div class="stat-pill-lbl"><?= $fr ? 'Selon votre forfait' : 'Based on your plan' ?></div>
-      </div>
-    </div>
-    <div class="stat-pill">
-      <div class="stat-pill-icon"><i class="fas fa-mobile-alt"></i></div>
-      <div>
-        <div class="stat-pill-val"><?= $fr ? 'Mobile' : 'Mobile' ?></div>
-        <div class="stat-pill-lbl"><?= $fr ? 'Gérez n\'importe où' : 'Manage anywhere' ?></div>
-      </div>
-    </div>
-    <div class="stat-pill">
-      <div class="stat-pill-icon"><i class="fas fa-headset"></i></div>
-      <div>
-        <div class="stat-pill-val"><?= $fr ? 'Lun–Sam' : 'Mon–Sat' ?></div>
-        <div class="stat-pill-lbl"><?= $fr ? 'Support 8h – 20h' : '8 am – 8 pm support' ?></div>
-      </div>
-    </div>
+  </div>
+</section>
+
+<!-- VALUE PANEL -->
+<div class="value-panel">
+  <h2><?= $fr ? "Vendre sur OCSAPP, <span>en toute transparence.</span>" : "Selling on OCSAPP, <span>fully transparent.</span>" ?></h2>
+  <p class="sub"><?= $fr ? "Ce que chaque vendeur peut tenir pour acquis, dès le premier jour." : "What every seller can count on, from day one." ?></p>
+  <div class="value-grid">
+    <div class="value-row"><div class="value-tick">✓</div><p><?= $fr ? "Aucuns frais pour commencer - forfait Essential gratuit, à vie" : "No cost to get started - Essential plan is free, forever" ?></p></div>
+    <div class="value-row"><div class="value-tick">✓</div><p><?= $fr ? "OCSAPP livre 100 % de vos commandes - aucune logistique à gérer vous-même" : "OCSAPP delivers 100% of your orders - no logistics to manage yourself" ?></p></div>
+    <div class="value-row"><div class="value-tick">✓</div><p><?= $fr ? "Versements chaque lundi - commission et frais de traitement toujours détaillés séparément" : "Payouts every Monday - commission and processing fees always itemized separately" ?></p></div>
+    <div class="value-row"><div class="value-tick">✓</div><p><?= $fr ? "Votre commission ne change jamais selon le mode de livraison ni les frais applicables à l'acheteur" : "Your commission never changes based on delivery method or buyer-facing fees" ?></p></div>
   </div>
 </div>
 
-<!-- ═══════════════ WHY OCSAPP - 3 PILLARS ═══════════════ -->
-<section class="section-white">
-  <div class="container">
-    <div class="section-label">
-      <span class="eyebrow eyebrow-green"><?= $fr ? 'Pourquoi OCSAPP' : 'Why OCSAPP' ?></span>
+<!-- GETTING STARTED -->
+<section class="card-section" style="padding-top:4px;">
+  <div class="wrap">
+    <div class="section-eyebrow"><?= $fr ? "MISE EN ROUTE" : "GETTING STARTED" ?></div>
+    <h2><?= $fr ? "Opérationnel en 3 étapes" : "Up and running in 3 steps" ?></h2>
+    <p class="section-lead"><?= $fr
+      ? "De votre inscription à votre première vente - voici exactement à quoi vous attendre."
+      : "From sign-up to your first sale - here's exactly what to expect." ?></p>
+    <div class="why-grid">
+      <article class="why-card">
+        <div class="why-num">01</div>
+        <h3><?= $fr ? "Inscrivez-vous gratuitement" : "Sign up for free" ?></h3>
+        <p><?= $fr
+          ? "Créez votre compte vendeur en quelques minutes. Renseignez vos informations, décrivez vos produits et choisissez votre forfait. Aucun appel téléphonique requis."
+          : "Create your seller account in minutes. Enter your business info, describe your products, and choose your plan. No phone call required." ?></p>
+        <span class="step-time">~5 minutes</span>
+      </article>
+      <article class="why-card">
+        <div class="why-num">02</div>
+        <h3><?= $fr ? "Approuvé en 2 à 5 jours" : "Approved in 2–5 days" ?></h3>
+        <p><?= $fr
+          ? "Notre équipe examine chaque candidature personnellement. Vous recevrez une décision par courriel - et pouvez explorer le tableau de bord dès votre inscription."
+          : "Our team personally reviews every application. You'll get a decision by email - and can explore the dashboard as soon as you sign up, while your application is under review." ?></p>
+        <span class="step-time"><?= $fr ? "2 à 5 jours ouvrables" : "2–5 business days" ?></span>
+      </article>
+      <article class="why-card">
+        <div class="why-num">03</div>
+        <h3><?= $fr ? "Commencez à vendre" : "Start selling" ?></h3>
+        <p><?= $fr
+          ? "Votre boutique est en ligne sur OCSAPP. Ajoutez vos produits, recevez des commandes et laissez les chauffeurs ODA s'occuper de la livraison - vous encaissez."
+          : "Your shop goes live on OCSAPP. Add your products, receive orders, and let ODA drivers handle delivery - you collect the payout." ?></p>
+        <span class="step-time"><?= $fr ? "Dès le premier jour" : "From day one" ?></span>
+      </article>
     </div>
-    <h2 class="section-title"><?= $fr ? 'Vendre sur OCSAPP, c\'est simple.' : 'Selling on OCSAPP is Simple.' ?></h2>
-    <p class="section-sub">
-      <?= $fr
-        ? 'OCSAPP est un écosystème numérique tout-en-un canadien-québécois connectant vendeurs et acheteurs à travers un réseau de livraison hyperlocal à <strong>objectif zéro émission</strong>.'
-        : 'OCSAPP is a Canadian-Quebec all-in-one marketplace connecting sellers and buyers through a <strong>zero-emission goal hyper-local delivery network</strong>.' ?>
-    </p>
+  </div>
+</section>
 
-    <div class="pillars-grid">
-      <div class="pillar-card g">
-        <div class="pillar-num">1</div>
-        <div class="pillar-icon">🏪</div>
-        <h3><?= $fr ? 'Listez vos produits' : 'List Your Products' ?></h3>
+<!-- DASHBOARD FEATURES -->
+<section class="card-section" style="padding-top:4px; background:var(--bg-light);">
+  <div class="wrap">
+    <div class="section-eyebrow"><?= $fr ? "CE QUE VOUS OBTENEZ" : "WHAT YOU GET" ?></div>
+    <h2><?= $fr ? "Un tableau de bord conçu pour votre succès" : "A dashboard built for your success" ?></h2>
+    <p class="section-lead"><?= $fr
+      ? "Tout ce dont vous avez besoin pour gérer votre boutique, vos commandes et vos revenus - au même endroit."
+      : "Everything you need to manage your shop, your orders, and your revenue - in one place." ?></p>
+    <div class="feature-grid">
+      <article class="feature-card">
+        <span class="feature-icon feature-icon-3d" aria-hidden="true"><svg viewBox="0 0 64 64"><defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#17d61f"/><stop offset="1" stop-color="#08790c"/></linearGradient></defs><path d="M12 27h40v25H12z" fill="url(#g1)"/><path d="M8 27l7-14h34l7 14z" fill="#00B207"/><path d="M18 33h10v19H18zM35 33h11v9H35z" fill="#fff" opacity=".92"/><path d="M15 13h34" stroke="#b7ffba" stroke-width="3" stroke-linecap="round"/></svg></span>
+        <h3><?= $fr ? "Votre boutique de marque" : "Your branded storefront" ?></h3>
         <p><?= $fr
-          ? 'Créez votre boutique de marque OCSAPP en quelques minutes. Téléversez vos produits, fixez vos prix, ajoutez vos photos et gérez votre inventaire complet depuis un seul tableau de bord.'
-          : 'Create your branded OCSAPP storefront in minutes. Upload products, set pricing, add images, and manage your full inventory — everything from one dashboard.' ?></p>
+          ? "Une page boutique dédiée, visible par tous les acheteurs OCSAPP. Logo, bannière, description - une identité que vos clients reconnaissent."
+          : "A dedicated shop page, visible to every OCSAPP buyer. Logo, banner, description - an identity your customers recognize and come back to." ?></p>
+      </article>
+      <article class="feature-card">
+        <span class="feature-icon feature-icon-3d" aria-hidden="true"><svg viewBox="0 0 64 64"><defs><linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#22e42a"/><stop offset="1" stop-color="#066c0a"/></linearGradient></defs><path d="M12 20l20-10 20 10-20 10z" fill="#36ef3d"/><path d="M12 20v25l20 10V30z" fill="url(#g2)"/><path d="M52 20v25L32 55V30z" fill="#0a8f0f"/><path d="M22 17l20 10" stroke="#eaffeb" stroke-width="3" opacity=".8"/></svg></span>
+        <h3><?= $fr ? "Gestion des commandes" : "Order management" ?></h3>
+        <p><?= $fr
+          ? "Recevez, confirmez et gérez chaque commande depuis un seul écran. Mettez à jour le statut (« En préparation », puis « Prêt pour ramassage ») pour que le suivi de l'acheteur reflète une progression réelle."
+          : "Receive, confirm, and manage every order from one screen. Update the status (\"Processing,\" then \"Ready for Pickup\") so the buyer's tracking reflects genuine progress, not a static screen." ?></p>
+      </article>
+      <article class="feature-card">
+        <span class="feature-icon feature-icon-3d" aria-hidden="true"><svg viewBox="0 0 64 64"><defs><linearGradient id="g3" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#25e72d"/><stop offset="1" stop-color="#08760c"/></linearGradient></defs><path d="M13 49V29h9v20zm14 0V18h9v31zm14 0V11h9v38z" fill="url(#g3)"/><path d="M9 52h46" stroke="#075d0a" stroke-width="4" stroke-linecap="round"/><circle cx="45" cy="17" r="7" fill="#eaffeb" opacity=".95"/><path d="M42 17l2 2 4-5" fill="none" stroke="#00B207" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <h3><?= $fr ? "Analytiques &amp; ventes" : "Analytics &amp; sales" ?></h3>
+        <p><?= $fr
+          ? "Suivez vos meilleurs produits, vos tendances de revenus et le comportement de vos clients. Prenez des décisions éclairées grâce aux données."
+          : "Track your top-selling products, revenue trends, and customer behavior. Make informed decisions on pricing and promotions with real data." ?></p>
+      </article>
+      <article class="feature-card">
+        <span class="feature-icon feature-icon-3d" aria-hidden="true"><svg viewBox="0 0 64 64"><defs><linearGradient id="g4" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#1ee626"/><stop offset="1" stop-color="#086c0b"/></linearGradient></defs><rect x="10" y="17" width="44" height="31" rx="6" fill="url(#g4)"/><rect x="15" y="23" width="34" height="7" rx="3.5" fill="#e9ffea" opacity=".92"/><circle cx="21" cy="39" r="4" fill="#fff"/><path d="M32 39h13" stroke="#d9ffda" stroke-width="3" stroke-linecap="round"/><path d="M25 12h14" stroke="#00B207" stroke-width="4" stroke-linecap="round"/></svg></span>
+        <h3><?= $fr ? "Revenus &amp; versements" : "Revenue &amp; payouts" ?></h3>
+        <p><?= $fr
+          ? "Versements chaque lundi, dépôt direct. Les montants sous 25 $ sont reportés à la semaine suivante. Relevé détaillé - commission et frais de traitement en lignes distinctes."
+          : "Payouts every Monday, direct deposit. Amounts under $25 roll over to the following week. Detailed statement - commission and processing fees shown as separate line items." ?></p>
+      </article>
+      <article class="feature-card">
+        <span class="feature-icon feature-icon-3d" aria-hidden="true"><svg viewBox="0 0 64 64"><defs><linearGradient id="g5" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#1fe528"/><stop offset="1" stop-color="#08730c"/></linearGradient></defs><path d="M8 24h31v20H8z" fill="url(#g5)"/><path d="M39 29h10l7 8v7H39z" fill="#0b8d10"/><circle cx="20" cy="47" r="6" fill="#082d0a"/><circle cx="47" cy="47" r="6" fill="#082d0a"/><circle cx="20" cy="47" r="2.5" fill="#baffbd"/><circle cx="47" cy="47" r="2.5" fill="#baffbd"/><path d="M44 32h5l4 5h-9z" fill="#dffff0"/></svg></span>
+        <h3><?= $fr ? "Livraison ODA incluse" : "ODA delivery included" ?></h3>
+        <p><?= $fr
+          ? "Les chauffeurs ODA ramassent les commandes chez vous et les livrent aux acheteurs. Aucune logistique propre requise - objectif zéro émission sur chaque livraison."
+          : "ODA drivers pick up orders from your shop and deliver them to buyers. No logistics of your own required - zero-emission on every delivery." ?></p>
+      </article>
+      <article class="feature-card">
+        <span class="feature-icon feature-icon-3d" aria-hidden="true"><svg viewBox="0 0 64 64"><defs><linearGradient id="g6" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#23e72b"/><stop offset="1" stop-color="#086d0b"/></linearGradient></defs><rect x="19" y="7" width="26" height="50" rx="7" fill="url(#g6)"/><rect x="23" y="13" width="18" height="34" rx="3" fill="#f6fff6"/><circle cx="32" cy="52" r="2.3" fill="#d6ffda"/><path d="M27 26h10M27 32h7" stroke="#00B207" stroke-width="2.6" stroke-linecap="round"/></svg></span>
+        <h3><?= $fr ? "Gestion depuis mobile" : "Manage from mobile" ?></h3>
+        <p><?= $fr
+          ? "Votre tableau de bord complet, accessible sur n'importe quel appareil. Confirmez des commandes et suivez vos revenus où que vous soyez."
+          : "Your full dashboard, accessible from any device. Confirm orders and track your revenue wherever you are." ?></p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- BUYER-PAID SURCHARGES -->
+<section class="trust">
+  <div class="wrap">
+    <h3><?= $fr ? "Frais additionnels - payés par l'acheteur, jamais par vous" : "Additional fees - paid by the buyer, never by you" ?></h3>
+    <p><?= $fr
+      ? "Certaines commandes déclenchent un supplément affiché à l'acheteur avant qu'il confirme son panier. Ces frais financent la livraison - ils ne touchent jamais votre commission."
+      : "Some orders trigger a surcharge disclosed to the buyer before they confirm their cart. These fees fund delivery - they never touch your commission." ?></p>
+    <div class="trust-grid">
+      <div class="trust-card">
+        <h4><?= $fr ? "Supplément commande volumineuse" : "Oversize order surcharge" ?></h4>
+        <p><?= $fr
+          ? "Au-delà de 15 kg au total dans le panier. Calculé automatiquement à partir du poids que vous déclarez pour chaque produit - un champ obligatoire à la fiche produit."
+          : "Applies above 15 kg total in the cart. Calculated automatically from the weight you declare for each product - a required field on every product listing." ?></p>
       </div>
-      <div class="pillar-card b">
-        <div class="pillar-num">2</div>
-        <div class="pillar-icon">🛒</div>
-        <h3><?= $fr ? 'Les acheteurs vous découvrent' : 'Buyers Discover &amp; Order' ?></h3>
+      <div class="trust-card">
+        <h4><?= $fr ? "Frais d'arrêt additionnel" : "Additional-stop fee" ?></h4>
         <p><?= $fr
-          ? 'Les clients qui naviguent sur la marketplace OCSAPP trouvent votre boutique, ajoutent au panier et passent commande. Vous êtes notifié dès qu\'une commande arrive — confirmez et préparez pour le ramassage.'
-          : 'Customers browsing the OCSAPP marketplace find your store, add to cart, and check out. You get notified the moment an order lands — confirm, pack, and update order status.' ?></p>
+          ? "Lorsqu'une commande multi-boutiques regroupe plus de 2 vendeurs, un frais par arrêt supplémentaire s'applique à l'acheteur pour chaque boutique au-delà des deux premières."
+          : "When a multi-shop order draws from more than 2 sellers, a per-stop fee applies to the buyer for each shop beyond the first two." ?></p>
       </div>
-      <div class="pillar-card p">
-        <div class="pillar-num">3</div>
-        <div class="pillar-icon">🚚</div>
-        <h3><?= $fr ? 'OCSAPP livre pour vous' : 'OCSAPP Delivers' ?></h3>
+      <div class="trust-card">
+        <h4><?= $fr ? "Supplément longue distance" : "Long-distance surcharge" ?></h4>
         <p><?= $fr
-          ? 'Notre réseau de chauffeurs ODA passe chez vous et livre aux acheteurs. Vous gérez le produit, nous gérons le dernier kilomètre — avec suivi en direct pour tout le monde.'
-          : 'Our ODA driver network picks up from your location and delivers to customers. You handle the product; we handle the last mile — with live tracking for everyone involved.' ?></p>
+          ? "Au-delà de 8 km de livraison dans votre zone. La distance est calculée automatiquement à partir du trajet réel - rien à déclarer de votre part."
+          : "Applies beyond 8 km of delivery within your zone. Distance is calculated automatically from the actual route - nothing for you to declare." ?></p>
+      </div>
+      <div class="trust-card">
+        <h4><?= $fr ? "Votre commission reste inchangée" : "Your commission stays the same" ?></h4>
+        <p><?= $fr
+          ? "Ces trois frais s'ajoutent au montant payé par l'acheteur. Aucun ne réduit ni n'augmente le pourcentage de commission de votre forfait."
+          : "All three fees are added to what the buyer pays. None of them reduce or increase your plan's commission percentage." ?></p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════ HOW IT WORKS - 3 STEPS ═══════════════ -->
-<section class="section-light">
-  <div class="container">
-    <div class="section-label">
-      <span class="eyebrow eyebrow-green"><?= $fr ? 'Mise en route' : 'Getting Started' ?></span>
-    </div>
-    <h2 class="section-title"><?= $fr ? 'Opérationnel en 3 étapes' : 'Up and Running in 3 Steps' ?></h2>
-    <p class="section-sub"><?= $fr ? 'De votre inscription à votre première vente — voici exactement à quoi vous attendre.' : 'From registration to your first sale — here\'s exactly what to expect.' ?></p>
-
-    <div class="how-3">
-      <div class="how-step">
-        <div class="how-num">1</div>
-        <span class="how-icon">📝</span>
-        <h3><?= $fr ? 'Inscrivez-vous gratuitement' : 'Register for Free' ?></h3>
-        <p><?= $fr
-          ? 'Créez votre compte vendeur en quelques minutes. Renseignez vos informations, décrivez vos produits et choisissez votre forfait. Aucun appel téléphonique requis.'
-          : 'Create your seller account in minutes. Add your business details, describe your products, and choose your plan. No phone call required.' ?></p>
-        <span class="how-time">~5 <?= $fr ? 'minutes' : 'minutes' ?></span>
-      </div>
-
-      <div class="how-arrow">→</div>
-
-      <div class="how-step">
-        <div class="how-num">2</div>
-        <span class="how-icon">✅</span>
-        <h3><?= $fr ? 'Approuvé en 2 à 5 jours' : 'Approved in 2–5 Days' ?></h3>
-        <p><?= $fr
-          ? 'Notre équipe examine chaque candidature personnellement. Vous recevrez une décision par courriel. Vous pouvez explorer le tableau de bord dès votre inscription pendant la révision.'
-          : 'Our team personally reviews every seller application. You\'ll receive a decision by email. You can explore the dashboard immediately while we review.' ?></p>
-        <span class="how-time"><?= $fr ? '2 à 5 jours ouvrables' : '2–5 business days' ?></span>
-      </div>
-
-      <div class="how-arrow">→</div>
-
-      <div class="how-step">
-        <div class="how-num">3</div>
-        <span class="how-icon">🚀</span>
-        <h3><?= $fr ? 'Commencez à vendre' : 'Start Selling' ?></h3>
-        <p><?= $fr
-          ? 'Votre boutique est en ligne sur OCSAPP. Ajoutez vos produits, recevez des commandes et laissez les chauffeurs ODA s\'occuper de la livraison — vous encaissez.'
-          : 'Your store is live on OCSAPP. Add products, receive orders, and let ODA drivers handle delivery — you focus on the product and get paid.' ?></p>
-        <span class="how-time"><?= $fr ? 'Dès le premier jour' : 'From day one' ?></span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════ WHAT YOU GET ═══════════════ -->
-<section class="section-white">
-  <div class="container">
-    <div class="section-label">
-      <span class="eyebrow eyebrow-green"><?= $fr ? 'Ce que vous obtenez' : 'What You Get' ?></span>
-    </div>
-    <h2 class="section-title"><?= $fr ? 'Un tableau de bord conçu pour votre succès' : 'A Dashboard Built Around Your Success' ?></h2>
-    <p class="section-sub"><?= $fr ? 'Tout ce dont vous avez besoin pour gérer votre boutique, vos commandes et vos revenus — au même endroit.' : 'Everything you need to run your store, manage orders, and track earnings — all in one place.' ?></p>
-
-    <div class="features-grid">
-      <div class="feature-card">
-        <span class="feature-icon">🏪</span>
-        <h4><?= $fr ? 'Votre boutique de marque' : 'Your Branded Storefront' ?></h4>
-        <p><?= $fr
-          ? 'Une page boutique dédiée, visible par tous les acheteurs OCSAPP. Logo, bannière, description — construisez une identité que vos clients reconnaissent et à laquelle ils reviennent.'
-          : 'A dedicated store page visible to all OCSAPP customers. Logo, banner, description — build an identity your customers recognize and return to.' ?></p>
-      </div>
-      <div class="feature-card">
-        <span class="feature-icon">📦</span>
-        <h4><?= $fr ? 'Gestion des commandes' : 'Order Management' ?></h4>
-        <p><?= $fr
-          ? 'Recevez, confirmez et gérez chaque commande depuis un seul écran. Mettez à jour le statut en temps réel pour que vos clients sachent toujours où en est leur commande.'
-          : 'Receive, confirm, and manage every order from one screen. Update status in real time so customers always know where their order stands.' ?></p>
-      </div>
-      <div class="feature-card">
-        <span class="feature-icon">📊</span>
-        <h4><?= $fr ? 'Analytiques &amp; ventes' : 'Analytics &amp; Insights' ?></h4>
-        <p><?= $fr
-          ? 'Suivez vos meilleurs produits, vos tendances de revenus et le comportement de vos clients. Prenez des décisions éclairées sur les prix et les promotions grâce aux données.'
-          : 'Track your top products, revenue trends, and customer behaviour. Use data to make smarter decisions about pricing and promotions.' ?></p>
-      </div>
-      <div class="feature-card">
-        <span class="feature-icon">💳</span>
-        <h4><?= $fr ? 'Revenus &amp; versements' : 'Earnings &amp; Payouts' ?></h4>
-        <p><?= $fr
-          ? 'Suivez vos gains, consultez l\'historique des versements et téléchargez vos relevés. OCSAPP verse sur un calendrier régulier avec une transparence totale par commande.'
-          : 'Track your earnings, view payout history, and download statements. OCSAPP pays out on a regular schedule with full transparency per order.' ?></p>
-      </div>
-      <div class="feature-card">
-        <span class="feature-icon">🚚</span>
-        <h4><?= $fr ? 'Livraison ODA incluse' : 'ODA Delivery Included' ?></h4>
-        <p><?= $fr
-          ? 'Les chauffeurs ODA ramassent les commandes chez vous et les livrent aux acheteurs. Aucune logistique propre requise. Chaque livraison s\'inscrit dans notre objectif zéro émission.'
-          : 'ODA drivers pick up orders from your location and deliver to buyers. No in-house logistics needed. Every delivery works toward our zero-emission goal.' ?></p>
-      </div>
-      <div class="feature-card">
-        <span class="feature-icon">📱</span>
-        <h4><?= $fr ? 'Gestion depuis mobile' : 'Mobile Management' ?></h4>
-        <p><?= $fr
-          ? 'Votre tableau de bord complet, accessible sur n\'importe quel appareil. Confirmez des commandes, mettez à jour vos stocks et suivez vos revenus où que vous soyez.'
-          : 'Your full dashboard, accessible on any device. Confirm orders, update inventory, and track earnings from wherever you are.' ?></p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════ TRUST / SOCIAL PROOF ═══════════════ -->
-<section class="section-light">
-  <div class="container">
-    <div class="section-label">
-      <span class="eyebrow eyebrow-green"><?= $fr ? 'Notre réseau de vendeurs' : 'Our Seller Network' ?></span>
-    </div>
-    <h2 class="section-title"><?= $fr ? 'Des boutiques dans toutes les catégories' : 'Stores Across Every Category' ?></h2>
-    <p class="section-sub"><?= $fr
-      ? 'OCSAPP accueille des vendeurs locaux au Québec dans toutes les catégories — des petites boutiques artisanales aux commerces établis de la région.'
-      : 'OCSAPP welcomes local Quebec sellers across all product categories — from small artisan shops to established local retailers.' ?></p>
-
-    <div class="category-chips">
-      <span class="category-chip">🥗 <?= $fr ? 'Alimentation &amp; boissons' : 'Food &amp; Beverage' ?></span>
-      <span class="category-chip">🧴 <?= $fr ? 'Santé &amp; beauté' : 'Health &amp; Beauty' ?></span>
-      <span class="category-chip">🏠 <?= $fr ? 'Maison &amp; décoration' : 'Home &amp; Living' ?></span>
-      <span class="category-chip">👕 <?= $fr ? 'Mode &amp; accessoires' : 'Clothing &amp; Accessories' ?></span>
-      <span class="category-chip">🌱 <?= $fr ? 'Bio &amp; naturel' : 'Organic &amp; Natural' ?></span>
-      <span class="category-chip">📦 <?= $fr ? 'Biens de consommation' : 'Consumer Goods' ?></span>
-    </div>
-
-    <div class="quote-card">
-      <p class="quote-text">
-        <?= $fr
-          ? '« Depuis qu\'on est sur OCSAPP, on reçoit des commandes régulières sans avoir à gérer la livraison. On s\'occupe de nos produits — eux s\'occupent du reste. »'
-          : '"Since joining OCSAPP, we receive consistent orders without managing delivery ourselves. We focus on our products — they handle the rest."' ?>
-      </p>
-      <div class="quote-author">
-        <div class="quote-avatar">🏪</div>
-        <div>
-          <div class="quote-name"><?= $fr ? 'Vendeur OCSAPP — Alimentation, Montréal' : 'OCSAPP Seller — Food &amp; Beverage, Montréal' ?></div>
-          <div class="quote-role"><?= $fr ? 'Forfait Essential · Actif depuis 2024' : 'Essential Plan · Active since 2024' ?></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════ PACKAGES ═══════════════ -->
-<section class="section-dark">
-  <div class="container">
-    <div class="section-label">
-      <span class="eyebrow eyebrow-neon"><?= $fr ? 'Forfaits vendeur' : 'Seller Plans' ?></span>
-    </div>
-    <h2 class="section-title light"><?= $fr ? 'Choisissez le bon forfait pour votre boutique' : 'Choose the Right Plan for Your Store' ?></h2>
-    <p class="section-sub light"><?= $fr ? 'Démarrez gratuitement sur Essential. Passez à niveau à tout moment pour débloquer plus d\'outils et de visibilité.' : 'Start free on Essential. Upgrade any time to unlock more tools and visibility.' ?></p>
-
-    <div class="packages-grid">
-
-      <div class="pkg-card pkg-ess">
-        <div class="pkg-name">Essential</div>
-        <div class="pkg-desc"><?= $fr ? 'Tout ce qu\'il faut pour ouvrir' : 'Everything you need to open' ?></div>
-        <div class="pkg-price">
-          <span class="pkg-price-num"><?= $fr ? 'Gratuit' : 'Free' ?></span>
-          <span class="pkg-price-lbl"><?= $fr ? 'pour commencer' : 'to start' ?></span>
-        </div>
-        <div class="pkg-rate">
-          <span class="pkg-rate-num">15%</span>
-          <span class="pkg-rate-lbl"><?= $fr ? 'commission livraison' : 'delivery commission' ?></span>
-        </div>
-        <div class="pkg-pickup">
-          <span class="pkg-pickup-num">8%</span>
-          <span class="pkg-pickup-lbl"><?= $fr ? 'commission ramassage' : 'pickup commission' ?></span>
-        </div>
-        <hr class="pkg-divider">
-        <ul class="pkg-features">
-          <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Jusqu\'à 30 produits actifs' : 'Up to 30 active listings' ?></li>
-          <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Boutique de marque OCSAPP' : 'Branded OCSAPP storefront' ?></li>
-          <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Tableau de bord de commandes' : 'Order management dashboard' ?></li>
-          <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Gestion des stocks' : 'Inventory management' ?></li>
-          <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Accès réseau livraison ODA' : 'ODA delivery network access' ?></li>
-          <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Suivi des versements' : 'Payout tracking' ?></li>
-          <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Messagerie client' : 'Customer messaging' ?></li>
-          <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Gestion depuis mobile' : 'Mobile management' ?></li>
-        </ul>
-        <a href="<?= url('register') ?>?role=seller" class="pkg-cta outline"><?= $fr ? 'Commencer gratuitement' : 'Get Started Free' ?></a>
-      </div>
-
-      <div class="pkg-card pkg-exp">
-        <div class="pkg-popular"><?= $fr ? 'Le plus populaire' : 'Most Popular' ?></div>
-        <div class="pkg-name">Experience</div>
-        <div class="pkg-desc"><?= $fr ? 'Pour les boutiques en croissance' : 'For growing stores' ?></div>
-        <div class="pkg-price">
-          <span class="pkg-price-num">$39</span>
-          <span class="pkg-price-lbl"><?= $fr ? 'par mois' : 'per month' ?></span>
-        </div>
-        <div class="pkg-rate">
-          <span class="pkg-rate-num">12%</span>
-          <span class="pkg-rate-lbl"><?= $fr ? 'commission livraison' : 'delivery commission' ?></span>
-        </div>
-        <div class="pkg-pickup">
-          <span class="pkg-pickup-num">6%</span>
-          <span class="pkg-pickup-lbl"><?= $fr ? 'commission ramassage' : 'pickup commission' ?></span>
-        </div>
-        <hr class="pkg-divider">
-        <ul class="pkg-features">
-          <li class="inherited"><i class="fas fa-layer-group"></i> <?= $fr ? 'Tout ce qu\'Essential inclut' : 'Everything in Essential' ?></li>
-          <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Produits illimités' : 'Unlimited product listings' ?></li>
-          <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Analytiques avancées' : 'Advanced analytics' ?></li>
-          <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Outils de promotions' : 'Discount &amp; promotion tools' ?></li>
-          <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Support vendeur prioritaire' : 'Priority seller support' ?></li>
-          <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Taux de commission réduit' : 'Lower commission rate' ?></li>
-        </ul>
-        <a href="mailto:sellers@ocsapp.ca?subject=Experience%20Plan%20Inquiry" class="pkg-cta"><?= $fr ? 'Postuler' : 'Get Experience' ?></a>
-      </div>
-
-      <div class="pkg-card pkg-pre">
-        <div class="pkg-name">Prestige</div>
-        <div class="pkg-desc"><?= $fr ? 'Pour les vendeurs établis' : 'For established sellers' ?></div>
-        <div class="pkg-price">
-          <span class="pkg-price-num">$89</span>
-          <span class="pkg-price-lbl"><?= $fr ? 'par mois' : 'per month' ?></span>
-        </div>
-        <div class="pkg-rate">
-          <span class="pkg-rate-num">10%</span>
-          <span class="pkg-rate-lbl"><?= $fr ? 'commission livraison' : 'delivery commission' ?></span>
-        </div>
-        <div class="pkg-pickup">
-          <span class="pkg-pickup-num">5%</span>
-          <span class="pkg-pickup-lbl"><?= $fr ? 'commission ramassage' : 'pickup commission' ?></span>
-        </div>
-        <hr class="pkg-divider">
-        <ul class="pkg-features">
-          <li class="inherited"><i class="fas fa-layer-group"></i> <?= $fr ? 'Tout ce qu\'Experience inclut' : 'Everything in Experience' ?></li>
-          <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Placement en vedette' : 'Featured store placement' ?></li>
-          <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Bannières publicitaires' : 'Homepage &amp; category banner ads' ?></li>
-          <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Gestionnaire de compte dédié' : 'Dedicated account manager' ?></li>
-          <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Rapports de ventes avancés' : 'Advanced sales reporting' ?></li>
-          <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Commission la plus basse' : 'Lowest commission rate' ?></li>
-        </ul>
-        <a href="mailto:sellers@ocsapp.ca?subject=Prestige%20Plan%20Inquiry" class="pkg-cta outline"><?= $fr ? 'Postuler' : 'Get Prestige' ?></a>
-      </div>
-
-      <div class="pkg-card pkg-ent">
-        <div class="pkg-name">Enterprise</div>
-        <div class="pkg-desc"><?= $fr ? 'Solutions sur mesure, grande échelle' : 'Custom solutions, large scale' ?></div>
-        <div class="pkg-price">
-          <span class="pkg-price-num" style="font-size:18px;white-space:nowrap"><?= $fr ? 'Sur devis' : 'Custom quote' ?></span>
-          <span class="pkg-price-lbl"><?= $fr ? 'par mois' : 'per month' ?></span>
-        </div>
-        <div class="pkg-rate">
-          <span class="pkg-rate-num" style="font-size:16px;white-space:nowrap"><?= $fr ? 'Prix sur demande' : 'Price upon request' ?></span>
-          <span class="pkg-rate-lbl"><?= $fr ? 'commission livraison' : 'delivery commission' ?></span>
-        </div>
-        <div class="pkg-pickup">
-          <span class="pkg-pickup-num" style="font-size:16px;white-space:nowrap"><?= $fr ? 'Prix sur demande' : 'Price upon request' ?></span>
-          <span class="pkg-pickup-lbl"><?= $fr ? 'commission ramassage' : 'pickup commission' ?></span>
-        </div>
-        <hr class="pkg-divider">
-        <ul class="pkg-features">
-          <li class="inherited"><i class="fas fa-layer-group"></i> <?= $fr ? 'Tout ce que Prestige inclut' : 'Everything in Prestige' ?></li>
-          <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Intégration sur mesure' : 'Custom integration support' ?></li>
-          <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Gestion multi-emplacements' : 'Multi-location management' ?></li>
-          <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Équipe de succès dédiée' : 'Dedicated seller success team' ?></li>
-          <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Commission personnalisée' : 'Custom commission agreement' ?></li>
-          <li><i class="fas fa-check-circle"></i> <?= $fr ? 'Intégration accompagnée' : 'White-glove onboarding' ?></li>
-        </ul>
-        <a href="mailto:sellers@ocsapp.ca?subject=Enterprise%20Plan%20Inquiry" class="pkg-cta outline"><?= $fr ? 'Nous contacter' : 'Contact Us' ?></a>
-      </div>
-
-    </div>
-
-    <div class="plan-note">
-      <?= $fr
-        ? '<strong>Remarque :</strong> Tous les nouveaux comptes démarrent sur <strong>Essential</strong> sans frais. Les forfaits <strong>Experience</strong> (39$/mois) et <strong>Prestige</strong> (89$/mois) sont facturés mensuellement, en plus du taux de commission réduit. Pour passer à niveau, contactez <strong>sellers@ocsapp.ca</strong> ou votre gestionnaire de compte. Les changements prennent effet dans un délai d\'un jour ouvrable.'
-        : '<strong>Note:</strong> All new seller accounts start on the <strong>Essential</strong> plan at no cost. <strong>Experience</strong> ($39/mo) and <strong>Prestige</strong> ($89/mo) are billed monthly, in addition to their reduced commission rate. To upgrade, contact <strong>sellers@ocsapp.ca</strong> or your account manager. Changes take effect within one business day.' ?>
-      <br><br>
-      <?= $fr
-        ? '<strong>Frais de traitement des paiements :</strong> Les frais standards de traitement (2,9 % + 0,30 $ CAD) sont absorbés par le vendeur et déduits du montant net avant paiement, aux côtés de la commission - ils ne sont jamais ajoutés comme frais séparés à la facture de l\'acheteur.'
-        : '<strong>Payment processing fee:</strong> The standard processing fee (2.9% + $0.30 CAD) is absorbed by the seller and deducted from net proceeds before payout, alongside commission - it is never added as a separate line on the buyer\'s invoice.' ?>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════ FAQ ═══════════════ -->
-<section class="section-white">
-  <div class="container">
-    <div class="section-label">
-      <span class="eyebrow eyebrow-green">FAQ</span>
-    </div>
-    <h2 class="section-title"><?= $fr ? 'Questions fréquentes' : 'Common Questions' ?></h2>
-    <p class="section-sub"><?= $fr ? 'Tout ce que vous devez savoir avant d\'ouvrir votre boutique.' : 'Everything you need to know before opening your store.' ?></p>
-
-    <div class="faq">
-      <?php
-      $faqs = $fr ? [
-        ['Combien ça coûte d\'ouvrir une boutique sur OCSAPP ?',
-         'Rien. Le forfait Essential est entièrement gratuit. Vous payez seulement lorsque vous vendez - OCSAPP prélève une petite commission par vente complétée. Les forfaits payants (Experience à 39$/mois, Prestige à 89$/mois) offrent des produits illimités, un taux de commission réduit et des outils supplémentaires.'],
-        ['Combien de temps dure l\'approbation ?',
-         'La plupart des candidatures sont examinées dans un délai de 2 à 5 jours ouvrables. Vous serez notifié par courriel. Si vous n\'avez pas eu de nouvelles après 5 jours, contactez sellers@ocsapp.ca avec votre courriel d\'inscription.'],
-        ['Comment fonctionne la livraison ? Est-ce que j\'envoie les commandes moi-même ?',
-         'Non — vous n\'expédiez pas les commandes vous-même. Le réseau de chauffeurs ODA d\'OCSAPP gère toutes les livraisons. Lorsqu\'une commande est prête, un chauffeur ODA est envoyé pour la ramasser chez vous et la livrer directement au client.'],
-        ['Comment et quand suis-je payé ?',
-         'OCSAPP traite les versements sur un calendrier régulier après confirmation de la livraison des commandes. Vos gains sont suivis en temps réel dans votre tableau de bord. Pour les questions de versement, contactez sellers@ocsapp.ca.'],
-        ['Combien de produits puis-je lister ?',
-         'Sur le forfait Essential, vous pouvez lister jusqu\'à 30 produits actifs à la fois. Les forfaits Experience et plus offrent des listes de produits illimitées. Contactez sellers@ocsapp.ca pour discuter d\'une mise à niveau.'],
-        ['Puis-je changer de forfait plus tard ?',
-         'Oui — vous pouvez passer à niveau à tout moment. Contactez sellers@ocsapp.ca ou votre gestionnaire de compte. Les changements prennent effet dans un délai d\'un jour ouvrable. Tous les forfaits payants sont au mois, sans engagement à long terme.'],
-      ] : [
-        ['Is there a cost to open a store on OCSAPP?',
-         'No. The Essential plan is completely free to start. You only pay when you sell - OCSAPP takes a small commission per completed order. Paid plans (Experience at $39/month, Prestige at $89/month) offer unlimited listings, lower commission rates, and additional tools.'],
-        ['How long does seller approval take?',
-         'Most seller applications are reviewed within 2–5 business days. You\'ll receive a decision by email. If you haven\'t heard back after 5 business days, email sellers@ocsapp.ca with your registration email and we\'ll follow up.'],
-        ['How does delivery work? Do I ship orders myself?',
-         'No — you do not ship orders yourself. OCSAPP\'s ODA driver network handles all deliveries. When an order is ready, an ODA driver is dispatched to pick it up from your location and deliver it directly to the customer.'],
-        ['How and when do I get paid?',
-         'OCSAPP processes seller payouts on a regular schedule after orders are confirmed as delivered. Your earnings are tracked in real time in your seller dashboard. For payout questions, contact sellers@ocsapp.ca.'],
-        ['How many products can I list?',
-         'On the Essential plan, you can list up to 30 active products at a time. The Experience plan and above offer unlimited product listings. Contact sellers@ocsapp.ca to discuss upgrading.'],
-        ['Can I upgrade my plan later?',
-         'Yes — you can upgrade at any time. Contact sellers@ocsapp.ca or your account manager. Changes take effect within one business day. All paid plans are month-to-month with no long-term commitment.'],
-      ];
-      foreach ($faqs as $faq): ?>
-      <div class="faq-item">
-        <button class="faq-q" onclick="toggleFaq(this)" aria-expanded="false">
-          <?= htmlspecialchars($faq[0]) ?>
-          <i class="fas fa-chevron-down"></i>
-        </button>
-        <div class="faq-a"><?= htmlspecialchars($faq[1]) ?></div>
-      </div>
-      <?php endforeach; ?>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════ CONTACT ═══════════════ -->
-<section class="section-light">
-  <div class="container">
-    <div class="contact-box">
-      <h3><?= $fr ? 'Nous sommes là pour vous aider' : 'We\'re Here to Help' ?></h3>
+<!-- PRICING -->
+<section class="pricing">
+  <div class="wrap">
+    <div class="pricing-head">
+      <div class="section-eyebrow"><?= $fr ? "FORFAITS VENDEUR" : "SELLER PLANS" ?></div>
+      <h2><?= $fr ? "Choisissez le bon forfait pour votre boutique" : "Choose the right plan for your shop" ?></h2>
       <p><?= $fr
-        ? 'Notre équipe de succès vendeur est disponible pour vous aider avec votre candidature, la configuration de votre boutique et tout ce qui suit. Incluez toujours votre <strong style="color:#86efac;">courriel d\'inscription ou nom de boutique</strong> pour que nous trouvions votre compte rapidement.'
-        : 'Our seller success team is available to assist with applications, store setup, and everything that comes after. Always include your <strong style="color:#86efac;">registered email or store name</strong> when reaching out so we can find your account quickly.' ?></p>
-      <div class="contact-meta">
-        <div class="contact-item">
-          <div class="c-label"><?= $fr ? 'Support vendeur' : 'Seller Support' ?></div>
-          <div class="c-value">sellers@ocsapp.ca</div>
-          <div class="c-sub"><?= $fr ? 'Candidatures, forfaits &amp; boutiques' : 'Applications, plans &amp; store questions' ?></div>
-        </div>
-        <div class="contact-item">
-          <div class="c-label"><?= $fr ? 'Téléphone' : 'Phone' ?></div>
-          <div class="c-value">514-746-3789</div>
-          <div class="c-sub"><?= $fr ? 'Lun–Sam · 8h – 20h' : 'Mon–Sat · 8 am – 8 pm' ?></div>
-        </div>
-        <div class="contact-item">
-          <div class="c-label"><?= $fr ? 'Info générale' : 'General Info' ?></div>
-          <div class="c-value">info@ocsapp.ca</div>
-          <div class="c-sub"><?= $fr ? 'Renseignements généraux' : 'General inquiries' ?></div>
-        </div>
+        ? "Démarrez gratuitement sur Essential. Passez à niveau à tout moment pour débloquer plus d'outils et de visibilité."
+        : "Start free on Essential. Upgrade anytime to unlock more tools and visibility." ?></p>
+    </div>
+    <div class="pricing-grid">
+      <div class="pricing-card">
+        <h3>Essential</h3>
+        <p class="pricing-tagline"><?= $fr ? "Tout ce qu'il faut pour ouvrir" : "Everything you need to open" ?></p>
+        <div class="pricing-price"><?= $fr ? "Gratuit" : "Free" ?></div>
+        <p class="pricing-commission"><strong>15%</strong> <?= $fr ? "commission livraison" : "delivery commission" ?></p>
+        <p class="pricing-commission"><strong>8%</strong> <?= $fr ? "commission ramassage" : "pickup commission" ?></p>
+        <ul class="pricing-list">
+          <li><?= $fr ? "Jusqu'à 30 produits actifs" : "Up to 30 active products" ?></li>
+          <li><?= $fr ? "Boutique de marque OCSAPP" : "Branded OCSAPP storefront" ?></li>
+          <li><?= $fr ? "Tableau de bord de commandes" : "Order dashboard" ?></li>
+          <li><?= $fr ? "Gestion des stocks" : "Inventory management" ?></li>
+          <li><?= $fr ? "Accès réseau livraison ODA" : "ODA delivery network access" ?></li>
+          <li><?= $fr ? "Suivi des versements" : "Payout tracking" ?></li>
+          <li><?= $fr ? "Messagerie client" : "Customer messaging" ?></li>
+          <li><?= $fr ? "Gestion depuis mobile" : "Mobile management" ?></li>
+        </ul>
+        <a class="pricing-cta" href="<?= url('register') ?>?role=seller"><?= $fr ? "Commencer gratuitement" : "Start for Free" ?></a>
+      </div>
+      <div class="pricing-card popular">
+        <span class="pricing-badge"><?= $fr ? "Le plus populaire" : "Most Popular" ?></span>
+        <h3>Experience</h3>
+        <p class="pricing-tagline"><?= $fr ? "Pour les boutiques en croissance" : "For growing shops" ?></p>
+        <div class="pricing-price">$39 <span>/ <?= $fr ? "mois" : "month" ?></span></div>
+        <p class="pricing-commission"><strong>12%</strong> <?= $fr ? "commission livraison" : "delivery commission" ?></p>
+        <p class="pricing-commission"><strong>6%</strong> <?= $fr ? "commission ramassage" : "pickup commission" ?></p>
+        <ul class="pricing-list">
+          <li><?= $fr ? "Tout ce qu'Essential inclut" : "Everything in Essential" ?></li>
+          <li><?= $fr ? "Produits illimités" : "Unlimited products" ?></li>
+          <li><?= $fr ? "Analytiques avancées" : "Advanced analytics" ?></li>
+          <li><?= $fr ? "Outils de promotions" : "Promotional tools" ?></li>
+          <li><?= $fr ? "Support vendeur prioritaire" : "Priority seller support" ?></li>
+          <li><?= $fr ? "Taux de commission réduit" : "Reduced commission rate" ?></li>
+        </ul>
+        <a class="pricing-cta" href="mailto:sellers@ocsapp.ca?subject=Experience%20Plan%20Inquiry"><?= $fr ? "Postuler" : "Apply" ?></a>
+      </div>
+      <div class="pricing-card">
+        <h3>Prestige</h3>
+        <p class="pricing-tagline"><?= $fr ? "Pour les vendeurs établis" : "For established sellers" ?></p>
+        <div class="pricing-price">$89 <span>/ <?= $fr ? "mois" : "month" ?></span></div>
+        <p class="pricing-commission"><strong>10%</strong> <?= $fr ? "commission livraison" : "delivery commission" ?></p>
+        <p class="pricing-commission"><strong>5%</strong> <?= $fr ? "commission ramassage" : "pickup commission" ?></p>
+        <ul class="pricing-list">
+          <li><?= $fr ? "Tout ce qu'Experience inclut" : "Everything in Experience" ?></li>
+          <li><?= $fr ? "Placement en vedette" : "Featured placement" ?></li>
+          <li><?= $fr ? "Bannières publicitaires" : "Advertising banners" ?></li>
+          <li><?= $fr ? "Gestionnaire de compte dédié" : "Dedicated account manager" ?></li>
+          <li><?= $fr ? "Rapports de ventes avancés" : "Advanced sales reports" ?></li>
+          <li><?= $fr ? "Commission la plus basse" : "Lowest commission" ?></li>
+        </ul>
+        <a class="pricing-cta outline" href="mailto:sellers@ocsapp.ca?subject=Prestige%20Plan%20Inquiry"><?= $fr ? "Postuler" : "Apply" ?></a>
+      </div>
+      <div class="pricing-card">
+        <h3>Enterprise</h3>
+        <p class="pricing-tagline"><?= $fr ? "Solutions sur mesure, grande échelle" : "Custom solutions, large scale" ?></p>
+        <div class="pricing-price"><?= $fr ? "Sur devis" : "Custom quote" ?></div>
+        <p class="pricing-commission"><?= $fr ? "Commission <strong>personnalisée</strong>" : "Commission <strong>custom</strong>" ?></p>
+        <p class="pricing-commission"><?= $fr ? "Ramassage <strong>personnalisé</strong>" : "Pickup <strong>custom</strong>" ?></p>
+        <ul class="pricing-list">
+          <li><?= $fr ? "Tout ce que Prestige inclut" : "Everything in Prestige" ?></li>
+          <li><?= $fr ? "Intégration sur mesure" : "Custom integration" ?></li>
+          <li><?= $fr ? "Gestion multi-emplacements" : "Multi-location management" ?></li>
+          <li><?= $fr ? "Équipe de succès dédiée" : "Dedicated success team" ?></li>
+          <li><?= $fr ? "Intégration accompagnée" : "Guided onboarding" ?></li>
+        </ul>
+        <a class="pricing-cta outline" href="mailto:sellers@ocsapp.ca?subject=Enterprise%20Plan%20Inquiry"><?= $fr ? "Nous contacter" : "Contact Us" ?></a>
+      </div>
+    </div>
+    <div class="pricing-note">
+      <p><strong><?= $fr ? "Remarque :" : "Note:" ?></strong> <?= $fr
+        ? "Tous les nouveaux comptes démarrent sur Essential sans frais. Les forfaits Experience (39 $/mois) et Prestige (89 $/mois) sont facturés mensuellement, en plus du taux de commission réduit. Pour passer à niveau, contactez <strong>sellers@ocsapp.ca</strong> ou votre gestionnaire de compte - les changements prennent effet dans un délai d'un jour ouvrable."
+        : "All new accounts start on Essential at no cost. The Experience ($39/month) and Prestige ($89/month) plans are billed monthly, in addition to the reduced commission rate. To upgrade, contact <strong>sellers@ocsapp.ca</strong> or your account manager - changes take effect within one business day." ?></p>
+      <p><strong><?= $fr ? "Frais de traitement des paiements :" : "Payment processing fee:" ?></strong> <?= $fr
+        ? "les frais standards (2,9 % + 0,30 $ CAD) sont absorbés par le vendeur et déduits du montant net avant paiement, aux côtés de la commission - ils ne sont jamais ajoutés comme frais séparé à la facture de l'acheteur."
+        : "the standard rate (2.9% + $0.30 CAD) is absorbed by the seller and deducted from net proceeds before payout, alongside commission - it is never added as a separate line item to the buyer's bill." ?></p>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq">
+  <div class="wrap">
+    <div class="faq-head">
+      <div class="section-eyebrow">FAQ</div>
+      <h2><?= $fr ? "Questions fréquentes" : "Frequently Asked Questions" ?></h2>
+      <p><?= $fr ? "Tout ce que vous devez savoir avant d'ouvrir votre boutique." : "Everything you need to know before opening your shop." ?></p>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item">
+        <h4><?= $fr ? "Combien ça coûte d'ouvrir une boutique sur OCSAPP ?" : "How much does it cost to open a shop on OCSAPP?" ?></h4>
+        <p><?= $fr
+          ? "Rien. Le forfait Essential est entièrement gratuit. Vous payez seulement lorsque vous vendez - OCSAPP prélève une petite commission par vente complétée. Les forfaits payants (Experience à 39 $/mois, Prestige à 89 $/mois) offrent des produits illimités, un taux de commission réduit et des outils supplémentaires."
+          : "Nothing. The Essential plan is entirely free. You only pay when you sell - OCSAPP takes a small commission on each completed sale. Paid plans (Experience at $39/month, Prestige at $89/month) offer unlimited products, a reduced commission rate, and additional tools." ?></p>
+      </div>
+      <div class="faq-item">
+        <h4><?= $fr ? "Combien de temps dure l'approbation ?" : "How long does approval take?" ?></h4>
+        <p><?= $fr
+          ? "La plupart des candidatures sont examinées dans un délai de 2 à 5 jours ouvrables. Vous serez notifié par courriel. Si vous n'avez pas eu de nouvelles après 5 jours, contactez sellers@ocsapp.ca avec votre courriel d'inscription."
+          : "Most applications are reviewed within 2–5 business days. You'll be notified by email. If you haven't heard back after 5 days, contact sellers@ocsapp.ca with the email you registered with." ?></p>
+      </div>
+      <div class="faq-item">
+        <h4><?= $fr ? "Comment fonctionne la livraison ? Est-ce que j'envoie les commandes moi-même ?" : "How does delivery work? Do I ship orders myself?" ?></h4>
+        <p><?= $fr
+          ? "Non - vous n'expédiez pas les commandes vous-même. Le réseau de chauffeurs ODA d'OCSAPP gère 100 % des livraisons. Lorsqu'une commande est prête, un chauffeur ODA est envoyé pour la ramasser chez vous et la livrer directement au client."
+          : "No - you never ship orders yourself. OCSAPP's ODA driver network handles 100% of deliveries. When an order is ready, an ODA driver is dispatched to pick it up from your shop and deliver it directly to the customer." ?></p>
+      </div>
+      <div class="faq-item">
+        <h4><?= $fr ? "Comment et quand suis-je payé ?" : "How and when do I get paid?" ?></h4>
+        <p><?= $fr
+          ? "OCSAPP effectue les versements chaque semaine, tous les lundis, par dépôt direct dans votre compte bancaire, pour les commandes complétées durant la période précédente. Les montants inférieurs à 25 $ sont reportés à la semaine suivante plutôt que versés séparément. Chaque versement est accompagné d'un relevé détaillé, avec la commission et les frais de traitement indiqués comme deux lignes distinctes."
+          : "OCSAPP processes payouts weekly, every Monday, by direct deposit to your bank account, for orders completed in the preceding period. Amounts under $25 roll over to the following week rather than being paid separately. Every payout comes with a detailed statement, with commission and processing fees shown as two separate line items." ?></p>
+      </div>
+      <div class="faq-item">
+        <h4><?= $fr ? "Combien de produits puis-je lister ?" : "How many products can I list?" ?></h4>
+        <p><?= $fr
+          ? "Sur le forfait Essential, vous pouvez lister jusqu'à 30 produits actifs à la fois. Les forfaits Experience et plus offrent des listes de produits illimitées. Contactez sellers@ocsapp.ca pour discuter d'une mise à niveau."
+          : "On the Essential plan, you can list up to 30 active products at a time. Experience and higher plans offer unlimited product listings. Contact sellers@ocsapp.ca to discuss upgrading." ?></p>
+      </div>
+      <div class="faq-item">
+        <h4><?= $fr ? "Puis-je changer de forfait plus tard ?" : "Can I change plans later?" ?></h4>
+        <p><?= $fr
+          ? "Oui - vous pouvez passer à niveau à tout moment. Contactez sellers@ocsapp.ca ou votre gestionnaire de compte. Les changements prennent effet dans un délai d'un jour ouvrable. Tous les forfaits payants sont au mois, sans engagement à long terme."
+          : "Yes - you can upgrade at any time. Contact sellers@ocsapp.ca or your account manager. Changes take effect within one business day. All paid plans are month-to-month, with no long-term commitment." ?></p>
+      </div>
+      <div class="faq-item new">
+        <h4><?= $fr ? "Qu'est-ce que le champ « poids » et pourquoi dois-je le remplir ?" : "What's the \"weight\" field, and why is it required?" ?></h4>
+        <p><?= $fr
+          ? "Le poids est un champ obligatoire sur chaque fiche produit - pas un détail facultatif. OCSAPP additionne le poids déclaré pour chaque article du panier d'un acheteur, à la caisse, pour déterminer si un supplément pour commande volumineuse s'applique. L'acheteur n'estime jamais lui-même le poids : votre valeur déclarée est la seule donnée utilisée pour ce calcul. Si un chauffeur constate à la cueillette un écart important avec le poids déclaré, OCSAPP peut ajuster le supplément rétroactivement à partir d'une preuve photo ou de balayage."
+          : "Weight is a mandatory field on every product listing - not an optional detail. OCSAPP sums the weight you declare across every item in a buyer's cart, at checkout, to determine whether an oversize order surcharge applies. Buyers never estimate weight themselves: your declared figure is the only data used for that calculation. If a driver's inspection at pickup shows a material discrepancy with the declared weight, OCSAPP may adjust the surcharge retroactively based on photo or scan evidence." ?></p>
+      </div>
+      <div class="faq-item new">
+        <h4><?= $fr ? "Que se passe-t-il si un acheteur retourne un article ou demande un remboursement ?" : "What happens if a buyer returns an item or requests a refund?" ?></h4>
+        <p><?= $fr
+          ? "Les retours sont gérés par la Politique de retours et remboursements d'OCSAPP. Si le système détermine, à partir d'une preuve photo et de balayage, qu'un retour est lié à une erreur ou un défaut présent au moment où vous avez remis la commande au chauffeur, les frais de logistique inverse et la valeur de l'article remboursé sont déduits de votre prochain versement. Vous n'êtes jamais facturé pour un problème survenu après la prise en charge par le chauffeur, ni pour un simple changement d'avis de l'acheteur - et vous disposez de 5 jours ouvrables pour contester une déduction directement depuis votre tableau de bord."
+          : "Returns are governed by OCSAPP's Returns &amp; Refund Policy. If the system determines, from photo and scan evidence, that a return is linked to an error or defect present when you handed the order to the driver, the reverse-logistics fee and the refunded item's value are deducted from your next payout. You're never charged for an issue that occurred after the driver took custody, or for a simple change of mind by the buyer - and you have 5 business days to dispute a deduction directly from your dashboard." ?></p>
+      </div>
+      <div class="faq-item new">
+        <h4><?= $fr ? "Les suppléments pour commande volumineuse ou multi-boutiques affectent-ils ma commission ?" : "Do the oversize or multi-shop surcharges affect my commission?" ?></h4>
+        <p><?= $fr
+          ? "Non. Le supplément pour commande volumineuse, les frais d'arrêt additionnel et le supplément longue distance sont payés par l'acheteur et servent uniquement à financer la livraison. Aucun des trois ne change le pourcentage de commission de votre forfait."
+          : "No. The oversize order surcharge, the additional-stop fee, and the long-distance surcharge are all paid by the buyer and go entirely toward funding delivery. None of the three changes your plan's commission percentage." ?></p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════ FINAL CTA ═══════════════ -->
-<section class="cta-section">
-  <div class="container">
-    <h2><?= $fr ? 'Votre boutique vous attend.' : 'Your Store Is Waiting.' ?></h2>
-    <p><?= $fr ? 'Inscrivez-vous en quelques minutes. Approuvé en 2 à 5 jours. Sans frais pour commencer — jamais.' : 'Register in minutes. Reviewed in 2–5 business days. No fees to start — ever.' ?></p>
-    <div>
-      <a href="<?= url('register') ?>?role=seller" class="btn-white-lg">
-        <i class="fas fa-store"></i> <?= $fr ? 'Ouvrir ma boutique gratuitement' : 'Open Your Store Free' ?>
-      </a>
-      <a href="mailto:sellers@ocsapp.ca" class="btn-ghost-lg">
-        <i class="fas fa-envelope"></i> <?= $fr ? 'Contacter notre équipe' : 'Contact Our Team' ?>
-      </a>
+<!-- SUPPORT -->
+<section class="support">
+  <div class="wrap">
+    <div class="support-grid">
+      <div class="support-card">
+        <h4><?= $fr ? "Support vendeur" : "Seller Support" ?></h4>
+        <p class="support-main"><a href="mailto:sellers@ocsapp.ca">sellers@ocsapp.ca</a></p>
+        <p><?= $fr ? "Candidatures, forfaits &amp; boutiques" : "Applications, plans &amp; shops" ?></p>
+      </div>
+      <div class="support-card">
+        <h4><?= $fr ? "Téléphone" : "Phone" ?></h4>
+        <p class="support-main">514-746-3789</p>
+        <p><?= $fr ? "Lun–Sam · 8h – 20h" : "Mon–Sat · 8am – 8pm" ?></p>
+      </div>
+      <div class="support-card">
+        <h4><?= $fr ? "Info générale" : "General Info" ?></h4>
+        <p class="support-main"><a href="mailto:info@ocsapp.ca">info@ocsapp.ca</a></p>
+        <p><?= $fr ? "Renseignements généraux" : "General inquiries" ?></p>
+      </div>
     </div>
   </div>
 </section>
 
-<?php require __DIR__ . '/../components/footer.php'; ?>
+<!-- CTA BAND -->
+<section class="cta-band">
+  <div class="wrap">
+    <h2><?= $fr ? "Votre boutique vous attend." : "Your shop is waiting." ?></h2>
+    <p><?= $fr
+      ? "Inscrivez-vous en quelques minutes. Approuvé en 2 à 5 jours. Sans frais pour commencer - jamais."
+      : "Sign up in minutes. Approved in 2–5 days. No cost to get started - ever." ?></p>
+    <div class="cta-actions">
+      <a class="btn" href="<?= url('register') ?>?role=seller"><?= $fr ? "Ouvrir ma boutique gratuitement" : "Open My Shop for Free" ?></a>
+      <a class="btn-secondary" href="mailto:sellers@ocsapp.ca"><?= $fr ? "Contacter notre équipe" : "Contact Our Team" ?></a>
+    </div>
+  </div>
+</section>
 
-<script>
-function toggleFaq(btn) {
-  const answer = btn.nextElementSibling;
-  const isOpen = btn.classList.contains('open');
-  document.querySelectorAll('.faq-q.open').forEach(b => {
-    b.classList.remove('open');
-    b.setAttribute('aria-expanded','false');
-    b.nextElementSibling.classList.remove('open');
-  });
-  if (!isOpen) {
-    btn.classList.add('open');
-    btn.setAttribute('aria-expanded','true');
-    answer.classList.add('open');
-  }
-}
-</script>
+<!-- LEGAL IDENTITY -->
+<section class="legal-identity">
+  <div class="wrap">
+    <p class="foot-tagline"><?= $fr ? "L'infrastructure numérique tout-en-un du commerce local." : "The all-in-one digital infrastructure for local commerce." ?></p>
+    <p><?= $fr
+      ? "OCSAPP Inc. · Constituée sous le régime fédéral de la Loi canadienne sur les sociétés par actions (n° de société 1750354-7) · Numéro d'entreprise du Québec (NEQ) 1181584997"
+      : "OCSAPP Inc. · Federally incorporated under the Canada Business Corporations Act (Corporation No. 1750354-7) · Quebec enterprise number (NEQ) 1181584997" ?></p>
+    <p><?= $fr ? "Siège social : Laval, Québec (H7H)" : "Registered office: Laval, Québec (H7H)" ?></p>
+  </div>
+</section>
 
+<?php include __DIR__ . '/../components/footer.php'; ?>
 </body>
 </html>
