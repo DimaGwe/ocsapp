@@ -387,11 +387,11 @@ require dirname(__DIR__) . '/layout-header.php';
           name="weight_kg"
           class="form-input"
           step="0.01"
-          min="0"
+          min="0.01"
           required
           value="<?= $product['weight_kg'] ?? '' ?>"
         >
-        <p class="form-hint"><?= $fr ? 'Poids en kilogrammes — utilisé pour calculer les frais de manutention (0,20 $/kg)' : 'Weight in kilograms - used to calculate handling fees ($0.20/kg)' ?></p>
+        <p class="form-hint"><?= $fr ? 'Poids en kilogrammes - requis pour le calcul des frais de livraison' : 'Weight in kilograms - required to calculate delivery fees' ?></p>
       </div>
     </div>
 

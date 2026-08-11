@@ -46,6 +46,12 @@ $item = $item ?? [];
             <input type="number" name="stock_quantity" id="stock_quantity" min="0"
                    value="<?= (int)($item['stock_quantity'] ?? 0) ?>">
 
+            <?php if (($item['product_type'] ?? '') === 'seller'): ?>
+                <label for="weight">Weight per unit (kg)</label>
+                <input type="number" name="weight" id="weight" min="0.01" step="0.01"
+                       value="<?= htmlspecialchars($item['product_weight'] ?? '') ?>" required>
+            <?php endif; ?>
+
             <label for="status">Status</label>
             <select name="status" id="status">
                 <option value="active"   <?= ($item['status'] ?? '') === 'active'   ? 'selected' : '' ?>>Active</option>

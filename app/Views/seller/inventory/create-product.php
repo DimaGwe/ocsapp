@@ -75,8 +75,8 @@ $categories = $categories ?? [];
                     <input type="text" name="sku" id="sku" placeholder="e.g. MLK-ORG-2L" maxlength="100">
                 </div>
                 <div>
-                    <label for="weight">Weight (kg, optional)</label>
-                    <input type="number" name="weight" id="weight" min="0" step="0.001" placeholder="e.g. 2.0">
+                    <label for="weight">Weight per unit (kg)</label>
+                    <input type="number" name="weight" id="weight" min="0.01" step="0.01" placeholder="e.g. 2.0" required>
                 </div>
             </div>
 

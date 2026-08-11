@@ -136,7 +136,8 @@ class InventoryController
 
         $inventoryId = intval($_GET['id'] ?? 0);
         $stmt = $this->db->prepare("
-            SELECT si.*, p.name AS product_name, p.sku
+            SELECT si.*, p.name AS product_name, p.sku, p.weight AS product_weight,
+                   p.product_type, p.seller_id AS product_seller_id
             FROM shop_inventory si
             JOIN products p ON si.product_id = p.id
             WHERE si.id = ? AND si.shop_id = ?
@@ -182,6 +183,34 @@ class InventoryController
                 WHERE id = ? AND shop_id = ?
             ");
             $stmt->execute([$price, $stock, $status, $inventoryId, $shop['id']]);
+
+            // Weight backfill: sellers can set weight on their own products from the edit form
+            if (post('weight') !== null && post('weight') !== '') {
+                $weight = floatval(post('weight'));
+                if ($weight <= 0) {
+                    setFlash('error', 'Product weight (kg) must be greater than zero.');
+                    redirect(url('seller/inventory'));
+                    return;
+                }
+                $stmt = $this->db->prepare("
+                    UPDATE products p
+                    JOIN shop_inventory si ON si.product_id = p.id
+                    SET p.weight = ?, p.updated_at = NOW()
+                    WHERE si.id = ? AND si.shop_id = ?
+                      AND p.product_type = 'seller' AND p.seller_id = ?
+                ");
+                $stmt->execute([$weight, $inventoryId, $shop['id'], userId()]);
+
+                if ($weight > 25) {
+                    \App\Helpers\NotificationHelper::add(
+                        'product_weight_review',
+                        'Product weight needs review',
+                        "Seller inventory item #{$inventoryId} was updated to {$weight} kg per unit - please verify.",
+                        ['data' => ['inventory_id' => $inventoryId, 'weight' => $weight]]
+                    );
+                }
+            }
+
             setFlash('success', 'Inventory updated.');
         } catch (\PDOException $e) {
             logger("InventoryController::update() failed: " . $e->getMessage(), 'error');
@@ -273,6 +302,12 @@ class InventoryController
             return;
         }
 
+        if ($weight <= 0) {
+            setFlash('error', 'Product weight (kg) is required and must be greater than zero.');
+            redirect(url('seller/inventory/create-product'));
+            return;
+        }
+
         try {
             $this->db->beginTransaction();
 
@@ -284,8 +319,18 @@ class InventoryController
                 INSERT INTO products (name, slug, description, sku, weight, base_price, product_type, seller_id, status, created_at, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, 'seller', ?, 'active', NOW(), NOW())
             ");
-            $stmt->execute([$name, $slug, $description, $sku ?: null, $weight ?: null, $price, userId()]);
+            $stmt->execute([$name, $slug, $description, $sku ?: null, $weight, $price, userId()]);
             $productId = $this->db->lastInsertId();
+
+            // Implausible-weight flag: notify admin for manual review, never block the seller
+            if ($weight > 25) {
+                \App\Helpers\NotificationHelper::add(
+                    'product_weight_review',
+                    'Product weight needs review',
+                    "Seller product \"{$name}\" (ID {$productId}) was listed at {$weight} kg per unit - please verify.",
+                    ['data' => ['product_id' => $productId, 'weight' => $weight]]
+                );
+            }
 
             // Link category via join table
             if ($categoryId > 0) {

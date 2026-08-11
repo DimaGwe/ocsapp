@@ -90,6 +90,13 @@ class SupplierProductController {
             back();
         }
 
+        $weightKg = floatval(post('weight_kg', 0));
+        if ($weightKg <= 0) {
+            setFlash('error', 'Product weight (kg) is required and must be greater than zero');
+            back();
+            return;
+        }
+
         try {
             $db = \Database::getConnection();
 
@@ -144,7 +151,7 @@ class SupplierProductController {
                 post('sku'),
                 post('description'),
                 post('unit_price'),
-                post('weight_kg') ?: null,
+                $weightKg,
                 post('unit', 'unit'),
                 post('minimum_order_quantity', 1),
                 $stockQuantity,
@@ -152,6 +159,16 @@ class SupplierProductController {
                 post('is_available', 1),
                 post('notes')
             ]);
+
+            // Implausible-weight flag: notify admin for manual review, never block the supplier
+            if ($weightKg > 50) {
+                \App\Helpers\NotificationHelper::add(
+                    'product_weight_review',
+                    'Supplier product weight needs review',
+                    "Supplier product \"" . post('product_name') . "\" was listed at {$weightKg} kg per unit - please verify.",
+                    ['data' => ['supplier_id' => $supplierId, 'weight_kg' => $weightKg]]
+                );
+            }
 
             setFlash('success', 'Product added successfully');
             redirect(url('supplier/products'));
@@ -204,6 +221,13 @@ class SupplierProductController {
         if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
             setFlash('error', 'Invalid request');
             back();
+        }
+
+        $weightKg = floatval(post('weight_kg', 0));
+        if ($weightKg <= 0) {
+            setFlash('error', 'Product weight (kg) is required and must be greater than zero');
+            back();
+            return;
         }
 
         try {
@@ -293,7 +317,7 @@ class SupplierProductController {
                 post('sku'),
                 post('description'),
                 post('unit_price'),
-                post('weight_kg') ?: null,
+                $weightKg,
                 post('unit', 'unit'),
                 post('minimum_order_quantity', 1),
                 $stockQuantity,
@@ -303,6 +327,16 @@ class SupplierProductController {
                 $id,
                 $supplierId
             ]);
+
+            // Implausible-weight flag: notify admin for manual review, never block the supplier
+            if ($weightKg > 50) {
+                \App\Helpers\NotificationHelper::add(
+                    'product_weight_review',
+                    'Supplier product weight needs review',
+                    "Supplier product \"" . post('product_name') . "\" (ID {$id}) was updated to {$weightKg} kg per unit - please verify.",
+                    ['data' => ['supplier_id' => $supplierId, 'supplier_product_id' => $id, 'weight_kg' => $weightKg]]
+                );
+            }
 
             setFlash('success', 'Product updated successfully');
             redirect(url('supplier/products'));
