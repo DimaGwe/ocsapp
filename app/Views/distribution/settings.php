@@ -741,6 +741,32 @@ $useSameForBilling = (bool)($business['use_delivery_for_billing'] ?? 1);
         </form>
     </div>
 
+    <!-- 3b. Payment Method (Card on File - Sec 5.3) -->
+    <div class="section-card">
+        <div class="section-header">
+            <div class="section-title"><i class="fas fa-credit-card"></i> <?= $currentLang === 'fr' ? 'Moyen de paiement' : 'Payment Method' ?></div>
+        </div>
+        <p style="font-size:13px;color:#6b7280;margin-bottom:12px;">
+            <?= $currentLang === 'fr'
+                ? 'Requis en tout temps pour les comptes avec modalités net-30 et pour la facturation des forfaits payants.'
+                : 'Required at all times for net-30 accounts and for billing paid Distribution plans.' ?>
+        </p>
+
+        <?php if (!empty($business['stripe_payment_method_id'])): ?>
+        <div class="form-message" style="background:#f0fdf4;color:#166534;border-color:#bbf7d0;margin-bottom:12px;">
+            <i class="fas fa-check-circle"></i>
+            <?= htmlspecialchars(ucfirst($business['card_brand'] ?? 'Card')) ?> ****<?= htmlspecialchars($business['card_last4'] ?? '') ?>
+            (<?= $currentLang === 'fr' ? 'exp.' : 'exp.' ?> <?= htmlspecialchars($business['card_exp_month'] ?? '') ?>/<?= htmlspecialchars($business['card_exp_year'] ?? '') ?>)
+        </div>
+        <?php endif; ?>
+
+        <div id="card-element" style="padding:12px;border:1px solid #d1d5db;border-radius:8px;margin-bottom:12px;"></div>
+        <div id="cardMessage" class="form-message"></div>
+        <button type="button" class="btn-save" id="saveCardBtn">
+            <i class="fas fa-save"></i> <?= !empty($business['stripe_payment_method_id']) ? ($currentLang === 'fr' ? 'Mettre a jour la carte' : 'Update Card') : ($currentLang === 'fr' ? 'Enregistrer la carte' : 'Save Card') ?>
+        </button>
+    </div>
+
     <!-- 4. Account Information -->
     <div class="section-card">
         <div class="section-header">
@@ -1283,5 +1309,69 @@ document.querySelectorAll('.password-toggle').forEach(function(btn) {
   });
 });
 </script>
+
+<?php if (!empty($stripePublishableKey)): ?>
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+(function() {
+    const stripe = Stripe(<?= json_encode($stripePublishableKey) ?>);
+    const elements = stripe.elements();
+    const cardElement = elements.create('card');
+    cardElement.mount('#card-element');
+
+    const csrfToken = document.querySelector('input[name="_csrf_token"]')?.value || '';
+    const saveCardBtn = document.getElementById('saveCardBtn');
+    const cardMessage = document.getElementById('cardMessage');
+
+    function showCardMessage(msg, ok) {
+        cardMessage.textContent = msg;
+        cardMessage.style.display = 'block';
+        cardMessage.style.background = ok ? '#f0fdf4' : '#fef2f2';
+        cardMessage.style.color = ok ? '#166534' : '#991b1b';
+    }
+
+    saveCardBtn.addEventListener('click', async function() {
+        saveCardBtn.disabled = true;
+        try {
+            const intentRes = await fetch(<?= json_encode(url('distribution/card/setup-intent')) ?>, {
+                method: 'POST',
+                body: new URLSearchParams({ _csrf_token: csrfToken })
+            });
+            const intentData = await intentRes.json();
+            if (!intentData.success) {
+                showCardMessage(intentData.message || 'Failed to start card setup.', false);
+                saveCardBtn.disabled = false;
+                return;
+            }
+
+            const result = await stripe.confirmCardSetup(intentData.client_secret, {
+                payment_method: { card: cardElement }
+            });
+
+            if (result.error) {
+                showCardMessage(result.error.message, false);
+                saveCardBtn.disabled = false;
+                return;
+            }
+
+            const confirmRes = await fetch(<?= json_encode(url('distribution/card/confirm')) ?>, {
+                method: 'POST',
+                body: new URLSearchParams({ _csrf_token: csrfToken, setup_intent_id: result.setupIntent.id })
+            });
+            const confirmData = await confirmRes.json();
+            if (confirmData.success) {
+                showCardMessage(<?= json_encode($currentLang === 'fr' ? 'Carte enregistree avec succes.' : 'Card saved successfully.') ?>, true);
+                setTimeout(() => location.reload(), 1200);
+            } else {
+                showCardMessage(confirmData.message || 'Failed to save card.', false);
+            }
+        } catch (e) {
+            showCardMessage('An error occurred. Please try again.', false);
+        }
+        saveCardBtn.disabled = false;
+    });
+})();
+</script>
+<?php endif; ?>
 
 <?php include __DIR__ . '/layout-footer.php'; ?>

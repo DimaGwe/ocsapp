@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 require_once __DIR__ . '/../Helpers/AdminPermissionHelper.php';
+require_once __DIR__ . '/../Helpers/CreditHelper.php';
 
 /**
  * AdminBusinessController - Admin Management of Business Accounts
@@ -169,11 +170,24 @@ class AdminBusinessController
         $emailStmt->execute([$id]);
         $emailLog = $emailStmt->fetchAll(\PDO::FETCH_ASSOC);
 
+        $plans = $this->db->query("SELECT * FROM distribution_plans WHERE is_active = 1 ORDER BY sort_order")->fetchAll(\PDO::FETCH_ASSOC);
+
+        $qualification = \App\Helpers\CreditHelper::checkQualification($id);
+
+        $creditEventsStmt = $this->db->prepare("
+            SELECT * FROM distribution_credit_events WHERE business_profile_id = ? ORDER BY created_at DESC LIMIT 30
+        ");
+        $creditEventsStmt->execute([$id]);
+        $creditEvents = $creditEventsStmt->fetchAll(\PDO::FETCH_ASSOC);
+
         view('admin.business-accounts.view', [
             'business'    => $business,
             'documents'   => $documents,
             'activityLog' => $activityLog,
             'emailLog'    => $emailLog,
+            'plans'       => $plans,
+            'qualification' => $qualification,
+            'creditEvents' => $creditEvents,
         ]);
     }
 
@@ -500,6 +514,201 @@ class AdminBusinessController
             $_SESSION['admin_error'] = 'Failed to update account tier.';
         }
 
+        redirect('admin/business-accounts/view?id=' . $id);
+    }
+
+    /**
+     * Assign/change a business account's Distribution plan (Sec 5.2). Resets
+     * credit_limit from the plan's default unless the plan is negotiated
+     * (Enterprise), in which case the admin-entered limit is used.
+     */
+    public function updatePlan(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect('admin/business-accounts');
+            return;
+        }
+        if (!verifyCsrfToken($_POST['_csrf_token'] ?? '')) {
+            $_SESSION['admin_error'] = 'Invalid request.';
+            redirect('admin/business-accounts');
+            return;
+        }
+
+        $id = (int)($_POST['id'] ?? 0);
+        $planId = (int)($_POST['distribution_plan_id'] ?? 0);
+        $manualCreditLimit = $_POST['credit_limit'] !== '' ? (float)($_POST['credit_limit'] ?? null) : null;
+
+        try {
+            $plan = $this->db->prepare("SELECT * FROM distribution_plans WHERE id = ? AND is_active = 1");
+            $plan->execute([$planId]);
+            $plan = $plan->fetch(\PDO::FETCH_ASSOC);
+            if (!$plan) {
+                $_SESSION['admin_error'] = 'Invalid plan.';
+                redirect('admin/business-accounts/view?id=' . $id);
+                return;
+            }
+
+            $creditLimit = $plan['is_negotiated'] ? ($manualCreditLimit ?? 0.00) : (float)$plan['credit_limit'];
+            $isPaid = (float)$plan['monthly_fee'] > 0;
+
+            $current = $this->db->prepare("SELECT plan_started_at, next_billing_date FROM business_profiles WHERE id = ?");
+            $current->execute([$id]);
+            $current = $current->fetch(\PDO::FETCH_ASSOC);
+
+            $nextBillingDate = $current['next_billing_date'] ?? null;
+            if ($isPaid && !$nextBillingDate) {
+                $nextBillingDate = date('Y-m-d', strtotime('+1 month'));
+            } elseif (!$isPaid) {
+                $nextBillingDate = null;
+            }
+
+            $stmt = $this->db->prepare("
+                UPDATE business_profiles
+                SET distribution_plan_id = ?, credit_limit = ?,
+                    plan_started_at = COALESCE(plan_started_at, NOW()),
+                    next_billing_date = ?, plan_status = 'active',
+                    updated_at = NOW()
+                WHERE id = ?
+            ");
+            $stmt->execute([$planId, $creditLimit, $nextBillingDate, $id]);
+
+            $adminId = (int)($_SESSION['user']['id'] ?? 0);
+            \App\Helpers\CreditHelper::logEvent($id, 'plan_changed', 'admin', $adminId,
+                "Plan set to '{$plan['code']}', credit limit \${$creditLimit}.");
+
+            $_SESSION['admin_success'] = 'Distribution plan updated.';
+        } catch (\PDOException $e) {
+            error_log('Update plan error: ' . $e->getMessage());
+            $_SESSION['admin_error'] = 'Failed to update plan.';
+        }
+
+        redirect('admin/business-accounts/view?id=' . $id);
+    }
+
+    /**
+     * Sec 5.1: run the credit-check step (bureau if configured, else flags
+     * for manual review - see CreditHelper::runCreditCheck()).
+     */
+    public function runCreditCheck(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect('admin/business-accounts');
+            return;
+        }
+        if (!verifyCsrfToken($_POST['_csrf_token'] ?? '')) {
+            $_SESSION['admin_error'] = 'Invalid request.';
+            redirect('admin/business-accounts');
+            return;
+        }
+
+        $id = (int)($_POST['id'] ?? 0);
+        \App\Helpers\CreditHelper::runCreditCheck($id);
+        $_SESSION['admin_success'] = 'Credit review requested.';
+        redirect('admin/business-accounts/view?id=' . $id);
+    }
+
+    /**
+     * Sec 5.1: approve net-30 for this account (admin decision, or the
+     * outcome of a bureau check once one exists). Requires qualification to
+     * already be met per CreditHelper::checkQualification() - the UI hides
+     * this action until then, but re-check here too since state can change
+     * between page load and submit.
+     */
+    public function approveNet30(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect('admin/business-accounts');
+            return;
+        }
+        if (!verifyCsrfToken($_POST['_csrf_token'] ?? '')) {
+            $_SESSION['admin_error'] = 'Invalid request.';
+            redirect('admin/business-accounts');
+            return;
+        }
+
+        $id = (int)($_POST['id'] ?? 0);
+        $adminId = (int)($_SESSION['user']['id'] ?? 0);
+
+        $qualification = \App\Helpers\CreditHelper::checkQualification($id);
+        if (!$qualification['qualified']) {
+            $_SESSION['admin_error'] = 'This account has not met the 3-order / 30-day qualification period yet.';
+            redirect('admin/business-accounts/view?id=' . $id);
+            return;
+        }
+
+        \App\Helpers\CreditHelper::approveNet30($id, $adminId);
+        $_SESSION['admin_success'] = 'Net-30 approved for this account.';
+        redirect('admin/business-accounts/view?id=' . $id);
+    }
+
+    public function waiveCreditCheck(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect('admin/business-accounts');
+            return;
+        }
+        if (!verifyCsrfToken($_POST['_csrf_token'] ?? '')) {
+            $_SESSION['admin_error'] = 'Invalid request.';
+            redirect('admin/business-accounts');
+            return;
+        }
+
+        $id = (int)($_POST['id'] ?? 0);
+        $adminId = (int)($_SESSION['user']['id'] ?? 0);
+        $notes = sanitize($_POST['notes'] ?? '');
+
+        \App\Helpers\CreditHelper::waiveCreditCheck($id, $adminId, $notes);
+        $_SESSION['admin_success'] = 'Credit check waived.';
+        redirect('admin/business-accounts/view?id=' . $id);
+    }
+
+    /**
+     * Manual admin suspension of net-30 (Sec 5.3 also has automated
+     * suspension via a scheduled job - this is the manual-override path).
+     */
+    public function suspendNet30(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect('admin/business-accounts');
+            return;
+        }
+        if (!verifyCsrfToken($_POST['_csrf_token'] ?? '')) {
+            $_SESSION['admin_error'] = 'Invalid request.';
+            redirect('admin/business-accounts');
+            return;
+        }
+
+        $id = (int)($_POST['id'] ?? 0);
+        $adminId = (int)($_SESSION['user']['id'] ?? 0);
+        $reason = sanitize($_POST['reason'] ?? 'Manual suspension by admin.');
+
+        \App\Helpers\CreditHelper::suspendNet30($id, $reason, 'admin', $adminId);
+        $_SESSION['admin_success'] = 'Net-30 suspended for this account.';
+        redirect('admin/business-accounts/view?id=' . $id);
+    }
+
+    /**
+     * Sec 5.3: "requiring a fresh credit check to reinstate" - clears the
+     * suspension and re-queues review; net-30 must be explicitly re-approved
+     * afterward via approveNet30(), it is not restored automatically.
+     */
+    public function reinstateNet30(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect('admin/business-accounts');
+            return;
+        }
+        if (!verifyCsrfToken($_POST['_csrf_token'] ?? '')) {
+            $_SESSION['admin_error'] = 'Invalid request.';
+            redirect('admin/business-accounts');
+            return;
+        }
+
+        $id = (int)($_POST['id'] ?? 0);
+        $adminId = (int)($_SESSION['user']['id'] ?? 0);
+
+        \App\Helpers\CreditHelper::reinstateRequiresFreshCheck($id, $adminId);
+        $_SESSION['admin_success'] = 'Suspension cleared - a fresh credit review is required before net-30 can be re-approved.';
         redirect('admin/business-accounts/view?id=' . $id);
     }
 

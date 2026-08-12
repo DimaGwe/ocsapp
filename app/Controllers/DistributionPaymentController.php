@@ -691,6 +691,11 @@ class DistributionPaymentController
 
                 $this->db->commit();
 
+                // Sec 5.1: this paid order may push the account past the
+                // 3-order/30-day net-30 qualification threshold.
+                require_once __DIR__ . '/../Helpers/CreditHelper.php';
+                \App\Helpers\CreditHelper::markQualifiedIfEligible((int)$request['business_profile_id']);
+
                 // Admin bell notification — payment received
                 \App\Helpers\NotificationHelper::add(
                     'payment',
@@ -909,6 +914,11 @@ class DistributionPaymentController
             $this->generateDocuments($request['id']);
 
             $this->db->commit();
+
+            // Sec 5.1: this paid order may push the account past the
+            // 3-order/30-day net-30 qualification threshold.
+            require_once __DIR__ . '/../Helpers/CreditHelper.php';
+            \App\Helpers\CreditHelper::markQualifiedIfEligible((int)$request['business_profile_id']);
 
             // Fetch full request data for invoice + email
             $stmt = $this->db->prepare("

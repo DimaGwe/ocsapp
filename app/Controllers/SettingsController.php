@@ -262,6 +262,25 @@ class SettingsController {
                     ['key' => 'twilio_phone_number', 'label' => 'Phone Number', 'placeholder' => '+1...'],
                 ],
             ],
+            'equifax_ca' => [
+                'title' => 'Equifax Canada (Commercial Credit)',
+                'desc'  => 'Business Credit Management (Sec. 5.1) - one of two bureau options for the net-30 credit check gate. Until credentials are set here, net-30 approval falls back to manual admin review (same pattern already used for NEQ verification).',
+                'icon'  => 'fa-building-columns',
+                'link'  => 'https://www.equifax.ca/business/',
+                'keys'  => [
+                    ['key' => 'equifax_ca_client_id', 'label' => 'Client ID', 'placeholder' => ''],
+                    ['key' => 'equifax_ca_client_secret', 'label' => 'Client Secret', 'placeholder' => ''],
+                ],
+            ],
+            'dnb_ca' => [
+                'title' => 'Dun & Bradstreet Canada (Commercial Credit)',
+                'desc'  => 'Business Credit Management (Sec. 5.1) - the other bureau option (pick one). Until credentials are set here, net-30 approval falls back to manual admin review.',
+                'icon'  => 'fa-building-columns',
+                'link'  => 'https://www.dnb.com/ca-en.html',
+                'keys'  => [
+                    ['key' => 'dnb_ca_api_key', 'label' => 'API Key', 'placeholder' => ''],
+                ],
+            ],
         ];
     }
 
@@ -363,9 +382,37 @@ class SettingsController {
             $result = $this->pingGemini(setting('gemini_api_key', ''));
         } elseif ($provider === 'twilio') {
             $result = $this->pingTwilio(setting('twilio_account_sid', ''), setting('twilio_auth_token', ''));
+        } elseif ($provider === 'equifax_ca' || $provider === 'dnb_ca') {
+            $result = $this->pingCreditBureau($provider);
         }
 
         echo json_encode($result);
+    }
+
+    /**
+     * Deliberately does not attempt a real API call - Equifax Canada and D&B
+     * Canada both require a signed commercial agreement before any sandbox/
+     * production endpoint or auth flow is issued, so there's no verified API
+     * shape to build or test against yet. Guessing at endpoint URLs/auth
+     * schemes here would be worse than an honest "not implemented": it could
+     * silently fail in a confusing way, or send a real credential to a wrong
+     * endpoint once Jack has one. Once real API docs exist from whichever
+     * bureau Jack contracts with, replace this with a real ping call
+     * following the pingAnthropic()/pingTwilio() pattern above.
+     */
+    private function pingCreditBureau(string $provider): array {
+        $configured = $provider === 'equifax_ca'
+            ? (bool)setting('equifax_ca_client_id', '')
+            : (bool)setting('dnb_ca_api_key', '');
+
+        if (!$configured) {
+            return ['ok' => false, 'message' => 'No credentials saved yet.'];
+        }
+
+        return [
+            'ok' => false,
+            'message' => 'Credentials saved, but no live integration is built yet - net-30 approval falls back to manual admin review until this bureau\'s real API is wired up.',
+        ];
     }
 
     private function pingAnthropic(string $key): array {

@@ -715,6 +715,127 @@ ob_start();
             </form>
         </div>
 
+        <?php
+        $plans = $plans ?? [];
+        $qualification = $qualification ?? ['qualified' => false, 'order_count' => 0, 'account_age_days' => 0];
+        $creditEvents = $creditEvents ?? [];
+        $paymentTerms = $business['payment_terms'] ?? 'prepay';
+        $creditReviewStatus = $business['credit_review_status'] ?? 'not_required';
+        $isSuspended = !empty($business['net30_suspended_at']);
+        $hasCardOnFile = !empty($business['stripe_payment_method_id']);
+        ?>
+        <!-- Distribution Plan & Net-30 Credit (Sec 5) -->
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-file-invoice-dollar"></i> Distribution Plan &amp; Net-30 Credit
+            </div>
+
+            <form method="POST" action="<?= url('admin/business-accounts/update-plan') ?>" style="margin-bottom:16px;">
+                <?= csrfField() ?>
+                <input type="hidden" name="id" value="<?= $business['business_id'] ?? 0 ?>">
+                <div class="form-group">
+                    <label>Distribution Plan</label>
+                    <select name="distribution_plan_id">
+                        <?php foreach ($plans as $p): ?>
+                            <option value="<?= $p['id'] ?>" <?= ((int)($business['distribution_plan_id'] ?? 0) === (int)$p['id']) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($p['name']) ?>
+                                (<?= $p['monthly_fee'] > 0 ? '$' . number_format($p['monthly_fee'], 2) . '/mo, ' : 'free, ' ?><?= $p['is_negotiated'] ? 'negotiated limit' : '$' . number_format($p['credit_limit'], 2) . ' limit' ?>)
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Credit Limit (CAD) <small style="opacity:.7;">— only used for negotiated/Enterprise plans, otherwise auto-set from the plan</small></label>
+                    <input type="number" name="credit_limit" step="0.01" min="0" value="<?= $business['credit_limit'] ?? 0 ?>" placeholder="0.00">
+                </div>
+                <button type="submit" class="btn btn-secondary btn-block"><i class="fas fa-save"></i> Update Plan</button>
+            </form>
+
+            <div class="form-group">
+                <label>Qualification (Sec 5.1 — 3 paid orders + 30 days tenure)</label>
+                <div class="info-value">
+                    <?= $qualification['order_count'] ?> paid order(s), <?= $qualification['account_age_days'] ?> day(s) old —
+                    <?php if ($qualification['qualified']): ?>
+                        <span style="color:#16a34a;font-weight:600;">Qualified</span>
+                    <?php else: ?>
+                        <span style="color:#6b7280;">Not yet qualified</span>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Payment Terms / Credit Review Status</label>
+                <div class="info-value">
+                    <strong><?= strtoupper($paymentTerms) ?></strong> — credit review: <?= str_replace('_', ' ', $creditReviewStatus) ?>
+                    <?php if ($isSuspended): ?>
+                        <br><span style="color:#dc2626;">Suspended <?= date('M j, Y', strtotime($business['net30_suspended_at'])) ?>: <?= htmlspecialchars($business['net30_suspension_reason'] ?? '') ?></span>
+                    <?php endif; ?>
+                    <br>Card on file: <?= $hasCardOnFile ? htmlspecialchars(($business['card_brand'] ?? '') . ' ****' . ($business['card_last4'] ?? '')) : '<span style="color:#dc2626;">none</span>' ?>
+                </div>
+            </div>
+
+            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                <?php if ($creditReviewStatus === 'not_required' || $creditReviewStatus === 'admin_waived'): ?>
+                <form method="POST" action="<?= url('admin/business-accounts/credit-check') ?>">
+                    <?= csrfField() ?>
+                    <input type="hidden" name="id" value="<?= $business['business_id'] ?? 0 ?>">
+                    <button type="submit" class="btn btn-secondary btn-sm"><i class="fas fa-search-dollar"></i> Run Credit Check</button>
+                </form>
+                <?php endif; ?>
+
+                <?php if ($creditReviewStatus === 'pending_manual_review'): ?>
+                <form method="POST" action="<?= url('admin/business-accounts/waive-credit-check') ?>">
+                    <?= csrfField() ?>
+                    <input type="hidden" name="id" value="<?= $business['business_id'] ?? 0 ?>">
+                    <input type="hidden" name="notes" value="Waived by admin - no live bureau integration configured.">
+                    <button type="submit" class="btn btn-secondary btn-sm"><i class="fas fa-user-check"></i> Waive (Manual Approval)</button>
+                </form>
+                <?php endif; ?>
+
+                <?php if ($paymentTerms !== 'net30' && $qualification['qualified'] && in_array($creditReviewStatus, ['bureau_approved', 'admin_approved', 'admin_waived'], true)): ?>
+                <form method="POST" action="<?= url('admin/business-accounts/approve-net30') ?>">
+                    <?= csrfField() ?>
+                    <input type="hidden" name="id" value="<?= $business['business_id'] ?? 0 ?>">
+                    <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-check-circle"></i> Approve Net-30</button>
+                </form>
+                <?php elseif ($paymentTerms !== 'net30' && $qualification['qualified']): ?>
+                    <span style="align-self:center;color:#6b7280;font-size:13px;">Run/waive credit check before approving net-30.</span>
+                <?php endif; ?>
+
+                <?php if ($paymentTerms === 'net30' && !$isSuspended): ?>
+                <form method="POST" action="<?= url('admin/business-accounts/suspend-net30') ?>" onsubmit="return confirm('Suspend net-30 for this account?');">
+                    <?= csrfField() ?>
+                    <input type="hidden" name="id" value="<?= $business['business_id'] ?? 0 ?>">
+                    <input type="hidden" name="reason" value="Manual suspension by admin.">
+                    <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-ban"></i> Suspend Net-30</button>
+                </form>
+                <?php endif; ?>
+
+                <?php if ($isSuspended): ?>
+                <form method="POST" action="<?= url('admin/business-accounts/reinstate-net30') ?>">
+                    <?= csrfField() ?>
+                    <input type="hidden" name="id" value="<?= $business['business_id'] ?? 0 ?>">
+                    <button type="submit" class="btn btn-secondary btn-sm"><i class="fas fa-undo"></i> Clear Suspension (requires fresh review)</button>
+                </form>
+                <?php endif; ?>
+            </div>
+
+            <?php if (!empty($creditEvents)): ?>
+            <div style="margin-top:16px;">
+                <label style="font-weight:600;font-size:13px;">Credit Event History</label>
+                <div style="max-height:200px;overflow-y:auto;font-size:12px;margin-top:6px;">
+                    <?php foreach ($creditEvents as $ev): ?>
+                        <div style="padding:6px 0;border-bottom:1px solid #f0f0f0;">
+                            <strong><?= htmlspecialchars($ev['event_type']) ?></strong> (<?= htmlspecialchars($ev['changed_by_type']) ?>)
+                            — <?= date('M j, Y g:ia', strtotime($ev['created_at'])) ?>
+                            <?php if (!empty($ev['details'])): ?><br><span style="color:#6b7280;"><?= htmlspecialchars($ev['details']) ?></span><?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php endif; ?>
+        </div>
+
         <!-- Request Document -->
         <div class="card">
             <div class="card-title">

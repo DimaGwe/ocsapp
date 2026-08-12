@@ -123,6 +123,16 @@ class AdminReceivablesController
             // Log to status history
             $this->logStatusChange($sourceId, 'awaiting_payment', 'paid', "Manually marked paid via {$paymentMethod}. Ref: {$paymentReference}");
 
+            // Sec 5.1: this paid order may push the account past the
+            // 3-order/30-day net-30 qualification threshold.
+            $bizStmt = $this->db->prepare("SELECT business_profile_id FROM distribution_requests WHERE id = ?");
+            $bizStmt->execute([$sourceId]);
+            $bizId = (int)$bizStmt->fetchColumn();
+            if ($bizId) {
+                require_once __DIR__ . '/../Helpers/CreditHelper.php';
+                \App\Helpers\CreditHelper::markQualifiedIfEligible($bizId);
+            }
+
             // Check if all POs are ready — if so, trigger driver auto-assignment
             $this->maybeAutoAssignDriver($sourceId);
 

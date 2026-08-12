@@ -1028,6 +1028,15 @@ class SupplierProductController {
             $request = $stmt->fetch(\PDO::FETCH_ASSOC);
             if (!$request) return;
 
+            // Sec 5.1/5.3: net-30 accounts (with a card on file, order within
+            // their credit limit's deposit threshold) skip the payment-link
+            // flow entirely - order proceeds straight to procurement against
+            // a 30-day invoice. See CreditHelper::tryNet30Fastpath() docblock.
+            require_once __DIR__ . '/../Helpers/CreditHelper.php';
+            if (\App\Helpers\CreditHelper::tryNet30Fastpath($distRequestId)) {
+                return;
+            }
+
             $token     = bin2hex(random_bytes(32));
             $expiresAt = date('Y-m-d H:i:s', strtotime('+48 hours'));
 

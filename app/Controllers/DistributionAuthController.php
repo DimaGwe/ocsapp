@@ -981,12 +981,74 @@ class DistributionAuthController
             return;
         }
 
+        require_once __DIR__ . '/../Helpers/PaymentGatewayHelper.php';
+        $stripeConfig = getStripeConfig();
+
         $lang = $_SESSION['language'] ?? 'fr';
         view('distribution.settings', [
             'business'    => $business,
             'pageTitle'   => $lang === 'fr' ? 'Paramètres' : 'Settings',
             'currentPage' => 'settings',
+            'stripePublishableKey' => $stripeConfig['publishable_key'] ?? '',
         ]);
+    }
+
+    /**
+     * Sec 5.3 card-on-file: create a SetupIntent for the "add/update card"
+     * Stripe Elements flow.
+     */
+    public function createCardSetupIntent(): void
+    {
+        if (!$this->isBusinessLoggedIn()) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'Not authenticated']);
+            return;
+        }
+        if (!verifyCsrfToken(post('_csrf_token', ''))) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Invalid CSRF token']);
+            return;
+        }
+
+        require_once __DIR__ . '/../Helpers/StripeCustomerHelper.php';
+        try {
+            $clientSecret = \App\Helpers\StripeCustomerHelper::createSetupIntentClientSecret((int)$_SESSION['business']['id']);
+            echo json_encode(['success' => true, 'client_secret' => $clientSecret]);
+        } catch (\Throwable $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Sec 5.3 card-on-file: called by the frontend after Stripe.js
+     * confirmCardSetup() succeeds, to persist the resulting PaymentMethod.
+     */
+    public function confirmCardSetup(): void
+    {
+        if (!$this->isBusinessLoggedIn()) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'Not authenticated']);
+            return;
+        }
+        if (!verifyCsrfToken(post('_csrf_token', ''))) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Invalid CSRF token']);
+            return;
+        }
+
+        $setupIntentId = sanitize(post('setup_intent_id', ''));
+        if (!$setupIntentId) {
+            echo json_encode(['success' => false, 'message' => 'Missing setup intent.']);
+            return;
+        }
+
+        require_once __DIR__ . '/../Helpers/StripeCustomerHelper.php';
+        try {
+            \App\Helpers\StripeCustomerHelper::saveCardFromSetupIntent((int)$_SESSION['business']['id'], $setupIntentId);
+            echo json_encode(['success' => true]);
+        } catch (\Throwable $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
     }
 
     /**
