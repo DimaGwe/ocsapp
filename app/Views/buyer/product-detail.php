@@ -1372,7 +1372,7 @@ if (empty($productImages) && !empty($product['image'])) {
             if (newValue >= 1 && newValue <= max) {
                 input.value = newValue;
             } else if (newValue > max) {
-                showToast('<?= $t['only'] ?> ' + max + ' <?= $t['items_available'] ?>', 'error');
+                showToast(<?= json_encode($t['only'] ?? 'Only') ?> + ' ' + max + ' ' + <?= json_encode($t['items_available'] ?? 'items available') ?>, 'error');
             }
         }
         
@@ -1384,7 +1384,7 @@ if (empty($productImages) && !empty($product['image'])) {
             const productId = window.OCS_CONFIG.productId;
             
             button.disabled = true;
-            button.innerHTML = '<span>⏳</span><span><?= $t['processing'] ?>...</span>';
+            button.innerHTML = `<span>⏳</span><span>${<?= json_encode($t['processing'] ?? 'Processing') ?>}...</span>`;
             
             try {
                 const csrf = {
@@ -1409,7 +1409,7 @@ if (empty($productImages) && !empty($product['image'])) {
                 const data = await response.json();
                 
                 if (data.success) {
-                    button.innerHTML = '<span>✓</span><span><?= $t['added_to_cart'] ?>!</span>';
+                    button.innerHTML = `<span>✓</span><span>${<?= json_encode($t['added_to_cart'] ?? 'Added to Cart') ?>}!</span>`;
                     button.style.background = '#28a745';
                     
                     // Update cart count
@@ -1425,7 +1425,7 @@ if (empty($productImages) && !empty($product['image'])) {
                         mobileCartBadge.style.display = 'block';
                     }
                     
-                    showToast('<?= $t['product_added_to_cart'] ?>', 'success');
+                    showToast(<?= json_encode($t['product_added_to_cart'] ?? 'Product added to cart successfully!') ?>, 'success');
                     
                     setTimeout(() => {
                         button.innerHTML = originalContent;
@@ -1433,13 +1433,13 @@ if (empty($productImages) && !empty($product['image'])) {
                         button.disabled = false;
                     }, 2000);
                 } else {
-                    showToast(data.message || '<?= $t['failed_to_add'] ?>', 'error');
+                    showToast(data.message || <?= json_encode($t['failed_to_add'] ?? 'Failed to add product to cart') ?>, 'error');
                     button.innerHTML = originalContent;
                     button.disabled = false;
                 }
             } catch (error) {
                 console.error('Add to cart error:', error);
-                showToast('<?= $t['error_adding_to_cart'] ?>: ' + error.message, 'error');
+                showToast(<?= json_encode($t['error_adding_to_cart'] ?? 'Error adding to cart') ?> + ': ' + error.message, 'error');
                 button.innerHTML = originalContent;
                 button.disabled = false;
             }
@@ -1476,20 +1476,20 @@ if (empty($productImages) && !empty($product['image'])) {
             const icon = document.getElementById('wishlistIcon');
             inWishlist = !inWishlist;
             icon.textContent = inWishlist ? '❤️' : '🤍';
-            showToast(inWishlist ? '<?= $t['added_to_wishlist'] ?>' : '<?= $t['removed_from_wishlist'] ?>');
+            showToast(inWishlist ? <?= json_encode($t['added_to_wishlist'] ?? 'Added to wishlist') ?> : <?= json_encode($t['removed_from_wishlist'] ?? 'Removed from wishlist') ?>);
         }
         
         // Share
         function share() {
             if (navigator.share) {
                 navigator.share({
-                    title: '<?= htmlspecialchars($product['name'] ?? 'Product') ?>',
-                    text: '<?= $t['check_out_product'] ?>',
+                    title: <?= json_encode($product['name'] ?? 'Product') ?>,
+                    text: <?= json_encode($t['check_out_product'] ?? 'Check out this product') ?>,
                     url: window.location.href
                 });
             } else {
                 navigator.clipboard.writeText(window.location.href);
-                showToast('<?= $t['link_copied'] ?>');
+                showToast(<?= json_encode($t['link_copied'] ?? 'Link copied') ?>);
             }
         }
         
