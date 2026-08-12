@@ -387,6 +387,14 @@ class DeliveryController {
 
                 $deliveryType = $delivery['delivery_type'] ?? 'order';
 
+                // Sec 4.3 prerequisite: seller payout ledger entry (Marché
+                // orders only - distribution deliveries are B2B/supplier,
+                // handled separately).
+                if ($deliveryType !== 'distribution' && !empty($delivery['order_id'])) {
+                    require_once __DIR__ . '/../Helpers/SellerPayoutHelper.php';
+                    \App\Helpers\SellerPayoutHelper::createPayoutForOrder((int)$delivery['order_id']);
+                }
+
                 if ($deliveryType === 'distribution' && !empty($delivery['distribution_request_id'])) {
                     // Update distribution request status to completed
                     $stmt = $this->db->prepare("

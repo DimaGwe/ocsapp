@@ -523,6 +523,18 @@ class DriverApiController
             $this->onDeliveryCompleted($id, $userId);
 
         } elseif ($status === 'picked_up') {
+            // Sec 4.1: mandatory photo capture at pickup, hard-blocked - a driver
+            // cannot advance to picked_up without first uploading via
+            // POST /api/orders/:id/pickup-photo.
+            $photoChk = $this->db->prepare(
+                "SELECT pickup_photo_path FROM delivery_assignments WHERE order_id = ? AND driver_id = ? LIMIT 1"
+            );
+            $photoChk->execute([$id, $userId]);
+            $photoRow = $photoChk->fetch(\PDO::FETCH_ASSOC);
+            if (empty($photoRow['pickup_photo_path'])) {
+                $this->error('A pickup photo is required before marking this order picked up.', 400);
+            }
+
             $this->db->prepare(
                 "UPDATE orders SET driver_status = ?, picked_up_at = NOW(), updated_at = NOW() WHERE id = ?"
             )->execute([$status, $id]);
@@ -1868,6 +1880,18 @@ class DriverApiController
         if (!$order) $this->error('Order not found or not active', 404);
 
         if (in_array($outcome, $successOutcomes)) {
+            // Sec 4.1: mandatory delivery evidence, hard-blocked - either a
+            // delivery photo (POST /api/orders/:id/photo) or a signature
+            // satisfies this ("photo or signature capture at delivery").
+            $evChk = $this->db->prepare(
+                "SELECT proof_of_delivery, signature_collected FROM delivery_assignments WHERE order_id = ? AND driver_id = ? LIMIT 1"
+            );
+            $evChk->execute([$id, $userId]);
+            $evRow = $evChk->fetch(\PDO::FETCH_ASSOC);
+            if (empty($evRow['proof_of_delivery']) && empty($evRow['signature_collected'])) {
+                $this->error('A delivery photo or signature is required before marking this order delivered.', 400);
+            }
+
             // Mark as delivered
             $this->db->prepare(
                 "UPDATE orders
@@ -2456,6 +2480,109 @@ class DriverApiController
     }
 
     // -------------------------------------------------------------------------
+    // POST /api/orders/:id/signature
+    // Sec 4.1: buyer/recipient signature capture at delivery, as an
+    // alternative to the delivery photo (either satisfies the evidence
+    // requirement in orderOutcome()). Accepts a base64 PNG data URL (the
+    // typical output of a signature-pad widget).
+    // -------------------------------------------------------------------------
+    public function orderSignature(int $id): void
+    {
+        $userId = $this->authenticate();
+        $body   = $this->jsonBody();
+        $dataUrl = $body['signature'] ?? '';
+
+        if (!preg_match('/^data:image\/png;base64,(.+)$/', $dataUrl, $m)) {
+            $this->error('Signature must be a base64 PNG data URL.', 400);
+        }
+
+        $chk = $this->db->prepare(
+            "SELECT id FROM orders WHERE id = ? AND driver_id = ? AND status = 'out_for_delivery' LIMIT 1"
+        );
+        $chk->execute([$id, $userId]);
+        if (!$chk->fetch()) {
+            $this->error('Order not found', 404);
+        }
+
+        $decoded = base64_decode($m[1], true);
+        if ($decoded === false || strlen($decoded) > 2 * 1024 * 1024) {
+            $this->error('Invalid or oversized signature image.', 400);
+        }
+
+        $filename = "signature_{$id}_{$userId}_" . time() . ".png";
+        $destDir  = __DIR__ . '/../../../public/uploads/delivery/';
+        if (!is_dir($destDir)) {
+            mkdir($destDir, 0775, true);
+        }
+        file_put_contents($destDir . $filename, $decoded);
+
+        $this->db->prepare(
+            "UPDATE delivery_assignments SET signature_collected = 1, updated_at = NOW()
+             WHERE order_id = ? AND driver_id = ?"
+        )->execute([$id, $userId]);
+
+        $this->json(['success' => true]);
+    }
+
+    // -------------------------------------------------------------------------
+    // POST /api/orders/:id/pickup-photo
+    // Sec 4.1: mandatory photo capture at pickup/dispatch - required before
+    // updateOrderStatus() will accept a 'picked_up' transition. Mirrors
+    // orderPhoto() (the delivery-side proof) but writes to
+    // delivery_assignments.pickup_photo_path instead.
+    // -------------------------------------------------------------------------
+    public function orderPickupPhoto(int $id): void
+    {
+        $userId = $this->authenticate();
+
+        if (empty($_FILES['photo']) || $_FILES['photo']['error'] !== UPLOAD_ERR_OK) {
+            $this->error('No photo uploaded', 400);
+        }
+
+        $file     = $_FILES['photo'];
+        $maxBytes = 10 * 1024 * 1024; // 10 MB
+        if ($file['size'] > $maxBytes) {
+            $this->error('Photo must be under 10 MB', 400);
+        }
+
+        $mime    = mime_content_type($file['tmp_name']);
+        $allowed = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+        if (!isset($allowed[$mime])) {
+            $this->error('Only JPEG, PNG or WebP images are allowed', 400);
+        }
+
+        // Verify this driver owns the order and it's still active (pickup happens before delivery)
+        $chk = $this->db->prepare(
+            "SELECT id FROM orders WHERE id = ? AND driver_id = ? AND status = 'out_for_delivery' LIMIT 1"
+        );
+        $chk->execute([$id, $userId]);
+        if (!$chk->fetch()) {
+            $this->error('Order not found', 404);
+        }
+
+        $ext      = $allowed[$mime];
+        $filename = "pickup_{$id}_{$userId}_" . time() . ".{$ext}";
+        $destDir  = __DIR__ . '/../../../public/uploads/delivery/';
+        if (!is_dir($destDir)) {
+            mkdir($destDir, 0775, true);
+        }
+        $destPath = $destDir . $filename;
+
+        if (!move_uploaded_file($file['tmp_name'], $destPath)) {
+            $this->error('Failed to save photo', 500);
+        }
+
+        $relativePath = 'uploads/delivery/' . $filename;
+
+        $this->db->prepare(
+            "UPDATE delivery_assignments SET pickup_photo_path = ?, updated_at = NOW()
+             WHERE order_id = ? AND driver_id = ?"
+        )->execute([$relativePath, $id, $userId]);
+
+        $this->json(['success' => true, 'photo_url' => $this->fullAvatarUrl($relativePath)]);
+    }
+
+    // -------------------------------------------------------------------------
     // GET /api/pickups/:id
     // Returns a single pickup (PO) assigned to this driver
     // -------------------------------------------------------------------------
@@ -2687,6 +2814,11 @@ class DriverApiController
                     "UPDATE delivery_assignments SET status = 'delivered', delivered_at = NOW() WHERE id = ?"
                 )->execute([$daRow['id']]);
             }
+
+            // Sec 4.3 prerequisite: seller payout ledger entry, so a Dynamic
+            // Chargeback later has something real to net against.
+            require_once __DIR__ . '/../../Helpers/SellerPayoutHelper.php';
+            \App\Helpers\SellerPayoutHelper::createPayoutForOrder($orderId);
 
             // --- Buyer email: order delivered ---
             if (!empty($order['customer_email'])) {

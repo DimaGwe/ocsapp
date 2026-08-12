@@ -256,6 +256,15 @@ $sc = $statusColors[$order['status'] ?? ''] ?? ['bg'=>'#f5f5f5','color'=>'#555']
                     </form>
                 </div>
             <?php endif; ?>
+
+            <!-- Request Return (Sec 4 - Track A, 14-day window) -->
+            <?php if (($order['status'] ?? '') === 'delivered'): ?>
+                <div class="cancel-form">
+                    <a href="<?= url('account/orders/claim?order_id=' . (int)$order['id']) ?>" class="btn-cancel" style="text-decoration:none; display:inline-block;">
+                        <i class="fas fa-undo"></i> <?= $currentLang === 'fr' ? 'Faire une reclamation' : 'Request Return / File a Claim' ?>
+                    </a>
+                </div>
+            <?php endif; ?>
         </div>
 
         <!-- Order Items -->

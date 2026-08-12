@@ -115,6 +115,11 @@ return [
     'GET /account/orders/detail' => ['OrderController', 'orderDetail'],
     'POST /account/orders/cancel' => ['OrderController', 'cancelOrder'],
     'POST /account/orders/rate-driver' => ['OrderController', 'rateDriver'],
+
+    // Returns & Refund claims (Ecosystem Backend Requirements Sec 4, Track A/B2C)
+    'GET /account/orders/claim' => ['ClaimController', 'newClaim'],
+    'POST /account/orders/claim' => ['ClaimController', 'submitClaim'],
+    'GET /account/claims' => ['ClaimController', 'myClaims'],
     'GET /account/orders' => ['OrderController', 'myOrders'],
 
     // Settings
@@ -268,6 +273,14 @@ return [
     'POST /admin/business-accounts/suspend-net30' => ['AdminBusinessController', 'suspendNet30'],
     'POST /admin/business-accounts/reinstate-net30' => ['AdminBusinessController', 'reinstateNet30'],
     'POST /admin/business-accounts/delete' => ['AdminBusinessController', 'delete'],
+
+    // Returns & Refund claims review (Ecosystem Backend Requirements Sec 4)
+    'GET /admin/claims' => ['AdminClaimsController', 'index'],
+    'GET /admin/claims/view' => ['AdminClaimsController', 'view'],
+    'POST /admin/claims/confirm-vendor-caused' => ['AdminClaimsController', 'confirmVendorCaused'],
+    'POST /admin/claims/confirm-transit-caused' => ['AdminClaimsController', 'confirmTransitCaused'],
+    'POST /admin/claims/deny' => ['AdminClaimsController', 'deny'],
+    'POST /admin/claims/dispatch-return' => ['AdminClaimsController', 'dispatchReturn'],
     'POST /admin/business-accounts/messages/send' => ['BusinessMessagesController', 'adminSend'],
     'GET /admin/business-accounts/messages' => ['BusinessMessagesController', 'adminIndex'],
     'POST /admin/business-accounts/documents/verify'  => ['AdminBusinessController', 'verifyDocument'],
@@ -1016,6 +1029,8 @@ return [
     'POST /api/orders/{id}/accept'            => ['Api\\DriverApiController', 'acceptOrder'],
     'POST /api/orders/{id}/status'            => ['Api\\DriverApiController', 'updateOrderStatus'],
     'POST /api/orders/{id}/photo'             => ['Api\\DriverApiController', 'orderPhoto'],
+    'POST /api/orders/{id}/pickup-photo'      => ['Api\\DriverApiController', 'orderPickupPhoto'],
+    'POST /api/orders/{id}/signature'         => ['Api\\DriverApiController', 'orderSignature'],
     'POST /api/orders/{id}/outcome'           => ['Api\\DriverApiController', 'orderOutcome'],
     'POST /api/orders/{id}/cancel'            => ['Api\\DriverApiController', 'cancelOrder'],
     'GET /api/driver/earnings'                => ['Api\\DriverApiController', 'earnings'],
