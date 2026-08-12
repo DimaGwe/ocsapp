@@ -369,6 +369,12 @@ $interacInstructions = $interacSettings['interac_instructions'] ?? 'Please send 
                 <span>$<?= number_format($order['delivery_fee'], 2) ?></span>
             </div>
             <?php endif; ?>
+            <?php if (($order['additional_stop_fee'] ?? 0) > 0): ?>
+            <div class="total-row">
+                <span>Additional-Stop Fee</span>
+                <span>$<?= number_format($order['additional_stop_fee'], 2) ?></span>
+            </div>
+            <?php endif; ?>
             <div class="total-row grand">
                 <span>Total</span>
                 <span>$<?= number_format($order['total'] ?? 0, 2) ?> CAD</span>

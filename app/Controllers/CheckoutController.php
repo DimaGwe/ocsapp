@@ -168,6 +168,7 @@ class CheckoutController
             $defaultAddressCity = $addresses[0]['city'];
         }
         $displayDeliveryFee = resolveDeliveryZoneFee($defaultAddressCity)['fee'];
+        $stopFeePreview = calculateAdditionalStopFee($defaultAddressCity, count($ordersByShop));
 
         view('buyer/checkout', [
             'cartItems' => $cartItems,
@@ -175,6 +176,8 @@ class CheckoutController
             'addresses' => $addresses,
             'cartCount' => count($cart),
             'deliveryFee' => $displayDeliveryFee,
+            'additionalStopFee' => $stopFeePreview['total_fee'],
+            'additionalStops' => $stopFeePreview['additional_stops'],
         ]);
     }
     
@@ -267,6 +270,30 @@ class CheckoutController
             $itemsByShop[$shopId][] = $item;
         }
 
+        // Additional-Stop Fee (Sec 2.2): each shop-order created below still gets its own
+        // full delivery_fee (no consolidated-order model on the B2C side) - this surcharge
+        // is a separate line item layered on top, split evenly across the sibling orders
+        // created in this same checkout. checkout_session_id correlates them.
+        $shopCount = count($itemsByShop);
+        $stopFeeCalc = calculateAdditionalStopFee($selectedAddress['city'] ?? null, $shopCount);
+        $checkoutSessionId = bin2hex(random_bytes(16));
+
+        // Distribute the total stop fee across sibling orders without losing cents to rounding.
+        $stopFeeShares = [];
+        if ($stopFeeCalc['total_fee'] > 0 && $shopCount > 0) {
+            $baseShare = floor(($stopFeeCalc['total_fee'] / $shopCount) * 100) / 100;
+            $allocated = round($baseShare * $shopCount, 2);
+            $remainder = round($stopFeeCalc['total_fee'] - $allocated, 2);
+            $shopIds = array_keys($itemsByShop);
+            foreach ($shopIds as $i => $sid) {
+                $stopFeeShares[$sid] = $baseShare;
+            }
+            // Give any leftover pennies to the last order so the session total matches exactly.
+            if ($remainder > 0 && !empty($shopIds)) {
+                $stopFeeShares[end($shopIds)] = round($stopFeeShares[end($shopIds)] + $remainder, 2);
+            }
+        }
+
         $createdOrders = [];
 
         foreach ($itemsByShop as $shopId => $items) {
@@ -279,6 +306,7 @@ class CheckoutController
             }
 
             $deliveryFee = resolveDeliveryZoneFee($selectedAddress['city'] ?? null)['fee'];
+            $additionalStopFee = $stopFeeShares[$shopId] ?? 0.00;
             // Canadian tax: GST 5% + QST 9.975% = 14.975% (Quebec)
             $gstRate  = 0.05;
             $qstRate  = 0.09975;
@@ -286,21 +314,21 @@ class CheckoutController
             $qst      = round($subtotal * $qstRate, 2);
             $tax      = $gst + $qst;
             $discount = 0.00;
-            $total    = $subtotal + $deliveryFee + $tax - $discount;
+            $total    = $subtotal + $deliveryFee + $additionalStopFee + $tax - $discount;
 
             // Create Order — always starts as pending
             $orderSQL = "
                 INSERT INTO orders (
-                    user_id, shop_id, order_number,
-                    subtotal, tax, delivery_fee, discount, total,
+                    user_id, shop_id, order_number, checkout_session_id,
+                    subtotal, tax, delivery_fee, stop_count, additional_stop_fee, discount, total,
                     payment_method, payment_status,
                     delivery_date, delivery_time,
                     delivery_address,
                     notes, status,
                     created_at, updated_at
                 ) VALUES (
-                    :user_id, :shop_id, :order_number,
-                    :subtotal, :tax, :delivery_fee, :discount, :total,
+                    :user_id, :shop_id, :order_number, :checkout_session_id,
+                    :subtotal, :tax, :delivery_fee, :stop_count, :additional_stop_fee, :discount, :total,
                     :payment_method, :payment_status,
                     :delivery_date, :delivery_time,
                     :delivery_address,
@@ -313,9 +341,12 @@ class CheckoutController
                 'user_id' => $userId,
                 'shop_id' => $shopId,
                 'order_number' => $orderNumber,
+                'checkout_session_id' => $checkoutSessionId,
                 'subtotal' => $subtotal,
                 'tax' => $tax,
                 'delivery_fee' => $deliveryFee,
+                'stop_count' => $shopCount,
+                'additional_stop_fee' => $additionalStopFee,
                 'discount' => $discount,
                 'total' => $total,
                 'payment_method' => $paymentMethod,

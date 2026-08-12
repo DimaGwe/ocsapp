@@ -113,6 +113,10 @@ ob_start();
                     <div class="stat-label"><?= $currentLang === 'fr' ? 'Dist. max' : 'Max Dist.' ?></div>
                     <div class="stat-value"><?= number_format($zone['max_distance_km'] ?? 0, 1) ?> km</div>
                 </div>
+                <div class="stat-item">
+                    <div class="stat-label"><?= $currentLang === 'fr' ? 'Frais/arrêt suppl.' : 'Add\'l Stop Fee' ?></div>
+                    <div class="stat-value"><?= currency($zone['stop_fee_rate'] ?? 0) ?></div>
+                </div>
             </div>
             <div class="zone-footer">
                 <div class="zone-meta">
@@ -205,12 +209,16 @@ ob_start();
                         <input type="number" name="per_km_fee" id="f_per_km_fee" min="0" step="0.01" value="10.00" class="form-input">
                     </div>
                     <div class="form-group">
-                        <label class="form-label"><?= $currentLang === 'fr' ? 'Dist. max (km)' : 'Max Distance (km)' ?></label>
-                        <input type="number" name="max_distance_km" id="f_max_distance_km" min="0" step="0.1" value="10.0" class="form-input">
+                        <label class="form-label"><?= $currentLang === 'fr' ? 'Frais/arrêt suppl. ($)' : 'Additional-Stop Fee ($)' ?></label>
+                        <input type="number" name="stop_fee_rate" id="f_stop_fee_rate" min="0" step="0.01" value="0.00" class="form-input">
                     </div>
                 </div>
 
-                <div class="form-row">
+                <div class="form-row cols-3">
+                    <div class="form-group">
+                        <label class="form-label"><?= $currentLang === 'fr' ? 'Dist. max (km)' : 'Max Distance (km)' ?></label>
+                        <input type="number" name="max_distance_km" id="f_max_distance_km" min="0" step="0.1" value="10.0" class="form-input">
+                    </div>
                     <div class="form-group">
                         <label class="form-label"><?= $currentLang === 'fr' ? 'Temps estimé (min)' : 'Est. Time (minutes)' ?></label>
                         <input type="number" name="estimated_time" id="f_estimated_time" min="1" value="30" class="form-input">
@@ -266,6 +274,7 @@ function openZoneModal(id) {
     document.getElementById('f_country').value       = 'Dominican Republic';
     document.getElementById('f_base_fee').value      = '50.00';
     document.getElementById('f_per_km_fee').value    = '10.00';
+    document.getElementById('f_stop_fee_rate').value = '0.00';
     document.getElementById('f_max_distance_km').value = '10.0';
     document.getElementById('f_estimated_time').value = '30';
     document.getElementById('f_priority').value      = '0';
@@ -286,6 +295,7 @@ function openZoneModal(id) {
                 document.getElementById('f_country').value         = z.country ?? 'Dominican Republic';
                 document.getElementById('f_base_fee').value        = z.base_fee ?? '50.00';
                 document.getElementById('f_per_km_fee').value      = z.per_km_fee ?? '10.00';
+                document.getElementById('f_stop_fee_rate').value   = z.stop_fee_rate ?? '0.00';
                 document.getElementById('f_max_distance_km').value = z.max_distance_km ?? '10.0';
                 document.getElementById('f_estimated_time').value  = z.estimated_time ?? '30';
                 document.getElementById('f_priority').value        = z.priority ?? '0';

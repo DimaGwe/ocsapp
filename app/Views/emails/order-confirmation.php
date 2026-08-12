@@ -83,8 +83,9 @@ $orderDate = date('F j, Y', strtotime($order['created_at'] ?? 'now'));
                                 </tbody>
                                 <tfoot>
                                     <?php
-                                    $subtotal    = (float)($order['subtotal'] ?? 0);
-                                    $deliveryFee = (float)($order['delivery_fee'] ?? 0);
+                                    $subtotal          = (float)($order['subtotal'] ?? 0);
+                                    $deliveryFee       = (float)($order['delivery_fee'] ?? 0);
+                                    $additionalStopFee = (float)($order['additional_stop_fee'] ?? 0);
                                     $gst         = round($subtotal * 0.05, 2);
                                     $qst         = round($subtotal * 0.09975, 2);
                                     ?>
@@ -96,6 +97,12 @@ $orderDate = date('F j, Y', strtotime($order['created_at'] ?? 'now'));
                                     <tr>
                                         <td colspan="2" style="padding: 8px 12px; text-align: right; color: #6b7280; font-size: 14px;">Livraison :</td>
                                         <td style="padding: 8px 12px; text-align: right; color: #4b5563; font-size: 14px;">$<?= number_format($deliveryFee, 2) ?></td>
+                                    </tr>
+                                    <?php endif; ?>
+                                    <?php if ($additionalStopFee > 0): ?>
+                                    <tr>
+                                        <td colspan="2" style="padding: 8px 12px; text-align: right; color: #6b7280; font-size: 14px;">Frais de multi-arrêt :</td>
+                                        <td style="padding: 8px 12px; text-align: right; color: #4b5563; font-size: 14px;">$<?= number_format($additionalStopFee, 2) ?></td>
                                     </tr>
                                     <?php endif; ?>
                                     <tr>
@@ -215,6 +222,12 @@ $orderDate = date('F j, Y', strtotime($order['created_at'] ?? 'now'));
                                     <tr>
                                         <td colspan="2" style="padding: 8px 12px; text-align: right; color: #6b7280; font-size: 14px;">Delivery / Livraison :</td>
                                         <td style="padding: 8px 12px; text-align: right; color: #4b5563; font-size: 14px;">$<?= number_format($deliveryFee, 2) ?></td>
+                                    </tr>
+                                    <?php endif; ?>
+                                    <?php if ($additionalStopFee > 0): ?>
+                                    <tr>
+                                        <td colspan="2" style="padding: 8px 12px; text-align: right; color: #6b7280; font-size: 14px;">Additional-Stop Fee / Frais de multi-arrêt :</td>
+                                        <td style="padding: 8px 12px; text-align: right; color: #4b5563; font-size: 14px;">$<?= number_format($additionalStopFee, 2) ?></td>
                                     </tr>
                                     <?php endif; ?>
                                     <tr>

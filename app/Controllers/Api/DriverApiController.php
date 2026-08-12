@@ -369,7 +369,7 @@ class DriverApiController
         $this->db->beginTransaction();
         try {
             $stmt = $this->db->prepare(
-                "SELECT id, delivery_fee, distance_km, driver_payout FROM orders
+                "SELECT id, delivery_fee, distance_km, driver_payout, additional_stop_fee FROM orders
                  WHERE id = ? AND status = 'ready'
                  AND (driver_id IS NULL OR driver_id = ?) FOR UPDATE"
             );
@@ -383,7 +383,10 @@ class DriverApiController
             // Calculate payout if not already set by admin
             $payout = (float)($order['driver_payout'] ?? 0);
             if ($payout <= 0) {
-                $payout = $this->calculatePayout((float)($order['delivery_fee'] ?? 0));
+                $payout = $this->calculatePayout(
+                    (float)($order['delivery_fee'] ?? 0),
+                    (float)($order['additional_stop_fee'] ?? 0)
+                );
             }
 
             $this->db->prepare(
@@ -2607,22 +2610,13 @@ class DriverApiController
     }
 
     /**
-     * Calculate driver net payout for a delivery.
-     *
-     * Rates (configurable via env):
-     *   DRIVER_BASE_PAY      — minimum base pay per delivery (default $5.00)
-     *   DRIVER_PLATFORM_CUT  — platform commission 0–1 (default 0.30 = 30%)
+     * Calculate driver net payout for a delivery. Delegates to the shared
+     * PayoutHelper so every payout entry point uses the same 70/30 math.
      */
-    private function calculatePayout(float $orderDeliveryFee): float
+    private function calculatePayout(float $orderDeliveryFee, float $additionalStopFee = 0.00): float
     {
-        $basePay      = (float)(getenv('DRIVER_BASE_PAY')     ?: 5.00);
-        $platformCut  = (float)(getenv('DRIVER_PLATFORM_CUT') ?: 0.30);
-
-        // Use whichever is higher: configured base or the order's own delivery_fee
-        $base = max($basePay, $orderDeliveryFee);
-        $net  = round($base * (1 - $platformCut), 2);
-
-        return max($net, $basePay * (1 - $platformCut)); // floor at base minus commission
+        require_once __DIR__ . '/../../Helpers/PayoutHelper.php';
+        return \App\Helpers\PayoutHelper::calculateDriverPayout($orderDeliveryFee, $additionalStopFee)['driver_net_payout'];
     }
 
     /**
@@ -2661,10 +2655,11 @@ class DriverApiController
             $daRow = $daStmt->fetch(\PDO::FETCH_ASSOC);
 
             if ($daRow) {
-                $basePay     = (float)(getenv('DRIVER_BASE_PAY')    ?: 5.00);
-                $platformCut = (float)(getenv('DRIVER_PLATFORM_CUT') ?: 0.30);
-                $commission  = round($payout / (1 - $platformCut) * $platformCut, 2);
-                $gross       = round($payout + $commission, 2);
+                require_once __DIR__ . '/../../Helpers/PayoutHelper.php';
+                $basePay    = \App\Helpers\PayoutHelper::basePay();
+                $reversed   = \App\Helpers\PayoutHelper::commissionFromNetPayout($payout);
+                $commission = $reversed['commission'];
+                $gross      = $reversed['gross'];
 
                 // Avoid duplicate earnings record
                 $dupCheck = $this->db->prepare(
@@ -2674,9 +2669,13 @@ class DriverApiController
                 if (!$dupCheck->fetch()) {
                     $this->db->prepare(
                         "INSERT INTO delivery_earnings
-                         (driver_id, delivery_id, order_id, base_fee, total_earning, platform_commission, net_earning, payment_status)
-                         VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')"
-                    )->execute([$driverId, $daRow['id'], $orderId, $basePay, $gross, $commission, $payout]);
+                         (driver_id, delivery_id, order_id, base_fee, additional_stop_fee, total_earning, platform_commission, net_earning, payment_status)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')"
+                    )->execute([
+                        $driverId, $daRow['id'], $orderId, $basePay,
+                        (float)($order['additional_stop_fee'] ?? 0),
+                        $gross, $commission, $payout
+                    ]);
                 }
 
                 // Mark delivery_assignment delivered

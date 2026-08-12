@@ -678,14 +678,14 @@ function getBackupSupplierProduct(int $supplierProductId, array $excludeIds = []
  * a fixed list of its member towns. Falls back to the flat config delivery_fee
  * if the city doesn't match a known zone, or the zone lookup fails.
  *
- * @return array{fee: float, zone_code: ?string}
+ * @return array{fee: float, zone_code: ?string, stop_fee_rate: float}
  */
 function resolveDeliveryZoneFee(?string $city): array {
     $appConfig = require BASE_PATH . '/config/app.php';
     $fallback  = (float)($appConfig['delivery_fee'] ?? 5.00);
 
     if (!$city) {
-        return ['fee' => $fallback, 'zone_code' => null];
+        return ['fee' => $fallback, 'zone_code' => null, 'stop_fee_rate' => 0.00];
     }
 
     $city = trim($city);
@@ -710,22 +710,50 @@ function resolveDeliveryZoneFee(?string $city): array {
     }
 
     if (!$zoneCode) {
-        return ['fee' => $fallback, 'zone_code' => null];
+        return ['fee' => $fallback, 'zone_code' => null, 'stop_fee_rate' => 0.00];
     }
 
     try {
         $db = \Database::getConnection();
-        $stmt = $db->prepare("SELECT base_fee FROM delivery_zones WHERE code = ? AND is_active = 1 LIMIT 1");
+        $stmt = $db->prepare("SELECT base_fee, stop_fee_rate FROM delivery_zones WHERE code = ? AND is_active = 1 LIMIT 1");
         $stmt->execute([$zoneCode]);
-        $fee = $stmt->fetchColumn();
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        if ($fee === false) {
-            return ['fee' => $fallback, 'zone_code' => null];
+        if ($row === false) {
+            return ['fee' => $fallback, 'zone_code' => null, 'stop_fee_rate' => 0.00];
         }
 
-        return ['fee' => (float)$fee, 'zone_code' => $zoneCode];
+        return [
+            'fee' => (float)$row['base_fee'],
+            'zone_code' => $zoneCode,
+            'stop_fee_rate' => (float)($row['stop_fee_rate'] ?? 0.00),
+        ];
     } catch (\Exception $e) {
         logger("resolveDeliveryZoneFee error: " . $e->getMessage(), 'error');
-        return ['fee' => $fallback, 'zone_code' => null];
+        return ['fee' => $fallback, 'zone_code' => null, 'stop_fee_rate' => 0.00];
     }
+}
+
+/**
+ * Marché Additional-Stop Fee (Ecosystem Backend Requirements Sec. 2.2).
+ * First 2 sellers in a checkout are included free; each seller beyond that
+ * is charged the zone-calibrated per-stop rate.
+ *
+ * @return array{total_fee: float, additional_stops: int, per_order_share: float}
+ */
+function calculateAdditionalStopFee(?string $city, int $shopCount): array {
+    if ($shopCount <= 2) {
+        return ['total_fee' => 0.00, 'additional_stops' => 0, 'per_order_share' => 0.00];
+    }
+
+    $stopFeeRate = resolveDeliveryZoneFee($city)['stop_fee_rate'];
+    $additionalStops = $shopCount - 2;
+    $totalFee = round($additionalStops * $stopFeeRate, 2);
+    $perOrderShare = $shopCount > 0 ? round($totalFee / $shopCount, 2) : 0.00;
+
+    return [
+        'total_fee' => $totalFee,
+        'additional_stops' => $additionalStops,
+        'per_order_share' => $perOrderShare,
+    ];
 }

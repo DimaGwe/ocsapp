@@ -28,6 +28,7 @@ $od = [
         'lbl_qst'        => 'QST (9.975%)',
         'lbl_tax'        => 'Tax',
         'lbl_delivery'   => 'Delivery Fee',
+        'lbl_stop_fee'   => 'Additional-Stop Fee',
         'lbl_total'      => 'Total',
         'rate_title'     => 'Rate Your Delivery Driver',
         'delivered_by'   => 'Delivered by',
@@ -63,6 +64,7 @@ $od = [
         'lbl_qst'        => 'TVQ (9,975 %)',
         'lbl_tax'        => 'Taxe',
         'lbl_delivery'   => 'Frais de livraison',
+        'lbl_stop_fee'   => 'Frais de multi-arrêt',
         'lbl_total'      => 'Total',
         'rate_title'     => 'Évaluez votre livreur',
         'delivered_by'   => 'Livré par',
@@ -302,6 +304,9 @@ $sc = $statusColors[$order['status'] ?? ''] ?? ['bg'=>'#f5f5f5','color'=>'#555']
                 <?php endif; ?>
                 <?php if (!empty($order['delivery_fee'])): ?>
                     <div class="totals-row"><span><?= $od['lbl_delivery'] ?></span><span>$<?= number_format((float)$order['delivery_fee'], 2) ?></span></div>
+                <?php endif; ?>
+                <?php if (!empty($order['additional_stop_fee'])): ?>
+                    <div class="totals-row"><span><?= $od['lbl_stop_fee'] ?></span><span>$<?= number_format((float)$order['additional_stop_fee'], 2) ?></span></div>
                 <?php endif; ?>
                 <div class="totals-row grand"><span><?= $od['lbl_total'] ?></span><span>$<?= number_format((float)$order['total'], 2) ?></span></div>
             </div>

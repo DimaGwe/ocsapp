@@ -19,11 +19,13 @@ foreach ($cartItems as $item) {
     $subtotal += $item['subtotal'];
 }
 $deliveryFee = isset($deliveryFee) ? (float)$deliveryFee : 5.00;
+$additionalStopFee = isset($additionalStopFee) ? (float)$additionalStopFee : 0.00;
+$additionalStops = isset($additionalStops) ? (int)$additionalStops : 0;
 // Canadian tax: GST 5% + QST 9.975% = 14.975% (Quebec)
 $gst   = round($subtotal * 0.05, 2);
 $qst   = round($subtotal * 0.09975, 2);
 $tax   = $gst + $qst;
-$total = $subtotal + $deliveryFee + $tax;
+$total = $subtotal + $deliveryFee + $additionalStopFee + $tax;
 ?>
 <!DOCTYPE html>
 <html lang="<?= htmlspecialchars($currentLang) ?>">
@@ -484,6 +486,15 @@ $total = $subtotal + $deliveryFee + $tax;
                         <span><?= $t['checkout_delivery_fee'] ?? 'Delivery Fee' ?></span>
                         <span>$<?= number_format($deliveryFee, 2) ?></span>
                     </div>
+                    <?php if ($additionalStopFee > 0): ?>
+                    <div class="summary-row">
+                        <span>
+                            <?= $currentLang === 'fr' ? 'Frais de multi-arrêt' : 'Additional-Stop Fee' ?>
+                            <small style="opacity:.7;">(<?= $additionalStops ?> <?= $currentLang === 'fr' ? 'arrêt(s) suppl.' : 'extra stop(s)' ?>)</small>
+                        </span>
+                        <span>$<?= number_format($additionalStopFee, 2) ?></span>
+                    </div>
+                    <?php endif; ?>
                     <div class="summary-row">
                         <span><?= $currentLang === 'fr' ? 'TPS (5%)' : 'GST (5%)' ?></span>
                         <span>$<?= number_format($gst, 2) ?></span>
