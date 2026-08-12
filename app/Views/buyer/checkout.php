@@ -21,11 +21,13 @@ foreach ($cartItems as $item) {
 $deliveryFee = isset($deliveryFee) ? (float)$deliveryFee : 5.00;
 $additionalStopFee = isset($additionalStopFee) ? (float)$additionalStopFee : 0.00;
 $additionalStops = isset($additionalStops) ? (int)$additionalStops : 0;
+$oversizeSurcharge = isset($oversizeSurcharge) ? (float)$oversizeSurcharge : 0.00;
+$hardCapExceededShops = $hardCapExceededShops ?? [];
 // Canadian tax: GST 5% + QST 9.975% = 14.975% (Quebec)
 $gst   = round($subtotal * 0.05, 2);
 $qst   = round($subtotal * 0.09975, 2);
 $tax   = $gst + $qst;
-$total = $subtotal + $deliveryFee + $additionalStopFee + $tax;
+$total = $subtotal + $deliveryFee + $additionalStopFee + $oversizeSurcharge + $tax;
 ?>
 <!DOCTYPE html>
 <html lang="<?= htmlspecialchars($currentLang) ?>">
@@ -495,6 +497,12 @@ $total = $subtotal + $deliveryFee + $additionalStopFee + $tax;
                         <span>$<?= number_format($additionalStopFee, 2) ?></span>
                     </div>
                     <?php endif; ?>
+                    <?php if ($oversizeSurcharge > 0): ?>
+                    <div class="summary-row">
+                        <span><?= $currentLang === 'fr' ? 'Surcharge surdimensionnement' : 'Oversize Surcharge' ?></span>
+                        <span>$<?= number_format($oversizeSurcharge, 2) ?></span>
+                    </div>
+                    <?php endif; ?>
                     <div class="summary-row">
                         <span><?= $currentLang === 'fr' ? 'TPS (5%)' : 'GST (5%)' ?></span>
                         <span>$<?= number_format($gst, 2) ?></span>
@@ -508,10 +516,23 @@ $total = $subtotal + $deliveryFee + $additionalStopFee + $tax;
                         <span>$<?= number_format($total, 2) ?> CAD</span>
                     </div>
 
+                    <?php if (!empty($hardCapExceededShops)): ?>
+                    <div class="alert alert-error" style="margin-bottom:12px;">
+                        <?= $currentLang === 'fr'
+                            ? 'Le poids total de votre commande chez ' . htmlspecialchars(implode(', ', $hardCapExceededShops)) . ' dépasse la limite pour la livraison standard (40 kg). '
+                            : 'Your order total from ' . htmlspecialchars(implode(', ', $hardCapExceededShops)) . ' exceeds the standard delivery weight limit (40kg). ' ?>
+                        <a href="<?= url('contact') ?>"><?= $currentLang === 'fr' ? 'Contactez-nous pour un arrangement de fret personnalisé.' : 'Contact us for custom freight arrangements.' ?></a>
+                    </div>
+                    <button type="submit" class="place-order-btn" id="placeOrderBtn" disabled style="opacity:.5;cursor:not-allowed;">
+                        <span id="btnText"><?= $t['checkout_place_order'] ?? 'Place Order' ?> - $<?= number_format($total, 2) ?></span>
+                        <div class="spinner" id="btnSpinner"></div>
+                    </button>
+                    <?php else: ?>
                     <button type="submit" class="place-order-btn" id="placeOrderBtn">
                         <span id="btnText"><?= $t['checkout_place_order'] ?? 'Place Order' ?> - $<?= number_format($total, 2) ?></span>
                         <div class="spinner" id="btnSpinner"></div>
                     </button>
+                    <?php endif; ?>
 
                     <div class="secure-badge">
                         <i class="fas fa-lock"></i>

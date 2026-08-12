@@ -916,7 +916,7 @@ class DeliveryController {
         // LEFT JOIN: distribution-type deliveries have no order_id.
         $stmt = $this->db->prepare("
             SELECT da.driver_id, da.order_id, da.delivery_fee, da.distance_km,
-                   o.additional_stop_fee
+                   o.additional_stop_fee, o.oversize_base_surcharge, o.oversize_increment_surcharge
             FROM delivery_assignments da
             LEFT JOIN orders o ON o.id = da.order_id
             WHERE da.id = ?
@@ -931,14 +931,15 @@ class DeliveryController {
         // dashboard and was silently mispaying every delivery completed through it.
         // Now routes through the same 70/30 helper as the ODA mobile app.
         require_once __DIR__ . '/../Helpers/PayoutHelper.php';
-        $baseFee = (float)$delivery['delivery_fee'];
-        $stopFee = (float)($delivery['additional_stop_fee'] ?? 0);
-        $payout  = \App\Helpers\PayoutHelper::calculateDriverPayout($baseFee, $stopFee);
+        $baseFee   = (float)$delivery['delivery_fee'];
+        $stopFee   = (float)($delivery['additional_stop_fee'] ?? 0);
+        $oversize  = (float)($delivery['oversize_base_surcharge'] ?? 0) + (float)($delivery['oversize_increment_surcharge'] ?? 0);
+        $payout    = \App\Helpers\PayoutHelper::calculateDriverPayout($baseFee, $stopFee, $oversize);
 
         $stmt = $this->db->prepare("
             INSERT INTO delivery_earnings
-            (driver_id, delivery_id, order_id, base_fee, additional_stop_fee, distance_fee, total_earning, platform_commission, net_earning)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (driver_id, delivery_id, order_id, base_fee, additional_stop_fee, oversize_surcharge, distance_fee, total_earning, platform_commission, net_earning)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
 
         $stmt->execute([
@@ -947,6 +948,7 @@ class DeliveryController {
             $delivery['order_id'],
             $baseFee,
             $stopFee,
+            $oversize,
             0.00,
             $payout['gross_pay'],
             $payout['platform_commission'],

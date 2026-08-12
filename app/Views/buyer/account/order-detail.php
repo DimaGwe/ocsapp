@@ -29,6 +29,8 @@ $od = [
         'lbl_tax'        => 'Tax',
         'lbl_delivery'   => 'Delivery Fee',
         'lbl_stop_fee'   => 'Additional-Stop Fee',
+        'lbl_oversize'   => 'Oversize Surcharge',
+        'lbl_oversize_inc' => 'Oversize Increment',
         'lbl_total'      => 'Total',
         'rate_title'     => 'Rate Your Delivery Driver',
         'delivered_by'   => 'Delivered by',
@@ -65,6 +67,8 @@ $od = [
         'lbl_tax'        => 'Taxe',
         'lbl_delivery'   => 'Frais de livraison',
         'lbl_stop_fee'   => 'Frais de multi-arrêt',
+        'lbl_oversize'   => 'Surcharge surdimensionnement',
+        'lbl_oversize_inc' => 'Surdimensionnement suppl.',
         'lbl_total'      => 'Total',
         'rate_title'     => 'Évaluez votre livreur',
         'delivered_by'   => 'Livré par',
@@ -307,6 +311,12 @@ $sc = $statusColors[$order['status'] ?? ''] ?? ['bg'=>'#f5f5f5','color'=>'#555']
                 <?php endif; ?>
                 <?php if (!empty($order['additional_stop_fee'])): ?>
                     <div class="totals-row"><span><?= $od['lbl_stop_fee'] ?></span><span>$<?= number_format((float)$order['additional_stop_fee'], 2) ?></span></div>
+                <?php endif; ?>
+                <?php if (!empty($order['oversize_base_surcharge'])): ?>
+                    <div class="totals-row"><span><?= $od['lbl_oversize'] ?></span><span>$<?= number_format((float)$order['oversize_base_surcharge'], 2) ?></span></div>
+                <?php endif; ?>
+                <?php if (!empty($order['oversize_increment_surcharge'])): ?>
+                    <div class="totals-row"><span><?= $od['lbl_oversize_inc'] ?> (<?= (int)($order['oversize_increment_count'] ?? 0) ?>x10kg)</span><span>$<?= number_format((float)$order['oversize_increment_surcharge'], 2) ?></span></div>
                 <?php endif; ?>
                 <div class="totals-row grand"><span><?= $od['lbl_total'] ?></span><span>$<?= number_format((float)$order['total'], 2) ?></span></div>
             </div>

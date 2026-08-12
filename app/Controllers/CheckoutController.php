@@ -140,13 +140,15 @@ class CheckoutController
                     'shop_id' => $shopId,
                     'shop_name' => $item['shop_name'],
                     'items' => [],
-                    'subtotal' => 0
+                    'subtotal' => 0,
+                    'weight_kg' => 0
                 ];
             }
             $ordersByShop[$shopId]['items'][] = $item;
             $ordersByShop[$shopId]['subtotal'] += $item['subtotal'];
+            $ordersByShop[$shopId]['weight_kg'] += (float)($item['product']['weight'] ?? 0) * (int)$item['quantity'];
         }
-        
+
         // Get user's addresses
         $addresses = [];
         try {
@@ -170,6 +172,19 @@ class CheckoutController
         $displayDeliveryFee = resolveDeliveryZoneFee($defaultAddressCity)['fee'];
         $stopFeePreview = calculateAdditionalStopFee($defaultAddressCity, count($ordersByShop));
 
+        // Oversize Surcharge (Sec 2.1/2.1a) preview - summed across shop-orders for display,
+        // same aggregate-total approach as the stop fee preview above. Also surfaces the
+        // 40kg hard cap pre-confirmation so the buyer isn't surprised at "Place Order".
+        $oversizeTotalSurcharge = 0.00;
+        $hardCapExceededShops = [];
+        foreach ($ordersByShop as $shopId => $shopOrder) {
+            $oversizeCalc = calculateOversizeSurcharge($defaultAddressCity, $shopOrder['weight_kg']);
+            if ($oversizeCalc['hard_cap_exceeded']) {
+                $hardCapExceededShops[] = $shopOrder['shop_name'];
+            }
+            $oversizeTotalSurcharge += $oversizeCalc['total_surcharge'];
+        }
+
         view('buyer/checkout', [
             'cartItems' => $cartItems,
             'ordersByShop' => $ordersByShop,
@@ -178,6 +193,8 @@ class CheckoutController
             'deliveryFee' => $displayDeliveryFee,
             'additionalStopFee' => $stopFeePreview['total_fee'],
             'additionalStops' => $stopFeePreview['additional_stops'],
+            'oversizeSurcharge' => round($oversizeTotalSurcharge, 2),
+            'hardCapExceededShops' => $hardCapExceededShops,
         ]);
     }
     
@@ -270,6 +287,32 @@ class CheckoutController
             $itemsByShop[$shopId][] = $item;
         }
 
+        // Oversize Surcharge (Sec 2.1/2.1a) hard cap: an order whose total weight exceeds
+        // 40kg cannot go through standard checkout at all - reject before creating any
+        // orders and route the buyer to contact us for custom freight, rather than silently
+        // charging an ever-larger surcharge with no ceiling.
+        $shopWeights = [];
+        $hardCapExceededShops = [];
+        foreach ($itemsByShop as $shopId => $items) {
+            $weight = 0.0;
+            foreach ($items as $item) {
+                $weight += (float)($item['weight'] ?? 0) * (int)$item['quantity'];
+            }
+            $shopWeights[$shopId] = $weight;
+            if (calculateOversizeSurcharge($selectedAddress['city'] ?? null, $weight)['hard_cap_exceeded']) {
+                $hardCapExceededShops[] = $shopId;
+            }
+        }
+        if (!empty($hardCapExceededShops)) {
+            $this->db->rollBack();
+            jsonResponse([
+                'success' => false,
+                'message' => 'One or more shops in your cart exceed the maximum weight for standard delivery (40kg). Please contact us for custom freight arrangements.',
+                'contact_url' => url('contact'),
+            ]);
+            return;
+        }
+
         // Additional-Stop Fee (Sec 2.2): each shop-order created below still gets its own
         // full delivery_fee (no consolidated-order model on the B2C side) - this surcharge
         // is a separate line item layered on top, split evenly across the sibling orders
@@ -307,6 +350,7 @@ class CheckoutController
 
             $deliveryFee = resolveDeliveryZoneFee($selectedAddress['city'] ?? null)['fee'];
             $additionalStopFee = $stopFeeShares[$shopId] ?? 0.00;
+            $oversizeCalc = calculateOversizeSurcharge($selectedAddress['city'] ?? null, $shopWeights[$shopId] ?? 0.0);
             // Canadian tax: GST 5% + QST 9.975% = 14.975% (Quebec)
             $gstRate  = 0.05;
             $qstRate  = 0.09975;
@@ -314,13 +358,15 @@ class CheckoutController
             $qst      = round($subtotal * $qstRate, 2);
             $tax      = $gst + $qst;
             $discount = 0.00;
-            $total    = $subtotal + $deliveryFee + $additionalStopFee + $tax - $discount;
+            $total    = $subtotal + $deliveryFee + $additionalStopFee + $oversizeCalc['total_surcharge'] + $tax - $discount;
 
             // Create Order — always starts as pending
             $orderSQL = "
                 INSERT INTO orders (
                     user_id, shop_id, order_number, checkout_session_id,
-                    subtotal, tax, delivery_fee, stop_count, additional_stop_fee, discount, total,
+                    subtotal, tax, delivery_fee, stop_count, additional_stop_fee,
+                    total_weight_kg, oversize_base_surcharge, oversize_increment_count, oversize_increment_surcharge,
+                    discount, total,
                     payment_method, payment_status,
                     delivery_date, delivery_time,
                     delivery_address,
@@ -328,7 +374,9 @@ class CheckoutController
                     created_at, updated_at
                 ) VALUES (
                     :user_id, :shop_id, :order_number, :checkout_session_id,
-                    :subtotal, :tax, :delivery_fee, :stop_count, :additional_stop_fee, :discount, :total,
+                    :subtotal, :tax, :delivery_fee, :stop_count, :additional_stop_fee,
+                    :total_weight_kg, :oversize_base_surcharge, :oversize_increment_count, :oversize_increment_surcharge,
+                    :discount, :total,
                     :payment_method, :payment_status,
                     :delivery_date, :delivery_time,
                     :delivery_address,
@@ -347,6 +395,10 @@ class CheckoutController
                 'delivery_fee' => $deliveryFee,
                 'stop_count' => $shopCount,
                 'additional_stop_fee' => $additionalStopFee,
+                'total_weight_kg' => $oversizeCalc['total_weight_kg'],
+                'oversize_base_surcharge' => $oversizeCalc['base_surcharge'],
+                'oversize_increment_count' => $oversizeCalc['increment_count'],
+                'oversize_increment_surcharge' => $oversizeCalc['increment_surcharge'],
                 'discount' => $discount,
                 'total' => $total,
                 'payment_method' => $paymentMethod,
@@ -529,6 +581,7 @@ class CheckoutController
                 p.id as product_id,
                 p.name as product_name,
                 p.sku,
+                p.weight,
                 si.id as shop_inventory_id,
                 si.shop_id,
                 si.price,
@@ -569,6 +622,7 @@ class CheckoutController
                 'product_id' => $productId,
                 'product_name' => $product['product_name'],
                 'sku' => $product['sku'],
+                'weight' => (float)($product['weight'] ?? 0),
                 'shop_inventory_id' => $product['shop_inventory_id'],
                 'shop_id' => $product['shop_id'],
                 'price' => floatval($product['price']),

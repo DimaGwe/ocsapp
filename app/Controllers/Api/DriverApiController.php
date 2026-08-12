@@ -369,7 +369,8 @@ class DriverApiController
         $this->db->beginTransaction();
         try {
             $stmt = $this->db->prepare(
-                "SELECT id, delivery_fee, distance_km, driver_payout, additional_stop_fee FROM orders
+                "SELECT id, delivery_fee, distance_km, driver_payout, additional_stop_fee,
+                        oversize_base_surcharge, oversize_increment_surcharge FROM orders
                  WHERE id = ? AND status = 'ready'
                  AND (driver_id IS NULL OR driver_id = ?) FOR UPDATE"
             );
@@ -385,7 +386,8 @@ class DriverApiController
             if ($payout <= 0) {
                 $payout = $this->calculatePayout(
                     (float)($order['delivery_fee'] ?? 0),
-                    (float)($order['additional_stop_fee'] ?? 0)
+                    (float)($order['additional_stop_fee'] ?? 0),
+                    (float)($order['oversize_base_surcharge'] ?? 0) + (float)($order['oversize_increment_surcharge'] ?? 0)
                 );
             }
 
@@ -2613,10 +2615,10 @@ class DriverApiController
      * Calculate driver net payout for a delivery. Delegates to the shared
      * PayoutHelper so every payout entry point uses the same 70/30 math.
      */
-    private function calculatePayout(float $orderDeliveryFee, float $additionalStopFee = 0.00): float
+    private function calculatePayout(float $orderDeliveryFee, float $additionalStopFee = 0.00, float $oversizeSurcharge = 0.00): float
     {
         require_once __DIR__ . '/../../Helpers/PayoutHelper.php';
-        return \App\Helpers\PayoutHelper::calculateDriverPayout($orderDeliveryFee, $additionalStopFee)['driver_net_payout'];
+        return \App\Helpers\PayoutHelper::calculateDriverPayout($orderDeliveryFee, $additionalStopFee, $oversizeSurcharge)['driver_net_payout'];
     }
 
     /**
@@ -2667,13 +2669,15 @@ class DriverApiController
                 );
                 $dupCheck->execute([$orderId, $driverId]);
                 if (!$dupCheck->fetch()) {
+                    $oversizeSurcharge = (float)($order['oversize_base_surcharge'] ?? 0) + (float)($order['oversize_increment_surcharge'] ?? 0);
                     $this->db->prepare(
                         "INSERT INTO delivery_earnings
-                         (driver_id, delivery_id, order_id, base_fee, additional_stop_fee, total_earning, platform_commission, net_earning, payment_status)
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')"
+                         (driver_id, delivery_id, order_id, base_fee, additional_stop_fee, oversize_surcharge, total_earning, platform_commission, net_earning, payment_status)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')"
                     )->execute([
                         $driverId, $daRow['id'], $orderId, $basePay,
                         (float)($order['additional_stop_fee'] ?? 0),
+                        $oversizeSurcharge,
                         $gross, $commission, $payout
                     ]);
                 }

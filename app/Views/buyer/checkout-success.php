@@ -375,6 +375,18 @@ $interacInstructions = $interacSettings['interac_instructions'] ?? 'Please send 
                 <span>$<?= number_format($order['additional_stop_fee'], 2) ?></span>
             </div>
             <?php endif; ?>
+            <?php if (($order['oversize_base_surcharge'] ?? 0) > 0): ?>
+            <div class="total-row">
+                <span>Oversize Surcharge</span>
+                <span>$<?= number_format($order['oversize_base_surcharge'], 2) ?></span>
+            </div>
+            <?php endif; ?>
+            <?php if (($order['oversize_increment_surcharge'] ?? 0) > 0): ?>
+            <div class="total-row">
+                <span>Oversize Increment (<?= (int)($order['oversize_increment_count'] ?? 0) ?> x 10kg)</span>
+                <span>$<?= number_format($order['oversize_increment_surcharge'], 2) ?></span>
+            </div>
+            <?php endif; ?>
             <div class="total-row grand">
                 <span>Total</span>
                 <span>$<?= number_format($order['total'] ?? 0, 2) ?> CAD</span>

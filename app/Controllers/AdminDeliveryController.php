@@ -1602,9 +1602,10 @@ class AdminDeliveryController {
         try {
             $this->db->prepare("
                 INSERT INTO delivery_zones
-                    (name, code, city, state, country, base_fee, per_km_fee, stop_fee_rate, max_distance_km,
+                    (name, code, city, state, country, base_fee, per_km_fee, stop_fee_rate,
+                     oversize_base_rate, oversize_increment_rate, max_distance_km,
                      estimated_time, priority, notes, is_active, created_at)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())
             ")->execute([
                 $name, $code, $city,
                 trim(post('state', '')),
@@ -1612,6 +1613,8 @@ class AdminDeliveryController {
                 (float) post('base_fee', 0),
                 (float) post('per_km_fee', 0),
                 (float) post('stop_fee_rate', 0),
+                (float) post('oversize_base_rate', 0),
+                (float) post('oversize_increment_rate', 0),
                 (float) post('max_distance_km', 0),
                 (int)   post('estimated_time', 30),
                 (int)   post('priority', 0),
@@ -1638,7 +1641,8 @@ class AdminDeliveryController {
             $this->db->prepare("
                 UPDATE delivery_zones SET
                     name=?, code=?, city=?, state=?, country=?,
-                    base_fee=?, per_km_fee=?, stop_fee_rate=?, max_distance_km=?,
+                    base_fee=?, per_km_fee=?, stop_fee_rate=?,
+                    oversize_base_rate=?, oversize_increment_rate=?, max_distance_km=?,
                     estimated_time=?, priority=?, notes=?, is_active=?
                 WHERE id=?
             ")->execute([
@@ -1648,6 +1652,8 @@ class AdminDeliveryController {
                 (float) post('base_fee', 0),
                 (float) post('per_km_fee', 0),
                 (float) post('stop_fee_rate', 0),
+                (float) post('oversize_base_rate', 0),
+                (float) post('oversize_increment_rate', 0),
                 (float) post('max_distance_km', 0),
                 (int)   post('estimated_time', 30),
                 (int)   post('priority', 0),
@@ -2113,7 +2119,8 @@ class AdminDeliveryController {
             // Set driver_payout on the order if not already set
             if (!empty($delivery['order_id'])) {
                 $oStmt = $this->db->prepare(
-                    "SELECT delivery_fee, distance_km, driver_payout, additional_stop_fee FROM orders WHERE id = ? LIMIT 1"
+                    "SELECT delivery_fee, distance_km, driver_payout, additional_stop_fee,
+                            oversize_base_surcharge, oversize_increment_surcharge FROM orders WHERE id = ? LIMIT 1"
                 );
                 $oStmt->execute([$delivery['order_id']]);
                 $oRow = $oStmt->fetch(\PDO::FETCH_ASSOC);
@@ -2121,7 +2128,8 @@ class AdminDeliveryController {
                     require_once __DIR__ . '/../Helpers/PayoutHelper.php';
                     $payout = \App\Helpers\PayoutHelper::calculateDriverPayout(
                         (float)($oRow['delivery_fee'] ?? 0),
-                        (float)($oRow['additional_stop_fee'] ?? 0)
+                        (float)($oRow['additional_stop_fee'] ?? 0),
+                        (float)($oRow['oversize_base_surcharge'] ?? 0) + (float)($oRow['oversize_increment_surcharge'] ?? 0)
                     )['driver_net_payout'];
                     $this->db->prepare("UPDATE orders SET driver_payout = ? WHERE id = ?")
                              ->execute([$payout, $delivery['order_id']]);

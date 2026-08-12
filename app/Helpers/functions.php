@@ -678,14 +678,15 @@ function getBackupSupplierProduct(int $supplierProductId, array $excludeIds = []
  * a fixed list of its member towns. Falls back to the flat config delivery_fee
  * if the city doesn't match a known zone, or the zone lookup fails.
  *
- * @return array{fee: float, zone_code: ?string, stop_fee_rate: float}
+ * @return array{fee: float, zone_code: ?string, stop_fee_rate: float, oversize_base_rate: float, oversize_increment_rate: float}
  */
 function resolveDeliveryZoneFee(?string $city): array {
     $appConfig = require BASE_PATH . '/config/app.php';
     $fallback  = (float)($appConfig['delivery_fee'] ?? 5.00);
+    $zeroRates = ['fee' => $fallback, 'zone_code' => null, 'stop_fee_rate' => 0.00, 'oversize_base_rate' => 0.00, 'oversize_increment_rate' => 0.00];
 
     if (!$city) {
-        return ['fee' => $fallback, 'zone_code' => null, 'stop_fee_rate' => 0.00];
+        return $zeroRates;
     }
 
     $city = trim($city);
@@ -710,27 +711,29 @@ function resolveDeliveryZoneFee(?string $city): array {
     }
 
     if (!$zoneCode) {
-        return ['fee' => $fallback, 'zone_code' => null, 'stop_fee_rate' => 0.00];
+        return $zeroRates;
     }
 
     try {
         $db = \Database::getConnection();
-        $stmt = $db->prepare("SELECT base_fee, stop_fee_rate FROM delivery_zones WHERE code = ? AND is_active = 1 LIMIT 1");
+        $stmt = $db->prepare("SELECT base_fee, stop_fee_rate, oversize_base_rate, oversize_increment_rate FROM delivery_zones WHERE code = ? AND is_active = 1 LIMIT 1");
         $stmt->execute([$zoneCode]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         if ($row === false) {
-            return ['fee' => $fallback, 'zone_code' => null, 'stop_fee_rate' => 0.00];
+            return $zeroRates;
         }
 
         return [
             'fee' => (float)$row['base_fee'],
             'zone_code' => $zoneCode,
             'stop_fee_rate' => (float)($row['stop_fee_rate'] ?? 0.00),
+            'oversize_base_rate' => (float)($row['oversize_base_rate'] ?? 0.00),
+            'oversize_increment_rate' => (float)($row['oversize_increment_rate'] ?? 0.00),
         ];
     } catch (\Exception $e) {
         logger("resolveDeliveryZoneFee error: " . $e->getMessage(), 'error');
-        return ['fee' => $fallback, 'zone_code' => null, 'stop_fee_rate' => 0.00];
+        return $zeroRates;
     }
 }
 
@@ -755,5 +758,70 @@ function calculateAdditionalStopFee(?string $city, int $shopCount): array {
         'total_fee' => $totalFee,
         'additional_stops' => $additionalStops,
         'per_order_share' => $perOrderShare,
+    ];
+}
+
+/**
+ * Marché Oversize Surcharge (Ecosystem Backend Requirements Sec. 2.1/2.1a).
+ * Tiered by total order weight (declared weight x quantity, summed across the
+ * order's line items - each shop-order is checked independently since there's
+ * no consolidated-order model on the B2C side, see [[project_ecosystem_requirements]]):
+ *   < 15kg            -> no surcharge
+ *   15kg - 25kg        -> flat zone-calibrated base surcharge
+ *   > 25kg             -> base surcharge + $X per full 10kg increment beyond 25kg (rounded up)
+ *   > 40kg             -> hard cap, standard checkout must be blocked entirely
+ *
+ * Approvisionnement/B2B PO-side thresholds (25kg/50kg/100kg, different rates)
+ * are not implemented here - this is Marché/B2C only.
+ *
+ * @return array{
+ *   hard_cap_exceeded: bool,
+ *   total_weight_kg: float,
+ *   base_surcharge: float,
+ *   increment_surcharge: float,
+ *   increment_count: int,
+ *   total_surcharge: float
+ * }
+ */
+function calculateOversizeSurcharge(?string $city, float $totalWeightKg): array {
+    $threshold   = 15.0; // kg - base surcharge starts here
+    $baseBandEnd = 25.0; // kg - increments start beyond this
+    $incrementKg = 10.0; // kg per increment
+    $hardCap     = 40.0; // kg - standard checkout blocked beyond this
+
+    $zero = [
+        'hard_cap_exceeded' => false,
+        'total_weight_kg' => round($totalWeightKg, 2),
+        'base_surcharge' => 0.00,
+        'increment_surcharge' => 0.00,
+        'increment_count' => 0,
+        'total_surcharge' => 0.00,
+    ];
+
+    if ($totalWeightKg > $hardCap) {
+        return array_merge($zero, ['hard_cap_exceeded' => true]);
+    }
+
+    if ($totalWeightKg < $threshold) {
+        return $zero;
+    }
+
+    $zone = resolveDeliveryZoneFee($city);
+    $baseSurcharge = round($zone['oversize_base_rate'], 2);
+
+    $incrementCount = 0;
+    $incrementSurcharge = 0.00;
+    if ($totalWeightKg > $baseBandEnd) {
+        $incrementCount = (int)ceil(($totalWeightKg - $baseBandEnd) / $incrementKg);
+        $incrementSurcharge = round($incrementCount * $zone['oversize_increment_rate'], 2);
+    }
+
+    return [
+        'hard_cap_exceeded' => false,
+        'total_weight_kg' => round($totalWeightKg, 2),
+        'base_surcharge' => $baseSurcharge,
+        'increment_surcharge' => $incrementSurcharge,
+        'increment_count' => $incrementCount,
+        'total_surcharge' => round($baseSurcharge + $incrementSurcharge, 2),
     ];
 }

@@ -86,6 +86,9 @@ $orderDate = date('F j, Y', strtotime($order['created_at'] ?? 'now'));
                                     $subtotal          = (float)($order['subtotal'] ?? 0);
                                     $deliveryFee       = (float)($order['delivery_fee'] ?? 0);
                                     $additionalStopFee = (float)($order['additional_stop_fee'] ?? 0);
+                                    $oversizeBase      = (float)($order['oversize_base_surcharge'] ?? 0);
+                                    $oversizeInc       = (float)($order['oversize_increment_surcharge'] ?? 0);
+                                    $oversizeIncCount  = (int)($order['oversize_increment_count'] ?? 0);
                                     $gst         = round($subtotal * 0.05, 2);
                                     $qst         = round($subtotal * 0.09975, 2);
                                     ?>
@@ -103,6 +106,18 @@ $orderDate = date('F j, Y', strtotime($order['created_at'] ?? 'now'));
                                     <tr>
                                         <td colspan="2" style="padding: 8px 12px; text-align: right; color: #6b7280; font-size: 14px;">Frais de multi-arrêt :</td>
                                         <td style="padding: 8px 12px; text-align: right; color: #4b5563; font-size: 14px;">$<?= number_format($additionalStopFee, 2) ?></td>
+                                    </tr>
+                                    <?php endif; ?>
+                                    <?php if ($oversizeBase > 0): ?>
+                                    <tr>
+                                        <td colspan="2" style="padding: 8px 12px; text-align: right; color: #6b7280; font-size: 14px;">Surcharge surdimensionnement :</td>
+                                        <td style="padding: 8px 12px; text-align: right; color: #4b5563; font-size: 14px;">$<?= number_format($oversizeBase, 2) ?></td>
+                                    </tr>
+                                    <?php endif; ?>
+                                    <?php if ($oversizeInc > 0): ?>
+                                    <tr>
+                                        <td colspan="2" style="padding: 8px 12px; text-align: right; color: #6b7280; font-size: 14px;">Surdimensionnement suppl. (<?= $oversizeIncCount ?>x10kg) :</td>
+                                        <td style="padding: 8px 12px; text-align: right; color: #4b5563; font-size: 14px;">$<?= number_format($oversizeInc, 2) ?></td>
                                     </tr>
                                     <?php endif; ?>
                                     <tr>
@@ -228,6 +243,18 @@ $orderDate = date('F j, Y', strtotime($order['created_at'] ?? 'now'));
                                     <tr>
                                         <td colspan="2" style="padding: 8px 12px; text-align: right; color: #6b7280; font-size: 14px;">Additional-Stop Fee / Frais de multi-arrêt :</td>
                                         <td style="padding: 8px 12px; text-align: right; color: #4b5563; font-size: 14px;">$<?= number_format($additionalStopFee, 2) ?></td>
+                                    </tr>
+                                    <?php endif; ?>
+                                    <?php if ($oversizeBase > 0): ?>
+                                    <tr>
+                                        <td colspan="2" style="padding: 8px 12px; text-align: right; color: #6b7280; font-size: 14px;">Oversize Surcharge / Surcharge surdimensionnement :</td>
+                                        <td style="padding: 8px 12px; text-align: right; color: #4b5563; font-size: 14px;">$<?= number_format($oversizeBase, 2) ?></td>
+                                    </tr>
+                                    <?php endif; ?>
+                                    <?php if ($oversizeInc > 0): ?>
+                                    <tr>
+                                        <td colspan="2" style="padding: 8px 12px; text-align: right; color: #6b7280; font-size: 14px;">Oversize Increment / Surdimensionnement suppl. (<?= $oversizeIncCount ?>x10kg) :</td>
+                                        <td style="padding: 8px 12px; text-align: right; color: #4b5563; font-size: 14px;">$<?= number_format($oversizeInc, 2) ?></td>
                                     </tr>
                                     <?php endif; ?>
                                     <tr>
