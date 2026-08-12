@@ -427,10 +427,10 @@ textarea.form-control { resize: vertical; min-height: 110px; line-height: 1.5; }
 
 <script>
 const GENERATE_URL = '<?= $generateUrl ?>';
-const TXT_COPY     = '<?= $t['copy'] ?>';
-const TXT_COPIED   = '<?= $t['copied'] ?>';
-const TXT_GEN      = '<?= $t['generate'] ?>';
-const TXT_GENNING  = '<?= $t['generating'] ?>';
+const TXT_COPY     = <?= json_encode($t['copy'] ?? 'Copy') ?>;
+const TXT_COPIED   = <?= json_encode($t['copied'] ?? 'Copied') ?>;
+const TXT_GEN      = <?= json_encode($t['generate'] ?? 'Generate') ?>;
+const TXT_GENNING  = <?= json_encode($t['generating'] ?? 'Generating') ?>;
 
 document.getElementById('mktForm').addEventListener('submit', function(e) {
     e.preventDefault();

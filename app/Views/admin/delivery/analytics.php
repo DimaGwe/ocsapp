@@ -539,14 +539,14 @@ new Chart(document.getElementById('trendsChart'), {
     data: {
         labels: dates,
         datasets: [{
-            label: '<?= $t['total_deliveries'] ?>',
+            label: <?= json_encode($t['total_deliveries'] ?? 'Total Deliveries') ?>,
             data: totals,
             borderColor: 'rgb(0, 178, 7)',
             backgroundColor: 'rgba(0, 178, 7, 0.1)',
             tension: 0.4,
             fill: true
         }, {
-            label: '<?= $t['completed'] ?>',
+            label: <?= json_encode($t['completed'] ?? 'Completed') ?>,
             data: completed,
             borderColor: 'rgb(34, 197, 94)',
             backgroundColor: 'rgba(34, 197, 94, 0.1)',
@@ -582,7 +582,7 @@ const failed = total - completedCount;
 new Chart(document.getElementById('completionChart'), {
     type: 'doughnut',
     data: {
-        labels: ['<?= $t['completed'] ?>', '<?= $t['failed_cancelled'] ?>'],
+        labels: [<?= json_encode($t['completed'] ?? 'Completed') ?>, <?= json_encode($t['failed_cancelled'] ?? 'Failed/Cancelled') ?>],
         datasets: [{
             data: [completedCount, failed],
             backgroundColor: [

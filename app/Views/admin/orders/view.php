@@ -981,7 +981,7 @@ document.getElementById('statusForm').addEventListener('submit', async function(
         console.log('Response data:', data);
 
         if (data.success) {
-            alert('<?= $t['status_updated'] ?>');
+            alert(<?= json_encode($t['status_updated'] ?? 'Status updated') ?>);
             location.reload();
         } else {
             alert(data.message || data.error || 'Failed to update status');

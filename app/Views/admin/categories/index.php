@@ -459,7 +459,7 @@ ob_start();
                   >
                     <i class="fas fa-edit"></i>
                   </a>
-                  <form method="POST" action="<?= url('admin/categories/delete') ?>" style="display: inline;" onsubmit="return confirm('<?= $t['confirm_delete'] ?>')">
+                  <form method="POST" action="<?= url('admin/categories/delete') ?>" style="display: inline;" onsubmit="return confirm(<?= htmlspecialchars(json_encode($t['confirm_delete'] ?? 'Are you sure?'), ENT_QUOTES) ?>)">
                     <?= csrfField() ?>
                     <input type="hidden" name="id" value="<?= $category['id'] ?>">
                     <button 

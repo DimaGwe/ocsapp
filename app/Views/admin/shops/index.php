@@ -851,7 +851,7 @@ ob_start();
                         type="submit"
                         class="action-btn approve"
                         title="<?= $t['approve'] ?>"
-                        onclick="return confirm('<?= $t['confirm_approve'] ?>')"
+                        onclick="return confirm(<?= htmlspecialchars(json_encode($t['confirm_approve'] ?? 'Are you sure?'), ENT_QUOTES) ?>)"
                       >
                         <i class="fas fa-check"></i>
                       </button>
@@ -875,7 +875,7 @@ ob_start();
                           type="submit"
                           class="action-btn deactivate"
                           title="<?= $t['deactivate'] ?>"
-                          onclick="return confirm('<?= $t['confirm_deactivate'] ?>')"
+                          onclick="return confirm(<?= htmlspecialchars(json_encode($t['confirm_deactivate'] ?? 'Are you sure?'), ENT_QUOTES) ?>)"
                         >
                           <i class="fas fa-ban"></i>
                         </button>
@@ -888,7 +888,7 @@ ob_start();
                           type="submit"
                           class="action-btn activate"
                           title="<?= $t['activate'] ?>"
-                          onclick="return confirm('<?= $t['confirm_activate'] ?>')"
+                          onclick="return confirm(<?= htmlspecialchars(json_encode($t['confirm_activate'] ?? 'Are you sure?'), ENT_QUOTES) ?>)"
                         >
                           <i class="fas fa-check-circle"></i>
                         </button>
@@ -904,7 +904,7 @@ ob_start();
                       type="submit"
                       class="action-btn delete"
                       title="<?= $t['delete'] ?>"
-                      onclick="return confirm('<?= $t['confirm_delete'] ?>')"
+                      onclick="return confirm(<?= htmlspecialchars(json_encode($t['confirm_delete'] ?? 'Are you sure?'), ENT_QUOTES) ?>)"
                     >
                       <i class="fas fa-trash"></i>
                     </button>
@@ -1066,7 +1066,7 @@ function viewShopDetails(shop) {
         </div>
         <div class="detail-section">
             <p class="detail-label"><?= $t['description'] ?></p>
-            <p class="detail-description">${shop.description || '<?= $t['no_description'] ?>'}</p>
+            <p class="detail-description">${shop.description || <?= json_encode($t['no_description'] ?? 'No description available') ?>}</p>
         </div>
         <div class="detail-section">
             <p class="detail-label"><?= $t['address'] ?></p>

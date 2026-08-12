@@ -786,7 +786,7 @@ function toggleSelectAll(checkbox) {
 function showPaymentModal() {
     const selected = document.querySelectorAll('.earning-checkbox:checked');
     if (selected.length === 0) {
-        alert('<?= $t['select_earnings'] ?>');
+        alert(<?= json_encode($t['select_earnings'] ?? 'Please select earnings') ?>);
         return;
     }
     document.getElementById('modalCount').textContent = selected.length;
@@ -820,7 +820,7 @@ async function confirmMarkPaid() {
 
         if (data.success) {
             closePaymentModal();
-            alert('<?= $t['marked_success'] ?>');
+            alert(<?= json_encode($t['marked_success'] ?? 'Marked as paid successfully') ?>);
             location.reload();
         } else {
             alert('Error: ' + (data.error || 'Unknown error'));

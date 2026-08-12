@@ -463,7 +463,7 @@ ob_start();
             <?php endif; ?>
 
             <div class="revision-actions">
-              <form method="POST" action="<?= url('admin/legal/restore') ?>" style="display: inline;" onsubmit="return confirm('<?= $t['confirm_restore'] ?>')">
+              <form method="POST" action="<?= url('admin/legal/restore') ?>" style="display: inline;" onsubmit="return confirm(<?= htmlspecialchars(json_encode($t['confirm_restore'] ?? 'Are you sure?'), ENT_QUOTES) ?>)">
                 <?= csrfField() ?>
                 <input type="hidden" name="revision_id" value="<?= $revision['id'] ?>">
                 <button type="submit" class="btn-restore">

@@ -351,7 +351,7 @@ document.getElementById('addDriverForm').addEventListener('submit', function(e) 
     
     if (password !== confirm) {
         e.preventDefault();
-        alert('<?= $t['passwords_not_match'] ?>');
+        alert(<?= json_encode($t['passwords_not_match'] ?? 'Passwords do not match') ?>);
         return false;
     }
 });
