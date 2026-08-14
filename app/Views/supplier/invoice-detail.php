@@ -147,7 +147,11 @@
         <?php endif; ?>
         <tr><td>TPS (5%)</td><td class="amount" style="text-align:right;">$<?= number_format($invoice['tax_gst'], 2) ?></td></tr>
         <tr><td>TVQ (9.975%)</td><td class="amount" style="text-align:right;">$<?= number_format($invoice['tax_qst'], 2) ?></td></tr>
-        <tr><td><?= $fr ? 'Total' : 'Total' ?></td><td class="amount" style="text-align:right;color:var(--primary);">$<?= number_format($invoice['total_amount'], 2) ?></td></tr>
+        <tr style="border-top:1px solid var(--gray-200);"><td style="font-weight:600;"><?= $fr ? 'Total brut' : 'Gross Total' ?></td><td class="amount" style="text-align:right;font-weight:600;">$<?= number_format($invoice['total_amount'], 2) ?></td></tr>
+        <?php if ($invoice['commission_amount'] > 0): ?>
+        <tr><td><?= $fr ? 'Commission de la plateforme' : 'Platform Commission' ?> (<?= number_format($invoice['commission_rate'], 2) ?>%)</td><td class="amount" style="text-align:right;color:#dc2626;">-$<?= number_format($invoice['commission_amount'], 2) ?></td></tr>
+        <?php endif; ?>
+        <tr><td style="font-weight:700;"><?= $fr ? 'Montant net à payer' : 'Net Payable' ?></td><td class="amount" style="text-align:right;font-weight:700;color:var(--primary);">$<?= number_format($invoice['net_payable'], 2) ?></td></tr>
       </table>
     </div>
     <?php endif; ?>
@@ -163,10 +167,10 @@
       </div>
       <?php if ($invoice['amount_paid'] > 0 && $invoice['balance_due'] > 0.01): ?>
         <div style="font-size:12px;color:var(--gray-400);margin-top:6px;">
-          $<?= number_format($invoice['amount_paid'], 2) ?> <?= $fr ? 'payé sur' : 'paid of' ?> $<?= number_format($invoice['total_amount'], 2) ?>
+          $<?= number_format($invoice['amount_paid'], 2) ?> <?= $fr ? 'payé sur' : 'paid of' ?> $<?= number_format($invoice['net_payable'], 2) ?>
         </div>
         <div style="margin-top:8px;background:var(--gray-200);border-radius:4px;height:6px;overflow:hidden;">
-          <div style="height:100%;background:#059669;border-radius:4px;width:<?= min(100, round(($invoice['amount_paid'] / $invoice['total_amount']) * 100)) ?>%;"></div>
+          <div style="height:100%;background:#059669;border-radius:4px;width:<?= min(100, round(($invoice['amount_paid'] / max(0.01, $invoice['net_payable'])) * 100)) ?>%;"></div>
         </div>
       <?php endif; ?>
     </div>

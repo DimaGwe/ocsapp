@@ -1008,7 +1008,7 @@ class AdminDistributionController
             $stmt = $this->db->prepare("
                 SELECT po.id, po.po_number, po.admin_paid_at, po.supplier_id,
                        po.subtotal, po.tax_gst, po.tax_qst, po.shipping_cost, po.total_amount,
-                       s.email AS supplier_email, s.company_name AS supplier_company,
+                       s.email AS supplier_email, s.company_name AS supplier_company, s.commission_rate,
                        dr.request_number, dr.status AS dr_status, dr.business_profile_id
                 FROM purchase_orders po
                 JOIN distribution_requests dr ON dr.id = po.distribution_request_id
@@ -1023,6 +1023,12 @@ class AdminDistributionController
                 $this->jsonError('PO not found.');
                 return;
             }
+
+            // Same wholesale-commission deduction as AdminPayablesController::createInvoiceForPO() -
+            // computed on goods subtotal only, deducted from what OCS actually pays the supplier.
+            $commissionRate = (float)($po['commission_rate'] ?? 0);
+            $commissionAmount = round((float)$po['subtotal'] * ($commissionRate / 100), 2);
+            $netPayable = round((float)$po['total_amount'] - $commissionAmount, 2);
 
             if ($po['admin_paid_at']) {
                 header('Content-Type: application/json');
@@ -1045,10 +1051,11 @@ class AdminDistributionController
             $invRow = $existingInv->fetch(\PDO::FETCH_ASSOC);
 
             if ($invRow) {
-                // Update existing invoice to paid
+                // Update existing invoice to paid — net_payable (post-commission), not the
+                // gross total_amount, is what OCS actually owes the supplier.
                 $this->db->prepare("
                     UPDATE supplier_invoices
-                    SET amount_paid  = total_amount,
+                    SET amount_paid  = net_payable,
                         balance_due  = 0,
                         status       = 'paid',
                         paid_at      = NOW(),
@@ -1056,6 +1063,13 @@ class AdminDistributionController
                     WHERE id = ?
                 ")->execute([$invRow['id']]);
                 $invoiceId = (int)$invRow['id'];
+
+                // Re-fetch the invoice's actual net_payable for the payment record below
+                // (may differ from the freshly-computed $netPayable if the invoice already
+                // existed with its own commission snapshot).
+                $netPayable = (float)$this->db->query(
+                    "SELECT net_payable FROM supplier_invoices WHERE id = " . (int)$invRow['id']
+                )->fetchColumn();
             } else {
                 // Generate invoice number: INV-YYYYMM-NNNN
                 $lastInv = $this->db->query(
@@ -1072,9 +1086,9 @@ class AdminDistributionController
                 $this->db->prepare("
                     INSERT INTO supplier_invoices
                     (invoice_number, supplier_id, po_id, subtotal, tax_gst, tax_qst, shipping,
-                     total_amount, amount_paid, balance_due, status,
+                     commission_rate, commission_amount, total_amount, net_payable, amount_paid, balance_due, status,
                      issue_date, due_date, paid_at, created_by, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'paid', CURDATE(), CURDATE(), NOW(), ?, NOW(), NOW())
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'paid', CURDATE(), CURDATE(), NOW(), ?, NOW(), NOW())
                 ")->execute([
                     $invoiceNumber,
                     $po['supplier_id'],
@@ -1083,8 +1097,11 @@ class AdminDistributionController
                     (float)$po['tax_gst'],
                     (float)$po['tax_qst'],
                     (float)$po['shipping_cost'],
+                    $commissionRate,
+                    $commissionAmount,
                     $total,
-                    $total,
+                    $netPayable,
+                    $netPayable,
                     $adminId,
                 ]);
                 $invoiceId = (int)$this->db->lastInsertId();
@@ -1109,7 +1126,7 @@ class AdminDistributionController
             ")->execute([
                 $paymentNumber,
                 $po['supplier_id'],
-                (float)$po['total_amount'],
+                $netPayable,
                 $paymentMethod,
                 $reference ?: null,
                 'Distribution request #' . $po['request_number'] . ' — PO #' . $po['po_number'],
@@ -1121,7 +1138,7 @@ class AdminDistributionController
             $this->db->prepare("
                 INSERT IGNORE INTO supplier_invoice_payments (invoice_id, payment_id, amount_applied, created_at)
                 VALUES (?, ?, ?, NOW())
-            ")->execute([$invoiceId, $paymentId, (float)$po['total_amount']]);
+            ")->execute([$invoiceId, $paymentId, $netPayable]);
 
             $this->db->commit();
 

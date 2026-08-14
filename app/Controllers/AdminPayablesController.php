@@ -72,7 +72,7 @@ class AdminPayablesController
                 COUNT(*) as total_invoices,
                 SUM(CASE WHEN status IN ('sent','partial') THEN balance_due ELSE 0 END) as total_outstanding,
                 SUM(CASE WHEN status = 'overdue' THEN balance_due ELSE 0 END) as total_overdue,
-                SUM(CASE WHEN status = 'paid' THEN total_amount ELSE 0 END) as total_paid,
+                SUM(CASE WHEN status = 'paid' THEN net_payable ELSE 0 END) as total_paid,
                 SUM(CASE WHEN status IN ('sent','partial') AND due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY) THEN balance_due ELSE 0 END) as due_this_week,
                 COUNT(CASE WHEN status = 'overdue' THEN 1 END) as overdue_count,
                 COUNT(CASE WHEN status IN ('sent','partial') AND due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY) THEN 1 END) as due_this_week_count
@@ -180,8 +180,8 @@ class AdminPayablesController
                 return false;
             }
 
-            // Get supplier payment terms to calculate due date
-            $stmt = $db->prepare("SELECT payment_terms FROM suppliers WHERE id = ?");
+            // Get supplier payment terms + commission rate to calculate due date and net payout
+            $stmt = $db->prepare("SELECT payment_terms, commission_rate FROM suppliers WHERE id = ?");
             $stmt->execute([$po['supplier_id']]);
             $supplier = $stmt->fetch(\PDO::FETCH_ASSOC);
 
@@ -191,6 +191,8 @@ class AdminPayablesController
                     $paymentTermsDays = (int)$m[1];
                 }
             }
+
+            $commissionRate = (float)($supplier['commission_rate'] ?? 0);
 
             // Generate invoice number (INV-YYYYMM-XXXX)
             $prefix = 'INV-' . date('Ym') . '-';
@@ -210,15 +212,22 @@ class AdminPayablesController
             $qst = round($taxableAmount * 0.09975, 2);
             $total = round($subtotal + $shipping + $gst + $qst, 2);
 
+            // Wholesale commission (Sec 5.2) is charged on goods subtotal only,
+            // same base as the seller-side commission/processing fee, and is
+            // deducted from what OCS actually pays the supplier.
+            $commissionAmount = round($subtotal * ($commissionRate / 100), 2);
+            $netPayable = round($total - $commissionAmount, 2);
+
             $issueDate = date('Y-m-d');
             $dueDate = date('Y-m-d', strtotime("+{$paymentTermsDays} days"));
 
             $stmt = $db->prepare("
                 INSERT INTO supplier_invoices (
                     invoice_number, supplier_id, po_id,
-                    subtotal, tax_gst, tax_qst, shipping, total_amount, amount_paid, balance_due,
+                    subtotal, tax_gst, tax_qst, shipping, commission_rate, commission_amount,
+                    total_amount, net_payable, amount_paid, balance_due,
                     status, issue_date, due_date, created_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0.00, ?, 'sent', ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0.00, ?, 'sent', ?, ?, ?)
             ");
             $stmt->execute([
                 $invoiceNumber,
@@ -228,8 +237,11 @@ class AdminPayablesController
                 $gst,
                 $qst,
                 $shipping,
+                $commissionRate,
+                $commissionAmount,
                 $total,
-                $total,
+                $netPayable,
+                $netPayable,
                 $issueDate,
                 $dueDate,
                 $createdBy,
@@ -251,7 +263,10 @@ class AdminPayablesController
                 'tax_gst' => $gst,
                 'tax_qst' => $qst,
                 'shipping' => $shipping,
+                'commission_rate' => $commissionRate,
+                'commission_amount' => $commissionAmount,
                 'total_amount' => $total,
+                'net_payable' => $netPayable,
                 'issue_date' => $issueDate,
                 'due_date' => $dueDate,
             ];
@@ -437,7 +452,10 @@ class AdminPayablesController
                 <tr><td style='padding:6px 12px; color:#6b7280;'>Shipping</td><td style='padding:6px 12px; text-align:right; font-weight:500;'>$" . number_format((float)$invoice['shipping'], 2) . "</td></tr>
                 <tr><td style='padding:6px 12px; color:#6b7280;'>GST (5%)</td><td style='padding:6px 12px; text-align:right; font-weight:500;'>$" . number_format((float)$invoice['tax_gst'], 2) . "</td></tr>
                 <tr><td style='padding:6px 12px; color:#6b7280;'>QST (9.975%)</td><td style='padding:6px 12px; text-align:right; font-weight:500;'>$" . number_format((float)$invoice['tax_qst'], 2) . "</td></tr>
-                <tr style='border-top:2px solid #1f2937;'><td style='padding:10px 12px; font-size:15px; font-weight:700;'>Total Due</td><td style='padding:10px 12px; text-align:right; font-size:15px; font-weight:700; color:#00b207;'>$" . number_format((float)$invoice['total_amount'], 2) . "</td></tr>
+                <tr style='border-top:1px solid #e5e7eb;'><td style='padding:6px 12px; font-weight:600;'>Gross Total</td><td style='padding:6px 12px; text-align:right; font-weight:600;'>$" . number_format((float)$invoice['total_amount'], 2) . "</td></tr>" .
+                (((float)$invoice['commission_amount'] > 0) ? "
+                <tr><td style='padding:6px 12px; color:#6b7280;'>Platform Commission (" . number_format((float)$invoice['commission_rate'], 2) . "%)</td><td style='padding:6px 12px; text-align:right; font-weight:500; color:#991b1b;'>-$" . number_format((float)$invoice['commission_amount'], 2) . "</td></tr>" : "") . "
+                <tr style='border-top:2px solid #1f2937;'><td style='padding:10px 12px; font-size:15px; font-weight:700;'>Net Payable</td><td style='padding:10px 12px; text-align:right; font-size:15px; font-weight:700; color:#00b207;'>$" . number_format((float)$invoice['net_payable'], 2) . "</td></tr>
             </table>
         </div>
     </div>
@@ -615,9 +633,10 @@ class AdminPayablesController
                 VALUES (?, ?, ?)
             ")->execute([$invoiceId, $paymentId, $effectiveAmount]);
 
-            // Update invoice balances
+            // Update invoice balances — net_payable (post-commission), not the gross
+            // total_amount, is what OCS actually owes the supplier.
             $newAmountPaid = (float)$invoice['amount_paid'] + $effectiveAmount;
-            $newBalance = (float)$invoice['total_amount'] - $newAmountPaid;
+            $newBalance = (float)$invoice['net_payable'] - $newAmountPaid;
             $newStatus = $newBalance <= 0.01 ? 'paid' : 'partial'; // 0.01 tolerance for rounding
             $paidAt = $newStatus === 'paid' ? date('Y-m-d H:i:s') : null;
 
@@ -711,7 +730,8 @@ class AdminPayablesController
 
         $stmt = $this->db->query("
             SELECT si.invoice_number, s.company_name as supplier, po.po_number,
-                   si.subtotal, si.tax_gst, si.tax_qst, si.shipping, si.total_amount,
+                   si.subtotal, si.tax_gst, si.tax_qst, si.shipping,
+                   si.commission_rate, si.commission_amount, si.total_amount, si.net_payable,
                    si.amount_paid, si.balance_due, si.status,
                    si.issue_date, si.due_date, si.paid_at
             FROM supplier_invoices si
@@ -725,7 +745,7 @@ class AdminPayablesController
         header('Content-Disposition: attachment; filename="supplier-payables-' . date('Y-m-d') . '.csv"');
 
         $out = fopen('php://output', 'w');
-        fputcsv($out, ['Invoice #', 'Supplier', 'PO #', 'Subtotal', 'GST', 'QST', 'Shipping', 'Total', 'Paid', 'Balance', 'Status', 'Issue Date', 'Due Date', 'Paid At']);
+        fputcsv($out, ['Invoice #', 'Supplier', 'PO #', 'Subtotal', 'GST', 'QST', 'Shipping', 'Commission Rate', 'Commission Amount', 'Gross Total', 'Net Payable', 'Paid', 'Balance', 'Status', 'Issue Date', 'Due Date', 'Paid At']);
 
         foreach ($invoices as $inv) {
             fputcsv($out, [
@@ -736,7 +756,10 @@ class AdminPayablesController
                 $inv['tax_gst'],
                 $inv['tax_qst'],
                 $inv['shipping'],
+                $inv['commission_rate'],
+                $inv['commission_amount'],
                 $inv['total_amount'],
+                $inv['net_payable'],
                 $inv['amount_paid'],
                 $inv['balance_due'],
                 $inv['status'],

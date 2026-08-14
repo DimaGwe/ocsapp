@@ -168,7 +168,11 @@ ob_start();
         <?php if ($invoice['shipping'] > 0): ?><tr><td>Shipping</td><td class="amount" style="text-align:right;">$<?= number_format($invoice['shipping'], 2) ?></td></tr><?php endif; ?>
         <tr><td>GST (5%)</td><td class="amount" style="text-align:right;">$<?= number_format($invoice['tax_gst'], 2) ?></td></tr>
         <tr><td>QST (9.975%)</td><td class="amount" style="text-align:right;">$<?= number_format($invoice['tax_qst'], 2) ?></td></tr>
-        <tr><td>Total</td><td class="amount" style="text-align:right;">$<?= number_format($invoice['total_amount'], 2) ?></td></tr>
+        <tr style="border-top:1px solid #e5e7eb;"><td style="font-weight:600;">Gross Total</td><td class="amount" style="text-align:right;font-weight:600;">$<?= number_format($invoice['total_amount'], 2) ?></td></tr>
+        <?php if ($invoice['commission_amount'] > 0): ?>
+        <tr><td>Platform Commission (<?= number_format($invoice['commission_rate'], 2) ?>%)</td><td class="amount" style="text-align:right;color:#991b1b;">-$<?= number_format($invoice['commission_amount'], 2) ?></td></tr>
+        <?php endif; ?>
+        <tr style="border-top:2px solid #1f2937;"><td style="font-weight:700;">Net Payable</td><td class="amount" style="text-align:right;font-weight:700;color:#00b207;">$<?= number_format($invoice['net_payable'], 2) ?></td></tr>
       </table>
     </div>
     <?php endif; ?>
@@ -207,7 +211,7 @@ ob_start();
         $<?= number_format($invoice['balance_due'], 2) ?>
       </div>
       <?php if ($invoice['amount_paid'] > 0 && $invoice['balance_due'] > 0.01): ?>
-        <div style="font-size:12px;color:#6b7280;margin-top:6px;">$<?= number_format($invoice['amount_paid'], 2) ?> paid of $<?= number_format($invoice['total_amount'], 2) ?></div>
+        <div style="font-size:12px;color:#6b7280;margin-top:6px;">$<?= number_format($invoice['amount_paid'], 2) ?> paid of $<?= number_format($invoice['net_payable'], 2) ?></div>
       <?php endif; ?>
     </div>
 
