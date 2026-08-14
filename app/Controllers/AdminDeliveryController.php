@@ -1773,7 +1773,7 @@ class AdminDeliveryController {
 
         return view('admin/delivery/live-map', [
             'pageTitle' => 'Live Driver Map',
-            'gmapsKey'  => env('GOOGLE_MAPS_KEY', 'AIzaSyB43koHaoLagCIiwoEydQXPoQAfglYGTqY'),
+            'gmapsKey'  => env('GOOGLE_MAPS_KEY', ''),
         ]);
     }
 
@@ -1794,7 +1794,7 @@ class AdminDeliveryController {
         return view('admin/delivery/route-replay', [
             'pageTitle' => 'Route Replay',
             'drivers'   => $drivers,
-            'gmapsKey'  => env('GOOGLE_MAPS_KEY', 'AIzaSyB43koHaoLagCIiwoEydQXPoQAfglYGTqY'),
+            'gmapsKey'  => env('GOOGLE_MAPS_KEY', ''),
         ]);
     }
 

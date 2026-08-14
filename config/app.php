@@ -13,5 +13,5 @@ return [
     // Delivery fee in CAD — update via admin settings or .env DELIVERY_FEE
     'delivery_fee' => (float) env('DELIVERY_FEE', '5.00'),
     // Google Maps API key (Maps JS API + Directions API enabled)
-    'google_maps_key' => env('GOOGLE_MAPS_KEY', 'AIzaSyB43koHaoLagCIiwoEydQXPoQAfglYGTqY'),
+    'google_maps_key' => env('GOOGLE_MAPS_KEY', ''),
 ];
