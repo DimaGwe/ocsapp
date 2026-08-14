@@ -77,21 +77,52 @@ class DistributionRequestController
     }
 
     /**
+     * Number of distinct suppliers among catalog_items with quantity > 0 -
+     * the "stop count" for the Additional-Stop Fee (Business Account Agreement
+     * Sec. 7.6), since each consolidated supplier pickup is a stop.
+     */
+    private function calculateStopCount(array $catalogItems): int
+    {
+        $supplierIds = [];
+        $productIds = array_keys(array_filter($catalogItems, fn($qty) => (int)$qty > 0));
+        if (empty($productIds)) {
+            return 0;
+        }
+        $placeholders = implode(',', array_fill(0, count($productIds), '?'));
+        $stmt = $this->db->prepare("SELECT DISTINCT supplier_id FROM supplier_products WHERE id IN ({$placeholders})");
+        $stmt->execute($productIds);
+        return count($stmt->fetchAll(\PDO::FETCH_COLUMN));
+    }
+
+    /**
      * Calculate full summary breakdown
      * @param float $itemsTotal Total cost of items
      * @param float $deliveryDistance Delivery distance in km
      * @param float $totalWeightKg Total weight of catalog items in kg
      * @param float $tipAmount Optional tip amount (pre-tax, calculated on items subtotal)
+     * @param ?string $zoneCode Zone resolved from the request's delivery city (Sec. 7.4-7.8)
+     * @param int $stopCount Number of distinct suppliers consolidated into this request
      */
-    private function calculateSummary(float $itemsTotal, float $deliveryDistance, float $totalWeightKg = 0, float $tipAmount = 0): array
+    private function calculateSummary(float $itemsTotal, float $deliveryDistance, float $totalWeightKg = 0, float $tipAmount = 0, ?string $zoneCode = null, int $stopCount = 0): array
     {
+        require_once BASE_PATH . '/app/Helpers/functions.php';
+
         $tier = $this->getTier($itemsTotal);
         $tierConfig = self::PRICING_TIERS[$tier];
 
         $procurementFee = $itemsTotal * self::PROCUREMENT_FEE_RATE;
         $deliveryFee = $this->calculateDeliveryFee($deliveryDistance, $tier);
 
-        $subtotal = $itemsTotal + $procurementFee + $deliveryFee;
+        // Oversize/Long-Distance/Additional-Stop surcharges (Business Account Agreement
+        // Sec. 7.4-7.8) - same helpers and rates already used for Distribution shipments
+        // (DistributionFeeHelper), just wired into Approvisionnement's own checkout math.
+        $oversize = calculateB2BOversizeSurcharge($zoneCode, $totalWeightKg);
+        $longDistance = calculateB2BLongDistanceSurcharge($zoneCode, $deliveryDistance);
+        $stopFee = calculateB2BAdditionalStopFee($zoneCode, $stopCount);
+        $hardCapExceeded = $oversize['hard_cap_exceeded'] || $longDistance['hard_cap_exceeded'];
+
+        $subtotal = $itemsTotal + $procurementFee + $deliveryFee
+            + $oversize['total_surcharge'] + $longDistance['total_surcharge'] + $stopFee['total_fee'];
         $gstAmount = $subtotal * self::GST_RATE;
         $qstAmount = $subtotal * self::QST_RATE;
         $totalAmount = $subtotal + $gstAmount + $qstAmount + $tipAmount;
@@ -103,6 +134,12 @@ class DistributionRequestController
             'handling_fee' => 0.00, // no per-kg handling fee in the documented model — kept for schema compat
             'total_weight_kg' => round($totalWeightKg, 2),
             'delivery_fee' => round($deliveryFee, 2),
+            'zone_code' => $zoneCode,
+            'stop_count' => $stopCount,
+            'oversize_surcharge' => $oversize['total_surcharge'],
+            'long_distance_surcharge' => $longDistance['total_surcharge'],
+            'additional_stop_fee' => $stopFee['total_fee'],
+            'hard_cap_exceeded' => $hardCapExceeded,
             'tip_amount' => round($tipAmount, 2),
             'subtotal' => round($subtotal, 2),
             'gst_amount' => round($gstAmount, 2),
@@ -567,19 +604,35 @@ class DistributionRequestController
                 $data['delivery_distance'] = $serverDistance;
             }
 
-            // Calculate full summary breakdown with weight and tip
-            $summary = $this->calculateSummary($itemsTotal, $data['delivery_distance'], $totalWeightKg, $tipAmount);
+            // Zone + stop count for the Oversize/Long-Distance/Additional-Stop surcharges
+            // (Business Account Agreement Sec. 7.4-7.8)
+            require_once BASE_PATH . '/app/Helpers/functions.php';
+            $zoneCode = resolveB2BZoneCode($data['delivery_city'] ?? null);
+            $stopCount = $this->calculateStopCount($data['catalog_items'] ?? []);
+
+            // Calculate full summary breakdown with weight, tip, zone, and stop count
+            $summary = $this->calculateSummary($itemsTotal, $data['delivery_distance'], $totalWeightKg, $tipAmount, $zoneCode, $stopCount);
+
+            if ($summary['hard_cap_exceeded']) {
+                $this->db->rollBack();
+                $_SESSION['request_errors'] = ['general' => 'This request exceeds the maximum weight (100kg) or distance (30km) for standard Approvisionnement service. Please contact OCSAPP to arrange a custom freight arrangement.'];
+                $_SESSION['request_old'] = $data;
+                redirect('distribution/requests/create');
+                return;
+            }
 
             // Create request with summary data
             $stmt = $this->db->prepare("
                 INSERT INTO distribution_requests
                 (business_profile_id, request_number, request_name, notes, delivery_street, delivery_city,
                  delivery_province, delivery_postal_code, preferred_delivery_date, delivery_distance,
+                 zone_code, stop_count,
                  delivery_type, scheduled_date, scheduled_time_from, scheduled_time_to,
-                 tier, items_total, service_fee, handling_fee, total_weight_kg, delivery_fee,
+                 tier, items_total, service_fee, handling_fee, total_weight_kg,
+                 oversize_surcharge, long_distance_surcharge, additional_stop_fee, delivery_fee,
                  tip_amount, tip_percentage, subtotal,
                  gst_amount, qst_amount, tax_amount, total_amount, status, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', NOW(), NOW())
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', NOW(), NOW())
             ");
             $stmt->execute([
                 $businessId,
@@ -592,6 +645,8 @@ class DistributionRequestController
                 $data['delivery_postal_code'],
                 $data['preferred_delivery_date'] ?: null,
                 $data['delivery_distance'],
+                $summary['zone_code'],
+                $summary['stop_count'],
                 $data['delivery_type'],
                 $data['scheduled_date'] ?: null,
                 $data['scheduled_time_from'] ?: null,
@@ -601,6 +656,9 @@ class DistributionRequestController
                 $summary['service_fee'],
                 $summary['handling_fee'],
                 $summary['total_weight_kg'],
+                $summary['oversize_surcharge'],
+                $summary['long_distance_surcharge'],
+                $summary['additional_stop_fee'],
                 $summary['delivery_fee'],
                 $summary['tip_amount'],
                 $tipPercentage,
@@ -841,6 +899,9 @@ class DistributionRequestController
                 'total_weight_kg' => $request['total_weight_kg'] ?? 0,
                 'delivery_distance' => $request['delivery_distance'] ?? 0,
                 'delivery_fee' => $request['delivery_fee'] ?? 0,
+                'oversize_surcharge' => $request['oversize_surcharge'] ?? 0,
+                'long_distance_surcharge' => $request['long_distance_surcharge'] ?? 0,
+                'additional_stop_fee' => $request['additional_stop_fee'] ?? 0,
                 'free_delivery_km' => $tierConfig['freeDeliveryKm'],
                 'per_km_rate' => $tierConfig['perKmRate'],
                 'tip_amount' => $request['tip_amount'] ?? 0,
@@ -1109,8 +1170,21 @@ class DistributionRequestController
                 $tipPercentage = 0;
             }
 
-            // Calculate full summary breakdown with weight and tip
-            $summary = $this->calculateSummary($itemsTotal, $data['delivery_distance'], $totalWeightKg, $tipAmount);
+            // Zone + stop count for the Oversize/Long-Distance/Additional-Stop surcharges
+            // (Business Account Agreement Sec. 7.4-7.8)
+            require_once BASE_PATH . '/app/Helpers/functions.php';
+            $zoneCode = resolveB2BZoneCode($data['delivery_city'] ?? null);
+            $stopCount = $this->calculateStopCount($data['catalog_items'] ?? []);
+
+            // Calculate full summary breakdown with weight, tip, zone, and stop count
+            $summary = $this->calculateSummary($itemsTotal, $data['delivery_distance'], $totalWeightKg, $tipAmount, $zoneCode, $stopCount);
+
+            if ($summary['hard_cap_exceeded']) {
+                $this->db->rollBack();
+                $_SESSION['request_errors'] = ['general' => 'This request exceeds the maximum weight (100kg) or distance (30km) for standard Approvisionnement service. Please contact OCSAPP to arrange a custom freight arrangement.'];
+                redirect('distribution/requests/edit?id=' . $requestId);
+                return;
+            }
 
             // Update request with summary data
             $stmt = $this->db->prepare("
@@ -1123,11 +1197,16 @@ class DistributionRequestController
                     delivery_postal_code = ?,
                     preferred_delivery_date = ?,
                     delivery_distance = ?,
+                    zone_code = ?,
+                    stop_count = ?,
                     tier = ?,
                     items_total = ?,
                     service_fee = ?,
                     handling_fee = ?,
                     total_weight_kg = ?,
+                    oversize_surcharge = ?,
+                    long_distance_surcharge = ?,
+                    additional_stop_fee = ?,
                     delivery_fee = ?,
                     tip_amount = ?,
                     tip_percentage = ?,
@@ -1148,11 +1227,16 @@ class DistributionRequestController
                 $data['delivery_postal_code'],
                 $data['preferred_delivery_date'] ?: null,
                 $data['delivery_distance'],
+                $summary['zone_code'],
+                $summary['stop_count'],
                 $summary['tier'],
                 $summary['items_total'],
                 $summary['service_fee'],
                 $summary['handling_fee'],
                 $summary['total_weight_kg'],
+                $summary['oversize_surcharge'],
+                $summary['long_distance_surcharge'],
+                $summary['additional_stop_fee'],
                 $summary['delivery_fee'],
                 $summary['tip_amount'],
                 $tipPercentage,

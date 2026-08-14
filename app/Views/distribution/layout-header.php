@@ -825,6 +825,7 @@ if (!empty($_SESSION['business']['id']) && !$_bizIsPending) {
     .summary-note { font-size: 12px; color: #6b7280; margin-top: 12px; line-height: 1.5; }
     .summary-empty-text { color: #6b7280; font-size: 14px; text-align: center; padding: 24px 0; }
     .fee-row, .tax-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; color: #6b7280; }
+    .fee-row-warning { background: #fef3c7; color: #92400e; border-radius: 8px; padding: 10px 12px; margin-top: 8px; font-size: 12.5px; line-height: 1.5; }
     .tax-section { margin-top: 8px; border-top: 1px solid #f3f4f6; padding-top: 4px; }
     .tip-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid #f3f4f6; }
     .tip-header { font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }

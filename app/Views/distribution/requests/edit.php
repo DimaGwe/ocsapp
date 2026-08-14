@@ -243,6 +243,19 @@ require __DIR__ . '/../layout-header.php';
                                 <span>Delivery (<span id="deliveryInfo">Free</span>)</span>
                                 <span id="deliveryFeeAmount">$0.00</span>
                             </div>
+                            <div class="fee-row" id="oversizeFeeRow" style="display: none;">
+                                <span>Oversize Surcharge (<span id="oversizeInfo"></span>)</span>
+                                <span id="oversizeFeeAmount">$0.00</span>
+                            </div>
+                            <div class="fee-row" id="longDistanceFeeRow" style="display: none;">
+                                <span>Long-Distance Surcharge (<span id="longDistanceInfo"></span>)</span>
+                                <span id="longDistanceFeeAmount">$0.00</span>
+                            </div>
+                            <div class="fee-row" id="stopFeeRow" style="display: none;">
+                                <span>Additional-Stop Fee (<span id="stopFeeInfo"></span>)</span>
+                                <span id="stopFeeAmount">$0.00</span>
+                            </div>
+                            <div class="fee-row-warning" id="hardCapWarning" style="display: none;"></div>
                         </div>
 
                         <div class="summary-subtotal" id="summarySubtotal" style="display: none;">
@@ -481,6 +494,67 @@ require __DIR__ . '/../layout-header.php';
         const GST_RATE = 0.05;
         const QST_RATE = 0.09975;
 
+        // Oversize/Long-Distance/Additional-Stop surcharges (Business Account Agreement
+        // Sec. 7.4-7.8) - mirrors app/Helpers/functions.php's B2B surcharge helpers.
+        const WEST_ISLAND_TOWNS = [
+            'west island', 'kirkland', 'pointe-claire', 'pointe claire',
+            'dollard-des-ormeaux', 'dollard des ormeaux', 'ddo',
+            'beaconsfield', "baie-d'urfe", "baie-d'urfé", "baie d'urfe",
+            'sainte-anne-de-bellevue', 'ste-anne-de-bellevue', 'senneville',
+            'dorval', "l'ile-bizard", "l'île-bizard",
+        ];
+        const B2B_ZONE_RATES = {
+            WI:  { oversizeBase: 10.00, oversizeIncrement: 5.00, distanceBase: 10.00, distanceIncrement: 5.00, stopFee: 4.00 },
+            LAV: { oversizeBase: 11.25, oversizeIncrement: 5.63, distanceBase: 11.25, distanceIncrement: 5.63, stopFee: 4.50 },
+            MTL: { oversizeBase: 12.50, oversizeIncrement: 6.25, distanceBase: 12.50, distanceIncrement: 6.25, stopFee: 5.00 },
+        };
+
+        function resolveB2BZoneCode(city) {
+            if (!city) return null;
+            const cityLower = city.trim().toLowerCase();
+            if (WEST_ISLAND_TOWNS.includes(cityLower)) return 'WI';
+            if (cityLower.includes('laval')) return 'LAV';
+            if (cityLower.includes('montreal') || cityLower.includes('montréal')) return 'MTL';
+            return null;
+        }
+
+        function calculateB2BOversizeSurcharge(zoneCode, totalWeightKg) {
+            const threshold = 25.0, baseBandEnd = 50.0, incrementKg = 10.0, hardCap = 100.0;
+            const zero = { hardCapExceeded: false, baseSurcharge: 0, incrementSurcharge: 0, incrementCount: 0, totalSurcharge: 0 };
+            if (totalWeightKg > hardCap) return { ...zero, hardCapExceeded: true };
+            if (totalWeightKg < threshold || !zoneCode || !B2B_ZONE_RATES[zoneCode]) return zero;
+            const rates = B2B_ZONE_RATES[zoneCode];
+            const baseSurcharge = rates.oversizeBase;
+            let incrementCount = 0, incrementSurcharge = 0;
+            if (totalWeightKg > baseBandEnd) {
+                incrementCount = Math.ceil((totalWeightKg - baseBandEnd) / incrementKg);
+                incrementSurcharge = incrementCount * rates.oversizeIncrement;
+            }
+            return { hardCapExceeded: false, baseSurcharge, incrementSurcharge, incrementCount, totalSurcharge: baseSurcharge + incrementSurcharge };
+        }
+
+        function calculateB2BLongDistanceSurcharge(zoneCode, distanceKm) {
+            const threshold = 10.0, baseBandEnd = 15.0, incrementKm = 5.0, hardCap = 30.0;
+            const zero = { hardCapExceeded: false, baseSurcharge: 0, incrementSurcharge: 0, incrementCount: 0, totalSurcharge: 0 };
+            if (distanceKm === null || distanceKm === undefined) return zero;
+            if (distanceKm > hardCap) return { ...zero, hardCapExceeded: true };
+            if (distanceKm < threshold || !zoneCode || !B2B_ZONE_RATES[zoneCode]) return zero;
+            const rates = B2B_ZONE_RATES[zoneCode];
+            const baseSurcharge = rates.distanceBase;
+            let incrementCount = 0, incrementSurcharge = 0;
+            if (distanceKm > baseBandEnd) {
+                incrementCount = Math.ceil((distanceKm - baseBandEnd) / incrementKm);
+                incrementSurcharge = incrementCount * rates.distanceIncrement;
+            }
+            return { hardCapExceeded: false, baseSurcharge, incrementSurcharge, incrementCount, totalSurcharge: baseSurcharge + incrementSurcharge };
+        }
+
+        function calculateB2BAdditionalStopFee(zoneCode, stopCount) {
+            if (stopCount <= 2 || !zoneCode || !B2B_ZONE_RATES[zoneCode]) return { totalFee: 0, additionalStops: 0 };
+            const additionalStops = stopCount - 2;
+            return { totalFee: additionalStops * B2B_ZONE_RATES[zoneCode].stopFee, additionalStops };
+        }
+
         // Initialize tip from saved value
         let selectedTipPercent = parseInt(document.getElementById('tipPercentage').value) || 0;
 
@@ -506,6 +580,7 @@ require __DIR__ . '/../layout-header.php';
 
             const productInfo = {};
             document.querySelectorAll('template[id^="supplier-products-"]').forEach(template => {
+                const supplierId = template.id.replace('supplier-products-', '');
                 const clone = template.content.cloneNode(true);
                 clone.querySelectorAll('.product-item').forEach(item => {
                     const input = item.querySelector('.product-qty');
@@ -513,17 +588,20 @@ require __DIR__ . '/../layout-header.php';
                         productInfo[input.dataset.productId] = {
                             name: item.querySelector('.product-name').textContent,
                             price: parseFloat(input.dataset.price),
-                            weight: parseFloat(input.dataset.weight) || 0
+                            weight: parseFloat(input.dataset.weight) || 0,
+                            supplierId: supplierId
                         };
                     }
                 });
             });
 
+            const selectedSupplierIds = new Set();
             for (const [productId, qty] of Object.entries(selectedItems)) {
                 if (qty > 0 && productInfo[productId]) {
                     const info = productInfo[productId];
                     catalogTotal += qty * info.price;
                     totalWeightKg += qty * info.weight;
+                    if (info.supplierId) selectedSupplierIds.add(info.supplierId);
                     catalogItems.push({ name: info.name, qty, price: info.price, total: qty * info.price });
                 }
             }
@@ -547,6 +625,9 @@ require __DIR__ . '/../layout-header.php';
                 taxSection.style.display = 'none';
                 tipSection.style.display = 'none';
                 totalDiv.style.display = 'none';
+                document.getElementById('hardCapWarning').style.display = 'none';
+                const submitBtnReset = document.querySelector('.btn-submit');
+                if (submitBtnReset) submitBtnReset.disabled = false;
             } else {
                 const tier = getTier(catalogTotal);
                 const tierConfig = PRICING_TIERS[tier];
@@ -582,7 +663,54 @@ require __DIR__ . '/../layout-header.php';
                     document.getElementById('deliveryFeeAmount').textContent = '$' + deliveryFee.toFixed(2);
                 }
 
-                const subtotal = catalogTotal + serviceFee + deliveryFee;
+                // Oversize/Long-Distance/Additional-Stop surcharges (Business Account
+                // Agreement Sec. 7.4-7.8)
+                const zoneCode = resolveB2BZoneCode(document.querySelector('input[name="delivery_city"]')?.value || '');
+                const stopCount = selectedSupplierIds.size;
+                const oversize = calculateB2BOversizeSurcharge(zoneCode, totalWeightKg);
+                const longDistance = calculateB2BLongDistanceSurcharge(zoneCode, distance);
+                const stopFeeCalc = calculateB2BAdditionalStopFee(zoneCode, stopCount);
+                const hardCapExceeded = oversize.hardCapExceeded || longDistance.hardCapExceeded;
+
+                const oversizeFeeRow = document.getElementById('oversizeFeeRow');
+                if (oversize.totalSurcharge > 0) {
+                    oversizeFeeRow.style.display = 'flex';
+                    document.getElementById('oversizeInfo').textContent = `${totalWeightKg.toFixed(1)}kg, weight over 25kg`;
+                    document.getElementById('oversizeFeeAmount').textContent = '$' + oversize.totalSurcharge.toFixed(2);
+                } else {
+                    oversizeFeeRow.style.display = 'none';
+                }
+
+                const longDistanceFeeRow = document.getElementById('longDistanceFeeRow');
+                if (longDistance.totalSurcharge > 0) {
+                    longDistanceFeeRow.style.display = 'flex';
+                    document.getElementById('longDistanceInfo').textContent = `${distance.toFixed(1)}km, distance over 10km`;
+                    document.getElementById('longDistanceFeeAmount').textContent = '$' + longDistance.totalSurcharge.toFixed(2);
+                } else {
+                    longDistanceFeeRow.style.display = 'none';
+                }
+
+                const stopFeeRow = document.getElementById('stopFeeRow');
+                if (stopFeeCalc.totalFee > 0) {
+                    stopFeeRow.style.display = 'flex';
+                    document.getElementById('stopFeeInfo').textContent = `${stopFeeCalc.additionalStops} additional stop(s)`;
+                    document.getElementById('stopFeeAmount').textContent = '$' + stopFeeCalc.totalFee.toFixed(2);
+                } else {
+                    stopFeeRow.style.display = 'none';
+                }
+
+                const hardCapWarning = document.getElementById('hardCapWarning');
+                const submitBtn = document.querySelector('.btn-submit');
+                if (hardCapExceeded) {
+                    hardCapWarning.style.display = 'block';
+                    hardCapWarning.innerHTML = '<i class="fas fa-exclamation-triangle"></i> This request exceeds the maximum weight (100kg) or distance (30km) for standard service. Please contact OCSAPP to arrange custom freight.';
+                    if (submitBtn) submitBtn.disabled = true;
+                } else {
+                    hardCapWarning.style.display = 'none';
+                    if (submitBtn) submitBtn.disabled = false;
+                }
+
+                const subtotal = catalogTotal + serviceFee + deliveryFee + oversize.totalSurcharge + longDistance.totalSurcharge + stopFeeCalc.totalFee;
                 summarySubtotal.style.display = 'flex';
                 document.getElementById('subtotalAmount').textContent = '$' + subtotal.toFixed(2) + (shoppingCount > 0 ? '+' : '');
 

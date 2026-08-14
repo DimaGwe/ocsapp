@@ -46,6 +46,9 @@ $translations = [
         'items_total'            => 'Items Total',
         'service_fee'            => 'Procurement Fee',
         'handling'               => 'Handling',
+        'oversize_surcharge'     => 'Oversize Surcharge',
+        'long_distance_surcharge' => 'Long-Distance Surcharge',
+        'additional_stop_fee'   => 'Additional-Stop Fee',
         'free_delivery'          => 'Free',
         'gst'                    => 'GST (5%)',
         'qst'                    => 'QST (9.975%)',
@@ -120,6 +123,9 @@ $translations = [
         'items_total'            => 'Total des articles',
         'service_fee'            => 'Frais d\'approvisionnement',
         'handling'               => 'Manutention',
+        'oversize_surcharge'     => 'Supplément de surdimension',
+        'long_distance_surcharge' => 'Supplément longue distance',
+        'additional_stop_fee'   => 'Frais d\'arrêt supplémentaire',
         'free_delivery'          => 'Gratuit',
         'gst'                    => 'TPS (5\u00a0%)',
         'qst'                    => 'TVQ (9,975\u00a0%)',
@@ -708,6 +714,24 @@ $drStages = $currentLang === 'fr' ? [
                                     <span><?= $t['delivery_fee'] ?> (<?= $summary['delivery_distance'] <= $summary['free_delivery_km'] ? $t['free_delivery'] . ' &le;' . $summary['free_delivery_km'] . 'km' : ($summary['delivery_distance'] - $summary['free_delivery_km']) . 'km &times; $' . number_format($summary['per_km_rate'], 2) ?>)</span>
                                     <span>$<?= number_format($summary['delivery_fee'], 2) ?></span>
                                 </div>
+                                <?php if ($summary['oversize_surcharge'] > 0): ?>
+                                <div class="fee-row">
+                                    <span><?= $t['oversize_surcharge'] ?> (<?= number_format($summary['total_weight_kg'], 1) ?> kg)</span>
+                                    <span>$<?= number_format($summary['oversize_surcharge'], 2) ?></span>
+                                </div>
+                                <?php endif; ?>
+                                <?php if ($summary['long_distance_surcharge'] > 0): ?>
+                                <div class="fee-row">
+                                    <span><?= $t['long_distance_surcharge'] ?> (<?= number_format($summary['delivery_distance'], 1) ?> km)</span>
+                                    <span>$<?= number_format($summary['long_distance_surcharge'], 2) ?></span>
+                                </div>
+                                <?php endif; ?>
+                                <?php if ($summary['additional_stop_fee'] > 0): ?>
+                                <div class="fee-row">
+                                    <span><?= $t['additional_stop_fee'] ?></span>
+                                    <span>$<?= number_format($summary['additional_stop_fee'], 2) ?></span>
+                                </div>
+                                <?php endif; ?>
                             </div>
 
                             <div class="summary-subtotal">

@@ -1019,6 +1019,24 @@ ob_start();
                             <span>Delivery (<?= ($summary['delivery_distance'] ?? 0) <= ($summary['free_delivery_km'] ?? 15) ? 'Free ≤' . ($summary['free_delivery_km'] ?? 15) . 'km' : (($summary['delivery_distance'] ?? 0) - ($summary['free_delivery_km'] ?? 15)) . 'km × $' . number_format($summary['per_km_rate'] ?? 0, 2) ?>)</span>
                             <span>$<?= number_format($summary['delivery_fee'] ?? 0, 2) ?></span>
                         </div>
+                        <?php if (($summary['oversize_surcharge'] ?? 0) > 0): ?>
+                        <div class="fee-row">
+                            <span>Oversize Surcharge (<?= number_format($summary['total_weight_kg'] ?? 0, 1) ?> kg)</span>
+                            <span>$<?= number_format($summary['oversize_surcharge'], 2) ?></span>
+                        </div>
+                        <?php endif; ?>
+                        <?php if (($summary['long_distance_surcharge'] ?? 0) > 0): ?>
+                        <div class="fee-row">
+                            <span>Long-Distance Surcharge (<?= number_format($summary['delivery_distance'] ?? 0, 1) ?> km)</span>
+                            <span>$<?= number_format($summary['long_distance_surcharge'], 2) ?></span>
+                        </div>
+                        <?php endif; ?>
+                        <?php if (($summary['additional_stop_fee'] ?? 0) > 0): ?>
+                        <div class="fee-row">
+                            <span>Additional-Stop Fee</span>
+                            <span>$<?= number_format($summary['additional_stop_fee'], 2) ?></span>
+                        </div>
+                        <?php endif; ?>
                     </div>
 
                     <!-- Subtotal -->
