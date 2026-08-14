@@ -746,6 +746,10 @@ class DriverApiController
                 de.net_earning                                                        AS payout,
                 de.total_earning,
                 de.platform_commission,
+                de.base_fee,
+                de.additional_stop_fee,
+                de.oversize_surcharge,
+                de.long_distance_surcharge,
                 de.tip,
                 de.payment_status,
                 de.created_at                                                         AS date,
@@ -2402,6 +2406,22 @@ class DriverApiController
 
     private function formatOrder(array $row): array
     {
+        // Ecosystem Backend Requirements Sec. 3: drivers must see the itemized fee
+        // breakdown BEFORE accepting a job, matching the pricing doc's "a driver
+        // knows their per-delivery rate before accepting a job" promise (Section
+        // 2.2 of the pricing strategy). orders.driver_payout is only populated by
+        // acceptOrder() at accept time, so pre-acceptance it's still 0 — compute
+        // the live breakdown from the order's own locked-in fee columns instead
+        // (same components acceptOrder() itself uses), rather than showing $0.
+        require_once __DIR__ . '/../../Helpers/PayoutHelper.php';
+        $lockedPayout = (float)($row['driver_payout'] ?? 0);
+        $breakdown = \App\Helpers\PayoutHelper::calculateDriverPayout(
+            (float)($row['delivery_fee'] ?? 0),
+            (float)($row['additional_stop_fee'] ?? 0),
+            (float)($row['oversize_base_surcharge'] ?? 0) + (float)($row['oversize_increment_surcharge'] ?? 0),
+            (float)($row['long_distance_base_surcharge'] ?? 0) + (float)($row['long_distance_increment_surcharge'] ?? 0)
+        );
+
         return [
             'id'                      => (int)$row['id'],
             'order_number'            => $row['order_number'] ?? '',
@@ -2416,7 +2436,16 @@ class DriverApiController
             'driver_name'             => $row['driver_name'] ?? '',
             'driver_license'          => $row['driver_license'] ?? '',
             'distance_km'             => (float)($row['distance_km'] ?? 0),
-            'payout'                  => (float)($row['driver_payout'] ?? 0),
+            // Locked-in payout (post-accept, may reflect an admin override) if set,
+            // otherwise the live-calculated figure a driver would receive if they accept now.
+            'payout'                  => $lockedPayout > 0 ? $lockedPayout : $breakdown['driver_net_payout'],
+            'payout_breakdown'        => [
+                'base_fee'            => $breakdown['base_component'],
+                'additional_stop_fee' => $breakdown['additional_stop_fee'],
+                'oversize_surcharge'  => $breakdown['oversize_surcharge'],
+                'distance_surcharge'  => $breakdown['distance_surcharge'],
+                'gross_pay'           => $breakdown['gross_pay'],
+            ],
             'status'                  => $row['driver_status'] ?: $row['status'],
             'notes'                   => $row['delivery_notes'] ?? null,
             'created_at'              => $row['created_at'] ?? '',
@@ -2580,6 +2609,97 @@ class DriverApiController
             "UPDATE delivery_assignments SET pickup_photo_path = ?, updated_at = NOW()
              WHERE order_id = ? AND driver_id = ?"
         )->execute([$relativePath, $id, $userId]);
+
+        $this->json(['success' => true, 'photo_url' => $this->fullAvatarUrl($relativePath)]);
+    }
+
+    // -------------------------------------------------------------------------
+    // POST /api/orders/:id/weight-discrepancy
+    // Ecosystem Backend Requirements Sec. 3: driver-flagged weight discrepancy
+    // at pickup, with photo evidence. Flag-and-notify only - per Pricing
+    // Strategy Sec 8.4c, a confirmed discrepancy CAN trigger the oversize
+    // surcharge retroactively, but that's an admin decision (reviewed at
+    // /admin/delivery/details), never automatic. Mirrors orderPickupPhoto()'s
+    // upload validation.
+    // -------------------------------------------------------------------------
+    public function reportWeightDiscrepancy(int $id): void
+    {
+        $userId = $this->authenticate();
+
+        if (empty($_FILES['photo']) || $_FILES['photo']['error'] !== UPLOAD_ERR_OK) {
+            $this->error('No photo uploaded', 400);
+        }
+        $reportedWeight = (float)($_POST['reported_weight_kg'] ?? 0);
+        if ($reportedWeight <= 0) {
+            $this->error('reported_weight_kg is required', 400);
+        }
+
+        $file     = $_FILES['photo'];
+        $maxBytes = 10 * 1024 * 1024; // 10 MB
+        if ($file['size'] > $maxBytes) {
+            $this->error('Photo must be under 10 MB', 400);
+        }
+
+        $mime    = mime_content_type($file['tmp_name']);
+        $allowed = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+        if (!isset($allowed[$mime])) {
+            $this->error('Only JPEG, PNG or WebP images are allowed', 400);
+        }
+
+        // Verify this driver owns the order and it's still active (pickup happens before delivery)
+        $chk = $this->db->prepare(
+            "SELECT id, order_number, total_weight_kg FROM orders
+             WHERE id = ? AND driver_id = ? AND status = 'out_for_delivery' LIMIT 1"
+        );
+        $chk->execute([$id, $userId]);
+        $order = $chk->fetch(\PDO::FETCH_ASSOC);
+        if (!$order) {
+            $this->error('Order not found', 404);
+        }
+
+        $declaredWeight = (float)($order['total_weight_kg'] ?? 0);
+
+        // Avoid noise from trivial rounding differences - only flag a real mismatch.
+        $threshold = max(1.0, $declaredWeight * 0.10);
+        if (abs($reportedWeight - $declaredWeight) < $threshold) {
+            $this->error('Reported weight is within the declared range - no discrepancy to flag', 422);
+        }
+
+        $ext      = $allowed[$mime];
+        $filename = "weight_discrepancy_{$id}_{$userId}_" . time() . ".{$ext}";
+        $destDir  = __DIR__ . '/../../../public/uploads/delivery/';
+        if (!is_dir($destDir)) {
+            mkdir($destDir, 0775, true);
+        }
+        $destPath = $destDir . $filename;
+
+        if (!move_uploaded_file($file['tmp_name'], $destPath)) {
+            $this->error('Failed to save photo', 500);
+        }
+
+        $relativePath = 'uploads/delivery/' . $filename;
+
+        $deliveryId = $this->db->prepare(
+            "SELECT id FROM delivery_assignments WHERE order_id = ? AND driver_id = ? LIMIT 1"
+        );
+        $deliveryId->execute([$id, $userId]);
+        $deliveryAssignmentId = $deliveryId->fetchColumn() ?: null;
+
+        $this->db->prepare(
+            "INSERT INTO order_weight_discrepancies
+             (order_id, delivery_id, driver_id, declared_weight_kg, reported_weight_kg, photo_path, status, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW(), NOW())"
+        )->execute([$id, $deliveryAssignmentId, $userId, $declaredWeight, $reportedWeight, $relativePath]);
+
+        try {
+            require_once __DIR__ . '/../../Helpers/NotificationHelper.php';
+            \App\Helpers\NotificationHelper::add(
+                'delivery',
+                '⚖️ Weight Discrepancy Flagged — #' . $order['order_number'],
+                "Driver reported {$reportedWeight}kg at pickup vs. {$declaredWeight}kg declared for order #{$order['order_number']}. Review photo evidence before deciding whether to apply a retroactive oversize surcharge.",
+                ['link' => $deliveryAssignmentId ? '/admin/delivery/details?id=' . $deliveryAssignmentId : '/admin/delivery/active', 'icon' => 'weight-hanging', 'priority' => 'high']
+            );
+        } catch (\Exception $e) { /* non-blocking */ }
 
         $this->json(['success' => true, 'photo_url' => $this->fullAvatarUrl($relativePath)]);
     }

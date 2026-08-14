@@ -1034,6 +1034,7 @@ return [
     'POST /api/orders/{id}/status'            => ['Api\\DriverApiController', 'updateOrderStatus'],
     'POST /api/orders/{id}/photo'             => ['Api\\DriverApiController', 'orderPhoto'],
     'POST /api/orders/{id}/pickup-photo'      => ['Api\\DriverApiController', 'orderPickupPhoto'],
+    'POST /api/orders/{id}/weight-discrepancy' => ['Api\\DriverApiController', 'reportWeightDiscrepancy'],
     'POST /api/orders/{id}/signature'         => ['Api\\DriverApiController', 'orderSignature'],
     'POST /api/orders/{id}/outcome'           => ['Api\\DriverApiController', 'orderOutcome'],
     'POST /api/orders/{id}/cancel'            => ['Api\\DriverApiController', 'cancelOrder'],
