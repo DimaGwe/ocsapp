@@ -127,13 +127,16 @@ class AdminShipmentController
         $shipmentId = (int)($_GET['id'] ?? 0);
 
         try {
-            // Get shipment with business info
+            // Get shipment with business info + Distribution plan (Sec. 8: Débutant/Pro
+            // are automated, Enterprise stays a manual custom quote under Sec. 8.5).
             $stmt = $this->db->prepare("
                 SELECT s.*, bp.company_name,
-                       u.first_name, u.last_name, u.email, u.phone
+                       u.first_name, u.last_name, u.email, u.phone,
+                       dp.code AS plan_code, dp.name AS plan_name, dp.commission_rate
                 FROM distribution_shipments s
                 INNER JOIN business_profiles bp ON s.business_profile_id = bp.id
                 INNER JOIN users u ON bp.user_id = u.id
+                LEFT JOIN distribution_plans dp ON bp.distribution_plan_id = dp.id
                 WHERE s.id = ?
             ");
             $stmt->execute([$shipmentId]);
@@ -170,13 +173,24 @@ class AdminShipmentController
             $stmt->execute([$shipmentId]);
             $payments = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
+            // Automated-quote preview (Sec. 8.10/8.10a) for Débutant/Pro shipments still
+            // awaiting a quote, so the admin sees the exact figures before generating one.
+            $automatedPreview = null;
+            if ($shipment['status'] === 'submitted'
+                && in_array($shipment['plan_code'] ?? null, ['debutant', 'pro'], true)
+                && (float)($shipment['declared_value'] ?? 0) > 0) {
+                $shipment['stop_count'] = $shipment['is_multi_drop'] ? count($destinations) : 1;
+                $automatedPreview = \App\Helpers\DistributionFeeHelper::calculateShipmentFees($shipment, (float)$shipment['commission_rate']);
+            }
+
             view('admin.shipments.view', [
                 'shipment' => $shipment,
                 'destinations' => $destinations,
                 'items' => $items,
                 'quote' => $quote,
                 'statusHistory' => $statusHistory,
-                'payments' => $payments
+                'payments' => $payments,
+                'automatedPreview' => $automatedPreview,
             ]);
 
         } catch (\PDOException $e) {
@@ -205,8 +219,16 @@ class AdminShipmentController
         $shipmentId = (int)($_POST['shipment_id'] ?? 0);
 
         try {
-            // Get shipment
-            $stmt = $this->db->prepare("SELECT * FROM distribution_shipments WHERE id = ? AND status = 'submitted'");
+            // Get shipment + the business's Distribution plan (Business Account
+            // Agreement Sec. 8: Débutant/Pro are automated per Jack's direction,
+            // Enterprise stays a manual custom quote under Sec. 8.5).
+            $stmt = $this->db->prepare("
+                SELECT s.*, dp.code AS plan_code, dp.commission_rate
+                FROM distribution_shipments s
+                INNER JOIN business_profiles bp ON s.business_profile_id = bp.id
+                LEFT JOIN distribution_plans dp ON bp.distribution_plan_id = dp.id
+                WHERE s.id = ? AND s.status = 'submitted'
+            ");
             $stmt->execute([$shipmentId]);
             $shipment = $stmt->fetch(\PDO::FETCH_ASSOC);
 
@@ -216,32 +238,71 @@ class AdminShipmentController
                 return;
             }
 
-            // Get pricing inputs
-            $baseRate = (float)($_POST['base_rate'] ?? 0);
-            $perStopRate = (float)($_POST['per_stop_rate'] ?? 0);
-            $weightSurcharge = (float)($_POST['weight_surcharge'] ?? 0);
-            $distanceSurcharge = (float)($_POST['distance_surcharge'] ?? 0);
-            $rushSurcharge = (float)($_POST['rush_surcharge'] ?? 0);
-            $taxRate = (float)($_POST['tax_rate'] ?? 14.975);
-            $validDays = (int)($_POST['valid_days'] ?? 7);
-            $notes = sanitize($_POST['notes'] ?? '');
-
             // Get stops count
             if ($shipment['is_multi_drop']) {
                 $stmt = $this->db->prepare("SELECT COUNT(*) as count FROM distribution_shipment_destinations WHERE shipment_id = ?");
                 $stmt->execute([$shipmentId]);
-                $stopsCount = $stmt->fetch(\PDO::FETCH_ASSOC)['count'];
+                $shipment['stop_count'] = (int)$stmt->fetch(\PDO::FETCH_ASSOC)['count'];
             } else {
-                $stopsCount = 1;
+                $shipment['stop_count'] = 1;
             }
 
-            // Calculate totals
-            $stopsTotal = $perStopRate * $stopsCount;
-            $subtotal = $baseRate + $stopsTotal + $weightSurcharge + $distanceSurcharge + $rushSurcharge;
-            $taxAmount = $subtotal * ($taxRate / 100);
-            $totalAmount = $subtotal + $taxAmount;
-
+            $validDays = (int)($_POST['valid_days'] ?? 7);
+            $notes = sanitize($_POST['notes'] ?? '');
             $validUntil = date('Y-m-d', strtotime("+{$validDays} days"));
+
+            $isAutomatedTier = in_array($shipment['plan_code'] ?? null, ['debutant', 'pro'], true);
+            $canAutomate = $isAutomatedTier && (float)($shipment['declared_value'] ?? 0) > 0;
+
+            if ($canAutomate) {
+                $fees = \App\Helpers\DistributionFeeHelper::calculateShipmentFees($shipment, (float)$shipment['commission_rate']);
+
+                if ($fees['hard_cap_exceeded']) {
+                    // Sec. 8.10/8.10a hard cap - standard automated pricing doesn't
+                    // apply, this needs a custom arrangement. Don't silently auto-quote
+                    // past the cap; require the admin to price it manually below.
+                    setFlash('error', 'This shipment exceeds the standard weight/distance cap (100kg or 30km) - custom pricing required. Enter a manual quote instead.');
+                    redirect('admin/shipments/view?id=' . $shipmentId);
+                    return;
+                }
+
+                $declaredValue = $fees['declared_value'];
+                $distributionFeeAmount = $fees['distribution_fee_amount'];
+                $baseRate = $fees['delivery_fee'];
+                $perStopRate = 0.00; // stop fee is a flat total (zone-calibrated per stop), not typed per-stop
+                $stopsCount = $shipment['stop_count'];
+                $stopsTotal = $fees['additional_stop_fee'];
+                $weightSurcharge = round($fees['oversize_base_surcharge'] + $fees['oversize_increment_surcharge'], 2);
+                $distanceSurcharge = round($fees['long_distance_base_surcharge'] + $fees['long_distance_increment_surcharge'], 2);
+                $rushSurcharge = 0.00;
+                $taxRate = $fees['tax_rate'];
+                $subtotal = $fees['subtotal'];
+                $taxAmount = $fees['tax_amount'];
+                $totalAmount = $fees['total_amount'];
+                $isAutomated = 1;
+
+                // Persist the resolved zone/distance onto the shipment for future reference.
+                $this->db->prepare("
+                    UPDATE distribution_shipments SET zone_code = ?, routed_distance_km = ? WHERE id = ?
+                ")->execute([$fees['zone_code'], $fees['routed_distance_km'], $shipmentId]);
+            } else {
+                // Manual path (Enterprise/negotiated, or Débutant/Pro with no
+                // declared value yet on file) - unchanged admin-typed pricing.
+                $declaredValue = (float)($_POST['declared_value'] ?? $shipment['declared_value'] ?? 0);
+                $distributionFeeAmount = (float)($_POST['distribution_fee_amount'] ?? 0);
+                $baseRate = (float)($_POST['base_rate'] ?? 0);
+                $perStopRate = (float)($_POST['per_stop_rate'] ?? 0);
+                $stopsCount = $shipment['stop_count'];
+                $stopsTotal = $perStopRate * $stopsCount;
+                $weightSurcharge = (float)($_POST['weight_surcharge'] ?? 0);
+                $distanceSurcharge = (float)($_POST['distance_surcharge'] ?? 0);
+                $rushSurcharge = (float)($_POST['rush_surcharge'] ?? 0);
+                $taxRate = (float)($_POST['tax_rate'] ?? 14.975);
+                $subtotal = round($distributionFeeAmount + $baseRate + $stopsTotal + $weightSurcharge + $distanceSurcharge + $rushSurcharge, 2);
+                $taxAmount = round($subtotal * ($taxRate / 100), 2);
+                $totalAmount = round($subtotal + $taxAmount, 2);
+                $isAutomated = 0;
+            }
 
             $this->db->beginTransaction();
 
@@ -251,18 +312,20 @@ class AdminShipmentController
             // Create quote
             $stmt = $this->db->prepare("
                 INSERT INTO distribution_shipment_quotes
-                (shipment_id, base_rate, per_stop_rate, stops_count, stops_total,
+                (shipment_id, declared_value, distribution_fee_amount, base_rate, per_stop_rate, stops_count, stops_total,
                  weight_surcharge, distance_surcharge, rush_surcharge,
                  subtotal, tax_rate, tax_amount, total_amount,
-                 valid_until, notes, created_by, created_at)
-                VALUES (?, ?, ?, ?, ?,
+                 valid_until, notes, is_automated, created_by, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?,
                         ?, ?, ?,
                         ?, ?, ?, ?,
-                        ?, ?, ?, NOW())
+                        ?, ?, ?, ?, NOW())
             ");
 
             $stmt->execute([
                 $shipmentId,
+                $declaredValue,
+                $distributionFeeAmount,
                 $baseRate,
                 $perStopRate,
                 $stopsCount,
@@ -276,6 +339,7 @@ class AdminShipmentController
                 $totalAmount,
                 $validUntil,
                 $notes,
+                $isAutomated,
                 $_SESSION['user']['id'] ?? null
             ]);
 
@@ -288,11 +352,12 @@ class AdminShipmentController
             $stmt->execute([$subtotal, $taxAmount, $totalAmount, $shipmentId]);
 
             // Log status change
-            $this->logStatusChange($shipmentId, 'submitted', 'quoted', 'Quote created: $' . number_format($totalAmount, 2));
+            $quoteSource = $isAutomated ? 'Automated quote (Sec. 8.10/8.10a)' : 'Manual quote';
+            $this->logStatusChange($shipmentId, 'submitted', 'quoted', "{$quoteSource}: \$" . number_format($totalAmount, 2));
 
             $this->db->commit();
 
-            setFlash('success', 'Quote created successfully. Customer has been notified.');
+            setFlash('success', ($isAutomated ? 'Automated quote generated' : 'Quote created') . ' successfully. Customer has been notified.');
             redirect('admin/shipments/view?id=' . $shipmentId);
 
         } catch (\PDOException $e) {

@@ -34,6 +34,7 @@ $translations = [
         'sec_package'       => 'Package Details',
         'lbl_total_packages'=> 'Total Packages',
         'lbl_total_weight'  => 'Total Weight',
+        'lbl_declared_value'=> 'Declared Value',
         'not_specified'     => 'Not specified',
         'lbl_description'   => 'Description',
         'sec_items'         => 'Items',
@@ -91,6 +92,7 @@ $translations = [
         'sec_package'       => 'D&#233;tails du colis',
         'lbl_total_packages'=> 'Total des colis',
         'lbl_total_weight'  => 'Poids total',
+        'lbl_declared_value'=> 'Valeur d&#233;clar&#233;e',
         'not_specified'     => 'Non sp&#233;cifi&#233;',
         'lbl_description'   => 'Description',
         'sec_items'         => 'Articles',
@@ -270,6 +272,10 @@ unset($_pageTranslations);
                         <div class="info-group">
                             <div class="info-label"><?= $t['lbl_total_weight'] ?></div>
                             <div class="info-value"><?= $shipment['total_weight_kg'] ? $shipment['total_weight_kg'] . ' kg' : $t['not_specified'] ?></div>
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label"><?= $t['lbl_declared_value'] ?></div>
+                            <div class="info-value"><?= $shipment['declared_value'] ? '$' . number_format($shipment['declared_value'], 2) : $t['not_specified'] ?></div>
                         </div>
                     </div>
                     <?php if ($shipment['package_description']): ?>

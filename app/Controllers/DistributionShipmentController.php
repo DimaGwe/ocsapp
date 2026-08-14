@@ -183,6 +183,10 @@ class DistributionShipmentController
             'total_packages' => (int)($_POST['total_packages'] ?? 1),
             'total_weight_kg' => !empty($_POST['total_weight_kg']) ? (float)$_POST['total_weight_kg'] : null,
             'package_description' => sanitize($_POST['package_description'] ?? ''),
+            // Declared value of goods shipped - the Distribution Fee basis (Business
+            // Account Agreement Sec. 8.2). Businesses ship their own products, so
+            // unlike Approvisionnement there's no OCSAPP catalog price to derive this from.
+            'declared_value' => !empty($_POST['declared_value']) ? (float)$_POST['declared_value'] : null,
             // Notes
             'business_notes' => sanitize($_POST['business_notes'] ?? ''),
         ];
@@ -265,7 +269,7 @@ class DistributionShipmentController
                  requested_pickup_date, requested_pickup_time_start, requested_pickup_time_end,
                  destination_street, destination_city, destination_province, destination_postal_code,
                  destination_contact_name, destination_contact_phone, destination_instructions,
-                 total_packages, total_weight_kg, package_description, business_notes,
+                 total_packages, total_weight_kg, declared_value, package_description, business_notes,
                  submitted_at, created_at, updated_at)
                 VALUES (?, ?, ?, ?, ?,
                         ?, ?, ?, ?,
@@ -273,7 +277,7 @@ class DistributionShipmentController
                         ?, ?, ?,
                         ?, ?, ?, ?,
                         ?, ?, ?,
-                        ?, ?, ?, ?,
+                        ?, ?, ?, ?, ?,
                         ?, NOW(), NOW())
             ");
 
@@ -302,6 +306,7 @@ class DistributionShipmentController
                 $data['destination_instructions'] ?? null,
                 $data['total_packages'],
                 $data['total_weight_kg'],
+                $data['declared_value'],
                 $data['package_description'] ?: null,
                 $data['business_notes'] ?: null,
                 ($status === 'submitted') ? date('Y-m-d H:i:s') : null
@@ -576,6 +581,7 @@ class DistributionShipmentController
                     destination_instructions = ?,
                     total_packages = ?,
                     total_weight_kg = ?,
+                    declared_value = ?,
                     package_description = ?,
                     business_notes = ?,
                     updated_at = NOW()
@@ -604,6 +610,7 @@ class DistributionShipmentController
                 $isMultiDrop ? null : sanitize($_POST['destination_instructions'] ?? ''),
                 (int)($_POST['total_packages'] ?? 1),
                 !empty($_POST['total_weight_kg']) ? (float)$_POST['total_weight_kg'] : null,
+                !empty($_POST['declared_value']) ? (float)$_POST['declared_value'] : null,
                 sanitize($_POST['package_description'] ?? '') ?: null,
                 sanitize($_POST['business_notes'] ?? '') ?: null,
                 $shipmentId
@@ -864,6 +871,13 @@ class DistributionShipmentController
             if (empty($destinations)) {
                 $errors['destinations'] = 'At least one destination is required for multi-drop shipments.';
             }
+        }
+
+        // Declared value of goods - the Distribution Fee basis (Sec. 8.2). Required
+        // so Débutant/Pro shipments can be quoted automatically; without it, quoting
+        // falls back to a manual admin-typed quote.
+        if (empty($data['declared_value']) || $data['declared_value'] <= 0) {
+            $errors['declared_value'] = 'Declared value of the goods being shipped is required.';
         }
 
         return $errors;

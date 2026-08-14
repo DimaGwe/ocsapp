@@ -233,6 +233,11 @@ require __DIR__ . '/../layout-header.php';
                                value="<?= $old['total_weight_kg'] ?? $shipment['total_weight_kg'] ?? '' ?>">
                     </div>
                     <div class="form-group">
+                        <label class="form-label">Declared Value of Goods ($) *</label>
+                        <input type="number" name="declared_value" class="form-control" step="0.01" min="0" required
+                               value="<?= $old['declared_value'] ?? $shipment['declared_value'] ?? '' ?>">
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">Package Type</label>
                         <select name="package_type" class="form-control">
                             <?php $pkgType = $old['package_type'] ?? $shipment['package_type'] ?? ''; ?>

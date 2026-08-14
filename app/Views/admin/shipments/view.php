@@ -184,56 +184,118 @@
         <!-- Create Quote Form -->
         <?php if ($shipment['status'] === 'submitted'): ?>
             <div class="card" style="margin-bottom: 24px;">
-                <div class="card-header" style="background: #fef3c7;"><i class="fas fa-calculator"></i> Create Quote</div>
+                <div class="card-header" style="background: #fef3c7;">
+                    <i class="fas fa-calculator"></i> <?= $automatedPreview ? 'Automated Quote (Sec. 8.10/8.10a)' : 'Create Quote' ?>
+                </div>
                 <div class="card-body">
-                    <form action="<?= url('admin/shipments/quote') ?>" method="POST">
-                        <input type="hidden" name="_csrf_token" value="<?= generateCsrfToken() ?>">
-                        <input type="hidden" name="shipment_id" value="<?= $shipment['id'] ?>">
+                    <?php if ($automatedPreview): ?>
+                        <p style="color: #666; margin-top: 0;">
+                            Plan: <strong><?= htmlspecialchars($shipment['plan_name']) ?></strong>
+                            (<?= number_format($shipment['commission_rate'], 1) ?>% Distribution Fee) &mdash;
+                            computed automatically from declared value, weight, and routed distance. Enterprise-tier
+                            shipments are priced manually instead.
+                        </p>
+                        <div class="fee-breakdown" style="background: #f9fafb; border-radius: 8px; padding: 16px; margin: 12px 0;">
+                            <div class="fee-row"><span>Declared Value</span><span>$<?= number_format($automatedPreview['declared_value'], 2) ?></span></div>
+                            <div class="fee-row"><span>Distribution Fee (<?= number_format($shipment['commission_rate'], 1) ?>%)</span><span>$<?= number_format($automatedPreview['distribution_fee_amount'], 2) ?></span></div>
+                            <div class="fee-row"><span>Delivery Fee (<?= htmlspecialchars($automatedPreview['zone_code'] ?? 'zone unresolved') ?>)</span><span>$<?= number_format($automatedPreview['delivery_fee'], 2) ?></span></div>
+                            <?php if ($automatedPreview['oversize_base_surcharge'] > 0): ?>
+                            <div class="fee-row"><span>Oversize Surcharge (Sec. 8.10, <?= number_format($shipment['total_weight_kg'] ?? 0, 1) ?>kg)</span><span>$<?= number_format($automatedPreview['oversize_base_surcharge'] + $automatedPreview['oversize_increment_surcharge'], 2) ?></span></div>
+                            <?php endif; ?>
+                            <?php if ($automatedPreview['long_distance_base_surcharge'] > 0): ?>
+                            <div class="fee-row"><span>Long-Distance Surcharge (Sec. 8.10a, <?= number_format($automatedPreview['routed_distance_km'] ?? 0, 1) ?>km)</span><span>$<?= number_format($automatedPreview['long_distance_base_surcharge'] + $automatedPreview['long_distance_increment_surcharge'], 2) ?></span></div>
+                            <?php endif; ?>
+                            <?php if ($automatedPreview['additional_stop_fee'] > 0): ?>
+                            <div class="fee-row"><span>Additional-Stop Fee (Sec. 8.11)</span><span>$<?= number_format($automatedPreview['additional_stop_fee'], 2) ?></span></div>
+                            <?php endif; ?>
+                            <div class="fee-row" style="border-top: 1px solid #e5e7eb; padding-top: 8px; margin-top: 8px;"><span>Subtotal</span><span>$<?= number_format($automatedPreview['subtotal'], 2) ?></span></div>
+                            <div class="fee-row"><span>Tax (<?= number_format($automatedPreview['tax_rate'], 3) ?>%)</span><span>$<?= number_format($automatedPreview['tax_amount'], 2) ?></span></div>
+                            <div class="fee-row" style="font-weight: 700; font-size: 15px;"><span>Total</span><span>$<?= number_format($automatedPreview['total_amount'], 2) ?></span></div>
+                        </div>
 
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label>Base Rate ($) *</label>
-                                <input type="number" name="base_rate" class="form-control" step="0.01" required value="25.00">
-                            </div>
-                            <div class="form-group">
-                                <label>Per Stop Rate ($)</label>
-                                <input type="number" name="per_stop_rate" class="form-control" step="0.01" value="<?= $shipment['is_multi_drop'] ? '10.00' : '0' ?>">
-                            </div>
-                            <div class="form-group">
-                                <label>Weight Surcharge ($)</label>
-                                <input type="number" name="weight_surcharge" class="form-control" step="0.01" value="0">
-                            </div>
-                            <div class="form-group">
-                                <label>Distance Surcharge ($)</label>
-                                <input type="number" name="distance_surcharge" class="form-control" step="0.01" value="0">
-                            </div>
-                            <div class="form-group">
-                                <label>Rush Surcharge ($)</label>
-                                <input type="number" name="rush_surcharge" class="form-control" step="0.01" value="0">
-                            </div>
-                            <div class="form-group">
-                                <label>Tax Rate (%)</label>
-                                <input type="number" name="tax_rate" class="form-control" step="0.001" value="14.975">
-                            </div>
+                        <form action="<?= url('admin/shipments/quote') ?>" method="POST">
+                            <input type="hidden" name="_csrf_token" value="<?= generateCsrfToken() ?>">
+                            <input type="hidden" name="shipment_id" value="<?= $shipment['id'] ?>">
                             <div class="form-group">
                                 <label>Valid For (Days)</label>
-                                <select name="valid_days" class="form-control">
+                                <select name="valid_days" class="form-control" style="max-width: 200px;">
                                     <option value="7">7 days</option>
                                     <option value="14">14 days</option>
                                     <option value="30">30 days</option>
                                 </select>
                             </div>
-                        </div>
+                            <div class="form-group" style="margin-top: 12px;">
+                                <label>Notes for Customer</label>
+                                <textarea name="notes" class="form-control" rows="2" placeholder="Any notes about this quote..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="margin-top: 16px;">
+                                <i class="fas fa-paper-plane"></i> Generate &amp; Send Automated Quote
+                            </button>
+                        </form>
+                    <?php else: ?>
+                        <?php if (in_array($shipment['plan_code'] ?? null, ['debutant', 'pro'], true)): ?>
+                            <p style="background: #fee2e2; color: #991b1b; padding: 10px 14px; border-radius: 6px; margin-top: 0;">
+                                This business is on the <?= htmlspecialchars($shipment['plan_name'] ?? '') ?> plan (automated pricing applies), but this
+                                shipment has no declared value on file, or exceeds the standard weight/distance cap - falling back to a manual quote.
+                            </p>
+                        <?php endif; ?>
+                        <form action="<?= url('admin/shipments/quote') ?>" method="POST">
+                            <input type="hidden" name="_csrf_token" value="<?= generateCsrfToken() ?>">
+                            <input type="hidden" name="shipment_id" value="<?= $shipment['id'] ?>">
 
-                        <div class="form-group" style="margin-top: 16px;">
-                            <label>Notes for Customer</label>
-                            <textarea name="notes" class="form-control" rows="2" placeholder="Any notes about this quote..."></textarea>
-                        </div>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Declared Value ($)</label>
+                                    <input type="number" name="declared_value" class="form-control" step="0.01" value="<?= htmlspecialchars($shipment['declared_value'] ?? '') ?>">
+                                </div>
+                                <div class="form-group">
+                                    <label>Distribution Fee ($)</label>
+                                    <input type="number" name="distribution_fee_amount" class="form-control" step="0.01" value="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Base Rate / Delivery Fee ($) *</label>
+                                    <input type="number" name="base_rate" class="form-control" step="0.01" required value="25.00">
+                                </div>
+                                <div class="form-group">
+                                    <label>Per Stop Rate ($)</label>
+                                    <input type="number" name="per_stop_rate" class="form-control" step="0.01" value="<?= $shipment['is_multi_drop'] ? '10.00' : '0' ?>">
+                                </div>
+                                <div class="form-group">
+                                    <label>Weight Surcharge ($)</label>
+                                    <input type="number" name="weight_surcharge" class="form-control" step="0.01" value="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Distance Surcharge ($)</label>
+                                    <input type="number" name="distance_surcharge" class="form-control" step="0.01" value="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Rush Surcharge ($)</label>
+                                    <input type="number" name="rush_surcharge" class="form-control" step="0.01" value="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Tax Rate (%)</label>
+                                    <input type="number" name="tax_rate" class="form-control" step="0.001" value="14.975">
+                                </div>
+                                <div class="form-group">
+                                    <label>Valid For (Days)</label>
+                                    <select name="valid_days" class="form-control">
+                                        <option value="7">7 days</option>
+                                        <option value="14">14 days</option>
+                                        <option value="30">30 days</option>
+                                    </select>
+                                </div>
+                            </div>
 
-                        <button type="submit" class="btn btn-primary" style="margin-top: 16px;">
-                            <i class="fas fa-paper-plane"></i> Send Quote
-                        </button>
-                    </form>
+                            <div class="form-group" style="margin-top: 16px;">
+                                <label>Notes for Customer</label>
+                                <textarea name="notes" class="form-control" rows="2" placeholder="Any notes about this quote..."></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary" style="margin-top: 16px;">
+                                <i class="fas fa-paper-plane"></i> Send Quote
+                            </button>
+                        </form>
+                    <?php endif; ?>
                 </div>
             </div>
         <?php endif; ?>
@@ -243,11 +305,26 @@
         <!-- Quote Summary -->
         <?php if ($quote): ?>
             <div class="card" style="margin-bottom: 24px;">
-                <div class="card-header"><i class="fas fa-file-invoice-dollar"></i> Quote</div>
+                <div class="card-header">
+                    <i class="fas fa-file-invoice-dollar"></i> Quote
+                    <?php if (!empty($quote['is_automated'])): ?>
+                        <span style="font-size: 11px; font-weight: 600; background: #d1fae5; color: #065f46; padding: 2px 8px; border-radius: 10px; margin-left: 8px;">Automated</span>
+                    <?php endif; ?>
+                </div>
                 <div class="card-body">
                     <div class="quote-summary">
+                        <?php if (!empty($quote['distribution_fee_amount']) && $quote['distribution_fee_amount'] > 0): ?>
+                            <div class="quote-row">
+                                <span>Declared Value</span>
+                                <span>$<?= number_format($quote['declared_value'] ?? 0, 2) ?></span>
+                            </div>
+                            <div class="quote-row">
+                                <span>Distribution Fee</span>
+                                <span>$<?= number_format($quote['distribution_fee_amount'], 2) ?></span>
+                            </div>
+                        <?php endif; ?>
                         <div class="quote-row">
-                            <span>Base Rate</span>
+                            <span>Delivery / Base Rate</span>
                             <span>$<?= number_format($quote['base_rate'], 2) ?></span>
                         </div>
                         <?php if ($quote['stops_total'] > 0): ?>

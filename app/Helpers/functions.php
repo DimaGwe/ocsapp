@@ -974,3 +974,236 @@ function calculateLongDistanceSurcharge(?string $city, ?float $distanceKm): arra
         'total_surcharge' => round($baseSurcharge + $incrementSurcharge, 2),
     ];
 }
+
+/**
+ * Resolve the B2B zone code for a city (West Island / Laval / Greater Montreal
+ * core). Same city-matching table as resolveDeliveryZoneFee() - duplicated
+ * rather than shared, so this new B2B path can't accidentally change Marché's
+ * proven zone resolution.
+ */
+function resolveB2BZoneCode(?string $city): ?string {
+    if (!$city) {
+        return null;
+    }
+
+    $westIslandTowns = [
+        'west island', 'kirkland', 'pointe-claire', 'pointe claire',
+        'dollard-des-ormeaux', 'dollard des ormeaux', 'ddo',
+        'beaconsfield', "baie-d'urfe", "baie-d'urfé", 'baie d\'urfe',
+        'sainte-anne-de-bellevue', 'ste-anne-de-bellevue', 'senneville',
+        'dorval', "l'ile-bizard", "l'île-bizard",
+    ];
+
+    $cityLower = mb_strtolower(trim($city));
+
+    if (in_array($cityLower, $westIslandTowns, true)) {
+        return 'WI';
+    }
+    if (str_contains($cityLower, 'laval')) {
+        return 'LAV';
+    }
+    if (str_contains($cityLower, 'montreal') || str_contains($cityLower, 'montréal')) {
+        return 'MTL';
+    }
+
+    return null;
+}
+
+/**
+ * Resolve the B2B (Approvisionnement/Distribution) zone-calibrated rate set
+ * for a zone code. Business Account Agreement Schedule A/B - the numbers are
+ * identical between Approvisionnement (Sec 7.5/7.5a) and Distribution
+ * (Sec 8.10/8.10a), so this one set of columns serves both.
+ *
+ * @return array{delivery_fee: float, oversize_base_rate: float, oversize_increment_rate: float, long_distance_base_rate: float, long_distance_increment_rate: float, stop_fee_rate: float}
+ */
+function resolveB2BDistributionRates(?string $zoneCode): array {
+    $zero = ['delivery_fee' => 0.00, 'oversize_base_rate' => 0.00, 'oversize_increment_rate' => 0.00, 'long_distance_base_rate' => 0.00, 'long_distance_increment_rate' => 0.00, 'stop_fee_rate' => 0.00];
+
+    if (!$zoneCode) {
+        return $zero;
+    }
+
+    try {
+        $db = \Database::getConnection();
+        $stmt = $db->prepare("SELECT b2b_base_fee, b2b_oversize_base_rate, b2b_oversize_increment_rate, b2b_long_distance_base_rate, b2b_long_distance_increment_rate, b2b_stop_fee_rate FROM delivery_zones WHERE code = ? AND is_active = 1 LIMIT 1");
+        $stmt->execute([$zoneCode]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        if (!$row) {
+            return $zero;
+        }
+        return [
+            'delivery_fee' => (float)$row['b2b_base_fee'],
+            'oversize_base_rate' => (float)$row['b2b_oversize_base_rate'],
+            'oversize_increment_rate' => (float)$row['b2b_oversize_increment_rate'],
+            'long_distance_base_rate' => (float)$row['b2b_long_distance_base_rate'],
+            'long_distance_increment_rate' => (float)$row['b2b_long_distance_increment_rate'],
+            'stop_fee_rate' => (float)$row['b2b_stop_fee_rate'],
+        ];
+    } catch (\Throwable $e) {
+        logger("resolveB2BDistributionRates error: " . $e->getMessage(), 'error');
+        return $zero;
+    }
+}
+
+/**
+ * Routed distance between two arbitrary geocoded points (pickup -> destination).
+ * Generic version of resolveRoutedDistanceKm() (which is shop-to-buyer specific) -
+ * used for Distribution shipments, where both ends are the business's own
+ * addresses, not a shop or a stored buyer address. Lazily geocodes and caches
+ * onto the given table/column pair on first use, same pattern as Sec 2.1b.
+ *
+ * @param array $point ['lat' => ?float, 'lng' => ?float, 'street'/'city'/'province'/'postal_code', 'id' => row id, 'table' => table name, 'lat_col'/'lng_col' => column names]
+ */
+function resolveB2BPointCoords(array $point): ?array {
+    require_once BASE_PATH . '/app/Helpers/GeocodingHelper.php';
+
+    if (!empty($point['lat']) && !empty($point['lng'])) {
+        return ['lat' => (float)$point['lat'], 'lng' => (float)$point['lng']];
+    }
+
+    $coords = null;
+    if (!empty($point['postal_code'])) {
+        $coords = \GeocodingHelper::geocodePostalCode($point['postal_code']);
+    }
+    if (!$coords && !empty($point['street']) && !empty($point['city'])) {
+        $freeform = trim($point['street'] . ', ' . $point['city'] . ', ' . ($point['province'] ?? 'QC'));
+        $coords = \GeocodingHelper::geocodeFreeformAddress($freeform);
+    }
+    if (!$coords && !empty($point['city'])) {
+        $coords = \GeocodingHelper::geocodeAddress($point['city'], $point['province'] ?? '');
+    }
+    if (!$coords) {
+        return null;
+    }
+
+    if (!empty($point['id']) && !empty($point['table']) && !empty($point['lat_col']) && !empty($point['lng_col'])) {
+        try {
+            $db = \Database::getConnection();
+            $db->prepare("UPDATE {$point['table']} SET {$point['lat_col']} = ?, {$point['lng_col']} = ? WHERE id = ?")
+               ->execute([$coords['lat'], $coords['lng'], $point['id']]);
+        } catch (\Throwable $e) { /* non-blocking */ }
+    }
+
+    return $coords;
+}
+
+/**
+ * B2B Oversize Surcharge (Business Account Agreement Sec. 7.5 / Sec. 8.10):
+ *   < 25kg  -> no surcharge
+ *   25-50kg -> flat zone-calibrated base surcharge
+ *   > 50kg  -> base surcharge + $X per full 10kg increment beyond 50kg (rounded up)
+ *   > 100kg -> hard cap, standard service blocked - custom freight required
+ */
+function calculateB2BOversizeSurcharge(?string $zoneCode, float $totalWeightKg): array {
+    $threshold   = 25.0;
+    $baseBandEnd = 50.0;
+    $incrementKg = 10.0;
+    $hardCap     = 100.0;
+
+    $zero = [
+        'hard_cap_exceeded' => false,
+        'total_weight_kg' => round($totalWeightKg, 2),
+        'base_surcharge' => 0.00,
+        'increment_surcharge' => 0.00,
+        'increment_count' => 0,
+        'total_surcharge' => 0.00,
+    ];
+
+    if ($totalWeightKg > $hardCap) {
+        return array_merge($zero, ['hard_cap_exceeded' => true]);
+    }
+    if ($totalWeightKg < $threshold) {
+        return $zero;
+    }
+
+    $rates = resolveB2BDistributionRates($zoneCode);
+    $baseSurcharge = round($rates['oversize_base_rate'], 2);
+
+    $incrementCount = 0;
+    $incrementSurcharge = 0.00;
+    if ($totalWeightKg > $baseBandEnd) {
+        $incrementCount = (int)ceil(($totalWeightKg - $baseBandEnd) / $incrementKg);
+        $incrementSurcharge = round($incrementCount * $rates['oversize_increment_rate'], 2);
+    }
+
+    return [
+        'hard_cap_exceeded' => false,
+        'total_weight_kg' => round($totalWeightKg, 2),
+        'base_surcharge' => $baseSurcharge,
+        'increment_surcharge' => $incrementSurcharge,
+        'increment_count' => $incrementCount,
+        'total_surcharge' => round($baseSurcharge + $incrementSurcharge, 2),
+    ];
+}
+
+/**
+ * B2B Long-Distance Surcharge (Business Account Agreement Sec. 7.5a / Sec. 8.10a):
+ *   < 10km  -> no surcharge (within included radius)
+ *   10-15km -> flat zone-calibrated base surcharge
+ *   > 15km  -> base surcharge + $X per full 5km increment beyond 15km (rounded up)
+ *   > 30km  -> hard cap, standard service blocked - custom arrangement required
+ */
+function calculateB2BLongDistanceSurcharge(?string $zoneCode, ?float $distanceKm): array {
+    $threshold   = 10.0;
+    $baseBandEnd = 15.0;
+    $incrementKm = 5.0;
+    $hardCap     = 30.0;
+
+    $zero = [
+        'hard_cap_exceeded' => false,
+        'distance_km' => $distanceKm !== null ? round($distanceKm, 2) : 0.00,
+        'base_surcharge' => 0.00,
+        'increment_surcharge' => 0.00,
+        'increment_count' => 0,
+        'total_surcharge' => 0.00,
+    ];
+
+    if ($distanceKm === null) {
+        return $zero;
+    }
+    if ($distanceKm > $hardCap) {
+        return array_merge($zero, ['hard_cap_exceeded' => true]);
+    }
+    if ($distanceKm < $threshold) {
+        return $zero;
+    }
+
+    $rates = resolveB2BDistributionRates($zoneCode);
+    $baseSurcharge = round($rates['long_distance_base_rate'], 2);
+
+    $incrementCount = 0;
+    $incrementSurcharge = 0.00;
+    if ($distanceKm > $baseBandEnd) {
+        $incrementCount = (int)ceil(($distanceKm - $baseBandEnd) / $incrementKm);
+        $incrementSurcharge = round($incrementCount * $rates['long_distance_increment_rate'], 2);
+    }
+
+    return [
+        'hard_cap_exceeded' => false,
+        'distance_km' => round($distanceKm, 2),
+        'base_surcharge' => $baseSurcharge,
+        'increment_surcharge' => $incrementSurcharge,
+        'increment_count' => $incrementCount,
+        'total_surcharge' => round($baseSurcharge + $incrementSurcharge, 2),
+    ];
+}
+
+/**
+ * B2B Additional-Stop Fee (Business Account Agreement Sec. 7.6 / Sec. 8.11).
+ * First 2 pickup/drop locations are included; each beyond that is charged the
+ * zone-calibrated per-stop rate.
+ */
+function calculateB2BAdditionalStopFee(?string $zoneCode, int $stopCount): array {
+    if ($stopCount <= 2) {
+        return ['total_fee' => 0.00, 'additional_stops' => 0];
+    }
+
+    $stopFeeRate = resolveB2BDistributionRates($zoneCode)['stop_fee_rate'];
+    $additionalStops = $stopCount - 2;
+
+    return [
+        'total_fee' => round($additionalStops * $stopFeeRate, 2),
+        'additional_stops' => $additionalStops,
+    ];
+}

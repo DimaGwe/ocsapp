@@ -37,6 +37,7 @@ $t = ([
         'lbl_packages'      => 'Packages',
         'lbl_num_packages'  => 'Number of Packages',
         'lbl_weight'        => 'Total Weight (kg)',
+        'lbl_declared_value'=> 'Declared Value of Goods ($)',
         'lbl_pkg_type'      => 'Package Type',
         'lbl_pkg_desc'      => 'Package Description',
         'lbl_item_name'     => 'Item Name',
@@ -99,6 +100,7 @@ $t = ([
         'lbl_packages'      => 'Colis',
         'lbl_num_packages'  => 'Nombre de colis',
         'lbl_weight'        => 'Poids total (kg)',
+        'lbl_declared_value'=> 'Valeur déclarée des marchandises ($)',
         'lbl_pkg_type'      => 'Type de colis',
         'lbl_pkg_desc'      => 'Description du colis',
         'lbl_item_name'     => "Nom de l'article",
@@ -366,6 +368,10 @@ $t = $_pageT; unset($_pageT); // restore page-specific translations
                     <div class="form-group">
                         <label class="form-label"><?= $t['lbl_weight'] ?></label>
                         <input type="number" name="total_weight_kg" class="form-control" step="0.1" value="<?= $old['total_weight_kg'] ?? '' ?>">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"><?= $t['lbl_declared_value'] ?> *</label>
+                        <input type="number" name="declared_value" class="form-control" step="0.01" min="0" required value="<?= $old['declared_value'] ?? '' ?>">
                     </div>
                     <div class="form-group">
                         <label class="form-label"><?= $t['lbl_pkg_type'] ?></label>
