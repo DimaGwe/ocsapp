@@ -2120,7 +2120,8 @@ class AdminDeliveryController {
             if (!empty($delivery['order_id'])) {
                 $oStmt = $this->db->prepare(
                     "SELECT delivery_fee, distance_km, driver_payout, additional_stop_fee,
-                            oversize_base_surcharge, oversize_increment_surcharge FROM orders WHERE id = ? LIMIT 1"
+                            oversize_base_surcharge, oversize_increment_surcharge,
+                            long_distance_base_surcharge, long_distance_increment_surcharge FROM orders WHERE id = ? LIMIT 1"
                 );
                 $oStmt->execute([$delivery['order_id']]);
                 $oRow = $oStmt->fetch(\PDO::FETCH_ASSOC);
@@ -2129,7 +2130,8 @@ class AdminDeliveryController {
                     $payout = \App\Helpers\PayoutHelper::calculateDriverPayout(
                         (float)($oRow['delivery_fee'] ?? 0),
                         (float)($oRow['additional_stop_fee'] ?? 0),
-                        (float)($oRow['oversize_base_surcharge'] ?? 0) + (float)($oRow['oversize_increment_surcharge'] ?? 0)
+                        (float)($oRow['oversize_base_surcharge'] ?? 0) + (float)($oRow['oversize_increment_surcharge'] ?? 0),
+                        (float)($oRow['long_distance_base_surcharge'] ?? 0) + (float)($oRow['long_distance_increment_surcharge'] ?? 0)
                     )['driver_net_payout'];
                     $this->db->prepare("UPDATE orders SET driver_payout = ? WHERE id = ?")
                              ->execute([$payout, $delivery['order_id']]);

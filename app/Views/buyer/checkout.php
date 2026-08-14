@@ -22,12 +22,14 @@ $deliveryFee = isset($deliveryFee) ? (float)$deliveryFee : 5.00;
 $additionalStopFee = isset($additionalStopFee) ? (float)$additionalStopFee : 0.00;
 $additionalStops = isset($additionalStops) ? (int)$additionalStops : 0;
 $oversizeSurcharge = isset($oversizeSurcharge) ? (float)$oversizeSurcharge : 0.00;
+$longDistanceSurcharge = isset($longDistanceSurcharge) ? (float)$longDistanceSurcharge : 0.00;
 $hardCapExceededShops = $hardCapExceededShops ?? [];
+$distanceHardCapExceededShops = $distanceHardCapExceededShops ?? [];
 // Canadian tax: GST 5% + QST 9.975% = 14.975% (Quebec)
 $gst   = round($subtotal * 0.05, 2);
 $qst   = round($subtotal * 0.09975, 2);
 $tax   = $gst + $qst;
-$total = $subtotal + $deliveryFee + $additionalStopFee + $oversizeSurcharge + $tax;
+$total = $subtotal + $deliveryFee + $additionalStopFee + $oversizeSurcharge + $longDistanceSurcharge + $tax;
 ?>
 <!DOCTYPE html>
 <html lang="<?= htmlspecialchars($currentLang) ?>">
@@ -503,6 +505,12 @@ $total = $subtotal + $deliveryFee + $additionalStopFee + $oversizeSurcharge + $t
                         <span>$<?= number_format($oversizeSurcharge, 2) ?></span>
                     </div>
                     <?php endif; ?>
+                    <?php if ($longDistanceSurcharge > 0): ?>
+                    <div class="summary-row">
+                        <span><?= $currentLang === 'fr' ? 'Surcharge longue distance' : 'Long-Distance Surcharge' ?></span>
+                        <span>$<?= number_format($longDistanceSurcharge, 2) ?></span>
+                    </div>
+                    <?php endif; ?>
                     <div class="summary-row">
                         <span><?= $currentLang === 'fr' ? 'TPS (5%)' : 'GST (5%)' ?></span>
                         <span>$<?= number_format($gst, 2) ?></span>
@@ -516,6 +524,7 @@ $total = $subtotal + $deliveryFee + $additionalStopFee + $oversizeSurcharge + $t
                         <span>$<?= number_format($total, 2) ?> CAD</span>
                     </div>
 
+                    <?php $anyHardCapExceeded = !empty($hardCapExceededShops) || !empty($distanceHardCapExceededShops); ?>
                     <?php if (!empty($hardCapExceededShops)): ?>
                     <div class="alert alert-error" style="margin-bottom:12px;">
                         <?= $currentLang === 'fr'
@@ -523,6 +532,16 @@ $total = $subtotal + $deliveryFee + $additionalStopFee + $oversizeSurcharge + $t
                             : 'Your order total from ' . htmlspecialchars(implode(', ', $hardCapExceededShops)) . ' exceeds the standard delivery weight limit (40kg). ' ?>
                         <a href="<?= url('contact') ?>"><?= $currentLang === 'fr' ? 'Contactez-nous pour un arrangement de fret personnalisé.' : 'Contact us for custom freight arrangements.' ?></a>
                     </div>
+                    <?php endif; ?>
+                    <?php if (!empty($distanceHardCapExceededShops)): ?>
+                    <div class="alert alert-error" style="margin-bottom:12px;">
+                        <?= $currentLang === 'fr'
+                            ? 'La distance de livraison pour ' . htmlspecialchars(implode(', ', $distanceHardCapExceededShops)) . ' dépasse la limite pour la livraison standard (20 km). '
+                            : 'The delivery distance for ' . htmlspecialchars(implode(', ', $distanceHardCapExceededShops)) . ' exceeds the standard delivery distance limit (20km). ' ?>
+                        <a href="<?= url('contact') ?>"><?= $currentLang === 'fr' ? 'Contactez-nous pour un arrangement personnalisé.' : 'Contact us for a custom arrangement.' ?></a>
+                    </div>
+                    <?php endif; ?>
+                    <?php if ($anyHardCapExceeded): ?>
                     <button type="submit" class="place-order-btn" id="placeOrderBtn" disabled style="opacity:.5;cursor:not-allowed;">
                         <span id="btnText"><?= $t['checkout_place_order'] ?? 'Place Order' ?> - $<?= number_format($total, 2) ?></span>
                         <div class="spinner" id="btnSpinner"></div>

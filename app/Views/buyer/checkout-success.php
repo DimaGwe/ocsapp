@@ -387,6 +387,18 @@ $interacInstructions = $interacSettings['interac_instructions'] ?? 'Please send 
                 <span>$<?= number_format($order['oversize_increment_surcharge'], 2) ?></span>
             </div>
             <?php endif; ?>
+            <?php if (($order['long_distance_base_surcharge'] ?? 0) > 0): ?>
+            <div class="total-row">
+                <span>Long-Distance Surcharge</span>
+                <span>$<?= number_format($order['long_distance_base_surcharge'], 2) ?></span>
+            </div>
+            <?php endif; ?>
+            <?php if (($order['long_distance_increment_surcharge'] ?? 0) > 0): ?>
+            <div class="total-row">
+                <span>Long-Distance Increment (<?= (int)($order['long_distance_increment_count'] ?? 0) ?> x 4km)</span>
+                <span>$<?= number_format($order['long_distance_increment_surcharge'], 2) ?></span>
+            </div>
+            <?php endif; ?>
             <div class="total-row grand">
                 <span>Total</span>
                 <span>$<?= number_format($order['total'] ?? 0, 2) ?> CAD</span>

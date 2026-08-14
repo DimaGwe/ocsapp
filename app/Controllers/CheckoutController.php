@@ -160,29 +160,44 @@ class CheckoutController
         }
         
         $defaultAddressCity = null;
+        $defaultAddress = null;
         foreach ($addresses as $addr) {
             if ($addr['is_default']) {
                 $defaultAddressCity = $addr['city'];
+                $defaultAddress = $addr;
                 break;
             }
         }
-        if ($defaultAddressCity === null && !empty($addresses)) {
+        if ($defaultAddress === null && !empty($addresses)) {
             $defaultAddressCity = $addresses[0]['city'];
+            $defaultAddress = $addresses[0];
         }
         $displayDeliveryFee = resolveDeliveryZoneFee($defaultAddressCity)['fee'];
         $stopFeePreview = calculateAdditionalStopFee($defaultAddressCity, count($ordersByShop));
 
-        // Oversize Surcharge (Sec 2.1/2.1a) preview - summed across shop-orders for display,
-        // same aggregate-total approach as the stop fee preview above. Also surfaces the
-        // 40kg hard cap pre-confirmation so the buyer isn't surprised at "Place Order".
+        // Oversize Surcharge (Sec 2.1/2.1a) + Long-Distance Surcharge (Sec 2.1b) preview -
+        // summed across shop-orders for display, same aggregate-total approach as the stop
+        // fee preview above. Also surfaces both hard caps pre-confirmation so the buyer
+        // isn't surprised at "Place Order".
         $oversizeTotalSurcharge = 0.00;
+        $longDistanceTotalSurcharge = 0.00;
         $hardCapExceededShops = [];
+        $distanceHardCapExceededShops = [];
         foreach ($ordersByShop as $shopId => $shopOrder) {
             $oversizeCalc = calculateOversizeSurcharge($defaultAddressCity, $shopOrder['weight_kg']);
             if ($oversizeCalc['hard_cap_exceeded']) {
                 $hardCapExceededShops[] = $shopOrder['shop_name'];
             }
             $oversizeTotalSurcharge += $oversizeCalc['total_surcharge'];
+
+            if ($defaultAddress) {
+                $distanceKm = resolveRoutedDistanceKm((int)$shopId, $defaultAddress);
+                $longDistanceCalc = calculateLongDistanceSurcharge($defaultAddressCity, $distanceKm);
+                if ($longDistanceCalc['hard_cap_exceeded']) {
+                    $distanceHardCapExceededShops[] = $shopOrder['shop_name'];
+                }
+                $longDistanceTotalSurcharge += $longDistanceCalc['total_surcharge'];
+            }
         }
 
         view('buyer/checkout', [
@@ -193,7 +208,9 @@ class CheckoutController
             'deliveryFee' => $displayDeliveryFee,
             'additionalStopFee' => $stopFeePreview['total_fee'],
             'additionalStops' => $stopFeePreview['additional_stops'],
+            'distanceHardCapExceededShops' => $distanceHardCapExceededShops,
             'oversizeSurcharge' => round($oversizeTotalSurcharge, 2),
+            'longDistanceSurcharge' => round($longDistanceTotalSurcharge, 2),
             'hardCapExceededShops' => $hardCapExceededShops,
         ]);
     }
@@ -313,6 +330,30 @@ class CheckoutController
             return;
         }
 
+        // Long-Distance Surcharge (Sec 2.1b) hard cap: same "block, don't silently charge
+        // ever-larger surcharges" rule as the Oversize Surcharge, at 20km routed distance.
+        // Distance is resolved once per shop here and reused below for the actual surcharge.
+        $shopDistances = [];
+        $distanceHardCapExceededShops = [];
+        if ($selectedAddress) {
+            foreach ($itemsByShop as $shopId => $items) {
+                $distanceKm = resolveRoutedDistanceKm((int)$shopId, $selectedAddress);
+                $shopDistances[$shopId] = $distanceKm;
+                if (calculateLongDistanceSurcharge($selectedAddress['city'] ?? null, $distanceKm)['hard_cap_exceeded']) {
+                    $distanceHardCapExceededShops[] = $shopId;
+                }
+            }
+        }
+        if (!empty($distanceHardCapExceededShops)) {
+            $this->db->rollBack();
+            jsonResponse([
+                'success' => false,
+                'message' => 'One or more shops in your cart are beyond the maximum distance for standard delivery (20km). Please contact us for a custom arrangement.',
+                'contact_url' => url('contact'),
+            ]);
+            return;
+        }
+
         // Additional-Stop Fee (Sec 2.2): each shop-order created below still gets its own
         // full delivery_fee (no consolidated-order model on the B2C side) - this surcharge
         // is a separate line item layered on top, split evenly across the sibling orders
@@ -351,6 +392,7 @@ class CheckoutController
             $deliveryFee = resolveDeliveryZoneFee($selectedAddress['city'] ?? null)['fee'];
             $additionalStopFee = $stopFeeShares[$shopId] ?? 0.00;
             $oversizeCalc = calculateOversizeSurcharge($selectedAddress['city'] ?? null, $shopWeights[$shopId] ?? 0.0);
+            $longDistanceCalc = calculateLongDistanceSurcharge($selectedAddress['city'] ?? null, $shopDistances[$shopId] ?? null);
             // Canadian tax: GST 5% + QST 9.975% = 14.975% (Quebec)
             $gstRate  = 0.05;
             $qstRate  = 0.09975;
@@ -358,7 +400,7 @@ class CheckoutController
             $qst      = round($subtotal * $qstRate, 2);
             $tax      = $gst + $qst;
             $discount = 0.00;
-            $total    = $subtotal + $deliveryFee + $additionalStopFee + $oversizeCalc['total_surcharge'] + $tax - $discount;
+            $total    = $subtotal + $deliveryFee + $additionalStopFee + $oversizeCalc['total_surcharge'] + $longDistanceCalc['total_surcharge'] + $tax - $discount;
 
             // Create Order — always starts as pending
             $orderSQL = "
@@ -366,6 +408,7 @@ class CheckoutController
                     user_id, shop_id, order_number, checkout_session_id,
                     subtotal, tax, delivery_fee, stop_count, additional_stop_fee,
                     total_weight_kg, oversize_base_surcharge, oversize_increment_count, oversize_increment_surcharge,
+                    routed_distance_km, long_distance_base_surcharge, long_distance_increment_count, long_distance_increment_surcharge,
                     discount, total,
                     payment_method, payment_status,
                     delivery_date, delivery_time,
@@ -376,6 +419,7 @@ class CheckoutController
                     :user_id, :shop_id, :order_number, :checkout_session_id,
                     :subtotal, :tax, :delivery_fee, :stop_count, :additional_stop_fee,
                     :total_weight_kg, :oversize_base_surcharge, :oversize_increment_count, :oversize_increment_surcharge,
+                    :routed_distance_km, :long_distance_base_surcharge, :long_distance_increment_count, :long_distance_increment_surcharge,
                     :discount, :total,
                     :payment_method, :payment_status,
                     :delivery_date, :delivery_time,
@@ -399,6 +443,10 @@ class CheckoutController
                 'oversize_base_surcharge' => $oversizeCalc['base_surcharge'],
                 'oversize_increment_count' => $oversizeCalc['increment_count'],
                 'oversize_increment_surcharge' => $oversizeCalc['increment_surcharge'],
+                'routed_distance_km' => $longDistanceCalc['distance_km'],
+                'long_distance_base_surcharge' => $longDistanceCalc['base_surcharge'],
+                'long_distance_increment_count' => $longDistanceCalc['increment_count'],
+                'long_distance_increment_surcharge' => $longDistanceCalc['increment_surcharge'],
                 'discount' => $discount,
                 'total' => $total,
                 'payment_method' => $paymentMethod,

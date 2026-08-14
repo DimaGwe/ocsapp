@@ -89,6 +89,9 @@ $orderDate = date('F j, Y', strtotime($order['created_at'] ?? 'now'));
                                     $oversizeBase      = (float)($order['oversize_base_surcharge'] ?? 0);
                                     $oversizeInc       = (float)($order['oversize_increment_surcharge'] ?? 0);
                                     $oversizeIncCount  = (int)($order['oversize_increment_count'] ?? 0);
+                                    $distanceBase      = (float)($order['long_distance_base_surcharge'] ?? 0);
+                                    $distanceInc       = (float)($order['long_distance_increment_surcharge'] ?? 0);
+                                    $distanceIncCount  = (int)($order['long_distance_increment_count'] ?? 0);
                                     $gst         = round($subtotal * 0.05, 2);
                                     $qst         = round($subtotal * 0.09975, 2);
                                     ?>
@@ -118,6 +121,18 @@ $orderDate = date('F j, Y', strtotime($order['created_at'] ?? 'now'));
                                     <tr>
                                         <td colspan="2" style="padding: 8px 12px; text-align: right; color: #6b7280; font-size: 14px;">Surdimensionnement suppl. (<?= $oversizeIncCount ?>x10kg) :</td>
                                         <td style="padding: 8px 12px; text-align: right; color: #4b5563; font-size: 14px;">$<?= number_format($oversizeInc, 2) ?></td>
+                                    </tr>
+                                    <?php endif; ?>
+                                    <?php if ($distanceBase > 0): ?>
+                                    <tr>
+                                        <td colspan="2" style="padding: 8px 12px; text-align: right; color: #6b7280; font-size: 14px;">Surcharge longue distance :</td>
+                                        <td style="padding: 8px 12px; text-align: right; color: #4b5563; font-size: 14px;">$<?= number_format($distanceBase, 2) ?></td>
+                                    </tr>
+                                    <?php endif; ?>
+                                    <?php if ($distanceInc > 0): ?>
+                                    <tr>
+                                        <td colspan="2" style="padding: 8px 12px; text-align: right; color: #6b7280; font-size: 14px;">Longue distance suppl. (<?= $distanceIncCount ?>x4km) :</td>
+                                        <td style="padding: 8px 12px; text-align: right; color: #4b5563; font-size: 14px;">$<?= number_format($distanceInc, 2) ?></td>
                                     </tr>
                                     <?php endif; ?>
                                     <tr>
@@ -255,6 +270,18 @@ $orderDate = date('F j, Y', strtotime($order['created_at'] ?? 'now'));
                                     <tr>
                                         <td colspan="2" style="padding: 8px 12px; text-align: right; color: #6b7280; font-size: 14px;">Oversize Increment / Surdimensionnement suppl. (<?= $oversizeIncCount ?>x10kg) :</td>
                                         <td style="padding: 8px 12px; text-align: right; color: #4b5563; font-size: 14px;">$<?= number_format($oversizeInc, 2) ?></td>
+                                    </tr>
+                                    <?php endif; ?>
+                                    <?php if ($distanceBase > 0): ?>
+                                    <tr>
+                                        <td colspan="2" style="padding: 8px 12px; text-align: right; color: #6b7280; font-size: 14px;">Long-Distance Surcharge / Surcharge longue distance :</td>
+                                        <td style="padding: 8px 12px; text-align: right; color: #4b5563; font-size: 14px;">$<?= number_format($distanceBase, 2) ?></td>
+                                    </tr>
+                                    <?php endif; ?>
+                                    <?php if ($distanceInc > 0): ?>
+                                    <tr>
+                                        <td colspan="2" style="padding: 8px 12px; text-align: right; color: #6b7280; font-size: 14px;">Long-Distance Increment / Longue distance suppl. (<?= $distanceIncCount ?>x4km) :</td>
+                                        <td style="padding: 8px 12px; text-align: right; color: #4b5563; font-size: 14px;">$<?= number_format($distanceInc, 2) ?></td>
                                     </tr>
                                     <?php endif; ?>
                                     <tr>

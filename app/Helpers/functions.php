@@ -683,7 +683,7 @@ function getBackupSupplierProduct(int $supplierProductId, array $excludeIds = []
 function resolveDeliveryZoneFee(?string $city): array {
     $appConfig = require BASE_PATH . '/config/app.php';
     $fallback  = (float)($appConfig['delivery_fee'] ?? 5.00);
-    $zeroRates = ['fee' => $fallback, 'zone_code' => null, 'stop_fee_rate' => 0.00, 'oversize_base_rate' => 0.00, 'oversize_increment_rate' => 0.00];
+    $zeroRates = ['fee' => $fallback, 'zone_code' => null, 'stop_fee_rate' => 0.00, 'oversize_base_rate' => 0.00, 'oversize_increment_rate' => 0.00, 'long_distance_base_rate' => 0.00, 'long_distance_increment_rate' => 0.00];
 
     if (!$city) {
         return $zeroRates;
@@ -716,7 +716,7 @@ function resolveDeliveryZoneFee(?string $city): array {
 
     try {
         $db = \Database::getConnection();
-        $stmt = $db->prepare("SELECT base_fee, stop_fee_rate, oversize_base_rate, oversize_increment_rate FROM delivery_zones WHERE code = ? AND is_active = 1 LIMIT 1");
+        $stmt = $db->prepare("SELECT base_fee, stop_fee_rate, oversize_base_rate, oversize_increment_rate, long_distance_base_rate, long_distance_increment_rate FROM delivery_zones WHERE code = ? AND is_active = 1 LIMIT 1");
         $stmt->execute([$zoneCode]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
@@ -730,10 +730,90 @@ function resolveDeliveryZoneFee(?string $city): array {
             'stop_fee_rate' => (float)($row['stop_fee_rate'] ?? 0.00),
             'oversize_base_rate' => (float)($row['oversize_base_rate'] ?? 0.00),
             'oversize_increment_rate' => (float)($row['oversize_increment_rate'] ?? 0.00),
+            'long_distance_base_rate' => (float)($row['long_distance_base_rate'] ?? 0.00),
+            'long_distance_increment_rate' => (float)($row['long_distance_increment_rate'] ?? 0.00),
         ];
     } catch (\Exception $e) {
         logger("resolveDeliveryZoneFee error: " . $e->getMessage(), 'error');
         return $zeroRates;
+    }
+}
+
+/**
+ * Marché Long-Distance Surcharge (Ecosystem Backend Requirements Sec. 2.1b) distance
+ * input. Resolves the routed (not straight-line) driving distance from a shop's pickup
+ * location to a buyer's delivery address, lazily geocoding and caching coordinates on
+ * first use for both sides - same pattern already proven in DistributionRequestController
+ * for B2B (business_profiles/suppliers geocode-then-persist). Tries Google Directions
+ * first, falls back to the free OSRM demo server (GeocodingHelper::getGoogleDirectionsRoute
+ * / getOSRMRoute).
+ *
+ * Returns null on any failure (missing address data, geocoding failure, routing failure).
+ * Callers must treat null as "no surcharge, don't block checkout" - never throw - matching
+ * resolveDeliveryZoneFee()'s existing graceful-degradation convention.
+ */
+function resolveRoutedDistanceKm(int $shopId, array $address): ?float {
+    require_once BASE_PATH . '/app/Helpers/GeocodingHelper.php';
+
+    try {
+        $db = \Database::getConnection();
+
+        $stmt = $db->prepare("SELECT latitude, longitude, address FROM shops WHERE id = ?");
+        $stmt->execute([$shopId]);
+        $shop = $stmt->fetch(\PDO::FETCH_ASSOC);
+        if (!$shop) {
+            return null;
+        }
+
+        $shopLat = $shop['latitude'];
+        $shopLng = $shop['longitude'];
+        if (!$shopLat || !$shopLng) {
+            if (empty($shop['address'])) {
+                return null;
+            }
+            $coords = \GeocodingHelper::geocodeFreeformAddress($shop['address']);
+            if (!$coords) {
+                return null;
+            }
+            $shopLat = $coords['lat'];
+            $shopLng = $coords['lng'];
+            $db->prepare("UPDATE shops SET latitude = ?, longitude = ? WHERE id = ?")
+               ->execute([$shopLat, $shopLng, $shopId]);
+        }
+
+        $addrLat = $address['latitude'] ?? null;
+        $addrLng = $address['longitude'] ?? null;
+        if (!$addrLat || !$addrLng) {
+            $coords = null;
+            if (!empty($address['postal_code'])) {
+                $coords = \GeocodingHelper::geocodePostalCode($address['postal_code']);
+            }
+            if (!$coords && !empty($address['city'])) {
+                $coords = \GeocodingHelper::geocodeAddress($address['city'], $address['state'] ?? '');
+            }
+            if (!$coords) {
+                return null;
+            }
+            $addrLat = $coords['lat'];
+            $addrLng = $coords['lng'];
+            if (!empty($address['id'])) {
+                $db->prepare("UPDATE addresses SET latitude = ?, longitude = ? WHERE id = ?")
+                   ->execute([$addrLat, $addrLng, $address['id']]);
+            }
+        }
+
+        $waypoints = [
+            ['lat' => (float)$shopLat, 'lng' => (float)$shopLng],
+            ['lat' => (float)$addrLat, 'lng' => (float)$addrLng],
+        ];
+
+        $route = \GeocodingHelper::getGoogleDirectionsRoute($waypoints)
+              ?? \GeocodingHelper::getOSRMRoute($waypoints);
+
+        return $route['distance_km'] ?? null;
+    } catch (\Throwable $e) {
+        logger("resolveRoutedDistanceKm error: " . $e->getMessage(), 'error');
+        return null;
     }
 }
 
@@ -819,6 +899,75 @@ function calculateOversizeSurcharge(?string $city, float $totalWeightKg): array 
     return [
         'hard_cap_exceeded' => false,
         'total_weight_kg' => round($totalWeightKg, 2),
+        'base_surcharge' => $baseSurcharge,
+        'increment_surcharge' => $incrementSurcharge,
+        'increment_count' => $incrementCount,
+        'total_surcharge' => round($baseSurcharge + $incrementSurcharge, 2),
+    ];
+}
+
+/**
+ * Marché Long-Distance Surcharge (Ecosystem Backend Requirements Sec. 2.1b).
+ * Tiered by routed pickup-to-delivery distance (see resolveRoutedDistanceKm) - each
+ * shop-order is checked independently, same per-shop-order model as the Oversize
+ * Surcharge, since there's no consolidated-order model on the B2C side:
+ *   < 8km              -> no surcharge (within included radius)
+ *   8km - 12km          -> flat zone-calibrated base surcharge
+ *   > 12km              -> base surcharge + $X per full 4km increment beyond 12km (rounded up)
+ *   > 20km              -> hard cap, standard checkout must be blocked entirely
+ *
+ * Fournisseur/B2B thresholds (10-15km base band, 5km increment, 30km cap) are not
+ * implemented here - this is Marché/B2C only.
+ *
+ * @return array{
+ *   hard_cap_exceeded: bool,
+ *   distance_km: float,
+ *   base_surcharge: float,
+ *   increment_surcharge: float,
+ *   increment_count: int,
+ *   total_surcharge: float
+ * }
+ */
+function calculateLongDistanceSurcharge(?string $city, ?float $distanceKm): array {
+    $threshold   = 8.0;  // km - base surcharge starts here (start of the 8-12km base band)
+    $baseBandEnd = 12.0; // km - increments start beyond this
+    $incrementKm = 4.0;  // km per increment
+    $hardCap     = 20.0; // km - standard checkout blocked beyond this
+
+    $zero = [
+        'hard_cap_exceeded' => false,
+        'distance_km' => $distanceKm !== null ? round($distanceKm, 2) : 0.00,
+        'base_surcharge' => 0.00,
+        'increment_surcharge' => 0.00,
+        'increment_count' => 0,
+        'total_surcharge' => 0.00,
+    ];
+
+    if ($distanceKm === null) {
+        return $zero;
+    }
+
+    if ($distanceKm > $hardCap) {
+        return array_merge($zero, ['hard_cap_exceeded' => true]);
+    }
+
+    if ($distanceKm < $threshold) {
+        return $zero;
+    }
+
+    $zone = resolveDeliveryZoneFee($city);
+    $baseSurcharge = round($zone['long_distance_base_rate'], 2);
+
+    $incrementCount = 0;
+    $incrementSurcharge = 0.00;
+    if ($distanceKm > $baseBandEnd) {
+        $incrementCount = (int)ceil(($distanceKm - $baseBandEnd) / $incrementKm);
+        $incrementSurcharge = round($incrementCount * $zone['long_distance_increment_rate'], 2);
+    }
+
+    return [
+        'hard_cap_exceeded' => false,
+        'distance_km' => round($distanceKm, 2),
         'base_surcharge' => $baseSurcharge,
         'increment_surcharge' => $incrementSurcharge,
         'increment_count' => $incrementCount,

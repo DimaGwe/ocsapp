@@ -107,6 +107,47 @@ class GeocodingHelper
     }
 
     /**
+     * Geocode a free-text address (e.g. shops.address, which has no structured
+     * city/postal_code columns) using OpenStreetMap Nominatim. Same shape as
+     * geocodeAddress() but takes one string instead of city+province.
+     */
+    public static function geocodeFreeformAddress(string $address, string $country = 'Canada'): ?array
+    {
+        $address = trim($address);
+        if (empty($address)) return null;
+
+        $params = http_build_query([
+            'q' => "{$address}, {$country}",
+            'countrycodes' => 'CA',
+            'format' => 'json',
+            'limit' => 1
+        ]);
+
+        $context = stream_context_create([
+            'http' => [
+                'method' => 'GET',
+                'header' => 'User-Agent: ' . self::USER_AGENT . "\r\n",
+                'timeout' => 10
+            ]
+        ]);
+
+        $url = self::NOMINATIM_URL . '?' . $params;
+        $response = @file_get_contents($url, false, $context);
+
+        if ($response !== false) {
+            $data = json_decode($response, true);
+            if (!empty($data) && isset($data[0]['lat'], $data[0]['lon'])) {
+                return [
+                    'lat' => (float)$data[0]['lat'],
+                    'lng' => (float)$data[0]['lon']
+                ];
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Calculate straight-line distance between two points using Haversine formula
      * Returns distance in kilometers
      */
@@ -209,6 +250,102 @@ class GeocodingHelper
         $route[] = $customerCoord;
 
         return $route;
+    }
+
+    /**
+     * Get driving route from the Google Directions API. Requires
+     * GOOGLE_DIRECTIONS_KEY in .env - returns null if unset or the call
+     * fails for any reason, so callers can fall back to getOSRMRoute().
+     * Same return shape as getOSRMRoute() so the two are interchangeable.
+     *
+     * @param array $waypoints Exactly 2 points: [['lat'=>float,'lng'=>float], ...]
+     * @return array|null {distance_km, duration_min, polyline: [[lat,lng],...]}
+     */
+    public static function getGoogleDirectionsRoute(array $waypoints): ?array
+    {
+        $key = env('GOOGLE_DIRECTIONS_KEY', '');
+        if (!$key || count($waypoints) < 2) {
+            return null;
+        }
+
+        $origin = $waypoints[0];
+        $dest   = $waypoints[count($waypoints) - 1];
+
+        $params = http_build_query([
+            'origin'      => "{$origin['lat']},{$origin['lng']}",
+            'destination' => "{$dest['lat']},{$dest['lng']}",
+            'mode'        => 'driving',
+            'key'         => $key,
+        ]);
+
+        $context = stream_context_create([
+            'http' => [
+                'method' => 'GET',
+                'header' => 'User-Agent: ' . self::USER_AGENT . "\r\n",
+                'timeout' => 10
+            ]
+        ]);
+
+        $url = 'https://maps.googleapis.com/maps/api/directions/json?' . $params;
+        $response = @file_get_contents($url, false, $context);
+        if ($response === false) {
+            return null;
+        }
+
+        $data = json_decode($response, true);
+        if (($data['status'] ?? '') !== 'OK' || empty($data['routes'][0])) {
+            return null;
+        }
+
+        $route = $data['routes'][0];
+        $leg   = $route['legs'][0] ?? null;
+        if (!$leg) {
+            return null;
+        }
+
+        // Decode the overview polyline (Google's encoded-polyline format) into [lat,lng] points.
+        $polyline = self::decodeGooglePolyline($route['overview_polyline']['points'] ?? '');
+
+        return [
+            'distance_km'  => round(($leg['distance']['value'] ?? 0) / 1000, 1),
+            'duration_min' => round(($leg['duration']['value'] ?? 0) / 60),
+            'polyline'     => $polyline,
+        ];
+    }
+
+    private static function decodeGooglePolyline(string $encoded): array
+    {
+        $points = [];
+        $index = 0;
+        $lat = 0;
+        $lng = 0;
+        $len = strlen($encoded);
+
+        while ($index < $len) {
+            $shift = 0;
+            $result = 0;
+            do {
+                $b = ord($encoded[$index++]) - 63;
+                $result |= ($b & 0x1f) << $shift;
+                $shift += 5;
+            } while ($b >= 0x20);
+            $dlat = ($result & 1) ? ~($result >> 1) : ($result >> 1);
+            $lat += $dlat;
+
+            $shift = 0;
+            $result = 0;
+            do {
+                $b = ord($encoded[$index++]) - 63;
+                $result |= ($b & 0x1f) << $shift;
+                $shift += 5;
+            } while ($b >= 0x20);
+            $dlng = ($result & 1) ? ~($result >> 1) : ($result >> 1);
+            $lng += $dlng;
+
+            $points[] = ['lat' => $lat / 1e5, 'lng' => $lng / 1e5];
+        }
+
+        return $points;
     }
 
     /**
