@@ -357,6 +357,16 @@ class DistributionAuthController
 
             $this->db->commit();
 
+            // Sec. 6, Option 2: automatic live NEQ registry lookup, on top of the
+            // format validation (Option 1) already passed above. Routed to an
+            // admin for double-tap confirmation before it's treated as final.
+            try {
+                require_once __DIR__ . '/../Helpers/NEQVerificationHelper.php';
+                \App\Helpers\NEQVerificationHelper::runLookup($businessProfileId, $data['neq_number']);
+            } catch (\Throwable $e) {
+                logger('NEQ verification trigger error: ' . $e->getMessage(), 'error');
+            }
+
             // Store pending verification state in session (no auto-login yet)
             $_SESSION['pending_business_verification'] = [
                 'business_profile_id' => $businessProfileId,

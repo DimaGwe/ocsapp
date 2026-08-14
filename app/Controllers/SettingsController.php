@@ -281,6 +281,15 @@ class SettingsController {
                     ['key' => 'dnb_ca_api_key', 'label' => 'API Key', 'placeholder' => ''],
                 ],
             ],
+            'req_quebec' => [
+                'title' => 'Registraire des entreprises du Québec (REQ)',
+                'desc'  => 'NEQ Verification, Option 2 (Sec. 6) - a live registry lookup that runs automatically alongside format validation (Option 1), routed to an admin for double-tap confirmation before a business is treated as verified. Until credentials are set here, every new business application falls back to manual admin review (same pattern as the credit bureau gate above).',
+                'icon'  => 'fa-landmark',
+                'link'  => 'https://www.registreentreprises.gouv.qc.ca/',
+                'keys'  => [
+                    ['key' => 'req_quebec_api_key', 'label' => 'API Key', 'placeholder' => ''],
+                ],
+            ],
         ];
     }
 
@@ -384,6 +393,8 @@ class SettingsController {
             $result = $this->pingTwilio(setting('twilio_account_sid', ''), setting('twilio_auth_token', ''));
         } elseif ($provider === 'equifax_ca' || $provider === 'dnb_ca') {
             $result = $this->pingCreditBureau($provider);
+        } elseif ($provider === 'req_quebec') {
+            $result = $this->pingREQ();
         }
 
         echo json_encode($result);
@@ -412,6 +423,24 @@ class SettingsController {
         return [
             'ok' => false,
             'message' => 'Credentials saved, but no live integration is built yet - net-30 approval falls back to manual admin review until this bureau\'s real API is wired up.',
+        ];
+    }
+
+    /**
+     * Same reasoning as pingCreditBureau() - the Registraire des entreprises
+     * du Québec doesn't publish a documented, credentialed real-time lookup
+     * API the way Corporations Canada or a commercial bureau does, so there's
+     * no verified endpoint/auth shape to build against yet. NEQ verification
+     * falls back to manual admin review until real API access exists.
+     */
+    private function pingREQ(): array {
+        if (!(bool)setting('req_quebec_api_key', '')) {
+            return ['ok' => false, 'message' => 'No credentials saved yet.'];
+        }
+
+        return [
+            'ok' => false,
+            'message' => 'Credentials saved, but no live integration is built yet - NEQ verification falls back to manual admin review until the Registraire\'s real API is wired up.',
         ];
     }
 

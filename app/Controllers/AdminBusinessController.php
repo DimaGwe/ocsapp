@@ -180,6 +180,9 @@ class AdminBusinessController
         $creditEventsStmt->execute([$id]);
         $creditEvents = $creditEventsStmt->fetchAll(\PDO::FETCH_ASSOC);
 
+        require_once __DIR__ . '/../Helpers/NEQVerificationHelper.php';
+        $neqVerification = \App\Helpers\NEQVerificationHelper::getLatest($id);
+
         view('admin.business-accounts.view', [
             'business'    => $business,
             'documents'   => $documents,
@@ -188,7 +191,89 @@ class AdminBusinessController
             'plans'       => $plans,
             'qualification' => $qualification,
             'creditEvents' => $creditEvents,
+            'neqVerification' => $neqVerification,
         ]);
+    }
+
+    /**
+     * Sec. 6 NEQ verification, double-tap step 1: admin acknowledges they've
+     * reviewed the lookup result (or its absence).
+     */
+    public function confirmNeqStep1(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect('admin/business-accounts');
+            return;
+        }
+        if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
+            setFlash('error', 'Invalid security token.');
+            back();
+            return;
+        }
+
+        $verificationId = (int)post('verification_id');
+        $businessId = (int)post('business_id');
+
+        require_once __DIR__ . '/../Helpers/NEQVerificationHelper.php';
+        \App\Helpers\NEQVerificationHelper::confirmStep1($verificationId, $_SESSION['user']['id'] ?? 0);
+
+        setFlash('success', 'Step 1 confirmed. Confirm again below to finalize NEQ verification.');
+        redirect('admin/business-accounts/view?id=' . $businessId);
+    }
+
+    /**
+     * Sec. 6 NEQ verification, double-tap step 2: a second, distinct
+     * confirmation - only accepted if step 1 already happened.
+     */
+    public function confirmNeqStep2(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect('admin/business-accounts');
+            return;
+        }
+        if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
+            setFlash('error', 'Invalid security token.');
+            back();
+            return;
+        }
+
+        $verificationId = (int)post('verification_id');
+        $businessId = (int)post('business_id');
+        $notes = sanitize(post('notes', ''));
+
+        require_once __DIR__ . '/../Helpers/NEQVerificationHelper.php';
+        $ok = \App\Helpers\NEQVerificationHelper::confirmStep2($verificationId, $_SESSION['user']['id'] ?? 0, $notes);
+
+        setFlash($ok ? 'success' : 'error', $ok
+            ? 'NEQ verification confirmed.'
+            : 'Step 1 must be confirmed first.');
+        redirect('admin/business-accounts/view?id=' . $businessId);
+    }
+
+    /**
+     * Sec. 6 NEQ verification: admin rejects the lookup (mismatch/fraud concern).
+     */
+    public function rejectNeq(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect('admin/business-accounts');
+            return;
+        }
+        if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
+            setFlash('error', 'Invalid security token.');
+            back();
+            return;
+        }
+
+        $verificationId = (int)post('verification_id');
+        $businessId = (int)post('business_id');
+        $notes = sanitize(post('notes', ''));
+
+        require_once __DIR__ . '/../Helpers/NEQVerificationHelper.php';
+        \App\Helpers\NEQVerificationHelper::reject($verificationId, $_SESSION['user']['id'] ?? 0, $notes);
+
+        setFlash('success', 'NEQ verification rejected.');
+        redirect('admin/business-accounts/view?id=' . $businessId);
     }
 
     /**

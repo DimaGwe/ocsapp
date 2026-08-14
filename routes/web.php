@@ -273,6 +273,9 @@ return [
     'POST /admin/business-accounts/suspend-net30' => ['AdminBusinessController', 'suspendNet30'],
     'POST /admin/business-accounts/reinstate-net30' => ['AdminBusinessController', 'reinstateNet30'],
     'POST /admin/business-accounts/delete' => ['AdminBusinessController', 'delete'],
+    'POST /admin/business-accounts/neq/confirm-step1' => ['AdminBusinessController', 'confirmNeqStep1'],
+    'POST /admin/business-accounts/neq/confirm-step2' => ['AdminBusinessController', 'confirmNeqStep2'],
+    'POST /admin/business-accounts/neq/reject' => ['AdminBusinessController', 'rejectNeq'],
 
     // Returns & Refund claims review (Ecosystem Backend Requirements Sec 4)
     'GET /admin/claims' => ['AdminClaimsController', 'index'],

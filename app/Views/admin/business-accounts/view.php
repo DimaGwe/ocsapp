@@ -359,6 +359,84 @@ ob_start();
         </div>
         <?php endif; ?>
 
+        <!-- NEQ Verification, Option 2 (Sec. 6): live registry lookup + double-tap admin confirmation -->
+        <?php if ($neqVerification): ?>
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-search"></i> NEQ Verification (Option 2 - Registry Lookup)
+                <?php if ($neqVerification['final_status'] === 'confirmed'): ?>
+                    <span style="font-size: 11px; font-weight: 600; background: #d1fae5; color: #065f46; padding: 2px 8px; border-radius: 10px; margin-left: 8px;">Confirmed</span>
+                <?php elseif ($neqVerification['final_status'] === 'rejected'): ?>
+                    <span style="font-size: 11px; font-weight: 600; background: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 10px; margin-left: 8px;">Rejected</span>
+                <?php else: ?>
+                    <span style="font-size: 11px; font-weight: 600; background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 10px; margin-left: 8px;">Pending Review</span>
+                <?php endif; ?>
+            </div>
+            <div class="info-grid">
+                <div class="info-group">
+                    <div class="info-label">Lookup Status</div>
+                    <div class="info-value">
+                        <?php if ($neqVerification['lookup_status'] === 'api_not_configured'): ?>
+                            No live Registraire integration configured - flagged for manual review.
+                            (<a href="<?= url('admin/settings/integrations') ?>">Configure in Settings &gt; Integrations</a>)
+                        <?php else: ?>
+                            <?= htmlspecialchars(ucfirst(str_replace('_', ' ', $neqVerification['lookup_status']))) ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php if (!empty($neqVerification['req_legal_name'])): ?>
+                <div class="info-group">
+                    <div class="info-label">Registry Legal Name</div>
+                    <div class="info-value"><?= htmlspecialchars($neqVerification['req_legal_name']) ?></div>
+                </div>
+                <?php endif; ?>
+                <?php if (!empty($neqVerification['req_status'])): ?>
+                <div class="info-group">
+                    <div class="info-label">Registry Business Status</div>
+                    <div class="info-value"><?= htmlspecialchars($neqVerification['req_status']) ?></div>
+                </div>
+                <?php endif; ?>
+            </div>
+
+            <?php if ($neqVerification['final_status'] === 'pending'): ?>
+                <div style="margin-top: 16px; padding: 14px; background: #f9fafb; border-radius: 8px;">
+                    <p style="margin: 0 0 12px; color: #666; font-size: 13px;">
+                        Double-tap confirmation required: two distinct confirmations before this NEQ is treated as verified.
+                    </p>
+                    <?php if (empty($neqVerification['admin_step1_confirmed_at'])): ?>
+                        <form action="<?= url('admin/business-accounts/neq/confirm-step1') ?>" method="POST" style="display: inline-block;">
+                            <input type="hidden" name="_csrf_token" value="<?= generateCsrfToken() ?>">
+                            <input type="hidden" name="verification_id" value="<?= $neqVerification['id'] ?>">
+                            <input type="hidden" name="business_id" value="<?= $business['business_id'] ?>">
+                            <button type="submit" class="btn btn-secondary">Step 1: I've Reviewed This</button>
+                        </form>
+                    <?php else: ?>
+                        <p style="margin: 0 0 12px; color: #065f46; font-size: 13px;">
+                            <i class="fas fa-check-circle"></i> Step 1 confirmed <?= date('M j, Y H:i', strtotime($neqVerification['admin_step1_confirmed_at'])) ?>.
+                        </p>
+                        <form action="<?= url('admin/business-accounts/neq/confirm-step2') ?>" method="POST" style="display: inline-block; margin-right: 8px;">
+                            <input type="hidden" name="_csrf_token" value="<?= generateCsrfToken() ?>">
+                            <input type="hidden" name="verification_id" value="<?= $neqVerification['id'] ?>">
+                            <input type="hidden" name="business_id" value="<?= $business['business_id'] ?>">
+                            <button type="submit" class="btn btn-primary">Step 2: Confirm NEQ Verified</button>
+                        </form>
+                        <form action="<?= url('admin/business-accounts/neq/reject') ?>" method="POST" style="display: inline-block;">
+                            <input type="hidden" name="_csrf_token" value="<?= generateCsrfToken() ?>">
+                            <input type="hidden" name="verification_id" value="<?= $neqVerification['id'] ?>">
+                            <input type="hidden" name="business_id" value="<?= $business['business_id'] ?>">
+                            <button type="submit" class="btn btn-danger">Reject</button>
+                        </form>
+                    <?php endif; ?>
+                </div>
+            <?php elseif (!empty($neqVerification['admin_notes'])): ?>
+                <div class="info-group" style="margin-top: 12px;">
+                    <div class="info-label">Admin Notes</div>
+                    <div class="info-value"><?= htmlspecialchars($neqVerification['admin_notes']) ?></div>
+                </div>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
+
         <!-- Verification Documents -->
         <div class="card" id="documentsPanel">
             <div class="card-title">
