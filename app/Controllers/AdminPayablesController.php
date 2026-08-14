@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use Dompdf\Dompdf;
 use Dompdf\Options;
+use App\Middlewares\AuthMiddleware;
 
 class AdminPayablesController
 {
@@ -19,6 +20,12 @@ class AdminPayablesController
      */
     public function index(): void
     {
+        // checkRouteAccess() (not the coarser handle('admin')) so this respects the
+        // super_admin+admin-only scoping in admin_permissions.php's route_access map —
+        // this controller had no auth check at all until now (same gap already found
+        // and fixed in AdminSellerPayoutsController this same round).
+        AuthMiddleware::checkRouteAccess();
+
         $statusFilter = get('status', '');
         $supplierFilter = (int)get('supplier_id', 0);
 
@@ -90,6 +97,8 @@ class AdminPayablesController
      */
     public function viewInvoice(): void
     {
+        AuthMiddleware::checkRouteAccess();
+
         $id = (int)get('id');
 
         $stmt = $this->db->prepare("
@@ -258,6 +267,8 @@ class AdminPayablesController
      */
     public function generateInvoice(): void
     {
+        AuthMiddleware::checkRouteAccess();
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             redirect('admin/purchase-orders');
             return;
@@ -473,6 +484,8 @@ class AdminPayablesController
      */
     public function downloadInvoicePdf(): void
     {
+        AuthMiddleware::checkRouteAccess();
+
         $id = (int)get('id');
 
         $stmt = $this->db->prepare("SELECT invoice_number FROM supplier_invoices WHERE id = ?");
@@ -505,6 +518,8 @@ class AdminPayablesController
      */
     public function recordPayment(): void
     {
+        AuthMiddleware::checkRouteAccess();
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             redirect('admin/payables');
             return;
@@ -692,6 +707,8 @@ class AdminPayablesController
      */
     public function export(): void
     {
+        AuthMiddleware::checkRouteAccess();
+
         $stmt = $this->db->query("
             SELECT si.invoice_number, s.company_name as supplier, po.po_number,
                    si.subtotal, si.tax_gst, si.tax_qst, si.shipping, si.total_amount,

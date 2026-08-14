@@ -106,6 +106,7 @@ return [
         '/admin/suppliers' => ['super_admin', 'admin'],
         '/admin/purchase-orders' => ['super_admin', 'admin'],
         '/admin/distribution' => ['super_admin', 'admin'],
+        '/admin/payables' => ['super_admin', 'admin'],
         '/admin/receivables' => ['super_admin', 'admin'],
         '/admin/seller-payouts' => ['super_admin', 'admin'],
 

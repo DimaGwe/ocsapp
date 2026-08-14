@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use PDO;
 use Exception;
+use App\Middlewares\AuthMiddleware;
 
 require_once __DIR__ . '/../Helpers/AdminPermissionHelper.php';
 
@@ -36,6 +37,8 @@ class AdminDeliveryController {
      * Delivery Management Dashboard (Unified B2C + B2B)
      */
     public function index() {
+        AuthMiddleware::checkRouteAccess();
+
         // Get overview statistics (B2C orders)
         $stats = $this->getDeliveryStats();
 
@@ -76,6 +79,8 @@ class AdminDeliveryController {
      */
     public function drivers(): void
     {
+        AuthMiddleware::checkRouteAccess();
+
         $search       = get('search', '');
         $statusFilter = get('status', '');
         $perPage      = 20;
@@ -155,6 +160,8 @@ class AdminDeliveryController {
      * Delivery Staff Management
      */
     public function staff() {
+        AuthMiddleware::checkRouteAccess();
+
         $page = max(1, (int)get('page', 1));
         $perPage = 20;
         $offset = ($page - 1) * $perPage;
@@ -302,6 +309,8 @@ class AdminDeliveryController {
      */
     public function markUnderReview(): void
     {
+        AuthMiddleware::checkRouteAccess();
+
         if (!isPost()) { jsonResponse(['error' => 'Method not allowed'], 405); return; }
         verifyCsrfForApi();
 
@@ -369,6 +378,8 @@ class AdminDeliveryController {
      */
     public function requestInterview(): void
     {
+        AuthMiddleware::checkRouteAccess();
+
         if (!isPost()) { jsonResponse(['error' => 'Method not allowed'], 405); return; }
         verifyCsrfForApi();
 
@@ -444,6 +455,8 @@ class AdminDeliveryController {
      */
     public function sendApplicationMessage(): void
     {
+        AuthMiddleware::checkRouteAccess();
+
         if (!isPost()) { jsonResponse(['error' => 'Method not allowed'], 405); return; }
         verifyCsrfForApi();
 
@@ -520,6 +533,8 @@ class AdminDeliveryController {
      */
     public function getApplicationMessages(): void
     {
+        AuthMiddleware::checkRouteAccess();
+
         $appId = (int) get('application_id', 0);
         if (!$appId) { jsonResponse(['error' => 'Invalid ID'], 422); return; }
 
@@ -546,6 +561,8 @@ class AdminDeliveryController {
      */
     public function approveApplicationPipeline(): void
     {
+        AuthMiddleware::checkRouteAccess();
+
         if (!isPost()) { redirect(url('admin/delivery/staff')); return; }
         verifyCsrfForApi();
 
@@ -688,6 +705,8 @@ class AdminDeliveryController {
      */
     public function rejectApplicationPipeline(): void
     {
+        AuthMiddleware::checkRouteAccess();
+
         if (!isPost()) { redirect(url('admin/delivery/staff')); return; }
         verifyCsrfForApi();
 
@@ -769,6 +788,8 @@ class AdminDeliveryController {
      * Add New Delivery Driver
      */
     public function addDriver() {
+        AuthMiddleware::checkRouteAccess();
+
         if (!isPost()) {
             return view('admin/delivery/add-driver', [
                 'pageTitle' => 'Add Delivery Driver'
@@ -864,6 +885,8 @@ class AdminDeliveryController {
      * Show edit driver form (GET)
      */
     public function editDriver() {
+        AuthMiddleware::checkRouteAccess();
+
         $driverId = (int) get('id', 0);
         
         if (!$driverId) {
@@ -919,6 +942,8 @@ class AdminDeliveryController {
      * Update delivery driver (POST)
      */
     public function updateDriver() {
+        AuthMiddleware::checkRouteAccess();
+
         if (!isPost()) {
             redirect(url('admin/delivery/staff'));
             return;
@@ -1024,6 +1049,8 @@ class AdminDeliveryController {
      * Active Deliveries (Unified B2C + B2B)
      */
     public function activeDeliveries() {
+        AuthMiddleware::checkRouteAccess();
+
         $status = get('status', 'all');
         $type = get('type', 'all'); // all | orders | distribution
 
@@ -1195,6 +1222,8 @@ class AdminDeliveryController {
      * Single Delivery Details
      */
     public function deliveryDetails() {
+        AuthMiddleware::checkRouteAccess();
+
         $deliveryId = (int) get('id', 0);
 
         if (!$deliveryId) {
@@ -1289,11 +1318,25 @@ class AdminDeliveryController {
             $stmt->execute();
             $availableDrivers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+            // Weight discrepancy flagged by driver at pickup (Ecosystem Backend
+            // Requirements Sec. 3) - most recent one for this delivery, if any.
+            $stmt = $this->db->prepare("
+                SELECT wd.*, CONCAT(u.first_name, ' ', u.last_name) AS driver_name
+                FROM order_weight_discrepancies wd
+                LEFT JOIN users u ON u.id = wd.driver_id
+                WHERE wd.delivery_id = ?
+                ORDER BY wd.created_at DESC
+                LIMIT 1
+            ");
+            $stmt->execute([$deliveryId]);
+            $weightDiscrepancy = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+
             return view('admin/delivery/details', [
                 'delivery' => $delivery,
                 'orderItems' => $orderItems,
                 'statusHistory' => $statusHistory,
                 'availableDrivers' => $availableDrivers,
+                'weightDiscrepancy' => $weightDiscrepancy,
                 'pageTitle' => 'Delivery Details'
             ]);
 
@@ -1308,6 +1351,8 @@ class AdminDeliveryController {
      * Assign Delivery to Driver
      */
     public function assignDelivery() {
+        AuthMiddleware::checkRouteAccess();
+
         if (!isPost()) {
             return jsonResponse(['error' => 'Invalid request'], 400);
         }
@@ -1423,6 +1468,8 @@ class AdminDeliveryController {
      * Assign driver to a B2B distribution request
      */
     public function assignDistributionDriver() {
+        AuthMiddleware::checkRouteAccess();
+
         if (!isPost()) {
             return jsonResponse(['error' => 'Invalid request'], 400);
         }
@@ -1564,6 +1611,8 @@ class AdminDeliveryController {
      * Delivery Zones Management
      */
     public function zones() {
+        AuthMiddleware::checkRouteAccess();
+
         $stmt = $this->db->prepare("
             SELECT 
                 dz.*,
@@ -1581,6 +1630,8 @@ class AdminDeliveryController {
     }
 
     public function getZone(): void {
+        AuthMiddleware::checkRouteAccess();
+
         header('Content-Type: application/json');
         $id = (int) get('id', 0);
         if (!$id) { echo json_encode(['error' => 'Invalid ID']); return; }
@@ -1591,6 +1642,8 @@ class AdminDeliveryController {
     }
 
     public function createZone(): void {
+        AuthMiddleware::checkRouteAccess();
+
         if (!isPost()) { jsonResponse(['error' => 'Method not allowed'], 405); return; }
         verifyCsrfForApi();
         $name     = trim(post('name', ''));
@@ -1628,6 +1681,8 @@ class AdminDeliveryController {
     }
 
     public function updateZone(): void {
+        AuthMiddleware::checkRouteAccess();
+
         if (!isPost()) { jsonResponse(['error' => 'Method not allowed'], 405); return; }
         verifyCsrfForApi();
         $id   = (int) post('id', 0);
@@ -1668,6 +1723,8 @@ class AdminDeliveryController {
     }
 
     public function toggleZone(): void {
+        AuthMiddleware::checkRouteAccess();
+
         if (!isPost()) { jsonResponse(['error' => 'Method not allowed'], 405); return; }
         verifyCsrfForApi();
         $id       = (int) post('id', 0);
@@ -1686,6 +1743,8 @@ class AdminDeliveryController {
      * Analytics & Reports
      */
     public function analytics() {
+        AuthMiddleware::checkRouteAccess();
+
         $period = get('period', 'week');
         
         // Get performance metrics
@@ -1710,6 +1769,8 @@ class AdminDeliveryController {
      * Live Map — real-time driver positions
      */
     public function liveMap() {
+        AuthMiddleware::checkRouteAccess();
+
         return view('admin/delivery/live-map', [
             'pageTitle' => 'Live Driver Map',
             'gmapsKey'  => env('GOOGLE_MAPS_KEY', 'AIzaSyB43koHaoLagCIiwoEydQXPoQAfglYGTqY'),
@@ -1720,6 +1781,8 @@ class AdminDeliveryController {
      * Route Replay — pick a driver + date and replay their GPS path
      */
     public function routeReplay() {
+        AuthMiddleware::checkRouteAccess();
+
         // Get all drivers that have location log entries
         $drivers = $this->db->query("
             SELECT DISTINCT u.id, CONCAT(u.first_name, ' ', u.last_name) AS name
@@ -1739,6 +1802,8 @@ class AdminDeliveryController {
      * Route Replay Data API — returns GPS pings for a driver on a given date
      */
     public function replayData() {
+        AuthMiddleware::checkRouteAccess();
+
         header('Content-Type: application/json');
 
         $driverId = (int) ($_GET['driver_id'] ?? 0);
@@ -1797,6 +1862,8 @@ class AdminDeliveryController {
      * Route Optimizer — plan multi-stop routes
      */
     public function routeOptimizer() {
+        AuthMiddleware::checkRouteAccess();
+
         // Get unassigned/pending deliveries
         $stmt = $this->db->prepare("
             SELECT da.id, da.delivery_address, da.pickup_address, da.status, da.tracking_code,
@@ -1835,6 +1902,8 @@ class AdminDeliveryController {
      * Optimize Route — API endpoint for route optimization
      */
     public function optimizeRoute() {
+        AuthMiddleware::checkRouteAccess();
+
         header('Content-Type: application/json');
 
         $input = json_decode(file_get_contents('php://input'), true);
@@ -1907,6 +1976,8 @@ class AdminDeliveryController {
      * Export earnings as CSV
      */
     public function exportEarnings() {
+        AuthMiddleware::checkRouteAccess();
+
         $status = post('status', '');
         $driverId = post('driver_id', '');
         $dateFrom = post('date_from', '');
@@ -1984,6 +2055,8 @@ class AdminDeliveryController {
      * Earnings & Payouts
      */
     public function earnings() {
+        AuthMiddleware::checkRouteAccess();
+
         $status = get('status', 'pending');
         
         $whereClause = "WHERE 1=1";
@@ -2045,6 +2118,8 @@ class AdminDeliveryController {
      * Assign or reassign driver to delivery
      */
     public function assignDriverToDelivery() {
+        AuthMiddleware::checkRouteAccess();
+
         if (!isPost()) {
             return jsonResponse(['error' => 'Invalid request'], 400);
         }
@@ -2251,6 +2326,8 @@ class AdminDeliveryController {
      * Mark earnings as paid
      */
     public function markPaid() {
+        AuthMiddleware::checkRouteAccess();
+
         if (!isPost()) {
             return jsonResponse(['error' => 'Invalid request'], 400);
         }
@@ -2513,6 +2590,8 @@ class AdminDeliveryController {
  * Add this method to AdminDeliveryController
  */
 public function driverDetails() {
+    AuthMiddleware::checkRouteAccess();
+
     $driverId = (int) get('id', 0);
     
     if (!$driverId) {
@@ -2874,6 +2953,8 @@ public function cancelPickupRequest(): void {
  */
 public function requestBgcheck(): void
 {
+    AuthMiddleware::checkRouteAccess();
+
     verifyCsrfForApi();
 
     $appId   = (int) post('application_id', 0);
@@ -2977,6 +3058,8 @@ public function requestBgcheck(): void
  */
 public function requestComplianceDocs(): void
 {
+    AuthMiddleware::checkRouteAccess();
+
     verifyCsrfForApi();
 
     $driverId = (int) post('driver_id', 0);
@@ -3062,6 +3145,8 @@ public function requestComplianceDocs(): void
  */
 public function verifyBgcheck(): void
 {
+    AuthMiddleware::checkRouteAccess();
+
     verifyCsrfForApi();
 
     $appId   = (int) post('application_id', 0);
@@ -3142,6 +3227,8 @@ private const COMPLIANCE_UPLOAD_DIR = __DIR__ . '/../../storage/uploads/complian
  */
 public function complianceDownload(): void
 {
+    AuthMiddleware::checkRouteAccess();
+
     if (!isset($_SESSION['user']) || !\AdminPermissionHelper::isAdminRole($_SESSION['user']['role'] ?? null)) {
         http_response_code(403); exit('Access denied.');
     }
