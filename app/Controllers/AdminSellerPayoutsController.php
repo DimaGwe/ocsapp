@@ -2,6 +2,8 @@
 
 namespace App\Controllers;
 
+use App\Middlewares\AuthMiddleware;
+
 /**
  * AdminSellerPayoutsController (Ecosystem Backend Requirements Sec. 7)
  *
@@ -27,6 +29,12 @@ class AdminSellerPayoutsController
      */
     public function index(): void
     {
+        // checkRouteAccess() (not the coarser handle('admin')) so this respects the
+        // super_admin+admin-only scoping already configured in admin_permissions.php's
+        // route_access map - handle('admin') would let admin_staff in too, which is too
+        // broad for a page that marks real money as paid.
+        AuthMiddleware::checkRouteAccess();
+
         $statusFilter = get('status', 'pending');
         $shopFilter = (int)get('shop_id', 0);
 
@@ -86,6 +94,8 @@ class AdminSellerPayoutsController
      */
     public function markPaid(): void
     {
+        AuthMiddleware::checkRouteAccess();
+
         $token = post(env('CSRF_TOKEN_NAME', '_csrf_token'), '');
         if (!verifyCsrfToken($token)) {
             setFlash('error', 'Invalid security token. Please try again.');
