@@ -44,7 +44,7 @@ $t = ([
         'lbl_route'         => 'Delivery Route',
         'lbl_manual'        => 'Manual:',
         'items_total'       => 'Items Total',
-        'service_fee'       => 'Service Fee',
+        'service_fee'       => 'Procurement Fee',
         'handling'          => 'Handling',
         'delivery'          => 'Delivery',
         'subtotal'          => 'Subtotal',
@@ -117,7 +117,7 @@ $t = ([
         'lbl_route'         => 'Itinéraire de livraison',
         'lbl_manual'        => 'Manuel :',
         'items_total'       => 'Total des articles',
-        'service_fee'       => 'Frais de service',
+        'service_fee'       => 'Frais d\'approvisionnement',
         'handling'          => 'Manutention',
         'delivery'          => 'Livraison',
         'subtotal'          => 'Sous-total',
@@ -497,10 +497,6 @@ unset($_createT);
                             <div class="fee-row">
                                 <span><?= $t['service_fee'] ?> (<span id="serviceFeePercent">0</span>%)</span>
                                 <span id="serviceFeeAmount">$0.00</span>
-                            </div>
-                            <div class="fee-row">
-                                <span><?= $t['handling'] ?> (<span id="handlingWeightInfo">0 kg</span> × $0.20/kg)</span>
-                                <span id="handlingFeeAmount">$0.00</span>
                             </div>
                             <div class="fee-row" id="deliveryFeeRow">
                                 <span><?= $t['delivery'] ?> (<span id="deliveryInfo">Free</span>)</span>
@@ -1071,16 +1067,17 @@ unset($_createT);
             }
         });
 
-        // Pricing Tiers Configuration
+        // Delivery-vehicle tiers (service-fee % removed - Approvisionnement charges a
+        // flat 1% procurement fee, not a tiered service fee - see PROCUREMENT_FEE_RATE)
         const PRICING_TIERS = {
-            1: { maxAmount: 500, serviceFee: 0.25, freeDeliveryKm: 5, perKmRate: 1.00, vehicle: 'Small Car/Van' },
-            2: { maxAmount: 1500, serviceFee: 0.20, freeDeliveryKm: 5, perKmRate: 1.30, vehicle: 'Medium Truck/Van' },
-            3: { maxAmount: 3000, serviceFee: 0.15, freeDeliveryKm: 5, perKmRate: 2.00, vehicle: 'Large Truck/Forklift' },
-            4: { maxAmount: Infinity, serviceFee: 0.12, freeDeliveryKm: 5, perKmRate: 2.20, vehicle: 'Large Truck/Forklift' }
+            1: { maxAmount: 500, freeDeliveryKm: 5, perKmRate: 1.00, vehicle: 'Small Car/Van' },
+            2: { maxAmount: 1500, freeDeliveryKm: 5, perKmRate: 1.30, vehicle: 'Medium Truck/Van' },
+            3: { maxAmount: 3000, freeDeliveryKm: 5, perKmRate: 2.00, vehicle: 'Large Truck/Forklift' },
+            4: { maxAmount: Infinity, freeDeliveryKm: 5, perKmRate: 2.20, vehicle: 'Large Truck/Forklift' }
         };
 
-        // Weight-based handling fee: $0.20 per kg
-        const HANDLING_RATE_PER_KG = 0.20;
+        // Approvisionnement procurement fee: 1% flat, not tiered
+        const PROCUREMENT_FEE_RATE = 0.01;
 
         // Currently selected tip percentage
         let selectedTipPercent = 0;
@@ -1204,18 +1201,15 @@ unset($_createT);
                 // Get delivery distance (auto-calculated or manual)
                 const distance = parseFloat(document.getElementById('deliveryDistance').value) || 0;
 
-                // Calculate fees - weight-based handling
-                const serviceFee = catalogTotal * tierConfig.serviceFee;
-                const handlingFee = totalWeightKg * HANDLING_RATE_PER_KG;
+                // Calculate fees
+                const serviceFee = catalogTotal * PROCUREMENT_FEE_RATE;
                 const deliveryFee = calculateDeliveryFee(distance, tier);
 
                 // Update fee breakdown
                 feeBreakdown.style.display = 'block';
                 document.getElementById('itemsTotal').textContent = '$' + catalogTotal.toFixed(2) + (shoppingCount > 0 ? '+' : '');
-                document.getElementById('serviceFeePercent').textContent = (tierConfig.serviceFee * 100).toFixed(0);
+                document.getElementById('serviceFeePercent').textContent = (PROCUREMENT_FEE_RATE * 100).toFixed(0);
                 document.getElementById('serviceFeeAmount').textContent = '$' + serviceFee.toFixed(2);
-                document.getElementById('handlingWeightInfo').textContent = totalWeightKg.toFixed(1) + ' kg';
-                document.getElementById('handlingFeeAmount').textContent = '$' + handlingFee.toFixed(2);
 
                 // Update delivery info
                 if (distance <= tierConfig.freeDeliveryKm) {
@@ -1228,7 +1222,7 @@ unset($_createT);
                 }
 
                 // Calculate subtotal (before tax and tip)
-                const subtotal = catalogTotal + serviceFee + handlingFee + deliveryFee;
+                const subtotal = catalogTotal + serviceFee + deliveryFee;
                 summarySubtotal.style.display = 'flex';
                 document.getElementById('subtotalAmount').textContent = '$' + subtotal.toFixed(2) + (shoppingCount > 0 ? '+' : '');
 

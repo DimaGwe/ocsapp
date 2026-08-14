@@ -10,16 +10,20 @@ class DistributionRequestController
 {
     private $db;
 
-    // Pricing Tiers Configuration (must match create.php JavaScript)
+    // Delivery-vehicle tiers (must match create.php/edit.php JavaScript). Service-fee
+    // percentages removed — Ecosystem Backend Requirements Sec. 6 / the live
+    // /distribution marketing page both promise a flat 1% procurement fee, not a
+    // tiered 12-25% "service fee". See PROCUREMENT_FEE_RATE below.
     private const PRICING_TIERS = [
-        1 => ['maxAmount' => 500, 'serviceFee' => 0.25, 'freeDeliveryKm' => 5, 'perKmRate' => 1.00],
-        2 => ['maxAmount' => 1500, 'serviceFee' => 0.20, 'freeDeliveryKm' => 5, 'perKmRate' => 1.30],
-        3 => ['maxAmount' => 3000, 'serviceFee' => 0.15, 'freeDeliveryKm' => 5, 'perKmRate' => 2.00],
-        4 => ['maxAmount' => PHP_FLOAT_MAX, 'serviceFee' => 0.12, 'freeDeliveryKm' => 5, 'perKmRate' => 2.20]
+        1 => ['maxAmount' => 500, 'freeDeliveryKm' => 5, 'perKmRate' => 1.00],
+        2 => ['maxAmount' => 1500, 'freeDeliveryKm' => 5, 'perKmRate' => 1.30],
+        3 => ['maxAmount' => 3000, 'freeDeliveryKm' => 5, 'perKmRate' => 2.00],
+        4 => ['maxAmount' => PHP_FLOAT_MAX, 'freeDeliveryKm' => 5, 'perKmRate' => 2.20]
     ];
 
-    // Weight-based handling fee: $0.20 per kg
-    private const HANDLING_RATE_PER_KG = 0.20;
+    // Approvisionnement procurement fee (Ecosystem Backend Requirements Sec. 6):
+    // 1% flat on items total, not tiered, no markup on supplier prices.
+    private const PROCUREMENT_FEE_RATE = 0.01;
 
     // Tax Rates (Quebec)
     private const GST_RATE = 0.05;       // 5%
@@ -84,11 +88,10 @@ class DistributionRequestController
         $tier = $this->getTier($itemsTotal);
         $tierConfig = self::PRICING_TIERS[$tier];
 
-        $serviceFee = $itemsTotal * $tierConfig['serviceFee'];
-        $handlingFee = $totalWeightKg * self::HANDLING_RATE_PER_KG;
+        $procurementFee = $itemsTotal * self::PROCUREMENT_FEE_RATE;
         $deliveryFee = $this->calculateDeliveryFee($deliveryDistance, $tier);
 
-        $subtotal = $itemsTotal + $serviceFee + $handlingFee + $deliveryFee;
+        $subtotal = $itemsTotal + $procurementFee + $deliveryFee;
         $gstAmount = $subtotal * self::GST_RATE;
         $qstAmount = $subtotal * self::QST_RATE;
         $totalAmount = $subtotal + $gstAmount + $qstAmount + $tipAmount;
@@ -96,8 +99,8 @@ class DistributionRequestController
         return [
             'tier' => $tier,
             'items_total' => round($itemsTotal, 2),
-            'service_fee' => round($serviceFee, 2),
-            'handling_fee' => round($handlingFee, 2),
+            'service_fee' => round($procurementFee, 2), // column/key name kept for schema compat; now the flat 1% procurement fee (Sec. 6)
+            'handling_fee' => 0.00, // no per-kg handling fee in the documented model — kept for schema compat
             'total_weight_kg' => round($totalWeightKg, 2),
             'delivery_fee' => round($deliveryFee, 2),
             'tip_amount' => round($tipAmount, 2),
@@ -832,8 +835,8 @@ class DistributionRequestController
                 'tier' => $tier,
                 'tier_vehicle' => $tierVehicles[$tier] ?? 'Standard',
                 'items_total' => $request['items_total'] ?? $catalogTotal,
-                'service_fee' => $request['service_fee'] ?? ($catalogTotal * $tierConfig['serviceFee']),
-                'service_fee_percent' => round($tierConfig['serviceFee'] * 100),
+                'service_fee' => $request['service_fee'] ?? ($catalogTotal * self::PROCUREMENT_FEE_RATE),
+                'service_fee_percent' => self::PROCUREMENT_FEE_RATE * 100,
                 'handling_fee' => $request['handling_fee'] ?? 0,
                 'total_weight_kg' => $request['total_weight_kg'] ?? 0,
                 'delivery_distance' => $request['delivery_distance'] ?? 0,

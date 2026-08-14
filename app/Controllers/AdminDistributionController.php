@@ -12,16 +12,18 @@ class AdminDistributionController
 {
     private $db;
 
-    // Pricing Tiers Configuration (must match DistributionRequestController)
+    // Delivery-vehicle tiers (must match DistributionRequestController). Service-fee
+    // percentages removed — Approvisionnement charges a flat 1% procurement fee
+    // (Ecosystem Backend Requirements Sec. 6), not a tiered service fee.
     private const PRICING_TIERS = [
-        1 => ['maxAmount' => 500, 'serviceFee' => 0.25, 'freeDeliveryKm' => 5, 'perKmRate' => 1.00],
-        2 => ['maxAmount' => 1500, 'serviceFee' => 0.20, 'freeDeliveryKm' => 5, 'perKmRate' => 1.30],
-        3 => ['maxAmount' => 3000, 'serviceFee' => 0.15, 'freeDeliveryKm' => 5, 'perKmRate' => 2.00],
-        4 => ['maxAmount' => PHP_FLOAT_MAX, 'serviceFee' => 0.12, 'freeDeliveryKm' => 5, 'perKmRate' => 2.20]
+        1 => ['maxAmount' => 500, 'freeDeliveryKm' => 5, 'perKmRate' => 1.00],
+        2 => ['maxAmount' => 1500, 'freeDeliveryKm' => 5, 'perKmRate' => 1.30],
+        3 => ['maxAmount' => 3000, 'freeDeliveryKm' => 5, 'perKmRate' => 2.00],
+        4 => ['maxAmount' => PHP_FLOAT_MAX, 'freeDeliveryKm' => 5, 'perKmRate' => 2.20]
     ];
 
-    // Weight-based handling fee: $0.20 per kg
-    private const HANDLING_RATE_PER_KG = 0.20;
+    // Approvisionnement procurement fee: 1% flat, not tiered.
+    private const PROCUREMENT_FEE_RATE = 0.01;
 
     // Tax Rates (Quebec)
     private const GST_RATE = 0.05;       // 5%
@@ -231,8 +233,8 @@ class AdminDistributionController
                 'tier' => $tier,
                 'tier_vehicle' => $tierVehicles[$tier] ?? 'Standard',
                 'items_total' => $request['items_total'] ?? $catalogTotal,
-                'service_fee' => $request['service_fee'] ?? ($catalogTotal * $tierConfig['serviceFee']),
-                'service_fee_percent' => round($tierConfig['serviceFee'] * 100),
+                'service_fee' => $request['service_fee'] ?? ($catalogTotal * self::PROCUREMENT_FEE_RATE),
+                'service_fee_percent' => self::PROCUREMENT_FEE_RATE * 100,
                 'handling_fee' => $request['handling_fee'] ?? 0,
                 'total_weight_kg' => $request['total_weight_kg'] ?? 0,
                 'delivery_distance' => $request['delivery_distance'] ?? 0,

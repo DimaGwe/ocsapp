@@ -236,12 +236,8 @@ require __DIR__ . '/../layout-header.php';
                                 <span id="itemsTotal">$0.00</span>
                             </div>
                             <div class="fee-row">
-                                <span>Service Fee (<span id="serviceFeePercent">0</span>%)</span>
+                                <span>Procurement Fee (<span id="serviceFeePercent">0</span>%)</span>
                                 <span id="serviceFeeAmount">$0.00</span>
-                            </div>
-                            <div class="fee-row">
-                                <span>Handling (<span id="handlingWeightInfo">0 kg</span> × $0.20/kg)</span>
-                                <span id="handlingFeeAmount">$0.00</span>
                             </div>
                             <div class="fee-row" id="deliveryFeeRow">
                                 <span>Delivery (<span id="deliveryInfo">Free</span>)</span>
@@ -473,15 +469,15 @@ require __DIR__ . '/../layout-header.php';
             }
         });
 
-        // Pricing Tiers
+        // Delivery-vehicle tiers (service-fee % removed - flat 1% procurement fee below)
         const PRICING_TIERS = {
-            1: { maxAmount: 500, serviceFee: 0.25, freeDeliveryKm: 5, perKmRate: 1.00, vehicle: 'Small Car/Van' },
-            2: { maxAmount: 1500, serviceFee: 0.20, freeDeliveryKm: 5, perKmRate: 1.30, vehicle: 'Medium Truck/Van' },
-            3: { maxAmount: 3000, serviceFee: 0.15, freeDeliveryKm: 5, perKmRate: 2.00, vehicle: 'Large Truck/Forklift' },
-            4: { maxAmount: Infinity, serviceFee: 0.12, freeDeliveryKm: 5, perKmRate: 2.20, vehicle: 'Large Truck/Forklift' }
+            1: { maxAmount: 500, freeDeliveryKm: 5, perKmRate: 1.00, vehicle: 'Small Car/Van' },
+            2: { maxAmount: 1500, freeDeliveryKm: 5, perKmRate: 1.30, vehicle: 'Medium Truck/Van' },
+            3: { maxAmount: 3000, freeDeliveryKm: 5, perKmRate: 2.00, vehicle: 'Large Truck/Forklift' },
+            4: { maxAmount: Infinity, freeDeliveryKm: 5, perKmRate: 2.20, vehicle: 'Large Truck/Forklift' }
         };
 
-        const HANDLING_RATE_PER_KG = 0.20;
+        const PROCUREMENT_FEE_RATE = 0.01;
         const GST_RATE = 0.05;
         const QST_RATE = 0.09975;
 
@@ -570,16 +566,13 @@ require __DIR__ . '/../layout-header.php';
                 deliveryInputGroup.style.display = 'flex';
                 const distance = parseFloat(document.getElementById('deliveryDistance').value) || 0;
 
-                const serviceFee = catalogTotal * tierConfig.serviceFee;
-                const handlingFee = totalWeightKg * HANDLING_RATE_PER_KG;
+                const serviceFee = catalogTotal * PROCUREMENT_FEE_RATE;
                 const deliveryFee = calculateDeliveryFee(distance, tier);
 
                 feeBreakdown.style.display = 'block';
                 document.getElementById('itemsTotal').textContent = '$' + catalogTotal.toFixed(2) + (shoppingCount > 0 ? '+' : '');
-                document.getElementById('serviceFeePercent').textContent = (tierConfig.serviceFee * 100).toFixed(0);
+                document.getElementById('serviceFeePercent').textContent = (PROCUREMENT_FEE_RATE * 100).toFixed(0);
                 document.getElementById('serviceFeeAmount').textContent = '$' + serviceFee.toFixed(2);
-                document.getElementById('handlingWeightInfo').textContent = totalWeightKg.toFixed(1) + ' kg';
-                document.getElementById('handlingFeeAmount').textContent = '$' + handlingFee.toFixed(2);
 
                 if (distance <= tierConfig.freeDeliveryKm) {
                     document.getElementById('deliveryInfo').textContent = `Free ≤${tierConfig.freeDeliveryKm}km`;
@@ -589,7 +582,7 @@ require __DIR__ . '/../layout-header.php';
                     document.getElementById('deliveryFeeAmount').textContent = '$' + deliveryFee.toFixed(2);
                 }
 
-                const subtotal = catalogTotal + serviceFee + handlingFee + deliveryFee;
+                const subtotal = catalogTotal + serviceFee + deliveryFee;
                 summarySubtotal.style.display = 'flex';
                 document.getElementById('subtotalAmount').textContent = '$' + subtotal.toFixed(2) + (shoppingCount > 0 ? '+' : '');
 

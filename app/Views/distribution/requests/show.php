@@ -44,7 +44,7 @@ $translations = [
         'delivery_fee'           => 'Delivery Fee',
         'total_label'            => 'Total',
         'items_total'            => 'Items Total',
-        'service_fee'            => 'Service Fee',
+        'service_fee'            => 'Procurement Fee',
         'handling'               => 'Handling',
         'free_delivery'          => 'Free',
         'gst'                    => 'GST (5%)',
@@ -118,7 +118,7 @@ $translations = [
         'delivery_fee'           => 'Frais de livraison',
         'total_label'            => 'Total',
         'items_total'            => 'Total des articles',
-        'service_fee'            => 'Frais de service',
+        'service_fee'            => 'Frais d\'approvisionnement',
         'handling'               => 'Manutention',
         'free_delivery'          => 'Gratuit',
         'gst'                    => 'TPS (5\u00a0%)',
@@ -698,10 +698,12 @@ $drStages = $currentLang === 'fr' ? [
                                     <span><?= $t['service_fee'] ?> (<?= $summary['service_fee_percent'] ?>%)</span>
                                     <span>$<?= number_format($summary['service_fee'], 2) ?></span>
                                 </div>
+                                <?php if ($summary['handling_fee'] > 0): ?>
                                 <div class="fee-row">
                                     <span><?= $t['handling'] ?> (<?= number_format($summary['total_weight_kg'], 1) ?> kg &times; $0.20/kg)</span>
                                     <span>$<?= number_format($summary['handling_fee'], 2) ?></span>
                                 </div>
+                                <?php endif; ?>
                                 <div class="fee-row">
                                     <span><?= $t['delivery_fee'] ?> (<?= $summary['delivery_distance'] <= $summary['free_delivery_km'] ? $t['free_delivery'] . ' &le;' . $summary['free_delivery_km'] . 'km' : ($summary['delivery_distance'] - $summary['free_delivery_km']) . 'km &times; $' . number_format($summary['per_km_rate'], 2) ?>)</span>
                                     <span>$<?= number_format($summary['delivery_fee'], 2) ?></span>

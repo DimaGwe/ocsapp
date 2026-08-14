@@ -14,7 +14,7 @@ $t = ([
         'qty'                 => 'Qty',
         'shopping_items'      => 'Shopping List Items',
         'items_total'         => 'Items Total',
-        'service_fee'         => 'Service Fee',
+        'service_fee'         => 'Procurement Fee',
         'handling_label'      => 'Handling',
         'delivery_fee'        => 'Delivery Fee',
         'gst'                 => 'GST (5%)',
@@ -46,7 +46,7 @@ $t = ([
         'qty'                 => 'Qté',
         'shopping_items'      => "Articles de la liste d'achats",
         'items_total'         => 'Total des articles',
-        'service_fee'         => 'Frais de service',
+        'service_fee'         => 'Frais d\'approvisionnement',
         'handling_label'      => 'Manutention',
         'delivery_fee'        => 'Frais de livraison',
         'gst'                 => 'TPS (5%)',
@@ -183,10 +183,12 @@ $t = $_pageT; unset($_pageT); // restore page-specific translations
                     <span class="summary-label"><?= $t['service_fee'] ?></span>
                     <span class="summary-value">$<?= number_format($request['service_fee'] ?? 0, 2) ?></span>
                 </div>
+                <?php if (($request['handling_fee'] ?? 0) > 0): ?>
                 <div class="summary-row">
                     <span class="summary-label"><?= $t['handling_label'] ?> (<?= number_format($request['total_weight_kg'] ?? 0, 1) ?> kg × $0.20/kg)</span>
                     <span class="summary-value">$<?= number_format($request['handling_fee'] ?? 0, 2) ?></span>
                 </div>
+                <?php endif; ?>
                 <div class="summary-row">
                     <span class="summary-label"><?= $t['delivery_fee'] ?></span>
                     <span class="summary-value">$<?= number_format($request['delivery_fee'] ?? 0, 2) ?></span>

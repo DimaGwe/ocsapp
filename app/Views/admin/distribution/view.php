@@ -1006,13 +1006,15 @@ ob_start();
                             <span>$<?= number_format($summary['items_total'] ?: $catalogTotal, 2) ?><?= !empty($shoppingItems) ? '+' : '' ?></span>
                         </div>
                         <div class="fee-row">
-                            <span>Service Fee (<?= $summary['service_fee_percent'] ?>%)</span>
+                            <span>Procurement Fee (<?= $summary['service_fee_percent'] ?>%)</span>
                             <span>$<?= number_format($summary['service_fee'] ?? 0, 2) ?></span>
                         </div>
+                        <?php if (($summary['handling_fee'] ?? 0) > 0): ?>
                         <div class="fee-row">
                             <span>Handling (<?= number_format($summary['total_weight_kg'] ?? 0, 1) ?> kg × $0.20/kg)</span>
                             <span>$<?= number_format($summary['handling_fee'] ?? 0, 2) ?></span>
                         </div>
+                        <?php endif; ?>
                         <div class="fee-row">
                             <span>Delivery (<?= ($summary['delivery_distance'] ?? 0) <= ($summary['free_delivery_km'] ?? 15) ? 'Free ≤' . ($summary['free_delivery_km'] ?? 15) . 'km' : (($summary['delivery_distance'] ?? 0) - ($summary['free_delivery_km'] ?? 15)) . 'km × $' . number_format($summary['per_km_rate'] ?? 0, 2) ?>)</span>
                             <span>$<?= number_format($summary['delivery_fee'] ?? 0, 2) ?></span>
