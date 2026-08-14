@@ -381,6 +381,9 @@ return [
     'POST /admin/receivables/mark-refunded' => ['AdminReceivablesController', 'markRefunded'],
     'GET /admin/receivables/export' => ['AdminReceivablesController', 'export'],
 
+    'GET /admin/seller-payouts' => ['AdminSellerPayoutsController', 'index'],
+    'POST /admin/seller-payouts/mark-paid' => ['AdminSellerPayoutsController', 'markPaid'],
+
     // Orders Management (Admin)
     'GET /admin/orders' => ['AdminOrdersController', 'index'],
     'GET /admin/orders/view' => ['AdminOrdersController', 'view'],
@@ -580,6 +583,7 @@ return [
     'POST /seller/shop/store' => ['ShopController', 'store'],
     'GET /seller/shop/settings' => ['ShopController', 'settings'],
     'POST /seller/shop/update' => ['ShopController', 'update'],
+    'GET /seller/payouts' => ['ShopController', 'payouts'],
 
     // Seller Verification
     'GET /seller/verification' => ['SellerVerificationController', 'index'],

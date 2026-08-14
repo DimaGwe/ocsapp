@@ -1128,7 +1128,7 @@ $t = $translations[$currentLang] ?? $translations['en'];
         <?php
         $sectionPages = [
             'admin'      => ['dashboard', 'planner', 'users', 'deleted-users'],
-            'marketplace'=> ['buyers', 'sellers', 'shops', 'categories'],
+            'marketplace'=> ['buyers', 'sellers', 'shops', 'seller-payouts', 'categories'],
             'drivers'    => ['delivery', 'drivers-list', 'pickup-requests', 'training', 'route-replay', 'driver-activity', 'driver-earnings', 'vehicles', 'live-map', 'route-optimizer', 'zones'],
             'suppliers'  => ['suppliers', 'purchase-orders', 'payables', 'receivables'],
             'business'   => ['business-accounts', 'distribution'],
@@ -1181,7 +1181,7 @@ $t = $translations[$currentLang] ?? $translations['en'];
 
         <!-- MARKETPLACE -->
         <?php
-        $mktItems = ['sellers', 'shops', 'categories'];
+        $mktItems = ['sellers', 'shops', 'seller-payouts', 'categories'];
         $hasMktAccess = false;
         foreach ($mktItems as $item) {
             if (AdminPermissionHelper::canAccessMenu($item, $userRole)) { $hasMktAccess = true; break; }
@@ -1210,6 +1210,12 @@ $t = $translations[$currentLang] ?? $translations['en'];
           <a href="<?= url('admin/shops') ?>" class="nav-link <?= ($currentPage ?? '') === 'shops' ? 'active' : '' ?>">
             <i class="fa-solid fa-shop"></i>
             <span><?= $t['shops'] ?></span>
+          </a>
+          <?php endif; ?>
+          <?php if (AdminPermissionHelper::canAccessMenu('seller-payouts', $userRole)): ?>
+          <a href="<?= url('admin/seller-payouts') ?>" class="nav-link <?= ($currentPage ?? '') === 'seller-payouts' ? 'active' : '' ?>">
+            <i class="fa-solid fa-hand-holding-dollar"></i>
+            <span><?= $currentLang === 'fr' ? 'Versements vendeurs' : 'Seller Payouts' ?></span>
           </a>
           <?php endif; ?>
           <?php if (AdminPermissionHelper::canAccessMenu('categories', $userRole)): ?>

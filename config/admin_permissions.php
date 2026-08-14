@@ -36,6 +36,7 @@ return [
         'delivery' => ['super_admin', 'admin', 'admin_staff'],
         'driver-activity' => ['super_admin', 'admin'],
         'shops' => ['super_admin', 'admin', 'admin_staff'],
+        'seller-payouts' => ['super_admin', 'admin'],
         'waitlist'       => ['super_admin', 'admin'],
         'leads'          => ['super_admin', 'admin'],
         'marketing'      => ['super_admin', 'admin'],
@@ -106,6 +107,7 @@ return [
         '/admin/purchase-orders' => ['super_admin', 'admin'],
         '/admin/distribution' => ['super_admin', 'admin'],
         '/admin/receivables' => ['super_admin', 'admin'],
+        '/admin/seller-payouts' => ['super_admin', 'admin'],
 
         // Planner & analytics - admin+ only
         '/admin/planner' => ['super_admin', 'admin'],

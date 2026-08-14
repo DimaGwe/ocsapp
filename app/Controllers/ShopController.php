@@ -250,4 +250,52 @@ class ShopController
 
         redirect(url('seller/shop/settings'));
     }
+
+    /**
+     * Seller payout statement (Ecosystem Backend Requirements Sec. 7) -
+     * commission and processing fee itemized separately per order, per the
+     * Seller Central marketing copy's promise.
+     */
+    public function payouts(): void
+    {
+        if (!isLoggedIn() || !hasRole('seller')) {
+            redirect(url('login'));
+            return;
+        }
+
+        $stmt = $this->db->prepare("SELECT * FROM shops WHERE seller_id = ? LIMIT 1");
+        $stmt->execute([userId()]);
+        $shop = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$shop) {
+            setFlash('error', 'No shop found');
+            redirect(url('seller/shop/create'));
+            return;
+        }
+
+        $payouts = [];
+        try {
+            $stmt = $this->db->prepare("
+                SELECT sp.*, o.order_number
+                FROM seller_payouts sp
+                INNER JOIN orders o ON o.id = sp.order_id
+                WHERE sp.shop_id = ?
+                ORDER BY sp.created_at DESC
+                LIMIT 100
+            ");
+            $stmt->execute([$shop['id']]);
+            $payouts = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            logger("ShopController payouts error: " . $e->getMessage(), 'error');
+        }
+
+        require_once __DIR__ . '/../Helpers/SellerPayoutHelper.php';
+        $pendingBalance = \App\Helpers\SellerPayoutHelper::pendingBalance($shop['id']);
+
+        view('seller/payouts', [
+            'shop' => $shop,
+            'payouts' => $payouts,
+            'pendingBalance' => $pendingBalance,
+        ]);
+    }
 }

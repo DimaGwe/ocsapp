@@ -81,6 +81,7 @@ foreach ($todayStats as $ts) {
                 <a href="<?= url('seller/dashboard') ?>"><i class="fas fa-home"></i> Dashboard</a>
                 <a href="<?= url('seller/orders') ?>" class="active"><i class="fas fa-box"></i> Orders</a>
                 <a href="<?= url('seller/inventory') ?>"><i class="fas fa-cubes"></i> Inventory</a>
+                <a href="<?= url('seller/payouts') ?>"><i class="fas fa-dollar-sign"></i> Payouts</a>
                 <a href="<?= url('seller/shop/settings') ?>"><i class="fas fa-cog"></i> Shop Settings</a>
                 <hr style="border:none;border-top:1px solid #f0f0f0;margin:6px 0;">
                 <a href="#" style="color:#c62828;" onclick="event.preventDefault();document.getElementById('seller-logout-form').submit();"><i class="fas fa-sign-out-alt"></i> Logout</a>

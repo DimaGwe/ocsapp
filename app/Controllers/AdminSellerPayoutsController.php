@@ -1,0 +1,126 @@
+<?php
+
+namespace App\Controllers;
+
+/**
+ * AdminSellerPayoutsController (Ecosystem Backend Requirements Sec. 7)
+ *
+ * seller_payouts has existed since this week's Sec 4 chargeback-netting work
+ * but nothing ever read or managed it - this is the admin-facing "mark paid"
+ * mechanism the SellerPayoutHelper docblock already assumed: no real bank-
+ * transfer/Stripe Connect disbursement exists, admin pays a seller outside
+ * the system and marks the row paid here, same precedent already used for
+ * supplier (AdminPayablesController) and distribution (AdminReceivablesController)
+ * payments.
+ */
+class AdminSellerPayoutsController
+{
+    private $db;
+
+    public function __construct()
+    {
+        $this->db = \Database::getConnection();
+    }
+
+    /**
+     * GET /admin/seller-payouts
+     */
+    public function index(): void
+    {
+        $statusFilter = get('status', 'pending');
+        $shopFilter = (int)get('shop_id', 0);
+
+        $where = ['1=1'];
+        $params = [];
+
+        if ($statusFilter) {
+            $where[] = 'sp.status = ?';
+            $params[] = $statusFilter;
+        }
+        if ($shopFilter) {
+            $where[] = 'sp.shop_id = ?';
+            $params[] = $shopFilter;
+        }
+        $whereStr = implode(' AND ', $where);
+
+        $stmt = $this->db->prepare("
+            SELECT sp.*, s.name AS shop_name, o.order_number
+            FROM seller_payouts sp
+            INNER JOIN shops s ON s.id = sp.shop_id
+            INNER JOIN orders o ON o.id = sp.order_id
+            WHERE {$whereStr}
+            ORDER BY sp.created_at DESC
+            LIMIT 200
+        ");
+        $stmt->execute($params);
+        $payouts = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $stats = $this->db->query("
+            SELECT
+                COALESCE(SUM(CASE WHEN status = 'pending' THEN net_payout_amount - chargeback_amount ELSE 0 END), 0) AS pending_total,
+                SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) AS pending_count,
+                SUM(CASE WHEN status = 'held' THEN 1 ELSE 0 END) AS held_count
+            FROM seller_payouts
+        ")->fetch(\PDO::FETCH_ASSOC);
+
+        $shops = $this->db->query("
+            SELECT DISTINCT s.id, s.name FROM seller_payouts sp
+            INNER JOIN shops s ON s.id = sp.shop_id
+            ORDER BY s.name
+        ")->fetchAll(\PDO::FETCH_ASSOC);
+
+        view('admin.seller-payouts.index', [
+            'pageTitle' => 'Seller Payouts',
+            'payouts' => $payouts,
+            'stats' => $stats,
+            'shops' => $shops,
+            'statusFilter' => $statusFilter,
+            'shopFilter' => $shopFilter,
+        ]);
+    }
+
+    /**
+     * POST /admin/seller-payouts/mark-paid
+     * Accepts one or more payout IDs (bulk-capable, same as
+     * AdminReceivablesController's mark-paid flow).
+     */
+    public function markPaid(): void
+    {
+        $token = post(env('CSRF_TOKEN_NAME', '_csrf_token'), '');
+        if (!verifyCsrfToken($token)) {
+            setFlash('error', 'Invalid security token. Please try again.');
+            redirect(url('admin/seller-payouts'));
+            return;
+        }
+
+        $ids = post('payout_ids', []);
+        if (!is_array($ids)) {
+            $ids = [$ids];
+        }
+        $ids = array_filter(array_map('intval', $ids));
+
+        if (empty($ids)) {
+            setFlash('error', 'No payouts selected.');
+            redirect(url('admin/seller-payouts'));
+            return;
+        }
+
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+
+        try {
+            $stmt = $this->db->prepare("
+                UPDATE seller_payouts
+                SET status = 'paid', paid_at = NOW(), paid_by = ?, updated_at = NOW()
+                WHERE id IN ({$placeholders}) AND status = 'pending'
+            ");
+            $stmt->execute(array_merge([userId()], $ids));
+
+            setFlash('success', $stmt->rowCount() . ' payout(s) marked as paid.');
+        } catch (\PDOException $e) {
+            logger("AdminSellerPayoutsController markPaid error: " . $e->getMessage(), 'error');
+            setFlash('error', 'Failed to update payouts.');
+        }
+
+        redirect(url('admin/seller-payouts'));
+    }
+}

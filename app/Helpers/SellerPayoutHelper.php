@@ -54,13 +54,18 @@ class SellerPayoutHelper
         $subtotal = (float)$order['subtotal'];
         $rate = (float)$order['commission_rate'];
         $commission = round($subtotal * $rate / 100, 2);
-        $net = round($subtotal - $commission, 2);
+        // Payment Processing Fee (Ecosystem Backend Requirements Sec. 7 / Pricing Strategy Sec.
+        // 9.1): industry-standard Stripe/PayPal rate, same base as commission (subtotal, not
+        // delivery fee/tax), deducted the same way, same moment - "alongside commission" per the
+        // doc. Seller Central's marketing copy promises this is absorbed by the seller.
+        $processingFee = round($subtotal * 0.029 + 0.30, 2);
+        $net = round($subtotal - $commission - $processingFee, 2);
 
         $db->prepare("
             INSERT INTO seller_payouts
-            (shop_id, order_id, subtotal, commission_rate, commission_amount, net_payout_amount, status, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW(), NOW())
-        ")->execute([$order['shop_id'], $orderId, $subtotal, $rate, $commission, $net]);
+            (shop_id, order_id, subtotal, commission_rate, commission_amount, processing_fee_amount, net_payout_amount, status, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', NOW(), NOW())
+        ")->execute([$order['shop_id'], $orderId, $subtotal, $rate, $commission, $processingFee, $net]);
     }
 
     /**
