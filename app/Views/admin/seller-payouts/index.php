@@ -4,8 +4,10 @@ $currentPage = 'seller-payouts';
 $payouts = $payouts ?? [];
 $stats = $stats ?? [];
 $shops = $shops ?? [];
+$batches = $batches ?? [];
 $statusFilter = $statusFilter ?? 'pending';
 $shopFilter = $shopFilter ?? 0;
+$batchFilter = $batchFilter ?? 0;
 ob_start();
 ?>
 
@@ -30,10 +32,60 @@ ob_start();
   .btn-mark-paid { padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; background: #00b207; color: #fff; }
   .btn-mark-paid:hover { background: #009206; }
   .table-scroll { overflow-x: auto; }
+  .batches-card { background: white; border-radius: var(--radius-xl); box-shadow: var(--shadow-sm); overflow: hidden; margin-bottom: 24px; }
+  .batches-card h3 { padding: 16px 16px 0; font-size: 15px; color: var(--dark); }
+  .badge-open { background: #fff3e0; color: #e65100; }
+  .badge-completed { background: #e8f5e9; color: #2e7d32; }
 </style>
 
 <div class="page-header">
   <div class="page-title">Seller Payouts</div>
+</div>
+
+<div class="batches-card">
+  <h3>Weekly Payout Batches</h3>
+  <?php if (empty($batches)): ?>
+    <p style="color:#aaa;padding:16px;">No batches generated yet - the Monday cron creates one once a shop clears the $25 rollover threshold.</p>
+  <?php else: ?>
+    <div class="table-scroll">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Batch</th>
+          <th>Date</th>
+          <th>Shops</th>
+          <th>Items</th>
+          <th>Total</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php foreach ($batches as $b): ?>
+          <tr>
+            <td><?= htmlspecialchars($b['batch_number']) ?></td>
+            <td><?= date('M j, Y', strtotime($b['batch_date'])) ?></td>
+            <td><?= (int)$b['shop_count'] ?></td>
+            <td><?= (int)$b['item_count'] ?></td>
+            <td><strong>$<?= number_format((float)$b['total_amount'], 2) ?></strong></td>
+            <td><span class="badge badge-<?= htmlspecialchars($b['status']) ?>"><?= ucfirst($b['status']) ?></span></td>
+            <td>
+              <a href="<?= url('admin/seller-payouts') ?>?batch_id=<?= (int)$b['id'] ?>&status=" style="font-size:12px;">View items</a>
+              <?php if ($b['status'] === 'open'): ?>
+                &nbsp;|&nbsp;
+                <form method="POST" action="<?= url('admin/seller-payouts/mark-batch-paid') ?>" style="display:inline;" onsubmit="return confirm('Mark the entire batch as paid? This assumes you already sent every transfer in it outside the system.');">
+                  <?= csrfField() ?>
+                  <input type="hidden" name="batch_id" value="<?= (int)$b['id'] ?>">
+                  <button type="submit" class="btn-mark-paid">Mark Batch Paid</button>
+                </form>
+              <?php endif; ?>
+            </td>
+          </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+    </div>
+  <?php endif; ?>
 </div>
 
 <div class="stats-grid">
@@ -62,6 +114,12 @@ ob_start();
     <option value="0">All shops</option>
     <?php foreach ($shops as $s): ?>
       <option value="<?= (int)$s['id'] ?>" <?= $shopFilter === (int)$s['id'] ? 'selected' : '' ?>><?= htmlspecialchars($s['name']) ?></option>
+    <?php endforeach; ?>
+  </select>
+  <select name="batch_id" onchange="this.form.submit()">
+    <option value="0">All batches</option>
+    <?php foreach ($batches as $b): ?>
+      <option value="<?= (int)$b['id'] ?>" <?= $batchFilter === (int)$b['id'] ? 'selected' : '' ?>><?= htmlspecialchars($b['batch_number']) ?></option>
     <?php endforeach; ?>
   </select>
 </form>

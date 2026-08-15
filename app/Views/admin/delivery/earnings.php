@@ -592,6 +592,49 @@ ob_start();
 </div>
 
 <!-- Filters & Actions -->
+<?php $batches = $batches ?? []; $batchFilter = $batchFilter ?? 0; ?>
+<div class="earnings-card" style="margin-bottom:20px;">
+    <h3 style="padding:16px 16px 0;font-size:15px;color:var(--dark);">Weekly Payout Batches</h3>
+    <?php if (empty($batches)): ?>
+        <p style="color:#aaa;padding:16px;">No batches generated yet - the Monday cron creates one from all pending driver earnings.</p>
+    <?php else: ?>
+    <div class="table-container">
+        <table class="earnings-table">
+            <thead>
+                <tr>
+                    <th>Batch</th>
+                    <th>Date</th>
+                    <th>Drivers</th>
+                    <th>Items</th>
+                    <th class="text-right">Total</th>
+                    <th class="text-center">Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($batches as $b): ?>
+                <tr>
+                    <td><?= htmlspecialchars($b['batch_number']) ?></td>
+                    <td><?= date('M j, Y', strtotime($b['batch_date'])) ?></td>
+                    <td><?= (int)$b['driver_count'] ?></td>
+                    <td><?= (int)$b['item_count'] ?></td>
+                    <td class="text-right"><strong><?= currency($b['total_amount']) ?></strong></td>
+                    <td class="text-center"><span class="filter-btn <?= $b['status'] === 'open' ? 'pending' : 'paid' ?> active" style="pointer-events:none;"><?= ucfirst($b['status']) ?></span></td>
+                    <td>
+                        <a href="<?= url('/admin/delivery/earnings') ?>?status=&batch_id=<?= (int)$b['id'] ?>" style="font-size:12px;">View items</a>
+                        <?php if ($b['status'] === 'open'): ?>
+                            &nbsp;|&nbsp;
+                            <button type="button" class="btn btn-success" style="padding:4px 10px;font-size:12px;" onclick="markBatchPaid(<?= (int)$b['id'] ?>)">Mark Batch Paid</button>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+    <?php endif; ?>
+</div>
+
 <div class="filter-bar">
     <div class="status-filters">
         <a href="<?= url('/admin/delivery/earnings?status=all') ?>"
@@ -821,6 +864,34 @@ async function confirmMarkPaid() {
         if (data.success) {
             closePaymentModal();
             alert(<?= json_encode($t['marked_success'] ?? 'Marked as paid successfully') ?>);
+            location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+        }
+    } catch (error) {
+        alert('Network error: ' + error.message);
+    }
+}
+
+async function markBatchPaid(batchId) {
+    if (!confirm('Mark the entire batch as paid? This assumes you already sent every transfer in it outside the system.')) {
+        return;
+    }
+
+    try {
+        const response = await fetch('<?= url('/admin/delivery/mark-batch-paid') ?>', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || ''
+            },
+            body: JSON.stringify({ batch_id: batchId })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            alert(data.message || 'Batch marked as paid.');
             location.reload();
         } else {
             alert('Error: ' + (data.error || 'Unknown error'));

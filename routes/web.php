@@ -386,6 +386,7 @@ return [
 
     'GET /admin/seller-payouts' => ['AdminSellerPayoutsController', 'index'],
     'POST /admin/seller-payouts/mark-paid' => ['AdminSellerPayoutsController', 'markPaid'],
+    'POST /admin/seller-payouts/mark-batch-paid' => ['AdminSellerPayoutsController', 'markBatchPaid'],
 
     // Orders Management (Admin)
     'GET /admin/orders' => ['AdminOrdersController', 'index'],
@@ -413,6 +414,7 @@ return [
     'GET /admin/delivery/earnings' => ['AdminDeliveryController', 'earnings'],
     'GET /admin/delivery/driver-details' => ['AdminDeliveryController', 'driverDetails'],
     'POST /admin/delivery/mark-paid' => ['AdminDeliveryController', 'markPaid'],
+    'POST /admin/delivery/mark-batch-paid' => ['AdminDeliveryController', 'markBatchPaid'],
     'GET /admin/delivery/details' => ['AdminDeliveryController', 'deliveryDetails'],
     'POST /admin/delivery/assign-driver' => ['AdminDeliveryController', 'assignDriverToDelivery'],
     'POST /admin/delivery/assign-distribution-driver' => ['AdminDeliveryController', 'assignDistributionDriver'],
