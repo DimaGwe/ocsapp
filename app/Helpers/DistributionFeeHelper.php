@@ -98,12 +98,19 @@ class DistributionFeeHelper
 
         $hardCapExceeded = $oversize['hard_cap_exceeded'] || $longDistance['hard_cap_exceeded'];
 
-        $subtotal = round(
-            $distributionFeeAmount + $deliveryFee
+        $preFeeSubtotal = $distributionFeeAmount + $deliveryFee
             + $oversize['total_surcharge'] + $longDistance['total_surcharge']
-            + $stopFee['total_fee'],
-            2
-        );
+            + $stopFee['total_fee'];
+
+        // Payment Processing Fee (Business Account Agreement Sec. 9.9 correction,
+        // confirmed by Jack 2026-08-15): under Distribution the Business Client is the
+        // providing party (distributing its own goods to its own receiving customers),
+        // so unlike Approvisionnement it DOES absorb this fee - added to the shipment
+        // invoice, itemized separately from the Distribution Fee, same 2.9%+$0.30 rate
+        // used everywhere else in this program.
+        $processingFeeAmount = round($preFeeSubtotal * 0.029 + 0.30, 2);
+
+        $subtotal = round($preFeeSubtotal + $processingFeeAmount, 2);
         $taxRate = 14.975;
         $taxAmount = round($subtotal * ($taxRate / 100), 2);
         $totalAmount = round($subtotal + $taxAmount, 2);
@@ -121,6 +128,7 @@ class DistributionFeeHelper
             'long_distance_increment_surcharge' => $longDistance['increment_surcharge'],
             'long_distance_increment_count' => $longDistance['increment_count'],
             'additional_stop_fee' => $stopFee['total_fee'],
+            'processing_fee_amount' => $processingFeeAmount,
             'hard_cap_exceeded' => $hardCapExceeded,
             'tax_rate' => $taxRate,
             'subtotal' => $subtotal,

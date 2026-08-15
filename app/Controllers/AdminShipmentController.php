@@ -275,6 +275,7 @@ class AdminShipmentController
                 $weightSurcharge = round($fees['oversize_base_surcharge'] + $fees['oversize_increment_surcharge'], 2);
                 $distanceSurcharge = round($fees['long_distance_base_surcharge'] + $fees['long_distance_increment_surcharge'], 2);
                 $rushSurcharge = 0.00;
+                $processingFeeAmount = $fees['processing_fee_amount'];
                 $taxRate = $fees['tax_rate'];
                 $subtotal = $fees['subtotal'];
                 $taxAmount = $fees['tax_amount'];
@@ -298,7 +299,12 @@ class AdminShipmentController
                 $distanceSurcharge = (float)($_POST['distance_surcharge'] ?? 0);
                 $rushSurcharge = (float)($_POST['rush_surcharge'] ?? 0);
                 $taxRate = (float)($_POST['tax_rate'] ?? 14.975);
-                $subtotal = round($distributionFeeAmount + $baseRate + $stopsTotal + $weightSurcharge + $distanceSurcharge + $rushSurcharge, 2);
+                // Payment Processing Fee (Sec. 9.9 correction, confirmed by Jack
+                // 2026-08-15): applies to every Distribution invoice regardless of tier -
+                // the Business Client absorbs it here since it's the providing party.
+                $preFeeSubtotal = $distributionFeeAmount + $baseRate + $stopsTotal + $weightSurcharge + $distanceSurcharge + $rushSurcharge;
+                $processingFeeAmount = round($preFeeSubtotal * 0.029 + 0.30, 2);
+                $subtotal = round($preFeeSubtotal + $processingFeeAmount, 2);
                 $taxAmount = round($subtotal * ($taxRate / 100), 2);
                 $totalAmount = round($subtotal + $taxAmount, 2);
                 $isAutomated = 0;
@@ -313,11 +319,11 @@ class AdminShipmentController
             $stmt = $this->db->prepare("
                 INSERT INTO distribution_shipment_quotes
                 (shipment_id, declared_value, distribution_fee_amount, base_rate, per_stop_rate, stops_count, stops_total,
-                 weight_surcharge, distance_surcharge, rush_surcharge,
+                 weight_surcharge, distance_surcharge, rush_surcharge, processing_fee_amount,
                  subtotal, tax_rate, tax_amount, total_amount,
                  valid_until, notes, is_automated, created_by, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?,
-                        ?, ?, ?,
+                        ?, ?, ?, ?,
                         ?, ?, ?, ?,
                         ?, ?, ?, ?, NOW())
             ");
@@ -333,6 +339,7 @@ class AdminShipmentController
                 $weightSurcharge,
                 $distanceSurcharge,
                 $rushSurcharge,
+                $processingFeeAmount,
                 $subtotal,
                 $taxRate,
                 $taxAmount,

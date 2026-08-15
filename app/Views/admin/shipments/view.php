@@ -208,6 +208,9 @@
                             <?php if ($automatedPreview['additional_stop_fee'] > 0): ?>
                             <div class="fee-row"><span>Additional-Stop Fee (Sec. 8.11)</span><span>$<?= number_format($automatedPreview['additional_stop_fee'], 2) ?></span></div>
                             <?php endif; ?>
+                            <?php if (($automatedPreview['processing_fee_amount'] ?? 0) > 0): ?>
+                            <div class="fee-row"><span>Payment Processing Fee (Sec. 9.9, 2.9% + $0.30)</span><span>$<?= number_format($automatedPreview['processing_fee_amount'], 2) ?></span></div>
+                            <?php endif; ?>
                             <div class="fee-row" style="border-top: 1px solid #e5e7eb; padding-top: 8px; margin-top: 8px;"><span>Subtotal</span><span>$<?= number_format($automatedPreview['subtotal'], 2) ?></span></div>
                             <div class="fee-row"><span>Tax (<?= number_format($automatedPreview['tax_rate'], 3) ?>%)</span><span>$<?= number_format($automatedPreview['tax_amount'], 2) ?></span></div>
                             <div class="fee-row" style="font-weight: 700; font-size: 15px;"><span>Total</span><span>$<?= number_format($automatedPreview['total_amount'], 2) ?></span></div>
@@ -349,6 +352,12 @@
                             <div class="quote-row">
                                 <span>Rush</span>
                                 <span>$<?= number_format($quote['rush_surcharge'], 2) ?></span>
+                            </div>
+                        <?php endif; ?>
+                        <?php if (($quote['processing_fee_amount'] ?? 0) > 0): ?>
+                            <div class="quote-row">
+                                <span>Payment Processing Fee</span>
+                                <span>$<?= number_format($quote['processing_fee_amount'], 2) ?></span>
                             </div>
                         <?php endif; ?>
                         <div class="quote-row">

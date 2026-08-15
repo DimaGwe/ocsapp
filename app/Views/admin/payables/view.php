@@ -172,6 +172,9 @@ ob_start();
         <?php if ($invoice['commission_amount'] > 0): ?>
         <tr><td>Platform Commission (<?= number_format($invoice['commission_rate'], 2) ?>%)</td><td class="amount" style="text-align:right;color:#991b1b;">-$<?= number_format($invoice['commission_amount'], 2) ?></td></tr>
         <?php endif; ?>
+        <?php if (($invoice['processing_fee_amount'] ?? 0) > 0): ?>
+        <tr><td>Payment Processing Fee (2.9% + $0.30)</td><td class="amount" style="text-align:right;color:#991b1b;">-$<?= number_format($invoice['processing_fee_amount'], 2) ?></td></tr>
+        <?php endif; ?>
         <tr style="border-top:2px solid #1f2937;"><td style="font-weight:700;">Net Payable</td><td class="amount" style="text-align:right;font-weight:700;color:#00b207;">$<?= number_format($invoice['net_payable'], 2) ?></td></tr>
       </table>
     </div>

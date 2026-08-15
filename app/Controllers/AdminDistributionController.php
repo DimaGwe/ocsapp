@@ -1027,11 +1027,16 @@ class AdminDistributionController
                 return;
             }
 
-            // Same wholesale-commission deduction as AdminPayablesController::createInvoiceForPO() -
-            // computed on goods subtotal only, deducted from what OCS actually pays the supplier.
+            // Same wholesale-commission + processing-fee deduction as
+            // AdminPayablesController::createInvoiceForPO() - both computed on goods
+            // subtotal only, deducted from what OCS actually pays the supplier. The
+            // Business Client receives goods under Approvisionnement, so it never
+            // absorbs the processing fee (Business Account Agreement Sec 9.9 correction,
+            // confirmed by Jack 2026-08-15) - the Supplier does.
             $commissionRate = (float)($po['commission_rate'] ?? 0);
             $commissionAmount = round((float)$po['subtotal'] * ($commissionRate / 100), 2);
-            $netPayable = round((float)$po['total_amount'] - $commissionAmount, 2);
+            $processingFeeAmount = round((float)$po['subtotal'] * 0.029 + 0.30, 2);
+            $netPayable = round((float)$po['total_amount'] - $commissionAmount - $processingFeeAmount, 2);
 
             if ($po['admin_paid_at']) {
                 header('Content-Type: application/json');
@@ -1089,9 +1094,9 @@ class AdminDistributionController
                 $this->db->prepare("
                     INSERT INTO supplier_invoices
                     (invoice_number, supplier_id, po_id, subtotal, tax_gst, tax_qst, shipping,
-                     commission_rate, commission_amount, total_amount, net_payable, amount_paid, balance_due, status,
+                     commission_rate, commission_amount, processing_fee_amount, total_amount, net_payable, amount_paid, balance_due, status,
                      issue_date, due_date, paid_at, created_by, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'paid', CURDATE(), CURDATE(), NOW(), ?, NOW(), NOW())
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'paid', CURDATE(), CURDATE(), NOW(), ?, NOW(), NOW())
                 ")->execute([
                     $invoiceNumber,
                     $po['supplier_id'],
@@ -1102,6 +1107,7 @@ class AdminDistributionController
                     (float)$po['shipping_cost'],
                     $commissionRate,
                     $commissionAmount,
+                    $processingFeeAmount,
                     $total,
                     $netPayable,
                     $netPayable,

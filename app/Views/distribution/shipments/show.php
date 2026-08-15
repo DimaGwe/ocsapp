@@ -49,6 +49,7 @@ $translations = [
         'weight_surcharge'  => 'Weight Surcharge',
         'distance_surcharge'=> 'Distance Surcharge',
         'rush_surcharge'    => 'Rush Surcharge',
+        'processing_fee'    => 'Payment Processing Fee',
         'subtotal'          => 'Subtotal',
         'tax_label'         => 'Tax',
         'total_label'       => 'Total',
@@ -107,6 +108,7 @@ $translations = [
         'weight_surcharge'  => 'Suppl&#233;ment de poids',
         'distance_surcharge'=> 'Suppl&#233;ment de distance',
         'rush_surcharge'    => 'Suppl&#233;ment urgence',
+        'processing_fee'    => 'Frais de traitement des paiements',
         'subtotal'          => 'Sous-total',
         'tax_label'         => 'Taxe',
         'total_label'       => 'Total',
@@ -362,6 +364,12 @@ unset($_pageTranslations);
                                 <div class="quote-row">
                                     <span><?= $t['rush_surcharge'] ?></span>
                                     <span>$<?= number_format($quote['rush_surcharge'], 2) ?></span>
+                                </div>
+                            <?php endif; ?>
+                            <?php if (($quote['processing_fee_amount'] ?? 0) > 0): ?>
+                                <div class="quote-row">
+                                    <span><?= $t['processing_fee'] ?></span>
+                                    <span>$<?= number_format($quote['processing_fee_amount'], 2) ?></span>
                                 </div>
                             <?php endif; ?>
                             <div class="quote-row">

@@ -216,7 +216,15 @@ class AdminPayablesController
             // same base as the seller-side commission/processing fee, and is
             // deducted from what OCS actually pays the supplier.
             $commissionAmount = round($subtotal * ($commissionRate / 100), 2);
-            $netPayable = round($total - $commissionAmount, 2);
+
+            // Payment Processing Fee (Business Account Agreement Sec 9.9 correction /
+            // Supplier Account Agreement Sec 9.2, confirmed by Jack 2026-08-15): the
+            // Business Client receives goods under Approvisionnement, so it never
+            // absorbs this fee - the Supplier does, same base and rate as the
+            // seller-side processing fee (2.9% + $0.30 on goods subtotal).
+            $processingFeeAmount = round($subtotal * 0.029 + 0.30, 2);
+
+            $netPayable = round($total - $commissionAmount - $processingFeeAmount, 2);
 
             $issueDate = date('Y-m-d');
             $dueDate = date('Y-m-d', strtotime("+{$paymentTermsDays} days"));
@@ -224,10 +232,10 @@ class AdminPayablesController
             $stmt = $db->prepare("
                 INSERT INTO supplier_invoices (
                     invoice_number, supplier_id, po_id,
-                    subtotal, tax_gst, tax_qst, shipping, commission_rate, commission_amount,
+                    subtotal, tax_gst, tax_qst, shipping, commission_rate, commission_amount, processing_fee_amount,
                     total_amount, net_payable, amount_paid, balance_due,
                     status, issue_date, due_date, created_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0.00, ?, 'sent', ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0.00, ?, 'sent', ?, ?, ?)
             ");
             $stmt->execute([
                 $invoiceNumber,
@@ -239,6 +247,7 @@ class AdminPayablesController
                 $shipping,
                 $commissionRate,
                 $commissionAmount,
+                $processingFeeAmount,
                 $total,
                 $netPayable,
                 $netPayable,
@@ -265,6 +274,7 @@ class AdminPayablesController
                 'shipping' => $shipping,
                 'commission_rate' => $commissionRate,
                 'commission_amount' => $commissionAmount,
+                'processing_fee_amount' => $processingFeeAmount,
                 'total_amount' => $total,
                 'net_payable' => $netPayable,
                 'issue_date' => $issueDate,
@@ -455,6 +465,8 @@ class AdminPayablesController
                 <tr style='border-top:1px solid #e5e7eb;'><td style='padding:6px 12px; font-weight:600;'>Gross Total</td><td style='padding:6px 12px; text-align:right; font-weight:600;'>$" . number_format((float)$invoice['total_amount'], 2) . "</td></tr>" .
                 (((float)$invoice['commission_amount'] > 0) ? "
                 <tr><td style='padding:6px 12px; color:#6b7280;'>Platform Commission (" . number_format((float)$invoice['commission_rate'], 2) . "%)</td><td style='padding:6px 12px; text-align:right; font-weight:500; color:#991b1b;'>-$" . number_format((float)$invoice['commission_amount'], 2) . "</td></tr>" : "") . "
+                " . (((float)($invoice['processing_fee_amount'] ?? 0) > 0) ? "
+                <tr><td style='padding:6px 12px; color:#6b7280;'>Payment Processing Fee (2.9% + $0.30)</td><td style='padding:6px 12px; text-align:right; font-weight:500; color:#991b1b;'>-$" . number_format((float)$invoice['processing_fee_amount'], 2) . "</td></tr>" : "") . "
                 <tr style='border-top:2px solid #1f2937;'><td style='padding:10px 12px; font-size:15px; font-weight:700;'>Net Payable</td><td style='padding:10px 12px; text-align:right; font-size:15px; font-weight:700; color:#00b207;'>$" . number_format((float)$invoice['net_payable'], 2) . "</td></tr>
             </table>
         </div>
