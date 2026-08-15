@@ -2,7 +2,7 @@
 $currentLang = $_SESSION['language'] ?? 'fr';
 $t = getTranslations($currentLang);
 $user = $user ?? [];
-$stats = $stats ?? ['total_orders'=>0,'pending_orders'=>0,'completed_orders'=>0,'total_spent'=>0];
+$stats = $stats ?? ['total_orders'=>0,'pending_orders'=>0,'completed_orders'=>0,'total_spent'=>0,'store_credit_balance'=>0];
 $recentOrders = $recentOrders ?? [];
 $cartCount = $cartCount ?? 0;
 $pageTitle = $pageTitle ?? 'My Account';
@@ -101,6 +101,10 @@ $pageTitle = $pageTitle ?? 'My Account';
             <div class="stat-card">
                 <div class="stat-value">$<?= number_format((float)$stats['total_spent'], 2) ?></div>
                 <div class="stat-label">Total Spent</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">$<?= number_format((float)($stats['store_credit_balance'] ?? 0), 2) ?></div>
+                <div class="stat-label">Store Credit</div>
             </div>
         </div>
 

@@ -33,6 +33,25 @@ $fr = $currentLang === 'fr';
         </div>
 
         <div style="margin-bottom:16px;">
+            <label style="display:block; margin-bottom:6px; font-weight:600;"><?= $fr ? 'Methode de remboursement preferee' : 'Preferred Refund Method' ?></label>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <label style="display:flex; align-items:center; gap:8px; padding:12px; border:1px solid #d1d5db; border-radius:6px; cursor:pointer;">
+                    <input type="radio" name="preferred_refund_method" value="cash" checked>
+                    <span><?= $fr ? 'Remboursement en argent' : 'Cash Refund' ?></span>
+                </label>
+                <label style="display:flex; align-items:center; gap:8px; padding:12px; border:1px solid #16a34a; border-radius:6px; cursor:pointer; background:#f0fdf4;">
+                    <input type="radio" name="preferred_refund_method" value="store_credit">
+                    <span><?= $fr ? 'Credit OCSAPP (+ 10 % de bonus)' : 'OCSAPP Store Credit (+10% bonus)' ?></span>
+                </label>
+            </div>
+            <p style="color:#6b7280; font-size:13px; margin-top:6px;">
+                <?= $fr
+                    ? "Choisissez le credit boutique au lieu de l'argent et nous ajoutons 10 % a la valeur du credit. Le remboursement en argent demeure votre droit et n'est jamais refuse en faveur du credit."
+                    : "Choose store credit instead of cash and we add 10% to the credit value. Cash refund remains your right and is never withheld in favor of credit." ?>
+            </p>
+        </div>
+
+        <div style="margin-bottom:16px;">
             <label style="display:block; margin-bottom:6px; font-weight:600;"><?= $fr ? 'Description' : 'Description' ?></label>
             <textarea name="description" rows="4" required style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:6px;"></textarea>
         </div>

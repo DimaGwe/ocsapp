@@ -80,6 +80,7 @@ class ClaimController
         $claimType = sanitize(post('claim_type', ''));
         $description = sanitize(post('description', ''));
         $claimedValue = (float)post('claimed_value', 0);
+        $preferredRefundMethod = post('preferred_refund_method', 'cash') === 'store_credit' ? 'store_credit' : 'cash';
 
         $validTypes = ['damaged', 'missing_item', 'wrong_item', 'not_as_described', 'buyer_change_of_mind', 'other'];
         if (!in_array($claimType, $validTypes, true)) {
@@ -116,7 +117,7 @@ class ClaimController
         }
 
         $result = \App\Helpers\ClaimHelper::fileClaim(
-            'A', $orderId, null, $userId, $claimType, $description, $evidencePaths, $claimedValue
+            'A', $orderId, null, $userId, $claimType, $description, $evidencePaths, $claimedValue, $preferredRefundMethod
         );
 
         if (!$result['success']) {

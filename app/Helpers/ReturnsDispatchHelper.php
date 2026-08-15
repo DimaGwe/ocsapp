@@ -4,6 +4,7 @@ namespace App\Helpers;
 
 require_once __DIR__ . '/ChargebackHelper.php';
 require_once __DIR__ . '/PaymentGatewayHelper.php';
+require_once __DIR__ . '/StoreCreditHelper.php';
 
 /**
  * ReturnsDispatchHelper - Instant Reverse Routing + Returnless Refunds
@@ -48,6 +49,17 @@ class ReturnsDispatchHelper
         $claimedValue = (float)$claim['claimed_value'];
 
         if ($claimedValue < $reverseFee) {
+            $wantsCredit = ($claim['preferred_refund_method'] ?? 'cash') === 'store_credit';
+
+            if ($wantsCredit) {
+                $credit = \App\Helpers\StoreCreditHelper::addClaimRefundCredit((int)$claim['filed_by_user_id'], $claimedValue, $claimId);
+                if (!$credit['success']) {
+                    return ['success' => false, 'action' => null, 'error' => $credit['error']];
+                }
+                self::logAction($claimId, 'returnless_store_credit', "Item value \${$claimedValue} < reverse trip cost \${$reverseFee} - issued \${$credit['credited_amount']} store credit (incl. \${$credit['bonus_amount']} bonus), no pickup dispatched.");
+                return ['success' => true, 'action' => 'returnless_store_credit', 'error' => null];
+            }
+
             $refund = self::refundBuyer((int)$claim['order_id'], $claimedValue, "Returnless refund - claim #{$claimId}");
             if (!$refund['success']) {
                 return ['success' => false, 'action' => null, 'error' => $refund['error']];

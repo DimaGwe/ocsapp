@@ -472,6 +472,24 @@ $total = $subtotal + $deliveryFee + $additionalStopFee + $oversizeSurcharge + $l
                         </label>
                     </div>
                 </div>
+
+                <?php if (($storeCreditBalance ?? 0) > 0): ?>
+                <!-- Store Credit -->
+                <div class="card">
+                    <h2 class="card-title">
+                        <i class="fas fa-wallet"></i>
+                        <?= $t['checkout_store_credit'] ?? ($currentLang === 'fr' ? 'Credit OCSAPP' : 'OCSAPP Store Credit') ?>
+                    </h2>
+                    <label style="display:flex; align-items:center; gap:10px; padding:12px; border:1px solid #d1d5db; border-radius:8px; cursor:pointer;">
+                        <input type="checkbox" id="useStoreCredit" name="use_store_credit" value="1">
+                        <span>
+                            <?= $currentLang === 'fr'
+                                ? "Utiliser mon credit disponible (\$" . number_format($storeCreditBalance, 2) . ")"
+                                : "Use my available credit (\$" . number_format($storeCreditBalance, 2) . ")" ?>
+                        </span>
+                    </label>
+                </div>
+                <?php endif; ?>
             </div>
 
             <!-- RIGHT COLUMN (Summary + Place Order) -->

@@ -212,6 +212,7 @@ class CheckoutController
             'oversizeSurcharge' => round($oversizeTotalSurcharge, 2),
             'longDistanceSurcharge' => round($longDistanceTotalSurcharge, 2),
             'hardCapExceededShops' => $hardCapExceededShops,
+            'storeCreditBalance' => \App\Helpers\StoreCreditHelper::getBalance(userId()),
         ]);
     }
     
@@ -255,6 +256,7 @@ class CheckoutController
     $deliveryDate = sanitize(post('delivery_date', date('Y-m-d', strtotime('+1 day'))));
     $deliveryTime = sanitize(post('delivery_time', '10:00-12:00'));
     $notes = sanitize(post('notes', ''));
+    $useStoreCredit = post('use_store_credit', '0') === '1';
 
     // Validate address belongs to current user and fetch full details
     $selectedAddress = null;
@@ -546,6 +548,7 @@ class CheckoutController
         // Store pending order IDs in session for payment verification
         $orderIds = array_column($createdOrders, 'order_id');
         $_SESSION['pending_order_ids'] = $orderIds;
+        $_SESSION['use_store_credit'] = $useStoreCredit;
 
         // Route based on payment method
         if ($paymentMethod === 'card') {

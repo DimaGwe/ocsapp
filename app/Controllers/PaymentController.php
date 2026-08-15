@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 require_once __DIR__ . '/../Helpers/PaymentGatewayHelper.php';
+require_once __DIR__ . '/../Helpers/StoreCreditHelper.php';
 
 /**
  * PaymentController - Handles B2C marketplace payment processing
@@ -66,12 +67,43 @@ class PaymentController
             $grandTotal = array_sum(array_column($orders, 'total'));
             $orderNumbers = implode(', ', array_column($orders, 'order_number'));
 
+            // Store Credit (Returns & Refund Policy Sec. A6): buyer opted in at
+            // checkout, so apply whatever's available, capped at what's owed.
+            // Recorded on each order's store_credit_applied share now, but the
+            // real balance is only debited once payment is confirmed in
+            // completePayment() - never here, before anything is actually paid.
+            $creditApplied = 0.00;
+            if (!empty($_SESSION['use_store_credit'])) {
+                $available = \App\Helpers\StoreCreditHelper::getBalance(userId());
+                $creditApplied = round(min($available, $grandTotal), 2);
+            }
+
+            if ($creditApplied > 0) {
+                $this->applyStoreCreditShares($orders, $creditApplied);
+            }
+
+            $chargeAmount = round($grandTotal - $creditApplied, 2);
+
+            if ($chargeAmount <= 0) {
+                // Fully covered by store credit - no gateway involved at all.
+                $orderIds = array_column($orders, 'id');
+                $this->completePayment($orderIds, 'store_credit', 'CREDIT-' . uniqid());
+                unset($_SESSION['pending_order_ids']);
+                unset($_SESSION['use_store_credit']);
+                unset($_SESSION['cart']);
+                echo json_encode([
+                    'redirect' => url('checkout/success?order=' . ($orders[0]['order_number'] ?? '') . '&paid=1'),
+                    'gateway' => 'store_credit',
+                ]);
+                return;
+            }
+
             switch ($paymentMethod) {
                 case 'card':
-                    $this->createStripeSession($orders, $grandTotal, $orderNumbers);
+                    $this->createStripeSession($orders, $chargeAmount, $orderNumbers);
                     break;
                 case 'paypal':
-                    $this->createPayPalOrder($orders, $grandTotal, $orderNumbers);
+                    $this->createPayPalOrder($orders, $chargeAmount, $orderNumbers);
                     break;
                 default:
                     echo json_encode(['error' => 'Invalid payment method']);
@@ -415,6 +447,31 @@ class PaymentController
     }
 
     /**
+     * Splits a store-credit amount proportionally across the orders in this
+     * checkout session by their share of the combined total, and records it
+     * on each order's store_credit_applied - this is bookkeeping only, the
+     * real balance isn't touched until completePayment() confirms payment.
+     */
+    private function applyStoreCreditShares(array $orders, float $creditApplied): void
+    {
+        $grandTotal = array_sum(array_column($orders, 'total'));
+        if ($grandTotal <= 0) return;
+
+        $remaining = $creditApplied;
+        $count = count($orders);
+        foreach ($orders as $i => $order) {
+            if ($i === $count - 1) {
+                $share = round($remaining, 2); // last order absorbs any rounding remainder
+            } else {
+                $share = round($creditApplied * ((float)$order['total'] / $grandTotal), 2);
+                $remaining -= $share;
+            }
+            $this->db->prepare("UPDATE orders SET store_credit_applied = ? WHERE id = ?")
+                ->execute([$share, $order['id']]);
+        }
+    }
+
+    /**
      * Complete payment - update orders, assign delivery
      */
     private function completePayment(array $orderIds, string $gateway, string $transactionId): void
@@ -423,6 +480,16 @@ class PaymentController
             $this->db->beginTransaction();
 
             $placeholders = implode(',', array_fill(0, count($orderIds), '?'));
+
+            // Snapshot which orders are actually still pending (and their
+            // owed store credit) before flipping status, so the credit debit
+            // below only ever fires once per order - same guard as $updatedCount.
+            $pendingStmt = $this->db->prepare("
+                SELECT id, user_id, store_credit_applied FROM orders
+                WHERE id IN ($placeholders) AND payment_status = 'pending'
+            ");
+            $pendingStmt->execute($orderIds);
+            $pendingOrders = $pendingStmt->fetchAll(\PDO::FETCH_ASSOC);
 
             // Update orders to paid + confirmed
             $stmt = $this->db->prepare("
@@ -437,6 +504,20 @@ class PaymentController
             ");
             $stmt->execute(array_merge([$gateway, $transactionId], $orderIds));
             $updatedCount = $stmt->rowCount(); // 0 if already processed (prevents double-fire)
+
+            // Debit the real store credit balance now that payment is confirmed -
+            // never before this point, so a cancelled/abandoned gateway session
+            // never costs the buyer credit they didn't actually spend.
+            if ($updatedCount > 0 && !empty($pendingOrders)) {
+                $creditOwed = round(array_sum(array_column($pendingOrders, 'store_credit_applied')), 2);
+                if ($creditOwed > 0) {
+                    $creditUserId = (int)$pendingOrders[0]['user_id'];
+                    $creditResult = \App\Helpers\StoreCreditHelper::applyToCheckout($creditUserId, $creditOwed, (int)$pendingOrders[0]['id']);
+                    if (!$creditResult['success']) {
+                        logger("Store credit debit failed for orders [" . implode(',', $orderIds) . "]: " . $creditResult['error'], 'error');
+                    }
+                }
+            }
 
             // Log status changes
             foreach ($orderIds as $orderId) {

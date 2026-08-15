@@ -102,7 +102,8 @@ class AccountController
             'pending_orders' => intval($orderStats['pending_orders'] ?? 0),
             'completed_orders' => intval($orderStats['completed_orders'] ?? 0),
             'total_spent' => floatval($orderStats['total_spent'] ?? 0),
-            'wishlist_count' => 0
+            'wishlist_count' => 0,
+            'store_credit_balance' => \App\Helpers\StoreCreditHelper::getBalance(userId())
         ];
         
         view('buyer/account/index', [

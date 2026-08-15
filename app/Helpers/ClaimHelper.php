@@ -40,8 +40,13 @@ class ClaimHelper
         string $claimType,
         string $description,
         array $evidencePhotos,
-        float $claimedValue
+        float $claimedValue,
+        string $preferredRefundMethod = 'cash'
     ): array {
+        if (!in_array($preferredRefundMethod, ['cash', 'store_credit'], true)) {
+            $preferredRefundMethod = 'cash';
+        }
+
         $db = self::db();
 
         $deliveredAt = self::resolveDeliveredAt($track, $orderId, $distributionRequestId);
@@ -69,12 +74,12 @@ class ClaimHelper
         $stmt = $db->prepare("
             INSERT INTO order_claims
             (track, order_id, distribution_request_id, filed_by_user_id, claim_type, description,
-             evidence_photos, claimed_value, claim_deadline_at, fault_determination, fault_signals, status, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+             evidence_photos, claimed_value, preferred_refund_method, claim_deadline_at, fault_determination, fault_signals, status, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
         ");
         $stmt->execute([
             $track, $orderId, $distributionRequestId, $filedByUserId, $claimType, $description,
-            json_encode($evidencePhotos), $claimedValue, $deadline->format('Y-m-d H:i:s'),
+            json_encode($evidencePhotos), $claimedValue, $preferredRefundMethod, $deadline->format('Y-m-d H:i:s'),
             $signals['suggested'], json_encode($signals), $status,
         ]);
 
