@@ -191,8 +191,13 @@ class AdminClaimsController
         if (!$result['success']) {
             setFlash('error', $result['error'] ?? 'Failed to dispatch return.');
         } else {
-            $label = $result['action'] === 'returnless_refund' ? 'Buyer refunded directly (returnless).' : 'Reverse pickup dispatched.';
-            setFlash('success', $label);
+            $labels = [
+                'exchange_dispatched' => 'Identical replacement dispatched - no refund issued (Sec A5).',
+                'returnless_refund' => 'Buyer refunded directly (returnless).',
+                'returnless_store_credit' => 'Store credit issued directly (returnless).',
+                'reverse_pickup_dispatched' => 'Reverse pickup dispatched.',
+            ];
+            setFlash('success', $labels[$result['action']] ?? 'Return dispatched.');
         }
         redirect(url('admin/claims/view?id=' . $id));
     }

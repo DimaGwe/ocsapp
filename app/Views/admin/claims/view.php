@@ -103,13 +103,16 @@ ob_start();
         <div class="card" style="padding:20px; margin-bottom:16px;">
             <h3>Resolved</h3>
             <p>Resolution: <strong><?= htmlspecialchars(str_replace('_', ' ', $claim['resolution'] ?? '')) ?></strong></p>
-            <?php if ($claim['resolution'] === 'chargeback'): ?>
+            <?php if (in_array($claim['resolution'], ['chargeback', 'absorbed'], true)): ?>
             <form method="POST" action="<?= url('admin/claims/dispatch-return') ?>" style="margin-top:10px;">
                 <?= csrfField() ?>
                 <input type="hidden" name="id" value="<?= $claim['id'] ?>">
-                <button type="submit" class="btn btn-primary btn-block">Dispatch Return / Returnless Refund</button>
+                <button type="submit" class="btn btn-primary btn-block">Dispatch Return / Exchange / Refund</button>
             </form>
-            <p style="font-size:12px; color:#9ca3af; margin-top:6px;">Auto-decides based on item value vs. reverse-trip cost.</p>
+            <p style="font-size:12px; color:#9ca3af; margin-top:6px;">For damaged/wrong/incorrect items, tries an identical exchange first (Sec A5); otherwise auto-decides refund vs. reverse pickup based on item value vs. reverse-trip cost.</p>
+            <?php endif; ?>
+            <?php if (!empty($claim['replacement_order_id'])): ?>
+            <p style="margin-top:10px;">Replacement order: <a href="<?= url('admin/orders/view?id=' . $claim['replacement_order_id']) ?>">#<?= (int)$claim['replacement_order_id'] ?></a></p>
             <?php endif; ?>
         </div>
         <?php endif; ?>
