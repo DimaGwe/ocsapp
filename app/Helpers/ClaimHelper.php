@@ -114,10 +114,22 @@ class ClaimHelper
      */
     private static function computeFaultSignals(string $track, ?int $orderId, ?int $distributionRequestId, string $claimType): array
     {
-        if ($track !== 'A' || !$orderId) {
-            // Track B (distribution) doesn't have the same per-order pickup-
-            // photo enforcement built yet (see Task 19 scope note) - always
-            // needs manual review until that exists.
+        // Track A (Marche orders) keys delivery_assignments by order_id; Track B
+        // (Approvisionnement) keys the same table by distribution_request_id -
+        // both capture the identical pickup_photo_path/proof_of_delivery/
+        // signature_collected evidence via the same ODA driver flow
+        // (DriverApiController::completeDistributionDelivery() for Track B), so
+        // the same signal logic applies to both. Distribution *shipments*
+        // (Business Account Agreement Sec. 8, distributing a business's own
+        // goods) are a separate flow with no order_claims column to reference
+        // them at all yet - out of scope for this method until that schema exists.
+        if ($track === 'A' && $orderId) {
+            $whereClause = 'order_id = ?';
+            $whereValue = $orderId;
+        } elseif ($track === 'B' && $distributionRequestId) {
+            $whereClause = 'distribution_request_id = ?';
+            $whereValue = $distributionRequestId;
+        } else {
             return [
                 'suggested' => 'pending',
                 'reason' => 'No automated pickup/delivery evidence signal available for this order type - manual review required.',
@@ -128,9 +140,9 @@ class ClaimHelper
 
         $stmt = self::db()->prepare("
             SELECT pickup_photo_path, proof_of_delivery, signature_collected
-            FROM delivery_assignments WHERE order_id = ? LIMIT 1
+            FROM delivery_assignments WHERE {$whereClause} LIMIT 1
         ");
-        $stmt->execute([$orderId]);
+        $stmt->execute([$whereValue]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC) ?: [];
 
         $hasPickupEvidence = !empty($row['pickup_photo_path']);
