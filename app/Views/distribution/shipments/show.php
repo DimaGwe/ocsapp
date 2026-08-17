@@ -170,6 +170,11 @@ unset($_pageTranslations);
                         </button>
                     </form>
                 <?php endif; ?>
+                <?php if (in_array($shipment['status'], ['delivered', 'completed'])): ?>
+                    <a href="<?= url('distribution/claims/new?type=shipment&id=' . $shipment['id']) ?>" class="btn btn-secondary">
+                        <i class="fas fa-file-invoice"></i> <?= $currentLang === 'fr' ? 'Deposer une reclamation' : 'File a Claim' ?>
+                    </a>
+                <?php endif; ?>
             </div>
         </div>
 

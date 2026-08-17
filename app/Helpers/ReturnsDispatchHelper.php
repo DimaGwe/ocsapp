@@ -5,6 +5,7 @@ namespace App\Helpers;
 require_once __DIR__ . '/ChargebackHelper.php';
 require_once __DIR__ . '/PaymentGatewayHelper.php';
 require_once __DIR__ . '/StoreCreditHelper.php';
+require_once __DIR__ . '/BusinessCreditNoteHelper.php';
 
 /**
  * ReturnsDispatchHelper - Instant Reverse Routing + Returnless Refunds
@@ -243,6 +244,345 @@ class ReturnsDispatchHelper
         self::dispatchReversePickup($orderId, $claimId, \App\Helpers\ChargebackHelper::reverseLogisticsRate(self::resolveOrderCity($orderId), 'A'), $preferredDriverId);
 
         return ['success' => true, 'available' => true, 'replacement_order_id' => $replacementOrderId, 'replacement_order_number' => $replacementNumber, 'error' => null];
+    }
+
+    /**
+     * Sec B5 - Track B "Resolution Options": Replacement (default), Credit
+     * note (+5% bonus to the business's account balance), or Cash refund /
+     * payout adjustment - covers both Approvisionnement PO claims
+     * (distribution_request_id) and Distribution-shipment claims
+     * (distribution_shipment_id). Mirrors resolveReturnAction()'s
+     * exchange-first ordering, but Track B has no reverse-pickup/returnless-
+     * refund threshold logic - B2B claims don't carry a physical item back
+     * through Centrale Livreur the way Track A's does, per the Returns
+     * Policy (Track B is shipment/PO-level, not per-item).
+     *
+     * @return array{success: bool, action: ?string, error: ?string}
+     */
+    public static function resolveReturnActionTrackB(int $claimId): array
+    {
+        $db = self::db();
+        $stmt = $db->prepare("SELECT * FROM order_claims WHERE id = ? LIMIT 1");
+        $stmt->execute([$claimId]);
+        $claim = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$claim || $claim['track'] !== 'B' || (!$claim['distribution_request_id'] && !$claim['distribution_shipment_id'])) {
+            return ['success' => false, 'action' => null, 'error' => 'Only Track B claims against a procurement request or shipment support this resolution.'];
+        }
+        if (!in_array($claim['status'], ['resolved', 'approved'], true)) {
+            return ['success' => false, 'action' => null, 'error' => 'Claim must be resolved (fault determined) before dispatching a resolution.'];
+        }
+
+        $replacement = self::attemptTrackBReplacement($claimId, $claim);
+        if (!$replacement['success']) {
+            return ['success' => false, 'action' => null, 'error' => $replacement['error']];
+        }
+
+        if ($replacement['available']) {
+            $kind = $claim['distribution_shipment_id'] ? 'shipment' : 'procurement request';
+            self::logAction($claimId, 'replacement_dispatched', "Replacement {$kind} #{$replacement['replacement_number']} created at no charge, queued into the normal fulfillment pipeline (Sec B5).");
+            return ['success' => true, 'action' => 'replacement_dispatched', 'error' => null];
+        }
+
+        // B5's own fallback when the original record no longer exists to
+        // clone (cancelled/deleted) - falls through to the business's chosen
+        // credit-note-vs-cash preference, same as Track A's exchange fallback.
+        self::logAction($claimId, 'replacement_unavailable', 'Original record not found - falling back to credit note / cash per Sec B5.');
+
+        $businessProfileId = self::resolveTrackBBusinessProfileId($claim);
+        if (!$businessProfileId) {
+            return ['success' => false, 'action' => null, 'error' => 'Could not resolve the business account for this claim.'];
+        }
+
+        if (($claim['preferred_refund_method'] ?? 'cash') === 'credit_note') {
+            $credit = \App\Helpers\BusinessCreditNoteHelper::addClaimRefundCredit($businessProfileId, (float)$claim['claimed_value'], $claimId);
+            if (!$credit['success']) {
+                return ['success' => false, 'action' => null, 'error' => $credit['error']];
+            }
+            self::logAction($claimId, 'credit_note_issued', "Issued \${$credit['credited_amount']} credit note (incl. \${$credit['bonus_amount']} bonus) to the business's account balance.");
+            return ['success' => true, 'action' => 'credit_note_issued', 'error' => null];
+        }
+
+        // Cash refund / payout adjustment (Sec B5). A card charge can be
+        // refunded via Stripe directly; bank_transfer/net-30 invoice
+        // payments have no automated payout rail anywhere in this codebase
+        // (same gap as finding #4's weekly payout batching - see
+        // [[project_ecosystem_requirements]]), so this degrades honestly to
+        // a flagged admin task instead of fabricating an invoice-netting
+        // mechanism that doesn't exist.
+        $refund = self::refundTrackBPayment($claim);
+        if (!$refund['success']) {
+            self::logAction($claimId, 'cash_adjustment_needs_manual_action', $refund['error']);
+            require_once __DIR__ . '/NotificationHelper.php';
+            \App\Helpers\NotificationHelper::add(
+                'claim', '💳 Manual Payout Adjustment Needed',
+                "Claim #{$claimId}: cash refund/payout adjustment of \${$claim['claimed_value']} could not be processed automatically ({$refund['error']}) - handle manually.",
+                ['link' => '/admin/claims/view?id=' . $claimId, 'icon' => 'exclamation-triangle', 'priority' => 'high']
+            );
+            return ['success' => true, 'action' => 'cash_adjustment_flagged', 'error' => null];
+        }
+        self::logAction($claimId, 'cash_refund_processed', "Refunded \${$claim['claimed_value']} to the original payment method.");
+        return ['success' => true, 'action' => 'cash_refund_processed', 'error' => null];
+    }
+
+    /**
+     * @return array{success: bool, available: bool, replacement_number: ?string, error: ?string}
+     */
+    private static function attemptTrackBReplacement(int $claimId, array $claim): array
+    {
+        $db = self::db();
+
+        // Idempotency guard - same reasoning as Track A's attemptExchange().
+        if (!empty($claim['replacement_request_id'])) {
+            $existing = $db->prepare("SELECT request_number FROM distribution_requests WHERE id = ?");
+            $existing->execute([(int)$claim['replacement_request_id']]);
+            return ['success' => true, 'available' => true, 'replacement_number' => $existing->fetchColumn() ?: null, 'error' => null];
+        }
+        if (!empty($claim['replacement_shipment_id'])) {
+            $existing = $db->prepare("SELECT shipment_number FROM distribution_shipments WHERE id = ?");
+            $existing->execute([(int)$claim['replacement_shipment_id']]);
+            return ['success' => true, 'available' => true, 'replacement_number' => $existing->fetchColumn() ?: null, 'error' => null];
+        }
+
+        if (!empty($claim['distribution_request_id'])) {
+            return self::createReplacementRequest($claimId, (int)$claim['distribution_request_id']);
+        }
+        if (!empty($claim['distribution_shipment_id'])) {
+            return self::createReplacementShipment($claimId, (int)$claim['distribution_shipment_id']);
+        }
+
+        return ['success' => true, 'available' => false, 'replacement_number' => null, 'error' => null];
+    }
+
+    /**
+     * Approvisionnement replacement: clones the original request + its
+     * catalog items into a new $0 request, status 'paid' (skips
+     * pending/approval/payment - the admin's claim-resolution action IS the
+     * approval), so it flows through the exact same existing procurement ->
+     * delivery pipeline any normal paid request uses. Deliberately does NOT
+     * try to auto-dispatch a driver or re-trigger supplier
+     * invoicing/purchase-orders itself - procurement sourcing is
+     * admin-driven even for a brand-new request today, so inventing
+     * automation for just the replacement path would be a bigger claim than
+     * this codebase can honestly back. Shopping-list items
+     * (distribution_shopping_items) are not cloned - out of scope, flagged.
+     */
+    private static function createReplacementRequest(int $claimId, int $originalRequestId): array
+    {
+        $db = self::db();
+        $stmt = $db->prepare("SELECT * FROM distribution_requests WHERE id = ?");
+        $stmt->execute([$originalRequestId]);
+        $original = $stmt->fetch(\PDO::FETCH_ASSOC);
+        if (!$original) {
+            return ['success' => true, 'available' => false, 'replacement_number' => null, 'error' => null];
+        }
+
+        $itemsStmt = $db->prepare("SELECT * FROM distribution_request_items WHERE distribution_request_id = ?");
+        $itemsStmt->execute([$originalRequestId]);
+        $items = $itemsStmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        try {
+            $db->beginTransaction();
+
+            $newNumber = 'REPL-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
+
+            $db->prepare("
+                INSERT INTO distribution_requests
+                (business_profile_id, request_number, request_type, status, subtotal, tax_amount, delivery_fee,
+                 discount_amount, total_amount, payment_status, paid_at,
+                 delivery_street, delivery_city, delivery_province, delivery_postal_code, delivery_country,
+                 delivery_instructions, requested_delivery_date, business_notes, submitted_at, created_at, updated_at)
+                VALUES (?, ?, ?, 'paid', 0.00, 0.00, 0.00, 0.00, 0.00, 'paid', NOW(),
+                        ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), NOW())
+            ")->execute([
+                (int)$original['business_profile_id'],
+                $newNumber,
+                $original['request_type'],
+                $original['delivery_street'], $original['delivery_city'], $original['delivery_province'],
+                $original['delivery_postal_code'], $original['delivery_country'],
+                $original['delivery_instructions'], $original['requested_delivery_date'],
+                "Replacement for claim #{$claimId} (original request #{$original['request_number']}) - no charge, Sec B5.",
+            ]);
+            $newRequestId = (int)$db->lastInsertId();
+
+            foreach ($items as $item) {
+                $db->prepare("
+                    INSERT INTO distribution_request_items
+                    (distribution_request_id, product_id, product_name, product_sku, product_image, quantity, unit_price, subtotal, status, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW(), NOW())
+                ")->execute([
+                    $newRequestId, $item['product_id'], $item['product_name'], $item['product_sku'],
+                    $item['product_image'], $item['quantity'], $item['unit_price'], $item['subtotal'],
+                ]);
+            }
+
+            $db->prepare("UPDATE order_claims SET replacement_request_id = ?, updated_at = NOW() WHERE id = ?")
+               ->execute([$newRequestId, $claimId]);
+
+            $db->commit();
+        } catch (\Exception $e) {
+            if ($db->inTransaction()) $db->rollBack();
+            error_log('createReplacementRequest error: ' . $e->getMessage());
+            return ['success' => false, 'available' => false, 'replacement_number' => null, 'error' => $e->getMessage()];
+        }
+
+        require_once __DIR__ . '/NotificationHelper.php';
+        \App\Helpers\NotificationHelper::add(
+            'distribution', '🔁 Replacement Procurement Request Created',
+            "Request #{$newNumber} created at no charge for claim #{$claimId} - needs re-sourcing from the supplier via the normal procurement flow.",
+            ['link' => '/admin/distribution/view?id=' . $newRequestId, 'icon' => 'box-seam', 'priority' => 'high']
+        );
+
+        return ['success' => true, 'available' => true, 'replacement_number' => $newNumber, 'error' => null];
+    }
+
+    /**
+     * Distribution-shipment replacement: the business's own goods, not
+     * OCSAPP inventory, so there's nothing to stock-check or re-source -
+     * "replacement" here means the business physically replaces the
+     * damaged/lost goods on their end and OCSAPP dispatches a new $0
+     * delivery run for it (per Dima's scoping call: free re-delivery run,
+     * not a fabricated goods-replacement mechanism). Clones the shipment +
+     * its destinations, status 'paid' (ready for the exact same admin
+     * scheduling flow AdminShipmentController already uses - no new
+     * dispatch mechanism invented, since shipments have no driver
+     * auto-assign even on the happy path).
+     */
+    private static function createReplacementShipment(int $claimId, int $originalShipmentId): array
+    {
+        $db = self::db();
+        $stmt = $db->prepare("SELECT * FROM distribution_shipments WHERE id = ?");
+        $stmt->execute([$originalShipmentId]);
+        $original = $stmt->fetch(\PDO::FETCH_ASSOC);
+        if (!$original) {
+            return ['success' => true, 'available' => false, 'replacement_number' => null, 'error' => null];
+        }
+
+        $destStmt = $db->prepare("SELECT * FROM distribution_shipment_destinations WHERE shipment_id = ? ORDER BY sequence_order ASC");
+        $destStmt->execute([$originalShipmentId]);
+        $destinations = $destStmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        try {
+            $db->beginTransaction();
+
+            $newNumber = 'REPL-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
+
+            $db->prepare("
+                INSERT INTO distribution_shipments
+                (business_profile_id, shipment_number, shipment_type, status,
+                 pickup_street, pickup_city, pickup_province, pickup_postal_code,
+                 pickup_contact_name, pickup_contact_phone, pickup_instructions,
+                 is_multi_drop, destination_street, destination_city, destination_province,
+                 destination_postal_code, destination_contact_name, destination_contact_phone,
+                 destination_instructions, total_packages, total_weight_kg, package_description,
+                 declared_value, subtotal, tax_amount, total_amount, payment_status, paid_at,
+                 business_notes, submitted_at, created_at, updated_at)
+                VALUES (?, ?, ?, 'paid', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0.00, 0.00, 0.00, 'paid', NOW(), ?, NOW(), NOW(), NOW())
+            ")->execute([
+                (int)$original['business_profile_id'], $newNumber, $original['shipment_type'],
+                $original['pickup_street'], $original['pickup_city'], $original['pickup_province'], $original['pickup_postal_code'],
+                $original['pickup_contact_name'], $original['pickup_contact_phone'], $original['pickup_instructions'],
+                $original['is_multi_drop'], $original['destination_street'], $original['destination_city'], $original['destination_province'],
+                $original['destination_postal_code'], $original['destination_contact_name'], $original['destination_contact_phone'],
+                $original['destination_instructions'], $original['total_packages'], $original['total_weight_kg'], $original['package_description'],
+                $original['declared_value'],
+                "Replacement for claim #{$claimId} (original shipment #{$original['shipment_number']}) - no charge, Sec B5.",
+            ]);
+            $newShipmentId = (int)$db->lastInsertId();
+
+            foreach ($destinations as $dest) {
+                $db->prepare("
+                    INSERT INTO distribution_shipment_destinations
+                    (shipment_id, sequence_order, destination_name, street, city, province, postal_code,
+                     contact_name, contact_phone, delivery_instructions, status, packages_count, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, NOW(), NOW())
+                ")->execute([
+                    $newShipmentId, $dest['sequence_order'], $dest['destination_name'], $dest['street'], $dest['city'],
+                    $dest['province'], $dest['postal_code'], $dest['contact_name'], $dest['contact_phone'],
+                    $dest['delivery_instructions'], $dest['packages_count'],
+                ]);
+            }
+
+            $db->prepare("UPDATE order_claims SET replacement_shipment_id = ?, updated_at = NOW() WHERE id = ?")
+               ->execute([$newShipmentId, $claimId]);
+
+            $db->commit();
+        } catch (\Exception $e) {
+            if ($db->inTransaction()) $db->rollBack();
+            error_log('createReplacementShipment error: ' . $e->getMessage());
+            return ['success' => false, 'available' => false, 'replacement_number' => null, 'error' => $e->getMessage()];
+        }
+
+        require_once __DIR__ . '/NotificationHelper.php';
+        \App\Helpers\NotificationHelper::add(
+            'distribution', '🔁 Replacement Shipment Created',
+            "Shipment #{$newNumber} created at no charge for claim #{$claimId} - coordinate pickup of the replacement goods with the business, then schedule as usual.",
+            ['link' => '/admin/shipments/view?id=' . $newShipmentId, 'icon' => 'box-seam', 'priority' => 'high']
+        );
+
+        return ['success' => true, 'available' => true, 'replacement_number' => $newNumber, 'error' => null];
+    }
+
+    /**
+     * Resolves via filed_by_user_id -> business_profiles.user_id, NOT via
+     * the distribution_request/shipment row - this is the fallback path
+     * that only runs when that original record is already gone
+     * (attemptTrackBReplacement's 'available' => false case), so looking it
+     * up through the same missing row would always fail exactly when this
+     * method is needed. Found by testing the fallback branch directly
+     * before shipping it.
+     */
+    private static function resolveTrackBBusinessProfileId(array $claim): ?int
+    {
+        if (empty($claim['filed_by_user_id'])) {
+            return null;
+        }
+        $stmt = self::db()->prepare("SELECT id FROM business_profiles WHERE user_id = ?");
+        $stmt->execute([(int)$claim['filed_by_user_id']]);
+        $id = $stmt->fetchColumn();
+        return $id ? (int)$id : null;
+    }
+
+    /**
+     * Cash refund / payout adjustment leg of Sec B5. Only card (Stripe)
+     * payments can be refunded automatically today - reuses the same
+     * Stripe\Refund capability built for Track A, keyed off whichever
+     * record's payment_intent_id/payment_reference is on file.
+     */
+    private static function refundTrackBPayment(array $claim): array
+    {
+        $db = self::db();
+        if (!empty($claim['distribution_request_id'])) {
+            $stmt = $db->prepare("SELECT payment_method, payment_reference FROM distribution_requests WHERE id = ?");
+            $stmt->execute([(int)$claim['distribution_request_id']]);
+        } else {
+            $stmt = $db->prepare("SELECT payment_method, payment_reference FROM distribution_shipments WHERE id = ?");
+            $stmt->execute([(int)$claim['distribution_shipment_id']]);
+        }
+        $payment = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$payment || $payment['payment_method'] !== 'stripe' || empty($payment['payment_reference'])) {
+            return ['success' => false, 'error' => 'No card payment on file to refund automatically - this account pays by bank transfer/net-30, which has no automated payout rail yet.'];
+        }
+
+        $config = getStripeConfig();
+        if (empty($config['secret_key'])) {
+            return ['success' => false, 'error' => 'Card payments are not configured.'];
+        }
+
+        try {
+            \Stripe\Stripe::setApiKey($config['secret_key']);
+            $refund = \Stripe\Refund::create([
+                'payment_intent' => $payment['payment_reference'],
+                'amount' => (int)round((float)$claim['claimed_value'] * 100),
+                'reason' => 'requested_by_customer',
+                'metadata' => ['claim_id' => $claim['id']],
+            ]);
+            return ['success' => $refund->status !== 'failed', 'error' => null];
+        } catch (\Exception $e) {
+            error_log('refundTrackBPayment error: ' . $e->getMessage());
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
     }
 
     /**

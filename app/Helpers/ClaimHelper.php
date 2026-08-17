@@ -41,15 +41,21 @@ class ClaimHelper
         string $description,
         array $evidencePhotos,
         float $claimedValue,
-        string $preferredRefundMethod = 'cash'
+        string $preferredRefundMethod = 'cash',
+        ?int $distributionShipmentId = null
     ): array {
-        if (!in_array($preferredRefundMethod, ['cash', 'store_credit'], true)) {
+        $validMethods = $track === 'B' ? ['cash', 'credit_note'] : ['cash', 'store_credit'];
+        if (!in_array($preferredRefundMethod, $validMethods, true)) {
             $preferredRefundMethod = 'cash';
+        }
+
+        if ($track === 'B' && !$distributionRequestId && !$distributionShipmentId) {
+            return ['success' => false, 'claim_id' => null, 'error' => 'A Track B claim must reference either a procurement request or a shipment.'];
         }
 
         $db = self::db();
 
-        $deliveredAt = self::resolveDeliveredAt($track, $orderId, $distributionRequestId);
+        $deliveredAt = self::resolveDeliveredAt($track, $orderId, $distributionRequestId, $distributionShipmentId);
         if (!$deliveredAt) {
             return ['success' => false, 'claim_id' => null, 'error' => 'Order not found or not yet delivered.'];
         }
@@ -69,16 +75,16 @@ class ClaimHelper
             return ['success' => false, 'claim_id' => null, 'error' => 'Buyer change-of-mind claims are only available for Marche (B2C) orders.'];
         }
 
-        $signals = self::computeFaultSignals($track, $orderId, $distributionRequestId, $claimType);
+        $signals = self::computeFaultSignals($track, $orderId, $distributionRequestId, $claimType, $distributionShipmentId);
 
         $stmt = $db->prepare("
             INSERT INTO order_claims
-            (track, order_id, distribution_request_id, filed_by_user_id, claim_type, description,
+            (track, order_id, distribution_request_id, distribution_shipment_id, filed_by_user_id, claim_type, description,
              evidence_photos, claimed_value, preferred_refund_method, claim_deadline_at, fault_determination, fault_signals, status, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
         ");
         $stmt->execute([
-            $track, $orderId, $distributionRequestId, $filedByUserId, $claimType, $description,
+            $track, $orderId, $distributionRequestId, $distributionShipmentId, $filedByUserId, $claimType, $description,
             json_encode($evidencePhotos), $claimedValue, $preferredRefundMethod, $deadline->format('Y-m-d H:i:s'),
             $signals['suggested'], json_encode($signals), $status,
         ]);
@@ -92,7 +98,7 @@ class ClaimHelper
         return ['success' => true, 'claim_id' => $claimId, 'error' => null];
     }
 
-    private static function resolveDeliveredAt(string $track, ?int $orderId, ?int $distributionRequestId): ?string
+    private static function resolveDeliveredAt(string $track, ?int $orderId, ?int $distributionRequestId, ?int $distributionShipmentId = null): ?string
     {
         $db = self::db();
         if ($track === 'A' && $orderId) {
@@ -103,6 +109,17 @@ class ClaimHelper
         if ($track === 'B' && $distributionRequestId) {
             $stmt = $db->prepare("SELECT delivered_at FROM distribution_requests WHERE id = ? AND status = 'delivered' LIMIT 1");
             $stmt->execute([$distributionRequestId]);
+            return $stmt->fetchColumn() ?: null;
+        }
+        if ($track === 'B' && $distributionShipmentId) {
+            // distribution_shipments has no single delivered_at column (delivery is
+            // tracked per-destination) - falls back to completed_at, or updated_at at
+            // the moment AdminShipmentController flips status to 'delivered'/'completed'.
+            $stmt = $db->prepare("
+                SELECT COALESCE(completed_at, updated_at) FROM distribution_shipments
+                WHERE id = ? AND status IN ('delivered', 'completed') LIMIT 1
+            ");
+            $stmt->execute([$distributionShipmentId]);
             return $stmt->fetchColumn() ?: null;
         }
         return null;
@@ -117,7 +134,7 @@ class ClaimHelper
      *
      * @return array{suggested: string, reason: string, pickup_evidence: bool, delivery_evidence: bool}
      */
-    private static function computeFaultSignals(string $track, ?int $orderId, ?int $distributionRequestId, string $claimType): array
+    private static function computeFaultSignals(string $track, ?int $orderId, ?int $distributionRequestId, string $claimType, ?int $distributionShipmentId = null): array
     {
         // Track A (Marche orders) keys delivery_assignments by order_id; Track B
         // (Approvisionnement) keys the same table by distribution_request_id -
@@ -126,8 +143,11 @@ class ClaimHelper
         // (DriverApiController::completeDistributionDelivery() for Track B), so
         // the same signal logic applies to both. Distribution *shipments*
         // (Business Account Agreement Sec. 8, distributing a business's own
-        // goods) are a separate flow with no order_claims column to reference
-        // them at all yet - out of scope for this method until that schema exists.
+        // goods) go through a separate manual admin-driven delivery flow
+        // (AdminShipmentController) with no delivery_assignments row and no
+        // pickup/delivery photo capture at all - honestly falls through to the
+        // "no automated signal" branch below rather than fabricating evidence
+        // that was never actually captured.
         if ($track === 'A' && $orderId) {
             $whereClause = 'order_id = ?';
             $whereValue = $orderId;

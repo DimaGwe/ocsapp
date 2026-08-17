@@ -30,10 +30,13 @@ class AdminClaimsController
     {
         $statusFilter = get('status', '');
         $sql = "
-            SELECT oc.*, o.order_number, u.first_name, u.last_name, u.email
+            SELECT oc.*, o.order_number, u.first_name, u.last_name, u.email,
+                   dr.request_number, dsh.shipment_number
             FROM order_claims oc
             LEFT JOIN orders o ON o.id = oc.order_id
             LEFT JOIN users u ON u.id = oc.filed_by_user_id
+            LEFT JOIN distribution_requests dr ON dr.id = oc.distribution_request_id
+            LEFT JOIN distribution_shipments dsh ON dsh.id = oc.distribution_shipment_id
         ";
         $params = [];
         if ($statusFilter) {
@@ -56,11 +59,17 @@ class AdminClaimsController
         $id = (int)get('id', 0);
         $stmt = $this->db->prepare("
             SELECT oc.*, o.order_number, o.shop_id, s.name AS shop_name,
-                   u.first_name, u.last_name, u.email
+                   u.first_name, u.last_name, u.email,
+                   dr.request_number, dsh.shipment_number,
+                   COALESCE(bp_r.company_name, bp_s.company_name) AS business_name
             FROM order_claims oc
             LEFT JOIN orders o ON o.id = oc.order_id
             LEFT JOIN shops s ON s.id = o.shop_id
             LEFT JOIN users u ON u.id = oc.filed_by_user_id
+            LEFT JOIN distribution_requests dr ON dr.id = oc.distribution_request_id
+            LEFT JOIN distribution_shipments dsh ON dsh.id = oc.distribution_shipment_id
+            LEFT JOIN business_profiles bp_r ON bp_r.id = dr.business_profile_id
+            LEFT JOIN business_profiles bp_s ON bp_s.id = dsh.business_profile_id
             WHERE oc.id = ?
         ");
         $stmt->execute([$id]);
@@ -76,6 +85,10 @@ class AdminClaimsController
         if ($claim['order_id']) {
             $ev = $this->db->prepare("SELECT pickup_photo_path, proof_of_delivery, signature_collected FROM delivery_assignments WHERE order_id = ? LIMIT 1");
             $ev->execute([$claim['order_id']]);
+            $evidence = $ev->fetch(\PDO::FETCH_ASSOC) ?: [];
+        } elseif ($claim['distribution_request_id']) {
+            $ev = $this->db->prepare("SELECT pickup_photo_path, proof_of_delivery, signature_collected FROM delivery_assignments WHERE distribution_request_id = ? LIMIT 1");
+            $ev->execute([$claim['distribution_request_id']]);
             $evidence = $ev->fetch(\PDO::FETCH_ASSOC) ?: [];
         }
 
@@ -186,7 +199,14 @@ class AdminClaimsController
         }
 
         $id = (int)($_POST['id'] ?? 0);
-        $result = \App\Helpers\ReturnsDispatchHelper::resolveReturnAction($id);
+
+        $trackStmt = $this->db->prepare("SELECT track FROM order_claims WHERE id = ?");
+        $trackStmt->execute([$id]);
+        $track = $trackStmt->fetchColumn();
+
+        $result = $track === 'B'
+            ? \App\Helpers\ReturnsDispatchHelper::resolveReturnActionTrackB($id)
+            : \App\Helpers\ReturnsDispatchHelper::resolveReturnAction($id);
 
         if (!$result['success']) {
             setFlash('error', $result['error'] ?? 'Failed to dispatch return.');
@@ -196,6 +216,10 @@ class AdminClaimsController
                 'returnless_refund' => 'Buyer refunded directly (returnless).',
                 'returnless_store_credit' => 'Store credit issued directly (returnless).',
                 'reverse_pickup_dispatched' => 'Reverse pickup dispatched.',
+                'replacement_dispatched' => 'Replacement created at no charge and queued for fulfillment (Sec B5).',
+                'credit_note_issued' => 'Credit note issued to the business\'s account balance (Sec B5).',
+                'cash_refund_processed' => 'Refunded to the original payment method (Sec B5).',
+                'cash_adjustment_flagged' => 'No automated payout rail for this payment method - flagged for manual processing (Sec B5).',
             ];
             setFlash('success', $labels[$result['action']] ?? 'Return dispatched.');
         }

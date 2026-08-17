@@ -284,6 +284,11 @@ return [
     'POST /admin/claims/confirm-transit-caused' => ['AdminClaimsController', 'confirmTransitCaused'],
     'POST /admin/claims/deny' => ['AdminClaimsController', 'deny'],
     'POST /admin/claims/dispatch-return' => ['AdminClaimsController', 'dispatchReturn'],
+
+    // Track B claim filing (Distribution portal, Returns Policy Sec B1-B5)
+    'GET /distribution/claims' => ['DistributionClaimController', 'myClaims'],
+    'GET /distribution/claims/new' => ['DistributionClaimController', 'newClaim'],
+    'POST /distribution/claims/store' => ['DistributionClaimController', 'submitClaim'],
     'POST /admin/business-accounts/messages/send' => ['BusinessMessagesController', 'adminSend'],
     'GET /admin/business-accounts/messages' => ['BusinessMessagesController', 'adminIndex'],
     'POST /admin/business-accounts/documents/verify'  => ['AdminBusinessController', 'verifyDocument'],

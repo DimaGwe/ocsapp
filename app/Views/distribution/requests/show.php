@@ -434,6 +434,7 @@ $drStages = $currentLang === 'fr' ? [
                             <span class="status-msg"><?= $t['status_in_transit_msg'] ?></span>
                         <?php elseif ($request['status'] === 'delivered'): ?>
                             <span class="status-msg"><?= $t['status_delivered_msg'] ?></span>
+                            <a href="<?= url('distribution/claims/new?type=request&id=' . $request['id']) ?>" class="btn btn-sm" style="margin-left:12px; border:1px solid #d1d5db; border-radius:6px; padding:4px 10px;"><?= $currentLang === 'fr' ? 'Deposer une reclamation' : 'File a Claim' ?></a>
                         <?php elseif ($request['status'] === 'cancelled'): ?>
                             <span class="status-msg status-msg-cancelled"><?= $t['status_cancelled_msg'] ?></span>
                         <?php endif; ?>

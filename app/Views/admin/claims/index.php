@@ -39,8 +39,8 @@ ob_start();
     <tbody>
         <?php foreach ($claims as $c): ?>
         <tr style="border-bottom:1px solid #f0f0f0;">
-            <td style="padding:10px;">#<?= $c['id'] ?></td>
-            <td style="padding:10px;"><?= htmlspecialchars($c['order_number'] ?? '-') ?></td>
+            <td style="padding:10px;">#<?= $c['id'] ?> <?= $c['track'] === 'B' ? '<small style="color:#9ca3af;">(B)</small>' : '' ?></td>
+            <td style="padding:10px;"><?= htmlspecialchars($c['order_number'] ?? $c['request_number'] ?? $c['shipment_number'] ?? '-') ?></td>
             <td style="padding:10px;"><?= htmlspecialchars(trim(($c['first_name'] ?? '') . ' ' . ($c['last_name'] ?? ''))) ?></td>
             <td style="padding:10px;"><?= htmlspecialchars(str_replace('_', ' ', $c['claim_type'])) ?></td>
             <td style="padding:10px;">$<?= number_format($c['claimed_value'], 2) ?></td>

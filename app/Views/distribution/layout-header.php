@@ -1323,6 +1323,10 @@ if (!empty($_SESSION['business']['id']) && !$_bizIsPending) {
 
         <?php /* ── Always accessible ── */ ?>
         <div class="nav-section-label">&nbsp;</div>
+        <a href="<?= url('distribution/claims') ?>" class="nav-link <?= ($currentPage ?? '') === 'claims' ? 'active' : '' ?>">
+          <i class="fas fa-file-invoice"></i>
+          <span><?= ($currentLang ?? 'fr') === 'fr' ? 'Mes reclamations' : 'My Claims' ?></span>
+        </a>
         <a href="<?= url('distribution/messages') ?>" class="nav-link <?= ($currentPage ?? '') === 'messages' ? 'active' : '' ?>">
           <i class="fas fa-comments"></i>
           <span><?= $t['messages'] ?></span>
