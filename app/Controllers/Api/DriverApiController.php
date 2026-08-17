@@ -2440,6 +2440,7 @@ class DriverApiController
             'driver_name'             => $row['driver_name'] ?? '',
             'driver_license'          => $row['driver_license'] ?? '',
             'distance_km'             => (float)($row['distance_km'] ?? 0),
+            'total_weight_kg'         => (float)($row['total_weight_kg'] ?? 0),
             // Locked-in payout (post-accept, may reflect an admin override) if set,
             // otherwise the live-calculated figure a driver would receive if they accept now.
             'payout'                  => $lockedPayout > 0 ? $lockedPayout : $breakdown['driver_net_payout'],
