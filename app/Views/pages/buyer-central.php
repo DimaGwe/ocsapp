@@ -619,8 +619,8 @@ $fr = $currentLang === 'fr';
           </div>
         </div>
         <p class="price-tip-note"><i class="fas fa-hand-holding-heart"></i> <?= $fr
-          ? '100% du pourboire que vous laissez revient directement à votre chauffeur - nous ne prenons jamais de commission.'
-          : '100% of any tip you leave goes straight to your driver - we never take a cut.' ?></p>
+          ? 'Pourboire au chauffeur - bientôt disponible sur Marché. Quand ce sera en ligne, 100% du pourboire ira directement à votre chauffeur : nous ne prenons jamais de commission.'
+          : 'Tipping your driver - coming soon on Marché. When it launches, 100% of any tip you leave goes straight to your driver: we never take a cut.' ?></p>
       </div>
     </div>
 
