@@ -972,6 +972,11 @@ class DeliveryController {
             UPDATE orders SET status = ?, updated_at = NOW() WHERE id = ?
         ");
         $stmt->execute([$status, $orderId]);
+
+        if ($status === 'delivered') {
+            require_once __DIR__ . '/../Helpers/ReferralHelper.php';
+            \App\Helpers\ReferralHelper::maybeCreditReferral((int)$orderId);
+        }
     }
     
     private function getEarningsSummary($driverId, $period) {

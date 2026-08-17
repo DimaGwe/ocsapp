@@ -382,6 +382,14 @@ class CheckoutController
 
         $createdOrders = [];
 
+        // Founding Buyer Program (Sec 12.1/12.2): claimed once for this whole
+        // checkout (not once per shop-order) - "your first delivery Order"
+        // waives the base Delivery Fee on every shop-order this checkout
+        // creates, same "N sub-orders share one Order-level concept" model
+        // already used for the Additional-Stop Fee above.
+        require_once __DIR__ . '/../Helpers/FoundingBuyerHelper.php';
+        $foundingClaim = \App\Helpers\FoundingBuyerHelper::claimSlotIfEligible($userId);
+
         foreach ($itemsByShop as $shopId => $items) {
             $orderNumber = $this->generateOrderNumber();
 
@@ -392,6 +400,13 @@ class CheckoutController
             }
 
             $deliveryFee = resolveDeliveryZoneFee($selectedAddress['city'] ?? null)['fee'];
+            $foundingBuyerWaived = 0.00;
+            if ($foundingClaim['eligible'] && $deliveryFee > 0) {
+                // Sec 12.3: waives the base Delivery Fee only - Oversize/
+                // Additional-Stop/Long-Distance surcharges still apply.
+                $foundingBuyerWaived = $deliveryFee;
+                $deliveryFee = 0.00;
+            }
             $additionalStopFee = $stopFeeShares[$shopId] ?? 0.00;
             $oversizeCalc = calculateOversizeSurcharge($selectedAddress['city'] ?? null, $shopWeights[$shopId] ?? 0.0);
             $longDistanceCalc = calculateLongDistanceSurcharge($selectedAddress['city'] ?? null, $shopDistances[$shopId] ?? null);
@@ -411,6 +426,7 @@ class CheckoutController
                     subtotal, tax, delivery_fee, stop_count, additional_stop_fee,
                     total_weight_kg, oversize_base_surcharge, oversize_increment_count, oversize_increment_surcharge,
                     routed_distance_km, long_distance_base_surcharge, long_distance_increment_count, long_distance_increment_surcharge,
+                    founding_buyer_delivery_waived,
                     discount, total,
                     payment_method, payment_status,
                     delivery_date, delivery_time,
@@ -422,6 +438,7 @@ class CheckoutController
                     :subtotal, :tax, :delivery_fee, :stop_count, :additional_stop_fee,
                     :total_weight_kg, :oversize_base_surcharge, :oversize_increment_count, :oversize_increment_surcharge,
                     :routed_distance_km, :long_distance_base_surcharge, :long_distance_increment_count, :long_distance_increment_surcharge,
+                    :founding_buyer_delivery_waived,
                     :discount, :total,
                     :payment_method, :payment_status,
                     :delivery_date, :delivery_time,
@@ -449,6 +466,7 @@ class CheckoutController
                 'long_distance_base_surcharge' => $longDistanceCalc['base_surcharge'],
                 'long_distance_increment_count' => $longDistanceCalc['increment_count'],
                 'long_distance_increment_surcharge' => $longDistanceCalc['increment_surcharge'],
+                'founding_buyer_delivery_waived' => $foundingBuyerWaived,
                 'discount' => $discount,
                 'total' => $total,
                 'payment_method' => $paymentMethod,

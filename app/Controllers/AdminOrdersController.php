@@ -238,6 +238,11 @@ class AdminOrdersController {
             ");
             $stmt->execute([$status, $orderId]);
 
+            if ($status === 'delivered') {
+                require_once __DIR__ . '/../Helpers/ReferralHelper.php';
+                \App\Helpers\ReferralHelper::maybeCreditReferral((int)$orderId);
+            }
+
             // Try to add to history - but don't fail if tables don't exist
             try {
                 // Get user ID safely

@@ -5,6 +5,8 @@ $user = $user ?? [];
 $stats = $stats ?? ['total_orders'=>0,'pending_orders'=>0,'completed_orders'=>0,'total_spent'=>0,'store_credit_balance'=>0];
 $recentOrders = $recentOrders ?? [];
 $cartCount = $cartCount ?? 0;
+$founding = $founding ?? ['referral_code' => '', 'founding_buyer' => 0, 'founding_buyer_number' => null];
+$referralLink = !empty($founding['referral_code']) ? rtrim(env('APP_URL', 'https://ocsapp.ca'), '/') . '/register?ref=' . $founding['referral_code'] : '';
 $pageTitle = $pageTitle ?? 'My Account';
 ?>
 <!DOCTYPE html>
@@ -105,6 +107,21 @@ $pageTitle = $pageTitle ?? 'My Account';
             <div class="stat-card">
                 <div class="stat-value">$<?= number_format((float)($stats['store_credit_balance'] ?? 0), 2) ?></div>
                 <div class="stat-label">Store Credit</div>
+            </div>
+        </div>
+
+        <!-- Founding Buyer Program (Sec 12) -->
+        <div class="section-card" style="margin-bottom:24px;">
+            <div class="section-title">
+                <?= !empty($founding['founding_buyer']) ? '🌟 Founding Buyer' : 'Refer a Friend, Earn $5' ?>
+            </div>
+            <?php if (!empty($founding['founding_buyer'])): ?>
+                <p style="color:#555; font-size:14px; margin-bottom:12px;">You're Founding Buyer #<?= (int)$founding['founding_buyer_number'] ?> - your first delivery Order's Delivery Fee was on us.</p>
+            <?php endif; ?>
+            <p style="color:#555; font-size:14px; margin-bottom:12px;">Share your link - when a friend signs up and their first Order is delivered, you both get a $5 credit toward a future Delivery Fee. No limit on how many friends you refer.</p>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                <input type="text" readonly value="<?= htmlspecialchars($referralLink) ?>" id="referralLinkInput" style="flex:1; min-width:220px; padding:10px; border:1px solid #d1d5db; border-radius:6px; font-size:13px; background:#f9fafb;">
+                <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('referralLinkInput').value); this.textContent='Copied!'; setTimeout(() => this.textContent='Copy Link', 1500);" style="background:#00b207; color:#fff; border:none; padding:10px 18px; border-radius:6px; font-weight:600; cursor:pointer; font-size:13px;">Copy Link</button>
             </div>
         </div>
 

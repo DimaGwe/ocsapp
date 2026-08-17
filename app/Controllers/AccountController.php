@@ -105,12 +105,24 @@ class AccountController
             'wishlist_count' => 0,
             'store_credit_balance' => \App\Helpers\StoreCreditHelper::getBalance(userId())
         ];
-        
+
+        // Founding Buyer Program (Sec 12) - not in the session-cached user()
+        // array, so fetched directly. Lazily backfills a referral_code for
+        // accounts created before this feature existed.
+        require_once __DIR__ . '/../Helpers/ReferralHelper.php';
+        $fbStmt = $this->db->prepare("SELECT referral_code, founding_buyer, founding_buyer_number FROM users WHERE id = ?");
+        $fbStmt->execute([userId()]);
+        $founding = $fbStmt->fetch(\PDO::FETCH_ASSOC) ?: [];
+        if (empty($founding['referral_code'])) {
+            $founding['referral_code'] = \App\Helpers\ReferralHelper::assignReferralCode(userId());
+        }
+
         view('buyer/account/index', [
             'user' => $user,
             'stats' => $stats,
             'recentOrders' => $recentOrders,
             'cartCount' => $cartCount,
+            'founding' => $founding,
             'pageTitle' => 'My Account'
         ]);
     }

@@ -439,6 +439,9 @@ $hero = $heroConfig[$urlRole] ?? $heroConfig['default'];
   <div class="form-section">
     <form method="POST" action="<?= url('register') ?>">
       <?= csrfField() ?>
+      <?php if (!empty($_GET['ref'])): ?>
+        <input type="hidden" name="ref" value="<?= htmlspecialchars($_GET['ref']) ?>">
+      <?php endif; ?>
       <?php if ($redirect): ?>
         <input type="hidden" name="redirect" value="<?= htmlspecialchars($redirect) ?>">
       <?php endif; ?>

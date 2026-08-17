@@ -113,7 +113,7 @@ $isFr = ($currentLang === 'fr');
             <!-- ==================== VERSION FRANÇAISE ==================== -->
             <div class="legal-header">
                 <h1>Politique de confidentialité</h1>
-                <p>Dernière mise à jour : 25 février 2026</p>
+                <p>Dernière mise à jour : 17 août 2026</p>
             </div>
 
             <div class="legal-content">
@@ -287,10 +287,20 @@ $isFr = ($currentLang === 'fr');
                     <li>La législation provinciale sur la protection de la vie privée</li>
                 </ul>
 
-                <h2>10. Modifications de la politique</h2>
+                <h2>10. Décision fondée sur des signaux automatisés (réclamations)</h2>
+                <p>Lorsque vous déposez une réclamation en vertu de la Politique de retours et de remboursement d'OCSAPP (Marché ou Distribution aux entreprises), notre système peut calculer une <strong>suggestion</strong> quant à la cause probable du problème (responsabilité du vendeur/fournisseur ou incident survenu en transit) à partir de renseignements structurés déjà en notre possession - notamment la présence ou l'absence d'une photo de ramassage, d'une preuve de livraison ou d'une signature associée à votre commande.</p>
+                <ul>
+                    <li>Cette suggestion n'est <strong>jamais une décision finale</strong> : un membre de l'équipe OCSAPP examine toujours la réclamation et confirme (ou infirme) la suggestion avant qu'un remboursement, un remplacement, une note de crédit ou une déduction ne soit exécuté. Aucune décision financière n'est prise de façon entièrement automatisée.</li>
+                    <li>Vous avez le droit d'être informé qu'une suggestion a été générée pour votre réclamation.</li>
+                    <li>Vous avez le droit de connaître les renseignements personnels utilisés (par exemple, la présence ou l'absence des preuves photo/signature ci-dessus) et les principaux facteurs ayant mené à la suggestion.</li>
+                    <li>Vous avez le droit de demander une révision de la décision par un membre du personnel, et de lui présenter vos observations, même si - dans notre cas actuel - une personne examine déjà chaque réclamation avant qu'une décision ne soit finalisée.</li>
+                </ul>
+                <p>Pour exercer ces droits ou obtenir plus de détails sur une réclamation précise, contactez <a href="mailto:privacy@ocsapp.ca" style="color: #00b207;">privacy@ocsapp.ca</a> ou <a href="mailto:support@ocsapp.ca" style="color: #00b207;">support@ocsapp.ca</a> en indiquant le numéro de votre réclamation.</p>
+
+                <h2>11. Modifications de la politique</h2>
                 <p>Nous pouvons mettre à jour cette politique de confidentialité de temps à autre. Les modifications seront publiées sur cette page avec une date de mise à jour. L'utilisation continue de la plateforme après les modifications constitue une acceptation de la politique mise à jour.</p>
 
-                <h2>11. Nous contacter</h2>
+                <h2>12. Nous contacter</h2>
                 <p>Pour toute question concernant cette politique ou pour exercer vos droits :</p>
                 <ul>
                     <li><strong>Responsable de la protection de la vie privée :</strong> <a href="mailto:privacy@ocsapp.ca" style="color: #00b207;">privacy@ocsapp.ca</a></li>
@@ -312,7 +322,7 @@ $isFr = ($currentLang === 'fr');
             <!-- ==================== ENGLISH VERSION ==================== -->
             <div class="legal-header">
                 <h1>Privacy Policy</h1>
-                <p>Last Updated: February 25, 2026</p>
+                <p>Last Updated: August 17, 2026</p>
             </div>
 
             <div class="legal-content">
@@ -501,10 +511,20 @@ $isFr = ($currentLang === 'fr');
                     <li>Marketing data: Until you opt out + 30 days</li>
                 </ul>
 
-                <h2>10. Third-Party Links</h2>
+                <h2>10. Automated Signal-Based Suggestions (Claims)</h2>
+                <p>When you file a claim under OCSAPP's Returns & Refund Policy (Marketplace or Business Distribution), our system may compute a <strong>suggestion</strong> as to the likely cause of the issue (vendor/supplier-caused or transit-caused) from structured information we already hold - specifically, whether a pickup photo, delivery proof, or signature was captured for your order.</p>
+                <ul>
+                    <li>This suggestion is <strong>never a final decision</strong>: an OCSAPP team member always reviews the claim and confirms (or overrides) the suggestion before any refund, replacement, credit note, or deduction is carried out. No financial decision is made on a fully automated basis.</li>
+                    <li>You have the right to be informed that a suggestion was generated for your claim.</li>
+                    <li>You have the right to know the personal information used (for example, the presence or absence of the photo/signature evidence above) and the main factors behind the suggestion.</li>
+                    <li>You have the right to request that a member of our team review the decision, and to submit your own observations - even though, as things stand today, a person already reviews every claim before a decision is finalized.</li>
+                </ul>
+                <p>To exercise these rights or get more detail on a specific claim, contact <a href="mailto:privacy@ocsapp.ca" style="color: #00b207;">privacy@ocsapp.ca</a> or <a href="mailto:support@ocsapp.ca" style="color: #00b207;">support@ocsapp.ca</a> with your claim number.</p>
+
+                <h2>11. Third-Party Links</h2>
                 <p>Our platform may contain links to third-party websites. We are not responsible for the privacy practices of these external sites. Please review their privacy policies before providing any information.</p>
 
-                <h2>11. Canadian Privacy Laws</h2>
+                <h2>12. Canadian Privacy Laws</h2>
                 <p>We comply with Canadian privacy laws, including:</p>
                 <ul>
                     <li>Personal Information Protection and Electronic Documents Act (PIPEDA)</li>
@@ -512,10 +532,10 @@ $isFr = ($currentLang === 'fr');
                     <li>Provincial privacy legislation</li>
                 </ul>
 
-                <h2>12. Changes to This Privacy Policy</h2>
+                <h2>13. Changes to This Privacy Policy</h2>
                 <p>We may update this Privacy Policy from time to time. Changes will be posted on this page with an updated "Last Updated" date. Continued use of the platform after changes constitutes acceptance of the updated policy.</p>
 
-                <h2>13. Contact Us</h2>
+                <h2>14. Contact Us</h2>
                 <p>For questions about this Privacy Policy or to exercise your rights, contact us:</p>
                 <ul>
                     <li><strong>Privacy Officer:</strong> <a href="mailto:privacy@ocsapp.ca" style="color: #00b207;">privacy@ocsapp.ca</a></li>

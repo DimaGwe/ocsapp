@@ -523,6 +523,8 @@ class DriverApiController
                  delivered_at = NOW(), updated_at = NOW() WHERE id = ?"
             )->execute([$id]);
             $this->onDeliveryCompleted($id, $userId);
+            require_once __DIR__ . '/../../Helpers/ReferralHelper.php';
+            \App\Helpers\ReferralHelper::maybeCreditReferral((int)$id);
 
         } elseif ($status === 'picked_up') {
             // Sec 4.1: mandatory photo capture at pickup, hard-blocked - a driver
@@ -1908,6 +1910,8 @@ class DriverApiController
             )->execute([$outcome, $note ?: null, $id]);
 
             $this->onDeliveryCompleted($id, $userId);
+            require_once __DIR__ . '/../../Helpers/ReferralHelper.php';
+            \App\Helpers\ReferralHelper::maybeCreditReferral((int)$id);
 
         } else {
             // Mark as failed

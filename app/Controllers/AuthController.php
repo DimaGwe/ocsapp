@@ -337,7 +337,19 @@ class AuthController {
             ]);
 
             $userId = $db->lastInsertId();
-            
+
+            // Founding Buyer Program referral (Sec 12.1) - buyer accounts only,
+            // captured via the hidden 'ref' field on the registration form.
+            if ($selectedRole === 'buyer') {
+                require_once __DIR__ . '/../Helpers/ReferralHelper.php';
+                \App\Helpers\ReferralHelper::assignReferralCode((int)$userId);
+                $refCode = sanitize(post('ref', ''));
+                if ($refCode !== '') {
+                    $referrerId = \App\Helpers\ReferralHelper::resolveReferrerId($refCode);
+                    \App\Helpers\ReferralHelper::recordReferral((int)$userId, $referrerId);
+                }
+            }
+
             // Validate role exists in database
             $stmt = $db->prepare("SELECT id FROM roles WHERE name = ? LIMIT 1");
             $stmt->execute([$selectedRole]);

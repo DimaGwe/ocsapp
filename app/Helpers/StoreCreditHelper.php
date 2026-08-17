@@ -32,6 +32,21 @@ class StoreCreditHelper
     }
 
     /**
+     * Founding Buyer Program referral credit (Buyer ToS Sec. 12.1): "$5
+     * credit toward a future Delivery Fee" for both the referrer and the
+     * referred buyer, unlimited. Reuses this same balance/ledger rather than
+     * a second wallet - a $5 credit spends exactly like store credit already
+     * does at checkout.
+     */
+    public static function addReferralCredit(int $userId, float $amount, string $note): array
+    {
+        if ($amount <= 0) {
+            return ['success' => false, 'new_balance' => null, 'error' => 'Referral credit amount must be greater than zero.'];
+        }
+        return self::adjustBalance($userId, $amount, 'referral_bonus', $note, null, null);
+    }
+
+    /**
      * Issues store credit for a claim resolved in the buyer's favour, at
      * the claimed value plus the 10% bonus (Sec. A6). This is the store-
      * credit alternative to ReturnsDispatchHelper::refundBuyer() - the two
