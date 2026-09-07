@@ -751,6 +751,101 @@ class NotificationHelper
     }
 
     // =====================================================
+    // SELLER NOTIFICATION METHODS
+    // =====================================================
+
+    /**
+     * Add a notification for a seller (seller_notifications table)
+     */
+    public static function addSellerNotification(
+        int $sellerId,
+        string $type,
+        string $title,
+        string $message,
+        ?string $link = null,
+        string $icon = 'bell'
+    ): int|false {
+        try {
+            $db = \Database::getConnection();
+            $stmt = $db->prepare("
+                INSERT INTO seller_notifications
+                (seller_id, type, title, message, link, icon, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, NOW())
+            ");
+            $stmt->execute([$sellerId, $type, $title, $message, $link, $icon]);
+            return (int) $db->lastInsertId();
+        } catch (\PDOException $e) {
+            error_log("NotificationHelper::addSellerNotification error: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Get unread seller notification count
+     */
+    public static function getSellerUnreadCount(int $sellerId): int
+    {
+        try {
+            $db = \Database::getConnection();
+            $stmt = $db->prepare("SELECT COUNT(*) as count FROM seller_notifications WHERE seller_id = ? AND is_read = 0");
+            $stmt->execute([$sellerId]);
+            return (int) $stmt->fetch(\PDO::FETCH_ASSOC)['count'];
+        } catch (\PDOException $e) {
+            return 0;
+        }
+    }
+
+    /**
+     * Get recent seller notifications
+     */
+    public static function getSellerRecent(int $sellerId, int $limit = 10): array
+    {
+        try {
+            $db = \Database::getConnection();
+            $stmt = $db->prepare("
+                SELECT * FROM seller_notifications
+                WHERE seller_id = ?
+                ORDER BY is_read ASC, created_at DESC
+                LIMIT ?
+            ");
+            $stmt->execute([$sellerId, $limit]);
+            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Mark a seller notification as read
+     */
+    public static function markSellerRead(int $id, int $sellerId): bool
+    {
+        try {
+            $db = \Database::getConnection();
+            $stmt = $db->prepare("UPDATE seller_notifications SET is_read = 1, read_at = NOW() WHERE id = ? AND seller_id = ?");
+            $stmt->execute([$id, $sellerId]);
+            return $stmt->rowCount() > 0;
+        } catch (\PDOException $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Mark all seller notifications as read
+     */
+    public static function markAllSellerRead(int $sellerId): int
+    {
+        try {
+            $db = \Database::getConnection();
+            $stmt = $db->prepare("UPDATE seller_notifications SET is_read = 1, read_at = NOW() WHERE seller_id = ? AND is_read = 0");
+            $stmt->execute([$sellerId]);
+            return $stmt->rowCount();
+        } catch (\PDOException $e) {
+            return 0;
+        }
+    }
+
+    // =====================================================
     // BUSINESS NOTIFICATION METHODS
     // =====================================================
 
@@ -893,6 +988,33 @@ class NotificationHelper
             ")->execute([$businessId, $subject, $preview]);
         } catch (\PDOException $e) {
             error_log("NotificationHelper::logBusinessEmail error: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Add a driver bell notification. Drivers have no shared notifications
+     * table like suppliers/business - their bell is driver_delivery_notifications,
+     * written directly by each caller (AdminDeliveryController, AdminOrdersController,
+     * etc). This wraps that same insert so new callers (e.g. FoundingDriverHelper)
+     * don't have to duplicate the raw SQL.
+     */
+    public static function addDriverNotification(
+        int $driverId,
+        string $message,
+        string $type = 'normal',
+        int $sentBy = 0
+    ): int|false {
+        try {
+            $db = \Database::getConnection();
+            $stmt = $db->prepare("
+                INSERT INTO driver_delivery_notifications (driver_id, message, type, sent_by, created_at)
+                VALUES (?, ?, ?, ?, NOW())
+            ");
+            $stmt->execute([$driverId, $message, $type, $sentBy]);
+            return (int) $db->lastInsertId();
+        } catch (\PDOException $e) {
+            error_log("NotificationHelper::addDriverNotification error: " . $e->getMessage());
+            return false;
         }
     }
 }

@@ -23,7 +23,7 @@ class SellerVerificationController
             return;
         }
 
-        require view('seller/verification');
+        view('seller/verification');
     }
 
     /**

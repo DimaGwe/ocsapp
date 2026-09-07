@@ -229,6 +229,7 @@ return [
     'POST /admin/shops/deactivate' => ['AdminShopController', 'deactivate'],
     'POST /admin/shops/delete' => ['AdminShopController', 'delete'],
     'POST /admin/shops/toggle-status' => ['AdminShopController', 'toggleStatus'],
+    'POST /admin/shops/update-package' => ['AdminShopController', 'updatePackage'],
 
     // Categories Management
     'GET /admin/categories' => ['CategoryController', 'index'],
@@ -589,10 +590,12 @@ return [
     // SELLER ROUTES
     // ===================================
     'GET /seller/dashboard' => ['ShopController', 'dashboard'],
+    'GET /seller/analytics' => ['ShopController', 'analytics'],
     'GET /seller/shop/create' => ['ShopController', 'create'],
     'POST /seller/shop/store' => ['ShopController', 'store'],
     'GET /seller/shop/settings' => ['ShopController', 'settings'],
     'POST /seller/shop/update' => ['ShopController', 'update'],
+    'POST /seller/settings/password' => ['ShopController', 'updatePassword'],
     'GET /seller/payouts' => ['ShopController', 'payouts'],
 
     // Seller Verification
@@ -611,6 +614,8 @@ return [
 
     // Seller Order Management
     'GET /seller/orders' => ['OrderController', 'sellerOrders'],
+    'GET /seller/messages' => ['SellerMessagesController', 'index'],
+    'POST /seller/messages/send' => ['SellerMessagesController', 'send'],
     'POST /seller/orders/update-status' => ['OrderController', 'updateOrderStatus'],
 
     // ===================================
@@ -985,6 +990,8 @@ return [
     // ===================================
     'GET /api/supplier/messages/count'       => ['Api\\SupplierMessagesController', 'count'],
     'POST /api/supplier/messages/mark-read'  => ['Api\\SupplierMessagesController', 'markRead'],
+    'GET /api/seller/messages/count'         => ['Api\\SellerMessagesController', 'count'],
+    'POST /api/seller/messages/mark-read'    => ['Api\\SellerMessagesController', 'markRead'],
 
     // ===================================
     // BUSINESS MESSAGES API
@@ -1004,6 +1011,8 @@ return [
     // Admin messages send + poll (AJAX)
     'POST /admin/suppliers/messages/send'    => ['SupplierMessagesController', 'adminSend'],
     'GET /api/admin/supplier-messages'       => ['SupplierMessagesController', 'apiGetMessages'],
+    'POST /admin/sellers/messages/send'      => ['SellerMessagesController', 'adminSend'],
+    'GET /api/admin/seller-messages'         => ['SellerMessagesController', 'apiGetMessages'],
 
     // ===================================
     // SUPPLIER NOTIFICATIONS API
@@ -1013,6 +1022,10 @@ return [
     'GET /api/supplier/notifications/stream' => ['Api\\SupplierNotificationsController', 'stream'],
     'POST /api/supplier/notifications/mark-read' => ['Api\\SupplierNotificationsController', 'markRead'],
     'POST /api/supplier/notifications/mark-all-read' => ['Api\\SupplierNotificationsController', 'markAllRead'],
+    'GET /api/seller/notifications' => ['Api\\SellerNotificationsController', 'index'],
+    'GET /api/seller/notifications/count' => ['Api\\SellerNotificationsController', 'count'],
+    'POST /api/seller/notifications/mark-read' => ['Api\\SellerNotificationsController', 'markRead'],
+    'POST /api/seller/notifications/mark-all-read' => ['Api\\SellerNotificationsController', 'markAllRead'],
 
     // ===================================
     // TWILIO API - CRM Communication Center

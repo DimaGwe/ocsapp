@@ -79,6 +79,179 @@ class ShopController
     }
 
     /**
+     * Seller analytics dashboard
+     */
+    public function analytics(): void
+    {
+        if (!isLoggedIn() || !hasRole('seller')) {
+            redirect(url('login'));
+            return;
+        }
+
+        $stmt = $this->db->prepare("SELECT * FROM shops WHERE seller_id = ? ORDER BY created_at DESC LIMIT 1");
+        $stmt->execute([userId()]);
+        $shop = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$shop) {
+            setFlash('error', 'No shop found');
+            redirect(url('seller/shop/create'));
+            return;
+        }
+
+        $endDate   = sanitize(get('end_date', date('Y-m-d')));
+        $startDate = sanitize(get('start_date', date('Y-m-d', strtotime('-29 days', strtotime($endDate)))));
+        if (!strtotime($startDate) || !strtotime($endDate) || $startDate > $endDate) {
+            $endDate   = date('Y-m-d');
+            $startDate = date('Y-m-d', strtotime('-29 days'));
+        }
+
+        $rangeDays  = (int) ((strtotime($endDate) - strtotime($startDate)) / 86400) + 1;
+        $prevEnd    = date('Y-m-d', strtotime($startDate . ' -1 day'));
+        $prevStart  = date('Y-m-d', strtotime($prevEnd . " -" . ($rangeDays - 1) . " days"));
+
+        $summary = ['total_revenue' => 0, 'total_orders' => 0, 'avg_order_value' => 0, 'completed_orders' => 0];
+        $revenueChange = 0;
+        $ordersChange = 0;
+        $topProducts = [];
+        $statusBreakdown = [];
+        $lowStockProducts = [];
+        $productStats = ['total_products' => 0, 'active_products' => 0, 'out_of_stock' => 0, 'low_stock' => 0];
+        $chartLabels = [];
+        $chartRevenue = [];
+        $chartOrders = [];
+
+        try {
+            $periodTotals = function (string $from, string $to) use ($shop) {
+                $stmt = $this->db->prepare("
+                    SELECT
+                        COUNT(*) AS total_orders,
+                        SUM(total) AS all_orders_total,
+                        SUM(CASE WHEN status = 'delivered' THEN total ELSE 0 END) AS total_revenue,
+                        SUM(CASE WHEN status = 'delivered' THEN 1 ELSE 0 END) AS completed_orders
+                    FROM orders
+                    WHERE shop_id = ? AND DATE(created_at) BETWEEN ? AND ?
+                ");
+                $stmt->execute([$shop['id'], $from, $to]);
+                return $stmt->fetch(\PDO::FETCH_ASSOC) ?: [];
+            };
+
+            $current  = $periodTotals($startDate, $endDate);
+            $previous = $periodTotals($prevStart, $prevEnd);
+
+            $summary['total_orders']      = (int) ($current['total_orders'] ?? 0);
+            $summary['completed_orders']  = (int) ($current['completed_orders'] ?? 0);
+            $summary['total_revenue']     = (float) ($current['total_revenue'] ?? 0);
+            $summary['avg_order_value']   = $summary['total_orders'] > 0
+                ? (float) ($current['all_orders_total'] ?? 0) / $summary['total_orders']
+                : 0;
+
+            $prevRevenue = (float) ($previous['total_revenue'] ?? 0);
+            $prevOrders  = (int) ($previous['total_orders'] ?? 0);
+            $revenueChange = $prevRevenue > 0
+                ? round((($summary['total_revenue'] - $prevRevenue) / $prevRevenue) * 100, 1)
+                : ($summary['total_revenue'] > 0 ? 100 : 0);
+            $ordersChange = $prevOrders > 0
+                ? round((($summary['total_orders'] - $prevOrders) / $prevOrders) * 100, 1)
+                : ($summary['total_orders'] > 0 ? 100 : 0);
+
+            // Status breakdown
+            $stmt = $this->db->prepare("
+                SELECT status, COUNT(*) AS count
+                FROM orders
+                WHERE shop_id = ? AND DATE(created_at) BETWEEN ? AND ?
+                GROUP BY status
+            ");
+            $stmt->execute([$shop['id'], $startDate, $endDate]);
+            $statusBreakdown = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            // Top selling products
+            $stmt = $this->db->prepare("
+                SELECT oi.product_name AS name, oi.sku,
+                       (SELECT image_path FROM product_images WHERE product_id = oi.product_id AND is_primary = 1 LIMIT 1) AS image_path,
+                       SUM(oi.subtotal) AS total_revenue,
+                       SUM(oi.quantity) AS units_sold
+                FROM order_items oi
+                INNER JOIN orders o ON o.id = oi.order_id
+                WHERE o.shop_id = ? AND DATE(o.created_at) BETWEEN ? AND ?
+                GROUP BY oi.product_id, oi.product_name, oi.sku
+                ORDER BY total_revenue DESC
+                LIMIT 5
+            ");
+            $stmt->execute([$shop['id'], $startDate, $endDate]);
+            $topProducts = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            // Low stock products
+            $stmt = $this->db->prepare("
+                SELECT si.stock_quantity, si.low_stock_threshold AS low_stock_alert,
+                       p.name,
+                       (SELECT image_path FROM product_images WHERE product_id = p.id AND is_primary = 1 LIMIT 1) AS image_path,
+                       (SELECT c.name FROM product_categories pc INNER JOIN categories c ON c.id = pc.category_id WHERE pc.product_id = p.id AND pc.is_primary = 1 LIMIT 1) AS category_name
+                FROM shop_inventory si
+                INNER JOIN products p ON p.id = si.product_id
+                WHERE si.shop_id = ? AND si.stock_quantity <= si.low_stock_threshold
+                ORDER BY si.stock_quantity ASC
+                LIMIT 10
+            ");
+            $stmt->execute([$shop['id']]);
+            $lowStockProducts = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            // Product stats
+            $stmt = $this->db->prepare("
+                SELECT
+                    COUNT(*) AS total_products,
+                    SUM(status = 'active') AS active_products,
+                    SUM(stock_quantity = 0) AS out_of_stock,
+                    SUM(stock_quantity > 0 AND stock_quantity <= low_stock_threshold) AS low_stock
+                FROM shop_inventory
+                WHERE shop_id = ?
+            ");
+            $stmt->execute([$shop['id']]);
+            $productStats = array_merge($productStats, $stmt->fetch(\PDO::FETCH_ASSOC) ?: []);
+
+            // Daily chart series (zero-filled for days with no orders)
+            $stmt = $this->db->prepare("
+                SELECT DATE(created_at) AS d, SUM(total) AS rev, COUNT(*) AS cnt
+                FROM orders
+                WHERE shop_id = ? AND DATE(created_at) BETWEEN ? AND ?
+                GROUP BY DATE(created_at)
+            ");
+            $stmt->execute([$shop['id'], $startDate, $endDate]);
+            $byDay = [];
+            foreach ($stmt->fetchAll(\PDO::FETCH_ASSOC) as $row) {
+                $byDay[$row['d']] = $row;
+            }
+
+            $cursor = strtotime($startDate);
+            $endTs  = strtotime($endDate);
+            while ($cursor <= $endTs) {
+                $d = date('Y-m-d', $cursor);
+                $chartLabels[]  = date('M j', $cursor);
+                $chartRevenue[] = (float) ($byDay[$d]['rev'] ?? 0);
+                $chartOrders[]  = (int) ($byDay[$d]['cnt'] ?? 0);
+                $cursor = strtotime('+1 day', $cursor);
+            }
+        } catch (\PDOException $e) {
+            logger("ShopController analytics error: " . $e->getMessage(), 'error');
+        }
+
+        view('seller/analytics', [
+            'shop' => $shop,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'summary' => $summary,
+            'revenueChange' => $revenueChange,
+            'ordersChange' => $ordersChange,
+            'topProducts' => $topProducts,
+            'statusBreakdown' => $statusBreakdown,
+            'lowStockProducts' => $lowStockProducts,
+            'productStats' => $productStats,
+            'chartLabels' => json_encode($chartLabels),
+            'chartRevenue' => json_encode($chartRevenue),
+            'chartOrders' => json_encode($chartOrders),
+        ]);
+    }
+
+    /**
      * Show create shop form
      */
     public function create(): void
@@ -297,5 +470,62 @@ class ShopController
             'payouts' => $payouts,
             'pendingBalance' => $pendingBalance,
         ]);
+    }
+
+    /**
+     * Update seller account password (from Shop Settings)
+     */
+    public function updatePassword(): void
+    {
+        if (!isLoggedIn() || !hasRole('seller')) {
+            redirect(url('login'));
+            return;
+        }
+
+        $token = post(env('CSRF_TOKEN_NAME', '_csrf_token'), '');
+        if (!verifyCsrfToken($token)) {
+            setFlash('error', 'Invalid security token. Please try again.');
+            redirect(url('seller/shop/settings'));
+            return;
+        }
+
+        $userId = userId();
+        $currentPassword = post('current_password', '');
+        $newPassword = post('new_password', '');
+        $confirmPassword = post('confirm_password', '');
+
+        if (empty($currentPassword) || empty($newPassword)) {
+            setFlash('error', 'Current and new password are required.');
+            redirect(url('seller/shop/settings'));
+            return;
+        }
+
+        if (strlen($newPassword) < 8) {
+            setFlash('error', 'New password must be at least 8 characters.');
+            redirect(url('seller/shop/settings'));
+            return;
+        }
+
+        if ($newPassword !== $confirmPassword) {
+            setFlash('error', 'New password and confirmation do not match.');
+            redirect(url('seller/shop/settings'));
+            return;
+        }
+
+        $stmt = $this->db->prepare("SELECT password FROM users WHERE id = ?");
+        $stmt->execute([$userId]);
+        $user = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$user || !password_verify($currentPassword, $user['password'])) {
+            setFlash('error', 'Current password is incorrect.');
+            redirect(url('seller/shop/settings'));
+            return;
+        }
+
+        $stmt = $this->db->prepare("UPDATE users SET password = ? WHERE id = ?");
+        $stmt->execute([password_hash($newPassword, PASSWORD_BCRYPT), $userId]);
+
+        setFlash('success', 'Password updated successfully.');
+        redirect(url('seller/shop/settings'));
     }
 }

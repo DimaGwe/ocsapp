@@ -243,6 +243,14 @@ class EmailHelper
             '{{current_year}}' => date('Y'),
             '{{submitted_date}}' => date('F j, Y \a\t g:i A'),
 
+            // Self-pickup placeholders (Sec A) - added alongside buyer-ready-for-pickup.php,
+            // which is the only template using these so far.
+            '{{order_id}}' => htmlspecialchars($data['order_id'] ?? ''),
+            '{{shop_name}}' => htmlspecialchars($data['shop_name'] ?? ''),
+            '{{shop_address}}' => htmlspecialchars($data['shop_address'] ?? ''),
+            '{{shop_phone}}' => htmlspecialchars($data['shop_phone'] ?? ''),
+            '{{founding_partner_number}}' => htmlspecialchars((string)($data['founding_partner_number'] ?? '')),
+
             // Notification placeholders
             '{{notification_title}}' => htmlspecialchars($data['notification_title'] ?? ''),
             '{{notification_message}}' => htmlspecialchars($data['notification_message'] ?? ''),
@@ -606,6 +614,67 @@ class EmailHelper
         ];
 
         return self::sendTemplate($buyerEmail, 'buyer-out-for-delivery', $data);
+    }
+
+    /**
+     * Send buyer notification when a self-pickup order is ready for collection at the shop.
+     * Sec A (self-pickup checkout): mirrors sendBuyerOutForDelivery()'s working shape
+     * (customer_email/customer_first_name keys, same as the DeliveryController.php call
+     * site) rather than the DriverApiController.php copy, which selects columns that don't
+     * exist on orders and silently never sends.
+     *
+     * @param array $order Order + shop pickup details (customer_email, customer_first_name,
+     *                      order_number, id, total, shop_name, shop_address, shop_phone)
+     * @return bool Success status
+     */
+    public static function sendBuyerReadyForPickup(array $order): bool
+    {
+        $buyerEmail = $order['customer_email'] ?? '';
+        if (empty($buyerEmail)) {
+            logger("Customer email not found for ready-for-pickup notification", 'error');
+            return false;
+        }
+
+        $data = [
+            'order' => $order,
+            'user_first_name' => $order['customer_first_name'] ?? 'Customer',
+            'order_number' => $order['order_number'] ?? 'N/A',
+            'order_id' => $order['id'] ?? '',
+            'order_total' => number_format($order['total'] ?? 0, 2),
+            'shop_name' => $order['shop_name'] ?? 'the shop',
+            'shop_address' => $order['shop_address'] ?? '',
+            'shop_phone' => $order['shop_phone'] ?? '',
+            'subject' => "Your Order #{$order['order_number']} is Ready for Pickup!"
+        ];
+
+        return self::sendTemplate($buyerEmail, 'buyer-ready-for-pickup', $data);
+    }
+
+    /**
+     * Notify a seller they've been granted Founding Partner status (Seller
+     * Agreement Sec 3.2/6.1-6.2/Schedule A). No seller-facing bell notification
+     * channel exists in this codebase (confirmed - addSupplierNotification() has
+     * no seller equivalent), so email is the only real channel for this.
+     *
+     * @param array $seller email, first_name, shop_name, founding_partner_number
+     * @return bool Success status
+     */
+    public static function sendSellerFoundingPartnerGranted(array $seller): bool
+    {
+        $email = $seller['email'] ?? '';
+        if (empty($email)) {
+            logger("Seller email not found for Founding Partner notification", 'error');
+            return false;
+        }
+
+        $data = [
+            'user_first_name' => $seller['first_name'] ?? 'there',
+            'shop_name' => $seller['shop_name'] ?? 'your shop',
+            'founding_partner_number' => $seller['founding_partner_number'] ?? '',
+            'subject' => "You're a Founding Partner! Welcome to OCSAPP Seller Central",
+        ];
+
+        return self::sendTemplate($email, 'seller-founding-partner-granted', $data);
     }
 
     /**
@@ -1712,6 +1781,76 @@ class EmailHelper
 
         $subject = "Nouveau message fournisseur : {$companyName} / New Supplier Message: {$companyName}";
         self::setNextMeta('supplier_message_admin', 'supplier', $supplierId);
+        return self::send($adminEmail, $subject, $body);
+    }
+
+
+    /**
+     * Send new message notification to a seller (admin → seller)
+     * $seller keys: id, first_name, last_name, email, shop_name
+     */
+    public static function sendSellerNewMessage(array $seller, string $message): bool
+    {
+        $email = $seller['email'] ?? '';
+        if (empty($email)) {
+            return false;
+        }
+
+        $templatePath = __DIR__ . '/../Views/emails/seller-new-message.php';
+        if (!file_exists($templatePath)) {
+            logger("seller-new-message template not found", 'error');
+            return false;
+        }
+
+        $body = file_get_contents($templatePath);
+        $replacements = [
+            '{{first_name}}'   => htmlspecialchars($seller['first_name'] ?? 'Seller'),
+            '{{shop_name}}'    => htmlspecialchars($seller['shop_name'] ?? ''),
+            '{{message}}'      => nl2br(htmlspecialchars($message)),
+            '{{reply_url}}'    => 'https://ocsapp.ca/seller/messages',
+            '{{current_year}}' => date('Y'),
+        ];
+        $body = str_replace(array_keys($replacements), array_values($replacements), $body);
+
+        $subject = 'Nouveau message OCSAPP / New Message from OCSAPP';
+        self::setNextMeta('seller_message', 'seller', (int)($seller['id'] ?? 0));
+        return self::send($email, $subject, $body, ['replyTo' => 'info@ocsapp.ca']);
+    }
+
+    /**
+     * Send new message notification to admin (seller → admin)
+     * $seller keys: id, first_name, last_name, email, shop_name
+     */
+    public static function sendAdminNewMessageFromSeller(array $seller, string $message): bool
+    {
+        $adminEmail = 'info@ocsapp.ca';
+        $shopName   = $seller['shop_name'] ?? trim(($seller['first_name'] ?? '') . ' ' . ($seller['last_name'] ?? '')) ?: 'Seller';
+        $sellerId   = (int)($seller['id'] ?? 0);
+        $actionUrl  = 'https://ocsapp.ca/admin/sellers/view?id=' . $sellerId;
+        $preview    = mb_strlen($message) > 200 ? mb_substr($message, 0, 200) . '…' : $message;
+
+        $templatePath = __DIR__ . '/../Views/emails/planner-notification.php';
+        if (file_exists($templatePath)) {
+            $body = file_get_contents($templatePath);
+            $replacements = [
+                '{{user_first_name}}'      => 'Admin',
+                '{{user_last_name}}'       => '',
+                '{{user_email}}'           => $adminEmail,
+                '{{notification_title}}'   => "New Message from Seller: {$shopName}",
+                '{{notification_message}}' => nl2br(htmlspecialchars($preview)),
+                '{{notification_type}}'    => 'seller_message',
+                '{{action_url}}'           => $actionUrl,
+                '{{current_year}}'         => date('Y'),
+            ];
+            $body = str_replace(array_keys($replacements), array_values($replacements), $body);
+        } else {
+            $body = "<p>New message from seller <strong>{$shopName}</strong>:</p>"
+                  . "<blockquote>" . nl2br(htmlspecialchars($preview)) . "</blockquote>"
+                  . "<p><a href='{$actionUrl}'>View Seller →</a></p>";
+        }
+
+        $subject = "Nouveau message vendeur : {$shopName} / New Seller Message: {$shopName}";
+        self::setNextMeta('seller_message_admin', 'seller', $sellerId);
         return self::send($adminEmail, $subject, $body);
     }
 

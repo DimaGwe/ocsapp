@@ -416,6 +416,96 @@ ob_start();
   <?php endif; ?>
 </div>
 
+<!-- Messages -->
+<div class="section-card">
+  <div class="section-header">
+    <h3><i class="fas fa-comments" style="margin-right:6px;color:#7c3aed;"></i>Messages</h3>
+  </div>
+  <div id="sellerMsgThread" style="max-height:360px;overflow-y:auto;padding:8px 4px;display:flex;flex-direction:column;gap:12px;margin-bottom:16px;">
+    <div style="text-align:center;color:#9ca3af;padding:24px;">Loading messages…</div>
+  </div>
+  <form id="sellerMsgForm" style="display:flex;gap:10px;align-items:flex-end;">
+    <textarea id="sellerMsgInput" placeholder="Write a message to this seller…" maxlength="2000" rows="2"
+      style="flex:1;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;font-size:14px;font-family:inherit;resize:none;outline:none;"></textarea>
+    <button type="submit" id="sellerMsgSendBtn" style="padding:10px 20px;background:#00b207;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;height:44px;white-space:nowrap;">
+      <i class="fas fa-paper-plane"></i> Send
+    </button>
+  </form>
+</div>
+
+<script>
+(function() {
+  const sellerId = <?= (int) $seller['id'] ?>;
+  const threadEl = document.getElementById('sellerMsgThread');
+  const form = document.getElementById('sellerMsgForm');
+  const input = document.getElementById('sellerMsgInput');
+  const sendBtn = document.getElementById('sellerMsgSendBtn');
+  const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+  function escHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function renderMessages(messages) {
+    if (!messages.length) {
+      threadEl.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:24px;">No messages yet.</div>';
+      return;
+    }
+    let html = '';
+    messages.forEach(function(m) {
+      const isAdmin = m.sender_type === 'admin';
+      const name = isAdmin ? ((m.admin_first_name + ' ' + m.admin_last_name).trim() || 'Admin') : 'Seller';
+      const align = isAdmin ? 'flex-start' : 'flex-end';
+      const bg = isAdmin ? '#f3f4f6' : '#00b207';
+      const color = isAdmin ? '#1f2937' : '#fff';
+      const ts = new Date(m.created_at).toLocaleString();
+      html += '<div style="display:flex;flex-direction:column;align-items:' + align + ';">'
+        + '<div style="font-size:11px;color:#9ca3af;margin-bottom:2px;">' + escHtml(name) + '</div>'
+        + '<div style="max-width:70%;background:' + bg + ';color:' + color + ';padding:10px 14px;border-radius:14px;font-size:14px;white-space:pre-wrap;word-break:break-word;">' + escHtml(m.message) + '</div>'
+        + '<div style="font-size:10px;color:#9ca3af;margin-top:2px;">' + ts + '</div>'
+        + '</div>';
+    });
+    threadEl.innerHTML = html;
+    threadEl.scrollTop = threadEl.scrollHeight;
+  }
+
+  function loadMessages() {
+    fetch('<?= url('api/admin/seller-messages') ?>?seller_id=' + sellerId)
+      .then(r => r.json())
+      .then(data => { if (data.success) renderMessages(data.messages); })
+      .catch(() => {});
+  }
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const message = input.value.trim();
+    if (!message) return;
+    sendBtn.disabled = true;
+    fetch('<?= url('admin/sellers/messages/send') ?>', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+      body: JSON.stringify({ seller_id: sellerId, message: message })
+    })
+      .then(r => r.json())
+      .then(data => {
+        sendBtn.disabled = false;
+        if (data.success) {
+          input.value = '';
+          loadMessages();
+        } else {
+          alert(data.error || 'Failed to send message.');
+        }
+      })
+      .catch(() => { sendBtn.disabled = false; alert('Failed to send message.'); });
+  });
+
+  loadMessages();
+  setInterval(loadMessages, 10000);
+})();
+</script>
+
 <?php
 $content = ob_get_clean();
 require dirname(__DIR__) . '/layout.php';
