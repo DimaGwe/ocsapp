@@ -68,6 +68,7 @@ class AdminWaitlistController
                 SUM(role='supplier')  AS suppliers,
                 SUM(role='driver')    AS drivers,
                 SUM(role='business')  AS businesses,
+                SUM(role='partner')   AS partners,
                 SUM(status='pending')   AS pending,
                 SUM(status='notified')  AS notified,
                 SUM(status='converted') AS converted

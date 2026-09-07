@@ -8,6 +8,21 @@ $roleLabels = [
     'supplier' => 'Supplier',
     'driver'   => 'Driver',
     'business' => 'Business',
+    'partner'  => 'Partner',
+];
+
+$discoveryLabels = [
+    'social_media'   => 'Social media',
+    'friend_family'  => 'Friend / family',
+    'google_search'  => 'Google search',
+    'press'          => 'Press',
+    'representative' => 'OCSAPP representative',
+    'social'         => 'Social media',
+    'referral'       => 'Referral',
+    'local_business' => 'Local business',
+    'event'          => 'Event',
+    'web'            => 'Web',
+    'other'          => 'Other',
 ];
 
 ob_start();
@@ -100,6 +115,7 @@ ob_start();
   .badge-role-supplier { background: #fef9c3; color: #854d0e; }
   .badge-role-driver   { background: #f3e8ff; color: #7e22ce; }
   .badge-role-business { background: #f1f5f9; color: #475569; }
+  .badge-role-partner  { background: #ffe4e6; color: #be123c; }
 
   .badge-status-pending   { background: #fef3c7; color: #92400e; }
   .badge-status-notified  { background: #dbeafe; color: #1e40af; }
@@ -117,6 +133,33 @@ ob_start();
   .action-btn { background: none; border: none; cursor: pointer; font-size: 15px; padding: 4px; transition: color var(--transition-base); }
   .action-btn.delete { color: #ef4444; }
   .action-btn.delete:hover { color: #dc2626; }
+  .action-btn.view { color: var(--gray-600); }
+  .action-btn.view:hover { color: var(--primary); }
+
+  /* Details modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(15,23,42,.5);
+    align-items: center; justify-content: center; z-index: 1000; padding: 20px;
+  }
+  .modal-overlay.visible { display: flex; }
+  .modal-box {
+    background: white; border-radius: var(--radius-xl); max-width: 640px; width: 100%;
+    max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow-lg);
+  }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border); }
+  .modal-header h2 { font-size: 17px; font-weight: 700; color: var(--dark); }
+  .modal-close { background: none; border: none; font-size: 18px; color: var(--gray-500); cursor: pointer; }
+  .modal-body { padding: 20px 24px; }
+  .modal-section-title {
+    font-size: 11px; font-weight: 700; color: var(--gray-500); text-transform: uppercase;
+    letter-spacing: .05em; margin: 18px 0 8px; padding-top: 12px; border-top: 1px solid var(--border);
+  }
+  .modal-section-title:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+  .detail-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 20px; }
+  .detail-item { min-width: 0; }
+  .detail-label { font-size: 11px; font-weight: 600; color: var(--gray-500); text-transform: uppercase; letter-spacing: .04em; }
+  .detail-value { font-size: 13px; color: var(--dark); margin-top: 2px; word-break: break-word; }
+  .detail-value.empty { color: var(--gray-400); }
 
   /* Empty state */
   .empty-state { padding: 64px 24px; text-align: center; }
@@ -159,6 +202,7 @@ ob_start();
     ['Suppliers',  $stats['suppliers'],  'amber'],
     ['Drivers',    $stats['drivers'],    'purple'],
     ['Business',   $stats['businesses'],'gray'],
+    ['Partners',   $stats['partners'],   'red'],
     ['Pending',    $stats['pending'],    'amber'],
     ['Notified',   $stats['notified'],   'cyan'],
     ['Converted',  $stats['converted'],  'green'],
@@ -269,6 +313,9 @@ ob_start();
           <td style="font-size:12px;color:var(--gray-500);"><?= date('M j, Y', strtotime($e['created_at'])) ?></td>
           <td>
             <div class="action-buttons">
+              <button class="action-btn view" data-entry="<?= htmlspecialchars(base64_encode(json_encode($e)), ENT_QUOTES) ?>" onclick="viewEntry(this)" title="View details">
+                <i class="fas fa-eye"></i>
+              </button>
               <button class="action-btn delete" onclick="deleteEntry(<?= $e['id'] ?>, '<?= htmlspecialchars(addslashes($e['email'])) ?>')" title="Delete">
                 <i class="fas fa-trash"></i>
               </button>
@@ -302,7 +349,86 @@ ob_start();
   <?php endif; ?>
 </div>
 
+<!-- Details modal -->
+<div class="modal-overlay" id="details-modal" onclick="if (event.target === this) closeModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 id="details-modal-title">Waitlist Entry</h2>
+      <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="details-modal-body"></div>
+  </div>
+</div>
+
 <script>
+const roleLabels = <?= json_encode($roleLabels) ?>;
+const discoveryLabels = <?= json_encode($discoveryLabels) ?>;
+
+function detailItem(label, value) {
+  const v = (value === null || value === undefined || value === '') ? '<span class="empty">-</span>' : String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return `<div class="detail-item"><div class="detail-label">${label}</div><div class="detail-value">${v}</div></div>`;
+}
+
+function viewEntry(btn) {
+  const e = JSON.parse(atob(btn.dataset.entry));
+  const roleLabel = roleLabels[e.role] || e.role;
+  document.getElementById('details-modal-title').textContent = `${e.first_name} ${e.last_name} - ${roleLabel}`;
+
+  let html = '<div class="modal-section-title">Contact</div><div class="detail-grid">';
+  html += detailItem('Email', e.email);
+  html += detailItem('Phone', e.phone);
+  html += detailItem('City / Region', e.city_region);
+  html += detailItem('Preferred Language', (e.locale || '').toUpperCase());
+  html += detailItem('Business Name', e.business_name);
+  html += '</div>';
+
+  html += '<div class="modal-section-title">Role Details</div><div class="detail-grid">';
+  if (e.role === 'seller') {
+    html += detailItem('Business Type', e.seller_business_type);
+    html += detailItem('Has Online Store', e.seller_online_store === 'yes' ? 'Yes' : (e.seller_online_store === 'no' ? 'No' : ''));
+  } else if (e.role === 'supplier') {
+    html += detailItem('Products', e.supplier_products);
+    html += detailItem('Service Area', e.supplier_service_area);
+  } else if (e.role === 'business') {
+    html += detailItem('Sector', e.business_sector);
+    html += detailItem('Need', e.business_need);
+  } else if (e.role === 'driver') {
+    html += detailItem('Area', e.driver_area);
+    html += detailItem('Vehicle', e.driver_vehicle);
+    html += detailItem('Availability', e.driver_availability);
+  } else if (e.role === 'buyer') {
+    html += detailItem('Interest', e.buyer_interest);
+  } else if (e.role === 'partner') {
+    html += detailItem('Interest', e.partner_interest);
+  }
+  html += '</div>';
+
+  html += '<div class="modal-section-title">Marketing / Source</div><div class="detail-grid">';
+  html += detailItem('Discovery Source', discoveryLabels[e.discovery_source] || e.discovery_source);
+  html += detailItem('Marketing Consent', e.marketing_consent == 1 ? 'Yes' : 'No');
+  html += detailItem('Referral Source', e.referral_source);
+  html += detailItem('Referred By Code', e.referred_by);
+  html += detailItem('UTM Source', e.utm_source);
+  html += detailItem('UTM Medium', e.utm_medium);
+  html += detailItem('UTM Campaign', e.utm_campaign);
+  html += detailItem('UTM Content', e.utm_content);
+  html += '</div>';
+
+  html += '<div class="modal-section-title">System</div><div class="detail-grid">';
+  html += detailItem('Referral Code', e.referral_code);
+  html += detailItem('IP Address', e.ip_address);
+  html += detailItem('Status', e.status);
+  html += detailItem('Joined', e.created_at);
+  html += '</div>';
+
+  document.getElementById('details-modal-body').innerHTML = html;
+  document.getElementById('details-modal').classList.add('visible');
+}
+
+function closeModal() {
+  document.getElementById('details-modal').classList.remove('visible');
+}
+
 const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
 document.getElementById('select-all').addEventListener('change', function() {
