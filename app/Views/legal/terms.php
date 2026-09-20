@@ -11,6 +11,7 @@ $isFr = ($currentLang === 'fr');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <?= csrfMeta() ?>
     <title><?= $isFr ? 'Conditions d\'utilisation' : 'Terms of Service' ?> - OCSAPP</title>
 
     <!-- Favicon -->

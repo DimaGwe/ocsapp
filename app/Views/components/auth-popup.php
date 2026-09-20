@@ -53,11 +53,11 @@ if (!function_exists('isLoggedIn') || !isLoggedIn()):
           <i class="fas fa-store"></i>
         </div>
         <div class="option-content">
-          <h3><a href="<?= url('register?role=seller') ?>" class="option-title-link">Seller</a> Account</h3>
+          <h3><a href="<?= url('seller/apply') ?>" class="option-title-link">Seller</a> Account</h3>
           <p>Canadian or Quebec registered business approved for shop management and product selling on OCSAPP platform</p>
           <div class="option-buttons">
             <a href="<?= url('login') ?>" class="btn-auth btn-signin">Sign In</a>
-            <a href="<?= url('register?role=seller') ?>" class="btn-auth btn-create">Create Account</a>
+            <a href="<?= url('seller/apply') ?>" class="btn-auth btn-create">Create Account</a>
           </div>
         </div>
       </div>

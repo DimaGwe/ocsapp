@@ -7,6 +7,7 @@
 
 // Get current language
 $currentLang = $_SESSION['language'] ?? 'fr';
+$fr = ($currentLang === 'fr');
 
 // Get translations
 $t = getTranslations($currentLang);
@@ -110,8 +111,19 @@ if (empty($productImages) && !empty($product['image'])) {
     echo SeoHelper::generateOrganizationSchema();
     ?>
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="<?= asset('css/styles.css') ?>">
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="<?= asset('images/logo.png') ?>">
+    <link rel="apple-touch-icon" href="<?= asset('images/logo.png') ?>">
+    <meta name="theme-color" content="#00b207">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="<?= asset('css/global.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/components/header.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/components/footer.css') ?>">
     <style>
         body {
             padding-bottom: 80px;
@@ -915,27 +927,13 @@ if (empty($productImages) && !empty($product['image'])) {
     font-size: 14px;
 }
 
-/* Footer fix */
-.footer {
-    margin-top: 0;
-}
-
-.footer-bottom {
-    margin-bottom: 0;
-    padding-bottom: 20px;
-}
     </style>
 </head>
 <body>
-    <!-- Top Banner -->
-    <div class="top-banner">
-        <?= $t['store_location'] ?>: <?= htmlspecialchars($currentLocation) ?> | 
-        <?= $t['need_help'] ?>: <a href="tel:+18095551234">+1 (809) 555-1234</a>
-    </div>
-
-    <!-- Header -->
+    <!-- Header (Marché Central variant, consistent with /home, /categories, /shops and /cart) -->
+    <?php $useMarcheHeader = true; ?>
     <?php include __DIR__ . '/../components/header.php'; ?>
-    
+
     <!-- Breadcrumb -->
     <div class="breadcrumb">
         <a href="<?= url('/') ?>"><?= $t['home'] ?></a> / 
@@ -1304,37 +1302,62 @@ if (empty($productImages) && !empty($product['image'])) {
         <div class="modal-counter" id="modalCounter">1 / 1</div>
     </div>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-grid">
-            <div>
-                <h4><?= $t['get_to_know'] ?></h4>
-                <ul>
-                    <li><a href="<?= url('about') ?>"><?= $t['about_us'] ?></a></li>
-                    <li><a href="<?= url('contact') ?>"><?= $t['contact_us'] ?></a></li>
-                </ul>
+    <!-- Footer (Marché Central variant, matches /home, /categories, /shops and /cart) -->
+    <footer class="mc-footer">
+        <div class="mc-footer-wrap">
+            <div class="mc-footer-top">
+                <div class="mc-footer-brand-col">
+                    <div class="mc-footer-brand">
+                        <img src="<?= asset('images/logo.png') ?>" alt="<?= $fr ? 'Logo OCSAPP' : 'OCSAPP Logo' ?>">
+                        <span class="mc-footer-logo-text">OCSAPP</span>
+                    </div>
+                    <p class="mc-footer-tagline"><?= $fr ? "L'infrastructure numérique tout-en-un du commerce local." : 'The all-in-one digital infrastructure for local commerce.' ?></p>
+                    <p><?= $fr
+                        ? 'OCSAPP Inc. · Constituée sous le régime fédéral de la Loi canadienne sur les sociétés par actions (n<sup>o</sup> de société 1750354-7) · Numéro d\'entreprise du Québec (NEQ) 1181584997'
+                        : 'OCSAPP Inc. · Federally incorporated under the Canada Business Corporations Act (Corporation No. 1750354-7) · Quebec enterprise number (NEQ) 1181584997'
+                    ?></p>
+                    <p><?= $fr ? 'Siège social : Laval, Québec (H7H)' : 'Registered office: Laval, Québec (H7H)' ?></p>
+                </div>
+
+                <div class="mc-footer-col">
+                    <h5><?= $fr ? 'Apprenez à nous connaître' : 'Get to Know Us' ?></h5>
+                    <a href="<?= url('about') ?>"><?= $fr ? "À propos d'OCSAPP" : 'About OCSAPP' ?></a>
+                    <a href="<?= url('contact') ?>"><?= $fr ? 'Contactez-nous' : 'Contact Us' ?></a>
+                </div>
+
+                <div class="mc-footer-col">
+                    <h5><?= $fr ? 'Écosystème OCSAPP' : 'OCSAPP Ecosystem' ?></h5>
+                    <a href="<?= url('home') ?>"><?= $fr ? 'Marché Central' : 'Marketplace Central' ?></a>
+                    <a href="<?= url('buyer-central') ?>"><?= $fr ? 'Acheteur Central' : 'Buyer Central' ?></a>
+                    <a href="<?= url('seller-central') ?>"><?= $fr ? 'Vendeur Central' : 'Seller Central' ?></a>
+                    <a href="<?= url('supplier-central') ?>"><?= $fr ? 'Fournisseur Central' : 'Supplier Central' ?></a>
+                    <a href="<?= url('driver-central') ?>"><?= $fr ? 'Livreur Central · ODA' : 'Driver Central · ODA' ?></a>
+                    <a href="<?= url('distribution') ?>"><?= $fr ? 'Entreprise Centrale' : 'Business Central' ?></a>
+                </div>
+
+                <div class="mc-footer-col">
+                    <h5><?= $fr ? 'Connectez-vous avec nous' : 'Connect With Us' ?></h5>
+                    <a href="https://www.facebook.com/ocsapp.ca" target="_blank" rel="noopener">Facebook</a>
+                    <a href="https://www.instagram.com/ocsapp.ca" target="_blank" rel="noopener">Instagram</a>
+                    <a href="https://www.linkedin.com/company/ocsapp" target="_blank" rel="noopener">LinkedIn</a>
+                </div>
             </div>
-            <div>
-                <h4><?= $t['promote_with_us'] ?></h4>
-                <ul>
-                    <li><a href="<?= url('register') ?>"><?= $t['sell_on'] ?></a></li>
-                    <li><a href="<?= url('seller/help') ?>"><?= $t['vendor_central'] ?></a></li>
-                </ul>
+
+            <div class="mc-footer-bottom">
+                <p>OCSAPP &copy; <?= date('Y') ?>. <?= $fr ? 'Tous droits réservés.' : 'All rights reserved.' ?></p>
+                <div class="mc-footer-legal">
+                    <a href="<?= url('privacy') ?>"><?= $fr ? 'Politique de confidentialité' : 'Privacy Policy' ?></a>
+                    <a href="<?= url('terms') ?>"><?= $fr ? "Conditions d'utilisation" : 'Terms of Service' ?></a>
+                    <a href="<?= url('cookies') ?>"><?= $fr ? 'Politique de cookies' : 'Cookie Policy' ?></a>
+                    <a href="<?= url('returns') ?>"><?= $fr ? 'Retours' : 'Returns' ?></a>
+                    <a href="<?= url('accessibility') ?>"><?= $fr ? 'Accessibilité' : 'Accessibility' ?></a>
+                </div>
             </div>
-            <div>
-                <h4><?= $t['connect_with_us'] ?></h4>
-                <ul>
-                    <li><a href="#">Facebook</a></li>
-                    <li><a href="#">Twitter</a></li>
-                    <li><a href="#">Instagram</a></li>
-                </ul>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <p>OCS © <?= date('Y') ?>. <?= $t['all_rights'] ?></p>
         </div>
     </footer>
-    
+
+    <?php include __DIR__ . '/../components/auth-popup.php'; ?>
+
     <script>
         window.OCS_CONFIG = {
             isLoggedIn: <?= function_exists('isLoggedIn') && isLoggedIn() ? 'true' : 'false' ?>,

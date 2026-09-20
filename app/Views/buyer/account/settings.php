@@ -72,6 +72,7 @@ $cartCount = $cartCount ?? 0;
                 <a href="<?= url('account/addresses') ?>"><i class="fas fa-map-marker-alt"></i> Addresses</a>
                 <a href="<?= url('account/wishlist') ?>"><i class="fas fa-heart"></i> Wishlist</a>
                 <a href="<?= url('account/settings') ?>" class="active"><i class="fas fa-cog"></i> Settings</a>
+                <a href="<?= url('logout') ?>" style="color:#c62828;border-top:1px solid #f0f0f0;margin-top:8px;padding-top:18px;"><i class="fas fa-sign-out-alt"></i> Logout</a>
             </nav>
         </div>
     </aside>

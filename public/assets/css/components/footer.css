@@ -82,3 +82,41 @@
   color: #fff;
   text-decoration: underline;
 }
+
+/* ===================================
+   MARCHÉ CENTRAL FOOTER (<footer class="mc-footer">)
+   Hardcoded markup on Marché Central pages (/home, /categories) in place
+   of the default <?php include footer.php; ?> - matches ocsapp.ca's
+   landing page footer instead of the standard dark portal footer.
+   =================================== */
+.mc-footer{background:#fff;border-top:1px solid var(--border);padding:68px 0 30px;margin-top:48px}
+.mc-footer-wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+.mc-footer-top{display:grid;grid-template-columns:1.65fr .85fr 1fr .85fr;gap:46px;padding-bottom:42px;border-bottom:1px solid var(--border)}
+.mc-footer-brand{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.mc-footer-brand img{width:38px;height:38px;object-fit:contain}
+.mc-footer-logo-text{font-family:'Poppins',sans-serif;font-weight:700;color:var(--primary);font-size:18px}
+.mc-footer-tagline{font-size:13.5px;color:var(--gray-500);max-width:340px;margin-bottom:12px}
+.mc-footer-brand-col p:not(.mc-footer-tagline){font-size:11.5px;color:var(--gray-400);margin-bottom:4px;line-height:1.6}
+.mc-footer-col h5{font-family:'Poppins',sans-serif;font-size:11.5px;color:var(--dark);margin-bottom:14px;letter-spacing:.06em;text-transform:uppercase}
+.mc-footer-col a{display:block;color:var(--gray-500);font-size:13px;margin-bottom:9px;text-decoration:none}
+.mc-footer-col a:hover{color:var(--primary)}
+.mc-footer-bottom{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;align-items:center;padding-top:24px}
+.mc-footer-bottom p{font-size:12px;color:var(--gray-400)}
+.mc-footer-legal{display:flex;flex-wrap:wrap;gap:4px 16px}
+.mc-footer-legal a{color:var(--gray-400);font-size:11.5px;text-decoration:none}
+.mc-footer-legal a:hover{color:var(--primary)}
+
+@media(max-width:1060px){
+  .mc-footer-top{grid-template-columns:1.25fr 1fr 1fr}
+  .mc-footer-brand-col{grid-column:1/-1}
+}
+@media(max-width:760px){
+  .mc-footer-top{grid-template-columns:1fr 1fr}
+  .mc-footer-brand-col{grid-column:1/-1}
+}
+@media(max-width:560px){
+  .mc-footer-top{grid-template-columns:1fr}
+  .mc-footer-brand-col{grid-column:auto}
+  .mc-footer-bottom{align-items:flex-start;flex-direction:column}
+  .mc-footer-legal{gap:6px 14px}
+}

@@ -103,6 +103,19 @@ body.seller-central-page {
 .section-eyebrow { color: var(--green); font-size: 12px; font-family: 'Poppins','Segoe UI',sans-serif; font-weight: 700; letter-spacing: .12em; margin-bottom: 10px; text-align: center; }
 .card-section h2 { text-align: center; font-size: 30px; letter-spacing: -.02em; margin-bottom: 12px; }
 .section-lead { max-width: 720px; text-align: center; color: var(--text-grey); margin: 0 auto 34px; font-size: 16px; line-height: 1.8; }
+
+/* Requirements/eligibility checklist box (Founding Partner Program) - same block
+   as buyer-central.css / supplier-central.css, ported here since this page didn't
+   use the component before. */
+.requirements-box {
+  max-width: 900px; margin: 0 auto; background: #fff; border: 1px solid var(--border);
+  border-radius: 18px; padding: 30px 34px; box-shadow: var(--shadow-sm);
+}
+.requirements-box h4 { font-family: 'Poppins', 'Segoe UI', sans-serif; font-size: 16px; margin-bottom: 16px; }
+.requirements-box ul { list-style: none; display: grid; grid-template-columns: repeat(2,1fr); gap: 10px 24px; }
+.requirements-box li { font-size: 13.5px; color: var(--text-grey); padding-left: 22px; position: relative; line-height: 1.6; }
+.requirements-box li::before { content: "✓"; position: absolute; left: 0; color: var(--green); font-weight: 700; }
+@media (max-width: 700px) { .requirements-box ul { grid-template-columns: 1fr; } }
 .why-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; }
 .why-card {
   position: relative; background: white; border: 1px solid var(--border); border-radius: 18px;

@@ -425,6 +425,11 @@ $_daysUrgent = $_daysLeft !== null && $_daysLeft <= 7;
               <div class="stat-value" style="font-size:16px;color:<?= $dashPkgColor ?>;"><?= htmlspecialchars($dashPkgLabel) ?></div>
               <div class="stat-label"><?= $currentLang === 'fr' ? 'Mon forfait' : 'My Plan' ?></div>
               <div style="font-size:11px;color:#6b7280;margin-top:4px;"><?= $dashCommission ?>% <?= $currentLang === 'fr' ? 'commission' : 'commission' ?></div>
+              <?php if (!empty($supplier['founding_partner'])): ?>
+                <div style="display:inline-flex;align-items:center;gap:4px;background:#fef3c722;color:#b45309;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;border:1px solid #fbbf2455;margin-top:6px;">
+                  🌟 <?= $currentLang === 'fr' ? 'Fondateur' : 'Founding' ?> #<?= (int)$supplier['founding_partner_number'] ?>
+                </div>
+              <?php endif; ?>
             </div>
             <div class="stat-icon" style="background:<?= $dashPkgColor ?>18;color:<?= $dashPkgColor ?>;">
               <i class="fas fa-star"></i>

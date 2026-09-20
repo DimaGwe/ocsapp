@@ -1,0 +1,77 @@
+/**
+ * Ecosystem header + beta bar (shared component)
+ * Ported from public/landing.php's own inline header (class names prefixed
+ * eco- to avoid colliding with the portal header.css). First used by
+ * app/Views/auth/login.php (2026-09-08), now also used by app/Views/legal/dynamic.php.
+ */
+.eco-beta{
+  background:#075A0B;color:rgba(255,255,255,.72);
+  min-height:34px;display:flex;align-items:center;justify-content:center;
+  gap:10px;padding:6px 18px;font-size:12px;text-align:center;
+  border-bottom:1px solid rgba(0,178,7,.25);
+}
+.eco-beta-badge{
+  color:#00B207;border:1px solid rgba(0,178,7,.45);
+  background:rgba(0,178,7,.10);
+  border-radius:999px;padding:1px 8px;font-family:'Poppins',sans-serif;
+  font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+}
+.eco-beta a{color:#74E278;font-weight:600;text-decoration:none}
+
+.eco-header{
+  position:sticky;top:0;z-index:60;
+  background:rgba(255,255,255,.94);
+  border-bottom:1px solid #E5E7E4;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+.eco-wrap{width:min(1180px,calc(100% - 64px));margin-inline:auto}
+.eco-header-inner{min-height:76px;display:flex;align-items:center;gap:24px}
+.eco-brand{display:flex;align-items:center;gap:11px;flex-shrink:0;text-decoration:none;color:inherit}
+.eco-brand img{width:42px;height:42px;object-fit:contain;filter:drop-shadow(0 7px 15px rgba(0,178,7,.14))}
+.eco-brand-text{font-family:'Poppins',sans-serif;font-size:20px;font-weight:700;color:#00B207;letter-spacing:-.02em}
+.eco-header nav{display:flex;align-items:center;gap:26px;margin-left:auto}
+.eco-nav-link{font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;color:#3E4541;text-decoration:none}
+.eco-nav-link:hover{color:#00B207}
+.eco-lang{
+  display:flex;align-items:center;border:1px solid #E5E7E4;
+  border-radius:999px;padding:3px;background:#FAFBFA;
+}
+.eco-lang a{font-size:11px;font-weight:700;padding:5px 8px;border-radius:999px;color:#66706A;text-decoration:none}
+.eco-lang a.active{background:#17181A;color:#fff}
+.eco-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  min-height:46px;padding:0 20px;border-radius:12px;font-family:'Poppins',sans-serif;
+  font-size:13px;font-weight:600;border:1px solid transparent;transition:.2s ease;text-decoration:none;
+}
+.eco-btn-primary{background:#00B207;color:#fff;box-shadow:0 12px 28px rgba(0,178,7,.22)}
+.eco-btn-primary:hover{transform:translateY(-1px);box-shadow:0 16px 34px rgba(0,178,7,.28)}
+.eco-btn-secondary{background:#fff;color:#17181A;border-color:#E5E7E4}
+.eco-btn-secondary:hover{border-color:#00B207;color:#00B207}
+.eco-mobile-toggle{display:none;margin-left:auto;border:0;background:none;font-size:21px;color:#17181A;cursor:pointer;padding:4px 6px}
+.eco-mobile-menu{display:none;flex-direction:column;gap:2px;padding:10px 0 18px;border-top:1px solid #E5E7E4}
+.eco-mobile-menu.open{display:flex}
+.eco-mobile-menu-link{display:block;padding:12px 2px;font-size:14px;font-weight:600;color:#3E4541;border-bottom:1px solid #E5E7E4;text-decoration:none}
+.eco-mobile-menu-link:hover{color:#00B207}
+.eco-mobile-menu-lang{display:flex;gap:8px;margin:14px 0 4px}
+.eco-mobile-menu-lang a{font-size:12px;font-weight:700;padding:7px 16px;border-radius:999px;border:1px solid #E5E7E4;color:#66706A;text-decoration:none}
+.eco-mobile-menu-lang a.active{background:#17181A;color:#fff;border-color:#17181A}
+.eco-mobile-menu .eco-btn{margin-top:14px}
+
+@media(max-width:1060px){
+  .eco-header nav .eco-nav-link{display:none}
+}
+@media(max-width:760px){
+  .eco-wrap{width:min(100% - 40px,1180px)}
+  .eco-header nav{gap:10px}
+  .eco-header nav .eco-lang{display:none}
+  .eco-header-join{display:none}
+  .eco-header nav .eco-btn-secondary{display:none}
+  .eco-mobile-toggle{display:block}
+}
+@media(max-width:560px){
+  .eco-beta .eco-beta-full{display:none}
+  .eco-brand-text{font-size:18px}
+  .eco-brand img{width:38px;height:38px}
+  .eco-header-inner{min-height:68px}
+}
+@media(min-width:761px){.eco-mobile-menu{display:none!important}}

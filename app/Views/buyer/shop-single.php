@@ -27,6 +27,12 @@ $cartCount = $cartCount ?? 0;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($shop['name'] ?? 'Shop') ?> - <?= env('APP_NAME', 'OCSAPP') ?></title>
     <?= csrfMeta() ?>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="<?= asset('images/logo.png') ?>">
+    <link rel="apple-touch-icon" href="<?= asset('images/logo.png') ?>">
+    <meta name="theme-color" content="#00b207">
+
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -92,6 +98,13 @@ $cartCount = $cartCount ?? 0;
             font-size: 14px;
             margin-bottom: 15px;
         }
+        .shop-trust-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
         .shop-rating-large {
             display: inline-flex;
             align-items: center;
@@ -104,6 +117,21 @@ $cartCount = $cartCount ?? 0;
         }
         .shop-rating-large .stars {
             color: #ffc107;
+        }
+        .shop-rating-large .reviews-count {
+            color: #92720a;
+            font-weight: 500;
+        }
+        .shop-delivery-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #e6f7e8;
+            color: #0d7a12;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
         }
         .view-info-btn {
             display: block;
@@ -141,10 +169,11 @@ $cartCount = $cartCount ?? 0;
             background: #f7f7f7;
             border-left-color: #00b207;
         }
-        .sidebar-menu-item svg, .sidebar-menu-item span:first-child {
+        .sidebar-menu-item svg, .sidebar-menu-item i {
             width: 20px;
             text-align: center;
-            font-size: 18px;
+            font-size: 16px;
+            color: #00b207;
         }
         
         .categories-section {
@@ -188,18 +217,64 @@ $cartCount = $cartCount ?? 0;
         }
         
         .shop-banner {
+            position: relative;
             width: 100%;
-            height: 200px;
+            height: 220px;
             background: linear-gradient(135deg, #00b207 0%, #009206 100%);
             display: flex;
-            align-items: center;
-            justify-content: center;
+            align-items: flex-end;
             overflow: hidden;
         }
         .shop-banner img {
+            position: absolute;
+            inset: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+        .shop-banner-icon-fallback {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 64px;
+            color: rgba(255,255,255,0.35);
+        }
+        .shop-banner-overlay {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            padding: 40px 30px 18px;
+            background: linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0) 100%);
+            color: white;
+        }
+        .shop-banner-name {
+            font-size: 26px;
+            font-weight: 700;
+            line-height: 1.2;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+        }
+        .shop-banner-tagline {
+            font-size: 14px;
+            opacity: 0.92;
+            margin-top: 4px;
+            max-width: 640px;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+        }
+        .shop-founding-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(251,191,36,0.9);
+            color: #4a2c00;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 20px;
         }
         
         .products-header {
@@ -254,13 +329,14 @@ $cartCount = $cartCount ?? 0;
         
         .breadcrumb-menu {
             background: transparent;
-            padding: 20px 5%;
+            padding: 16px 5% 14px;
             display: flex;
-            gap: 15px;
+            gap: 8px;
             align-items: center;
             max-width: 1400px;
-            margin: 20px auto 0;
+            margin: 10px auto 0;
             position: relative;
+            font-size: 13px;
         }
 
         .breadcrumb-menu::after {
@@ -276,30 +352,25 @@ $cartCount = $cartCount ?? 0;
         .breadcrumb-btn {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            padding: 10px 20px;
-            background: #f7f7f7;
-            color: #333;
+            gap: 6px;
+            color: #666;
             text-decoration: none;
-            border-radius: 8px;
             font-weight: 500;
-            font-size: 14px;
-            transition: all 0.2s;
-            border: 1px solid #e6e6e6;
+            transition: color 0.2s;
         }
 
         .breadcrumb-btn:hover {
-            background: #00b207;
-            color: white;
-            border-color: #00b207;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,178,7,0.2);
+            color: #00b207;
         }
 
         .breadcrumb-btn.active {
-            background: #00b207;
-            color: white;
-            border-color: #00b207;
+            color: #222;
+            font-weight: 600;
+        }
+
+        .breadcrumb-sep {
+            color: #ccc;
+            font-size: 11px;
         }
         
         @media (max-width: 1200px) {
@@ -484,15 +555,16 @@ $cartCount = $cartCount ?? 0;
     <!-- Breadcrumb Menu -->
     <div class="breadcrumb-menu">
         <a href="<?= url('/') ?>" class="breadcrumb-btn">
-            <span>🏠</span>
+            <i class="fas fa-house"></i>
             <span><?= $t['home'] ?></span>
         </a>
+        <span class="breadcrumb-sep"><i class="fas fa-chevron-right"></i></span>
         <a href="<?= url('shops') ?>" class="breadcrumb-btn">
-            <span>🏪</span>
             <span><?= $t['shops'] ?></span>
         </a>
+        <span class="breadcrumb-sep"><i class="fas fa-chevron-right"></i></span>
         <a href="<?= url('shops/' . ($shop['slug'] ?? '')) ?>" class="breadcrumb-btn active">
-            <span><?= htmlspecialchars(substr($shop['name'] ?? 'Shop', 0, 20)) ?></span>
+            <span><?= htmlspecialchars(substr($shop['name'] ?? 'Shop', 0, 30)) ?></span>
         </a>
     </div>
 
@@ -506,42 +578,61 @@ $cartCount = $cartCount ?? 0;
                     <?php if (!empty($shop['logo'])): ?>
                         <img src="<?= url($shop['logo']) ?>" alt="<?= htmlspecialchars($shop['name']) ?>">
                     <?php else: ?>
-                        <span style="font-size: 60px;">🏪</span>
+                        <i class="fas fa-store" style="font-size: 48px; color: #ccc;"></i>
                     <?php endif; ?>
                 </div>
                 <div class="shop-name-large"><?= htmlspecialchars($shop['name'] ?? 'Shop Name') ?></div>
+                <?php if (!empty($shop['founding_partner'])): ?>
+                    <div style="text-align:center;margin-bottom:8px;">
+                        <span style="display:inline-flex;align-items:center;gap:5px;background:#fef3c722;color:#b45309;font-size:12px;font-weight:600;padding:5px 12px;border-radius:20px;border:1px solid #fbbf2455;">
+                            <i class="fas fa-star"></i> <?= $currentLang === 'fr' ? 'Partenaire Fondateur' : 'Founding Partner' ?>
+                        </span>
+                    </div>
+                <?php endif; ?>
                 <div class="shop-location-text">
-                    <?= htmlspecialchars(explode(',', $shop['address'] ?? 'Location')[0]) ?>
+                    <i class="fas fa-location-dot" style="color:#999;margin-right:4px;"></i>
+                    <?= htmlspecialchars(explode(',', $shop['address'] ?? ($currentLang === 'fr' ? 'Emplacement non precise' : 'Location not provided'))[0]) ?>
                 </div>
-                <div class="shop-rating-large">
-                    <span class="stars">⭐</span>
-                    <span><?= number_format($shop['average_rating'] ?? 4.8, 1) ?></span>
+                <div class="shop-trust-row">
+                    <div class="shop-rating-large">
+                        <span class="stars"><i class="fas fa-star"></i></span>
+                        <span><?= number_format($shop['average_rating'] ?? 4.8, 1) ?></span>
+                        <?php if (!empty($shop['reviews_count'])): ?>
+                            <span class="reviews-count">(<?= $shop['reviews_count'] ?>)</span>
+                        <?php endif; ?>
+                    </div>
+                    <?php if (!empty($shop['packaging_time'])): ?>
+                        <div class="shop-delivery-badge">
+                            <i class="fas fa-clock"></i>
+                            <?= htmlspecialchars($shop['packaging_time']) ?> <?= $currentLang === 'fr' ? 'min' : 'min' ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
                 <button class="view-info-btn" onclick="showShopInfoModal()">
                     <?= $t['view_information'] ?? 'View Information' ?> >
                 </button>
             </div>
-            
+
             <!-- Sidebar Menu -->
             <div class="sidebar-menu">
                 <a href="<?= url('shops/' . ($shop['slug'] ?? '')) ?>" class="sidebar-menu-item">
-                    <span>🛍️</span>
+                    <i class="fas fa-bag-shopping"></i>
                     <span><?= $t['products'] ?? 'Products' ?></span>
                 </a>
                 <a href="#" class="sidebar-menu-item" onclick="event.preventDefault(); openShopModal('feedbackModal');">
-                    <span>💬</span>
+                    <i class="fas fa-comment-dots"></i>
                     <span><?= $currentLang === 'fr' ? 'Laisser un avis' : 'Leave a Review' ?></span>
                 </a>
                 <a href="#" class="sidebar-menu-item" onclick="event.preventDefault(); openShopModal('contactModal');">
-                    <span>✉️</span>
+                    <i class="fas fa-envelope"></i>
                     <span><?= $currentLang === 'fr' ? 'Contacter la boutique' : 'Contact Shop' ?></span>
                 </a>
                 <a href="#" class="sidebar-menu-item" onclick="event.preventDefault(); openShopModal('policyModal');">
-                    <span>📋</span>
+                    <i class="fas fa-file-lines"></i>
                     <span><?= $currentLang === 'fr' ? 'Politiques' : 'Shop Policy' ?></span>
                 </a>
                 <a href="#" class="sidebar-menu-item" onclick="event.preventDefault(); openShopModal('reportModal');">
-                    <span>⚠️</span>
+                    <i class="fas fa-flag"></i>
                     <span><?= $currentLang === 'fr' ? 'Signaler' : 'Report' ?></span>
                 </a>
             </div>
@@ -570,10 +661,23 @@ $cartCount = $cartCount ?? 0;
                 <?php if (!empty($shop['cover_image'])): ?>
                     <img src="<?= url($shop['cover_image']) ?>" alt="<?= htmlspecialchars($shop['name']) ?>">
                 <?php else: ?>
-                    <span style="font-size: 80px; color: white;">🏪</span>
+                    <div class="shop-banner-icon-fallback"><i class="fas fa-store"></i></div>
                 <?php endif; ?>
+                <div class="shop-banner-overlay">
+                    <div class="shop-banner-name">
+                        <?= htmlspecialchars($shop['name'] ?? 'Shop') ?>
+                        <?php if (!empty($shop['founding_partner'])): ?>
+                            <span class="shop-founding-pill">
+                                <i class="fas fa-star"></i> <?= $currentLang === 'fr' ? 'Fondateur' : 'Founding' ?>
+                            </span>
+                        <?php endif; ?>
+                    </div>
+                    <?php if (!empty($shop['description'])): ?>
+                        <div class="shop-banner-tagline"><?= htmlspecialchars(mb_strimwidth($shop['description'], 0, 140, '…')) ?></div>
+                    <?php endif; ?>
+                </div>
             </div>
-            
+
             <!-- Products Header -->
             <div class="products-header">
                 <div class="products-header-info">
@@ -737,7 +841,7 @@ $cartCount = $cartCount ?? 0;
                 </div>
             <?php else: ?>
                 <div class="empty-state">
-                    <div style="font-size: 80px; margin-bottom: 20px;">📦</div>
+                    <div style="font-size: 64px; margin-bottom: 20px; color: #ddd;"><i class="fas fa-box-open"></i></div>
                     <h2 style="color: #666; margin-bottom: 10px;"><?= $t['no_products'] ?></h2>
                     <p style="color: #999;"><?= $t['shop_no_products_desc'] ?></p>
                 </div>
@@ -817,7 +921,7 @@ $cartCount = $cartCount ?? 0;
                                 <?php if ($hours['is_closed']): ?>
                                     <span style="color: #999;"><?= $t['closed'] ?? 'Closed' ?></span>
                                 <?php else: ?>
-                                    <?= date('g:i A', strtotime($hours['open_time'])) ?> - <?= date('g:i A', strtotime($hours['close_time'])) ?>
+                                    <?= date('g:i A', strtotime($hours['opens_at'])) ?> - <?= date('g:i A', strtotime($hours['closes_at'])) ?>
                                 <?php endif; ?>
                             </td>
                         </tr>

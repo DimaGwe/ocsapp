@@ -1,25 +1,39 @@
 <?php
 /**
- * Categories Page - Browse all product categories
+ * Categories Page - Marché Central taxonomy
  */
 
 // Get current language and translations
 $currentLang = $_SESSION['language'] ?? 'fr';
 $t = getTranslations($currentLang);
+$fr = ($currentLang === 'fr');
 
-// Get store location
-$storeLocation = $_SESSION['location'] ?? 'Santo Domingo, DR';
-
-// Default values
-$categories = $categories ?? [];
 $cartCount = $cartCount ?? 0;
+
+// Official Marché Central taxonomy: [icon file, shop-type filter, name FR, name EN, desc FR, desc EN]
+$taxonomy = [
+    ['icon-food-dining', 'food_dining', 'Restauration', 'Food & Dining', 'Restaurants, prêts-à-manger, cafés et expériences culinaires locales.', 'Restaurants, ready-to-eat meals, cafés and local culinary experiences.'],
+    ['icon-grocery', 'grocery', 'Épicerie', 'Grocery', 'Produits frais, garde-manger et essentiels du quotidien.', 'Fresh products, pantry staples and everyday essentials.'],
+    ['icon-health-pharmacy', 'health_pharmacy', 'Santé & pharmacie', 'Health & Pharmacy', 'Produits de santé, pharmacie, soins et essentiels bien-être.', 'Health products, pharmacy, care and wellness essentials.'],
+    ['icon-boutique', 'boutique', 'Mode & boutiques', 'Fashion & Boutiques', 'Mode, accessoires et commerces spécialisés.', 'Fashion, accessories and specialty shops.'],
+    ['icon-wellness-beauty', 'wellness_beauty', 'Bien-être & beauté', 'Wellness & Beauty', 'Beauté, soins personnels, mieux-être et produits spécialisés.', 'Beauty, personal care, wellness and specialty products.'],
+    ['icon-events-catering', 'events_catering', 'Événements & traiteur', 'Events & Catering', 'Traiteur, événements, célébrations et services connexes.', 'Catering, events, celebrations and related services.'],
+    ['icon-local-gems', 'local_gems', 'Artisans locaux', 'Local Artisans', "Créateurs d'ici, produits faits localement et petites séries.", 'Local makers, locally-made products and small batches.'],
+    ['icon-automotive', 'automotive', 'Pièces auto & industrielles', 'Auto & Industrial Parts', 'Pièces automobiles, fournitures techniques et besoins industriels.', 'Auto parts, technical supplies and industrial needs.'],
+    ['icon-home-everyday', 'home_everyday', 'Maison & quotidien', 'Home & Everyday', 'Maison, entretien, cuisine et essentiels de la vie courante.', 'Home, cleaning, kitchen and everyday essentials.'],
+    ['icon-electronics', 'electronics', 'Électronique & technologie', 'Electronics & Tech', 'Électronique, accessoires, appareils et solutions technologiques.', 'Electronics, accessories, devices and tech solutions.'],
+    ['icon-world-flavors', 'food_drink', 'Saveurs du monde', 'World Flavors', 'Produits, spécialités et cuisines représentatives de nos communautés.', 'Products, specialties and cuisines representing our communities.'],
+];
 ?>
 <!DOCTYPE html>
 <html lang="<?= htmlspecialchars($currentLang) ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $t['shop_by_category'] ?? 'Shop by Category' ?> - OCSAPP</title>
+    <title><?= $fr ? 'Catégories - Marché Central' : 'Categories - Marketplace Central' ?> | OCSAPP</title>
+    <meta name="description" content="<?= $fr
+        ? "Explorez les catégories de Marché Central : restauration, épicerie, santé, mode et plus, pour trouver rapidement ce qu'il vous faut sur OCSAPP."
+        : 'Browse Marketplace Central categories: dining, grocery, health, fashion and more, to quickly find what you need on OCSAPP.' ?>">
     <?= csrfMeta() ?>
 
     <!-- Favicon -->
@@ -30,396 +44,126 @@ $cartCount = $cartCount ?? 0;
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
 
     <!-- Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
     <!-- Modular CSS Architecture -->
     <link rel="stylesheet" href="<?= asset('css/global.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/components/header.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/components/footer.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/pages/categories.css') ?>">
 </head>
 <body>
-    <!-- Header (includes beta notice and top banner) -->
+    <!-- Header (Marché Central variant, consistent with /home) -->
+    <?php $useMarcheHeader = true; ?>
     <?php include __DIR__ . '/../components/header.php'; ?>
 
-    <!-- Breadcrumb Menu -->
-    <div class="breadcrumb-menu">
-        <a href="<?= url('/') ?>" class="breadcrumb-btn">
-            <span>🏠</span>
-            <span><?= $t['home'] ?? 'Home' ?></span>
-        </a>
-        <a href="<?= url('categories') ?>" class="breadcrumb-btn active">
-            <span>☰</span>
-            <span><?= $t['categories'] ?? 'Categories' ?></span>
-        </a>
-        <a href="<?= url('shops') ?>" class="breadcrumb-btn">
-            <span>🏪</span>
-            <span><?= $t['shops'] ?? 'Shops' ?></span>
-        </a>
+    <div class="mc-shell" id="main-content" tabindex="-1">
+        <div class="mc-wrap">
+            <nav class="mc-breadcrumb" aria-label="<?= $fr ? "Fil d'Ariane" : 'Breadcrumb' ?>">
+                <a href="<?= url('home') ?>"><i class="fas fa-store"></i><span><?= $fr ? 'Marché Central' : 'Marketplace Central' ?></span></a>
+                <span class="mc-sep">/</span>
+                <span aria-current="page"><?= $fr ? 'Catégories' : 'Categories' ?></span>
+            </nav>
+
+            <section class="mc-category-hero">
+                <div class="mc-category-hero-copy">
+                    <span class="mc-eyebrow"><?= $fr ? 'Marché Central · Taxonomie OCSAPP' : 'Marketplace Central · OCSAPP Taxonomy' ?></span>
+                    <h1><?= $fr ? 'Trouvez plus vite ce qui vous convient.' : 'Find what you need, faster.' ?></h1>
+                    <p><?= $fr
+                        ? "Une structure de catégories simplifiée pour découvrir les produits, commerces et services d'ici selon vos besoins, dans le même écosystème OCSAPP."
+                        : 'A simplified category structure to discover local products, shops and services by need, all within the same OCSAPP ecosystem.' ?></p>
+                </div>
+                <div class="mc-category-hero-note mc-market-identity">
+                    <div class="mc-market-identity-icon">
+                        <img src="<?= asset('images/marche-central-icon.png') ?>" alt="<?= $fr ? 'Icône officielle Marché Central' : 'Official Marketplace Central icon' ?>">
+                    </div>
+                    <div class="mc-market-identity-copy">
+                        <span class="mc-market-label"><?= $fr ? 'Marché Central' : 'Marketplace Central' ?></span>
+                        <strong><?= $fr ? 'Découvrir & magasiner' : 'Discover & shop' ?></strong>
+                        <span class="mc-market-sub"><?= $fr
+                            ? "Votre point d'entrée pour explorer les catégories, commerces et produits de l'écosystème OCSAPP."
+                            : 'Your entry point to explore the categories, shops and products of the OCSAPP ecosystem.' ?></span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mc-taxonomy-section" aria-labelledby="taxonomy-title">
+                <div class="mc-section-head">
+                    <span class="mc-eyebrow"><?= $fr ? 'Explorer par besoin' : 'Explore by need' ?></span>
+                    <h2 id="taxonomy-title"><?= $fr ? 'Les catégories Marché Central.' : 'The Marketplace Central categories.' ?></h2>
+                </div>
+                <div class="mc-taxonomy-grid">
+                    <?php foreach ($taxonomy as $cat): ?>
+                        <a class="mc-tax-card-primary" href="<?= url('shops?type=' . $cat[1]) ?>" data-category="<?= htmlspecialchars($fr ? $cat[2] : $cat[3]) ?>">
+                            <img src="<?= asset('images/marketplace-categories/' . $cat[0] . '.jpg') ?>" alt="<?= htmlspecialchars($fr ? $cat[2] : $cat[3]) ?>">
+                            <div class="mc-tax-content">
+                                <h3><?= htmlspecialchars($fr ? $cat[2] : $cat[3]) ?></h3>
+                                <p><?= htmlspecialchars($fr ? $cat[4] : $cat[5]) ?></p>
+                                <span class="mc-tax-cta"><?= $fr ? 'Explorer' : 'Explore' ?> <i class="fas fa-arrow-right"></i></span>
+                            </div>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            </section>
+        </div>
     </div>
 
-    <main class="page">
-        <!-- Page Header -->
-        <div class="categories-header">
-            <h1><?= $t['shop_by_category'] ?? 'Shop by Category' ?></h1>
-            <p><?= $t['browse_categories_desc'] ?? 'Browse our wide selection of product categories' ?></p>
+    <!-- Footer (Marché Central variant, matches /home) -->
+    <footer class="mc-footer">
+        <div class="mc-footer-wrap">
+            <div class="mc-footer-top">
+                <div class="mc-footer-brand-col">
+                    <div class="mc-footer-brand">
+                        <img src="<?= asset('images/logo.png') ?>" alt="<?= $fr ? 'Logo OCSAPP' : 'OCSAPP Logo' ?>">
+                        <span class="mc-footer-logo-text">OCSAPP</span>
+                    </div>
+                    <p class="mc-footer-tagline"><?= $fr ? "L'infrastructure numérique tout-en-un du commerce local." : 'The all-in-one digital infrastructure for local commerce.' ?></p>
+                    <p><?= $fr
+                        ? 'OCSAPP Inc. · Constituée sous le régime fédéral de la Loi canadienne sur les sociétés par actions (n<sup>o</sup> de société 1750354-7) · Numéro d\'entreprise du Québec (NEQ) 1181584997'
+                        : 'OCSAPP Inc. · Federally incorporated under the Canada Business Corporations Act (Corporation No. 1750354-7) · Quebec enterprise number (NEQ) 1181584997'
+                    ?></p>
+                    <p><?= $fr ? 'Siège social : Laval, Québec (H7H)' : 'Registered office: Laval, Québec (H7H)' ?></p>
+                </div>
+
+                <div class="mc-footer-col">
+                    <h5><?= $fr ? 'Apprenez à nous connaître' : 'Get to Know Us' ?></h5>
+                    <a href="<?= url('about') ?>"><?= $fr ? "À propos d'OCSAPP" : 'About OCSAPP' ?></a>
+                    <a href="<?= url('contact') ?>"><?= $fr ? 'Contactez-nous' : 'Contact Us' ?></a>
+                </div>
+
+                <div class="mc-footer-col">
+                    <h5><?= $fr ? 'Écosystème OCSAPP' : 'OCSAPP Ecosystem' ?></h5>
+                    <a href="<?= url('home') ?>"><?= $fr ? 'Marché Central' : 'Marketplace Central' ?></a>
+                    <a href="<?= url('buyer-central') ?>"><?= $fr ? 'Acheteur Central' : 'Buyer Central' ?></a>
+                    <a href="<?= url('seller-central') ?>"><?= $fr ? 'Vendeur Central' : 'Seller Central' ?></a>
+                    <a href="<?= url('supplier-central') ?>"><?= $fr ? 'Fournisseur Central' : 'Supplier Central' ?></a>
+                    <a href="<?= url('driver-central') ?>"><?= $fr ? 'Livreur Central · ODA' : 'Driver Central · ODA' ?></a>
+                    <a href="<?= url('distribution') ?>"><?= $fr ? 'Entreprise Centrale' : 'Business Central' ?></a>
+                </div>
+
+                <div class="mc-footer-col">
+                    <h5><?= $fr ? 'Connectez-vous avec nous' : 'Connect With Us' ?></h5>
+                    <a href="https://www.facebook.com/ocsapp.ca" target="_blank" rel="noopener">Facebook</a>
+                    <a href="https://www.instagram.com/ocsapp.ca" target="_blank" rel="noopener">Instagram</a>
+                    <a href="https://www.linkedin.com/company/ocsapp" target="_blank" rel="noopener">LinkedIn</a>
+                </div>
+            </div>
+
+            <div class="mc-footer-bottom">
+                <p>OCSAPP &copy; <?= date('Y') ?>. <?= $fr ? 'Tous droits réservés.' : 'All rights reserved.' ?></p>
+                <div class="mc-footer-legal">
+                    <a href="<?= url('privacy') ?>"><?= $fr ? 'Politique de confidentialité' : 'Privacy Policy' ?></a>
+                    <a href="<?= url('terms') ?>"><?= $fr ? "Conditions d'utilisation" : 'Terms of Service' ?></a>
+                    <a href="<?= url('cookies') ?>"><?= $fr ? 'Politique de cookies' : 'Cookie Policy' ?></a>
+                    <a href="<?= url('returns') ?>"><?= $fr ? 'Retours' : 'Returns' ?></a>
+                    <a href="<?= url('accessibility') ?>"><?= $fr ? 'Accessibilité' : 'Accessibility' ?></a>
+                </div>
+            </div>
         </div>
-
-        <?php if (!empty($categories)): ?>
-            <!-- Categories Count -->
-            <div class="categories-info">
-                <p>
-                    <?= $t['showing'] ?? 'Showing' ?> <strong><?= count($categories) ?></strong>
-                    <?= $t['categories'] ?? 'categories' ?>
-                </p>
-            </div>
-
-            <!-- Categories Grid -->
-            <div class="categories-grid">
-                <?php foreach ($categories as $category): ?>
-                    <a href="<?= url('category/' . $category['slug']) ?>" class="category-card">
-                        <div class="category-image">
-                            <?php if (!empty($category['image'])): ?>
-                                <img src="<?= url($category['image']) ?>"
-                                     alt="<?= htmlspecialchars($category['name']) ?>"
-                                     loading="lazy">
-                            <?php elseif (!empty($category['icon'])): ?>
-                                <div class="category-icon">
-                                    <i class="<?= htmlspecialchars($category['icon']) ?>"></i>
-                                </div>
-                            <?php else: ?>
-                                <div class="category-placeholder">
-                                    <i class="fas fa-box"></i>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-
-                        <div class="category-info">
-                            <h3 class="category-name"><?= htmlspecialchars($category['name']) ?></h3>
-
-                            <?php if (!empty($category['description'])): ?>
-                                <p class="category-description">
-                                    <?= htmlspecialchars(substr($category['description'], 0, 80)) ?>
-                                    <?= strlen($category['description']) > 80 ? '...' : '' ?>
-                                </p>
-                            <?php endif; ?>
-
-                            <div class="category-meta">
-                                <span class="product-count">
-                                    <i class="fas fa-cube"></i>
-                                    <?= $category['product_count'] ?? 0 ?>
-                                    <?= $t['products'] ?? 'products' ?>
-                                </span>
-                                <span class="view-link">
-                                    <?= $t['view_all'] ?? 'View all' ?> <i class="fas fa-arrow-right"></i>
-                                </span>
-                            </div>
-                        </div>
-                    </a>
-                <?php endforeach; ?>
-            </div>
-        <?php else: ?>
-            <!-- Empty State -->
-            <div class="empty-state" style="text-align: center; padding: 80px 20px; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                <i class="fas fa-boxes" style="font-size: 64px; color: #d1d5db; margin-bottom: 20px;"></i>
-                <h2 style="font-size: 24px; margin-bottom: 12px; color: #374151;">
-                    <?= $t['no_categories'] ?? 'No Categories Available' ?>
-                </h2>
-                <p style="font-size: 16px; color: #6b7280; margin-bottom: 24px;">
-                    <?= $t['no_categories_desc'] ?? 'Check back soon for new categories' ?>
-                </p>
-                <a href="<?= url('/') ?>"
-                   class="btn-primary"
-                   style="display: inline-block; padding: 12px 24px; background: #00b207; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
-                    <i class="fas fa-home"></i> <?= $t['back_to_home'] ?? 'Back to Homepage' ?>
-                </a>
-            </div>
-        <?php endif; ?>
-    </main>
-
-    <!-- Footer -->
-    <?php include __DIR__ . '/../components/footer.php'; ?>
-
-    <style>
-        /* Breadcrumb Menu */
-        .breadcrumb-menu {
-            background: transparent;
-            padding: 20px 5%;
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            max-width: 1400px;
-            margin: 20px auto 0;
-            position: relative;
-        }
-
-        .breadcrumb-menu::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 5%;
-            right: 5%;
-            height: 1px;
-            background: #e6e6e6;
-        }
-
-        .breadcrumb-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 20px;
-            background: #f7f7f7;
-            color: #333;
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: 500;
-            font-size: 14px;
-            transition: all 0.2s;
-            border: 1px solid #e6e6e6;
-        }
-
-        .breadcrumb-btn:hover {
-            background: #00b207;
-            color: white;
-            border-color: #00b207;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,178,7,0.2);
-        }
-
-        .breadcrumb-btn.active {
-            background: #00b207;
-            color: white;
-            border-color: #00b207;
-        }
-
-        @media (max-width: 1024px) {
-            .breadcrumb-menu {
-                padding: 20px 4%;
-            }
-
-            .breadcrumb-menu::after {
-                left: 4%;
-                right: 4%;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .breadcrumb-menu {
-                gap: 10px;
-            }
-        }
-
-        /* Categories Page Header */
-        .categories-header {
-            text-align: center;
-            margin-top: 30px;
-            margin-bottom: 40px;
-            background: linear-gradient(135deg, #00b207 0%, #009206 100%);
-            padding: 60px 40px;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 178, 7, 0.2);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .categories-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><rect fill="rgba(255,255,255,0.03)" x="0" y="0" width="50" height="50"/><rect fill="rgba(255,255,255,0.03)" x="50" y="50" width="50" height="50"/></svg>');
-            opacity: 0.3;
-            pointer-events: none;
-        }
-
-        .categories-header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 12px;
-            color: white;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            position: relative;
-            z-index: 1;
-        }
-
-        .categories-header p {
-            font-size: 1.1rem;
-            color: rgba(255, 255, 255, 0.95);
-            position: relative;
-            z-index: 1;
-        }
-
-        /* Categories Info */
-        .categories-info {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            margin-bottom: 32px;
-        }
-
-        .categories-info p {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #374151;
-            margin: 0;
-        }
-
-        .categories-info strong {
-            color: var(--primary);
-        }
-
-        /* Categories Grid */
-        .categories-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 24px;
-            margin-bottom: 40px;
-        }
-
-        /* Category Card */
-        .category-card {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            text-decoration: none;
-            display: block;
-            position: relative;
-            z-index: 1;
-        }
-
-        .category-card::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border: 2px solid var(--primary);
-            border-radius: 12px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            pointer-events: none;
-        }
-
-        .category-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
-            z-index: 10;
-        }
-
-        .category-card:hover::after {
-            opacity: 1;
-        }
-
-        /* Category Image */
-        .category-image {
-            width: 100%;
-            height: 200px;
-            overflow: hidden;
-            background: #f5f5f5;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-
-        .category-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: center;
-            transition: transform 0.3s ease;
-        }
-
-        .category-card:hover .category-image img {
-            transform: scale(1.05);
-        }
-
-        .category-icon {
-            font-size: 64px;
-            color: var(--primary);
-        }
-
-        .category-placeholder {
-            font-size: 64px;
-            color: #d1d5db;
-        }
-
-        /* Category Info */
-        .category-info {
-            padding: 20px;
-        }
-
-        .category-name {
-            font-size: 18px;
-            font-weight: 600;
-            color: #1f2937;
-            margin: 0 0 8px 0;
-        }
-
-        .category-description {
-            font-size: 14px;
-            color: #6b7280;
-            margin: 0 0 16px 0;
-            line-height: 1.5;
-        }
-
-        .category-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-top: 12px;
-            border-top: 1px solid #e5e7eb;
-        }
-
-        .product-count {
-            font-size: 13px;
-            color: #6b7280;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .product-count i {
-            color: var(--primary);
-        }
-
-        .view-link {
-            font-size: 13px;
-            color: var(--primary);
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .category-card:hover .view-link {
-            gap: 8px;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .categories-header h1 {
-                font-size: 2rem;
-            }
-
-            .categories-header {
-                padding: 40px 20px;
-            }
-
-            .categories-grid {
-                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-                gap: 16px;
-            }
-
-            .category-image {
-                height: 160px;
-            }
-        }
-    </style>
+    </footer>
 
     <script src="<?= asset('js/home.js') ?>"></script>
 </body>

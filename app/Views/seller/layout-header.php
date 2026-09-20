@@ -226,27 +226,59 @@ if (!empty($user['id'])) {
           <i class="fas fa-chart-line"></i>
           <span>Dashboard</span>
         </a>
+        <?php if ($_sellerShopUnapproved): ?>
+        <span class="nav-link locked" title="<?= $fr ? 'Verrouillé jusqu’à la vérification du compte' : 'Locked until account verification' ?>">
+          <i class="fas fa-chart-bar"></i>
+          <span>Analytics</span>
+          <i class="fas fa-lock nav-lock-icon"></i>
+        </span>
+        <?php else: ?>
         <a href="<?= url('seller/analytics') ?>" class="nav-link <?= ($pageTitle ?? '') === 'Analytics' ? 'active' : '' ?>">
           <i class="fas fa-chart-bar"></i>
           <span>Analytics</span>
         </a>
+        <?php endif; ?>
+        <?php if ($_sellerShopUnapproved): ?>
+        <span class="nav-link locked" title="<?= $fr ? 'Verrouillé jusqu’à la vérification du compte' : 'Locked until account verification' ?>">
+          <i class="fas fa-box"></i>
+          <span>Orders</span>
+          <i class="fas fa-lock nav-lock-icon"></i>
+        </span>
+        <?php else: ?>
         <a href="<?= url('seller/orders') ?>" class="nav-link <?= ($pageTitle ?? '') === 'Orders' ? 'active' : '' ?>">
           <i class="fas fa-box"></i>
           <span>Orders</span>
         </a>
+        <?php endif; ?>
+        <?php if ($_sellerShopUnapproved): ?>
+        <span class="nav-link locked" title="<?= $fr ? 'Verrouillé jusqu’à la vérification du compte' : 'Locked until account verification' ?>">
+          <i class="fas fa-cubes"></i>
+          <span>Inventory</span>
+          <i class="fas fa-lock nav-lock-icon"></i>
+        </span>
+        <?php else: ?>
         <a href="<?= url('seller/inventory') ?>" class="nav-link <?= strpos($pageTitle ?? '', 'Inventory') !== false || strpos($pageTitle ?? '', 'Product') !== false ? 'active' : '' ?>">
           <i class="fas fa-cubes"></i>
           <span>Inventory</span>
         </a>
+        <?php endif; ?>
         <a href="<?= url('seller/messages') ?>" class="nav-link <?= ($pageTitle ?? '') === 'Messages' ? 'active' : '' ?>">
           <i class="fas fa-comments"></i>
           <span>Messages</span>
           <span id="msgNavBadge" class="notif-count-badge<?= $_sellerUnreadMsgCount > 0 ? '' : ' hidden' ?>"><?= $_sellerUnreadMsgCount > 0 ? min($_sellerUnreadMsgCount, 99) : '' ?></span>
         </a>
+        <?php if ($_sellerShopUnapproved): ?>
+        <span class="nav-link locked" title="<?= $fr ? 'Verrouillé jusqu’à la vérification du compte' : 'Locked until account verification' ?>">
+          <i class="fas fa-dollar-sign"></i>
+          <span>Payouts</span>
+          <i class="fas fa-lock nav-lock-icon"></i>
+        </span>
+        <?php else: ?>
         <a href="<?= url('seller/payouts') ?>" class="nav-link <?= ($pageTitle ?? '') === 'Payouts' ? 'active' : '' ?>">
           <i class="fas fa-dollar-sign"></i>
           <span>Payouts</span>
         </a>
+        <?php endif; ?>
         <?php if ($_sellerShopUnapproved): ?>
         <a href="<?= url('seller/verification') ?>" class="nav-link <?= ($pageTitle ?? '') === 'Verification' ? 'active' : '' ?>">
           <i class="fas fa-file-signature"></i>
@@ -257,6 +289,13 @@ if (!empty($user['id'])) {
           <i class="fas fa-cog"></i>
           <span>Settings</span>
         </a>
+        <?php if ($_sellerShopUnapproved): ?>
+        <div style="margin:14px 20px 4px;padding:12px;background:rgba(255,255,255,0.08);border-radius:8px;font-size:11px;line-height:1.5;color:rgba(255,255,255,0.75);">
+          <i class="fas fa-info-circle"></i>
+          <?= $fr ? 'Téléversez vos documents pour déverrouiller toutes les fonctionnalités →' : 'Upload your documents to unlock all features →' ?>
+          <a href="<?= url('seller/verification') ?>" style="color:#fff;font-weight:600;text-decoration:underline;"><?= $fr ? 'Documents' : 'Go to Documents' ?></a>
+        </div>
+        <?php endif; ?>
 
         <hr style="border:none;border-top:1px solid rgba(255,255,255,0.15);margin:10px 20px;">
         <a href="#" class="nav-link" onclick="event.preventDefault();document.getElementById('seller-logout-form').submit();">

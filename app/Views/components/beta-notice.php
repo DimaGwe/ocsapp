@@ -12,6 +12,17 @@ $t = getTranslations($currentLang);
 <!-- Beta Notice CSS -->
 <link rel="stylesheet" href="<?= asset('css/beta-notice.css') ?>">
 
+<?php if (!empty($useMarcheHeader)): ?>
+<!-- Marché Central beta bar (opt-in via $useMarcheHeader, staging redesign 2026-09-05) -->
+<div class="mc-beta">
+    <span class="mc-beta-badge"><?= $currentLang === 'fr' ? 'Bêta' : 'Beta' ?></span>
+    <span class="mc-beta-full"><?= $currentLang === 'fr'
+        ? 'Plateforme en cours de développement. Certaines fonctionnalités ne sont pas encore disponibles.'
+        : 'Platform under development. Some features are not yet available.'
+    ?></span>
+    <a href="<?= url('waitlist') ?>"><?= $currentLang === 'fr' ? "Rejoindre la liste d'attente" : 'Join the waitlist' ?></a>
+</div>
+<?php else: ?>
 <!-- Persistent Beta Banner -->
 <div class="beta-banner">
     <div class="beta-banner-content">
@@ -29,6 +40,7 @@ $t = getTranslations($currentLang);
         </div>
     </div>
 </div>
+<?php endif; ?>
 
 <!-- First Visit Modal -->
 <div id="betaModalOverlay" class="beta-modal-overlay hidden">

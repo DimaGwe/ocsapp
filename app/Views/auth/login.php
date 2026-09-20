@@ -1,253 +1,287 @@
 <?php
 /**
- * OCS Login Page v2
+ * OCS Login Page v3 - Ecosystem role-based redesign
  * File: app/Views/auth/login.php
- * Split-panel layout with real site header/footer.
+ * One shared form driven by a 5-role selector (Buyer/Seller/Supplier/Business/Driver).
+ * Header/footer match the ecosystem landing page (public/landing.php) rather than
+ * the portal header.php/footer.php components.
  */
 
-$currentLang = $_SESSION['language'] ?? 'fr';
-$redirect    = isset($_GET['redirect']) ? sanitize($_GET['redirect']) : '';
+use App\Helpers\VisitorTracker;
+VisitorTracker::track();
 
-$lx_strings = [
-    'en' => [
-        'page_title'          => 'Sign In',
-        'heading'             => 'Welcome back',
-        'subheading'          => 'Sign in to continue to OCSAPP',
-        'email'               => 'Email address',
-        'password'            => 'Password',
-        'remember_me'         => 'Remember me',
-        'forgot_password'     => 'Forgot password?',
-        'sign_in'             => 'Sign In',
-        'no_account'          => "Don't have an account?",
-        'sign_up'             => 'Create one free',
-        'email_ph'            => 'you@example.com',
-        'password_ph'         => '••••••••',
-        'checkout_title'      => 'Complete Your Order',
-        'checkout_desc'       => 'Sign in to proceed with your',
-        'items_order'         => 'item(s)',
-        'sign_in_checkout'    => 'Sign In & Checkout',
-        'customer_tab'        => 'Customer / Seller',
-        'customer_desc'       => 'Shop or manage your store',
-        'supplier_tab'        => 'Supplier',
-        'supplier_desc'       => 'Supplier portal',
-        'distribution_tab'    => 'Business',
-        'distribution_desc'   => 'Distribution & procurement',
-        'driver_tab'          => 'Driver',
-        'driver_desc'         => 'Driver portal',
-        'access_supplier'     => 'Access Supplier Portal',
-        'access_distribution' => 'Access Business Portal',
-        'access_driver'       => 'Access Driver Portal',
-        'supplier_forgot'     => 'Forgot supplier password?',
-        'not_supplier_yet'    => 'Not a supplier yet?',
-        'learn_more'          => 'Learn more',
-        'new_partner'         => 'New business partner?',
-        'register'            => 'Register',
-        'drive_interest'      => 'Interested in driving?',
-        'or'                  => 'or',
-        'shop_now'            => 'Shop Now',
-        'become_seller'       => 'Become a Seller',
-        'become_driver'       => 'Become a Driver',
-        'driver_verified'     => 'Email verified! Your driver application has been submitted. Log in below with the credentials sent to your email.',
-        'brand_tagline'       => 'Zero-Emission Grocery Delivery',
-        'trust_1'             => 'Free to join - no setup fees',
-        'trust_2'             => 'Local sellers you can trust',
-        'trust_3'             => 'Zero-emission deliveries',
-        'trust_4'             => '100% Canadian platform',
+$currentLang    = $_SESSION['language'] ?? 'fr';
+$fr             = ($currentLang === 'fr');
+$redirect       = isset($_GET['redirect']) ? sanitize($_GET['redirect']) : '';
+$driverVerified = !empty($_GET['driver_verified']);
+$isCheckout     = ($redirect === '/checkout');
+
+$roles = [
+    'buyer' => [
+        'icon'         => 'buyer.png',
+        'fa'           => 'fa-bag-shopping',
+        'labelLine1'   => $fr ? 'Acheteur' : 'Buyer',
+        'labelLine2'   => 'Central',
+        'contextLabel' => $fr ? 'Acheteur Central' : 'Buyer Central',
+        'action'       => url('login'),
+        'forgot'       => url('forgot-password'),
+        'cta'          => $fr ? 'Accéder à Acheteur Central' : 'Access Buyer Central',
+        'ctaCheckout'  => $fr ? 'Se connecter et commander' : 'Sign In & Checkout',
+        'learnUrl'     => url('register' . ($redirect ? '?redirect=' . urlencode($redirect) : '')),
+        'learnLabel'   => $fr ? 'Créer un compte gratuit' : 'Create one free',
+        'noAccount'    => $fr ? 'Pas de compte?' : "Don't have an account?",
     ],
-    'fr' => [
-        'page_title'          => 'Connexion',
-        'heading'             => 'Bienvenue',
-        'subheading'          => 'Connectez-vous pour accéder à OCSAPP',
-        'email'               => 'Adresse courriel',
-        'password'            => 'Mot de passe',
-        'remember_me'         => 'Se souvenir',
-        'forgot_password'     => 'Mot de passe oublié?',
-        'sign_in'             => 'Se connecter',
-        'no_account'          => 'Pas de compte?',
-        'sign_up'             => 'Créer un compte gratuit',
-        'email_ph'            => 'vous@exemple.com',
-        'password_ph'         => '••••••••',
-        'checkout_title'      => 'Complétez votre commande',
-        'checkout_desc'       => 'Connectez-vous pour procéder avec votre commande de',
-        'items_order'         => 'article(s)',
-        'sign_in_checkout'    => 'Se connecter et commander',
-        'customer_tab'        => 'Client / Vendeur',
-        'customer_desc'       => 'Achetez ou gérez votre boutique',
-        'supplier_tab'        => 'Fournisseur',
-        'supplier_desc'       => 'Portail fournisseur',
-        'distribution_tab'    => 'Entreprise',
-        'distribution_desc'   => 'Distribution et approvisionnement',
-        'driver_tab'          => 'Chauffeur',
-        'driver_desc'         => 'Portail livreur',
-        'access_supplier'     => 'Accéder au portail fournisseur',
-        'access_distribution' => 'Accéder au portail entreprise',
-        'access_driver'       => 'Accéder au portail chauffeur',
-        'supplier_forgot'     => 'Mot de passe fournisseur oublié?',
-        'not_supplier_yet'    => 'Pas encore fournisseur?',
-        'learn_more'          => 'En savoir plus',
-        'new_partner'         => 'Nouveau partenaire?',
-        'register'            => 'Créer un compte',
-        'drive_interest'      => 'Intéressé à conduire?',
-        'or'                  => 'ou',
-        'shop_now'            => 'Magasiner',
-        'become_seller'       => 'Devenir vendeur',
-        'become_driver'       => 'Devenir livreur',
-        'driver_verified'     => 'Courriel vérifié ! Votre demande de livreur a été soumise. Connectez-vous ci-dessous avec les identifiants envoyés à votre courriel.',
-        'brand_tagline'       => "Livraison d'épicerie zéro émission",
-        'trust_1'             => 'Gratuit - aucun frais d\'inscription',
-        'trust_2'             => 'Vendeurs locaux de confiance',
-        'trust_3'             => 'Livraisons zéro émission',
-        'trust_4'             => 'Plateforme 100% canadienne',
+    'seller' => [
+        'icon'         => 'seller.png',
+        'fa'           => 'fa-tag',
+        'labelLine1'   => $fr ? 'Vendeur' : 'Seller',
+        'labelLine2'   => 'Central',
+        'contextLabel' => $fr ? 'Vendeur Central' : 'Seller Central',
+        'action'       => url('login'),
+        'forgot'       => url('forgot-password'),
+        'cta'          => $fr ? 'Accéder à Vendeur Central' : 'Access Seller Central',
+        'ctaCheckout'  => null,
+        'learnUrl'     => url('register' . ($redirect ? '?redirect=' . urlencode($redirect) : '')),
+        'learnLabel'   => $fr ? 'Créer un compte gratuit' : 'Create one free',
+        'noAccount'    => $fr ? 'Pas de compte?' : "Don't have an account?",
+    ],
+    'supplier' => [
+        'icon'         => 'supplier.png',
+        'fa'           => 'fa-boxes-stacked',
+        'labelLine1'   => $fr ? 'Fournisseur' : 'Supplier',
+        'labelLine2'   => 'Central',
+        'contextLabel' => $fr ? 'Fournisseur Central' : 'Supplier Central',
+        'action'       => url('supplier/login'),
+        'forgot'       => url('supplier/forgot-password'),
+        'cta'          => $fr ? 'Accéder à Fournisseur Central' : 'Access Supplier Central',
+        'ctaCheckout'  => null,
+        'learnUrl'     => url('supplier-central'),
+        'learnLabel'   => $fr ? 'En savoir plus' : 'Learn more',
+        'noAccount'    => $fr ? 'Pas encore fournisseur?' : 'Not a supplier yet?',
+    ],
+    'business' => [
+        'icon'         => 'business.png',
+        'fa'           => 'fa-briefcase',
+        'labelLine1'   => $fr ? 'Entreprise' : 'Business',
+        'labelLine2'   => 'Central',
+        'contextLabel' => $fr ? 'Entreprise Centrale' : 'Business Central',
+        'action'       => url('distribution/login'),
+        'forgot'       => url('forgot-password?portal=business'),
+        'cta'          => $fr ? 'Accéder à Entreprise Centrale' : 'Access Business Central',
+        'ctaCheckout'  => null,
+        'learnUrl'     => url('distribution/register'),
+        'learnLabel'   => $fr ? 'Créer un compte' : 'Register',
+        'noAccount'    => $fr ? 'Nouveau partenaire?' : 'New business partner?',
+    ],
+    'driver' => [
+        'icon'         => 'driver.png',
+        'fa'           => 'fa-car-side',
+        'labelLine1'   => $fr ? 'Livreur' : 'Driver',
+        'labelLine2'   => 'Central · ODA',
+        'contextLabel' => $fr ? 'Livreur Central · ODA' : 'Driver Central · ODA',
+        'action'       => url('login'),
+        'forgot'       => url('forgot-password'),
+        'cta'          => $fr ? 'Accéder à Livreur Central' : 'Access Driver Central',
+        'ctaCheckout'  => null,
+        'learnUrl'     => url('driver-central'),
+        'learnLabel'   => $fr ? 'En savoir plus' : 'Learn more',
+        'noAccount'    => $fr ? 'Intéressé à conduire?' : 'Interested in driving?',
     ],
 ];
 
-$lx = $lx_strings[$currentLang] ?? $lx_strings['en'];
+// Checkout only ever applies to the buyer flow, so it always wins as the default.
+// Otherwise a verified driver application lands straight on the driver role.
+$defaultRole = $isCheckout ? 'buyer' : ($driverVerified ? 'driver' : 'buyer');
+$dr = $roles[$defaultRole];
+
+$driverVerifiedMsg = $fr
+    ? 'Courriel vérifié ! Votre demande de livreur a été soumise. Connectez-vous ci-dessous avec les identifiants envoyés à votre courriel.'
+    : 'Email verified! Your driver application has been submitted. Log in below with the credentials sent to your email.';
 ?>
 <!DOCTYPE html>
 <html lang="<?= htmlspecialchars($currentLang) ?>">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><?= $lx['page_title'] ?> - OCSAPP</title>
+  <title><?= $fr ? 'Connexion' : 'Sign In' ?> - OCSAPP</title>
   <link rel="icon" type="image/png" href="<?= asset('images/logo.png') ?>">
   <meta name="theme-color" content="#00b207">
   <?= csrfMeta() ?>
   <link rel="stylesheet" href="<?= asset('css/global.css') ?>">
-  <link rel="stylesheet" href="<?= asset('css/components/header.css') ?>">
   <link rel="stylesheet" href="<?= asset('css/components/footer.css') ?>">
+  <link rel="stylesheet" href="<?= asset('css/components/eco-header.css') ?>">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="<?= asset('css/pages/login.css') ?>">
 </head>
 <body>
-<?php include __DIR__ . '/../components/header.php'; ?>
+
+<div class="eco-beta">
+  <span class="eco-beta-badge"><?= $fr ? 'Bêta' : 'Beta' ?></span>
+  <span class="eco-beta-full"><?= $fr
+      ? 'Plateforme en cours de développement. Certaines fonctionnalités ne sont pas encore disponibles.'
+      : 'Platform under development. Some features are not yet available.'
+  ?></span>
+  <a href="<?= url('waitlist') ?>"><?= $fr ? "Rejoindre la liste d'attente" : 'Join the waitlist' ?></a>
+</div>
+
+<header class="eco-header">
+  <div class="eco-wrap eco-header-inner">
+    <a class="eco-brand" href="<?= url('') ?>" aria-label="<?= $fr ? 'OCSAPP - Accueil' : 'OCSAPP - Home' ?>">
+      <img src="<?= asset('images/logo.png') ?>" alt="Logo OCSAPP">
+      <span class="eco-brand-text">OCSAPP</span>
+    </a>
+
+    <nav aria-label="<?= $fr ? 'Navigation principale' : 'Main navigation' ?>">
+      <a class="eco-nav-link" href="<?= url('') ?>#ecosysteme"><?= $fr ? 'Écosystème' : 'Ecosystem' ?></a>
+      <a class="eco-nav-link" href="<?= url('') ?>#centrales"><?= $fr ? 'Nos Centrales' : 'Our Centrals' ?></a>
+      <a class="eco-nav-link" href="<?= url('') ?>#fonctionnement"><?= $fr ? 'Comment ça fonctionne' : 'How it works' ?></a>
+      <a class="eco-nav-link" href="<?= url('about') ?>"><?= $fr ? 'À propos' : 'About' ?></a>
+      <div class="eco-lang" aria-label="<?= $fr ? 'Langue' : 'Language' ?>">
+        <a href="?lang=fr" class="<?= $fr ? 'active' : '' ?>" aria-current="<?= $fr ? 'page' : 'false' ?>">FR</a>
+        <a href="?lang=en" class="<?= !$fr ? 'active' : '' ?>" aria-current="<?= !$fr ? 'page' : 'false' ?>">EN</a>
+      </div>
+      <a class="eco-btn eco-btn-primary eco-header-join" href="<?= url('waitlist') ?>"><?= $fr ? 'Rejoindre OCSAPP' : 'Join OCSAPP' ?></a>
+      <button type="button" class="eco-mobile-toggle" id="navToggle" aria-label="Menu" aria-expanded="false" aria-controls="mobileMenu">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+    </nav>
+  </div>
+  <div class="eco-wrap">
+    <div class="eco-mobile-menu" id="mobileMenu">
+      <a class="eco-mobile-menu-link" href="<?= url('') ?>#ecosysteme"><?= $fr ? 'Écosystème' : 'Ecosystem' ?></a>
+      <a class="eco-mobile-menu-link" href="<?= url('') ?>#centrales"><?= $fr ? 'Nos Centrales' : 'Our Centrals' ?></a>
+      <a class="eco-mobile-menu-link" href="<?= url('') ?>#fonctionnement"><?= $fr ? 'Comment ça fonctionne' : 'How it works' ?></a>
+      <a class="eco-mobile-menu-link" href="<?= url('about') ?>"><?= $fr ? 'À propos' : 'About' ?></a>
+      <div class="eco-mobile-menu-lang" aria-label="<?= $fr ? 'Langue' : 'Language' ?>">
+        <a href="?lang=fr" class="<?= $fr ? 'active' : '' ?>" aria-current="<?= $fr ? 'page' : 'false' ?>">FR</a>
+        <a href="?lang=en" class="<?= !$fr ? 'active' : '' ?>" aria-current="<?= !$fr ? 'page' : 'false' ?>">EN</a>
+      </div>
+      <a class="eco-btn eco-btn-primary" style="width:100%" href="<?= url('waitlist') ?>"><?= $fr ? 'Rejoindre OCSAPP' : 'Join OCSAPP' ?></a>
+    </div>
+  </div>
+</header>
 
 <main class="login-page">
-  <div class="login-split">
+  <div class="stage">
+    <section class="auth-shell">
 
-    <!-- ── Left brand panel ── -->
-    <div class="brand-panel">
-      <div class="brand-logo">
-        <img src="<?= asset('images/logo.png') ?>" alt="OCSAPP">
-        <span>OCSAPP</span>
-      </div>
-
-      <div class="brand-body">
-        <div class="brand-tagline">
-          <?= $currentLang === 'fr'
-            ? 'Le commerce local,<br><span>réinventé.</span>'
-            : 'Local commerce,<br><span>reinvented.</span>' ?>
+      <!-- ── Left brand panel ── -->
+      <aside class="auth-side">
+        <div class="side-brand">
+          <div class="side-logo-wrap"><img src="<?= asset('images/logo.png') ?>" alt="OCSAPP"></div>
+          <strong>OCSAPP</strong>
         </div>
-        <p class="brand-sub"><?= $lx['brand_tagline'] ?></p>
 
-        <ul class="trust-list">
-          <li><i class="fa-solid fa-check"></i> <?= $lx['trust_1'] ?></li>
-          <li><i class="fa-solid fa-check"></i> <?= $lx['trust_2'] ?></li>
-          <li><i class="fa-solid fa-check"></i> <?= $lx['trust_3'] ?></li>
-          <li><i class="fa-solid fa-check"></i> <?= $lx['trust_4'] ?></li>
-        </ul>
-
-        <!-- Mobile-only trust pills -->
-        <div class="trust-pills">
-          <span class="trust-pill"><i class="fa-solid fa-check"></i> <?= $lx['trust_3'] ?></span>
-          <span class="trust-pill"><i class="fa-solid fa-check"></i> <?= $lx['trust_4'] ?></span>
-          <span class="trust-pill"><i class="fa-solid fa-check"></i> <?= $lx['trust_1'] ?></span>
+        <div class="side-copy">
+          <div class="eyebrow"><?= $fr ? 'Une infrastructure. Plusieurs accès.' : 'One infrastructure. Multiple access points.' ?></div>
+          <h1><?= $fr
+            ? 'Votre rôle.<br><span>Le même écosystème.</span>'
+            : 'Your role.<br><span>The same ecosystem.</span>' ?></h1>
+          <p><?= $fr
+            ? "Connectez-vous au Central qui correspond à votre activité. Chaque accès demeure relié à la même infrastructure OCSAPP."
+            : 'Sign in to the Central that matches your activity. Every access point stays connected to the same OCSAPP infrastructure.' ?></p>
         </div>
-      </div>
 
-      <p class="brand-footer-text">ocsapp.ca &copy; <?= date('Y') ?></p>
-    </div>
-
-    <!-- ── Right form panel ── -->
-    <div class="form-panel">
-
-      <!-- Role tabs -->
-      <div class="role-tabs" role="tablist">
-        <button type="button" class="role-tab active" id="tab-btn-customer"
-                onclick="switchTab('customer')" role="tab" aria-selected="true">
-          <span class="tab-icon"><i class="fa-solid fa-basket-shopping"></i></span>
-          <span class="tab-name"><?= $lx['customer_tab'] ?></span>
-        </button>
-        <button type="button" class="role-tab" id="tab-btn-supplier"
-                onclick="switchTab('supplier')" role="tab" aria-selected="false">
-          <span class="tab-icon"><i class="fa-solid fa-boxes-stacked"></i></span>
-          <span class="tab-name"><?= $lx['supplier_tab'] ?></span>
-        </button>
-        <button type="button" class="role-tab" id="tab-btn-distribution"
-                onclick="switchTab('distribution')" role="tab" aria-selected="false">
-          <span class="tab-icon"><i class="fa-solid fa-building"></i></span>
-          <span class="tab-name"><?= $lx['distribution_tab'] ?></span>
-        </button>
-        <button type="button" class="role-tab" id="tab-btn-driver"
-                onclick="switchTab('driver')" role="tab" aria-selected="false">
-          <span class="tab-icon"><i class="fa-solid fa-truck"></i></span>
-          <span class="tab-name"><?= $lx['driver_tab'] ?></span>
-        </button>
-      </div>
-
-      <!-- Form heading -->
-      <div class="form-heading">
-        <h2 id="form-title"><?= $lx['heading'] ?></h2>
-        <p id="form-subtitle"><?= $lx['subheading'] ?></p>
-      </div>
-
-      <!-- Driver verified notice -->
-      <?php if (!empty($_GET['driver_verified'])): ?>
-        <div class="alert alert-success">
-          <i class="fa-solid fa-circle-check"></i> <?= $lx['driver_verified'] ?>
+        <div class="side-list">
+          <div class="side-item"><span class="check"><i class="fa-solid fa-check"></i></span><span><?= $fr ? 'Accès centralisé selon votre rôle' : 'Centralized access based on your role' ?></span></div>
+          <div class="side-item"><span class="check"><i class="fa-solid fa-check"></i></span><span><?= $fr ? 'Commerce local connecté' : 'Connected local commerce' ?></span></div>
+          <div class="side-item"><span class="check"><i class="fa-solid fa-check"></i></span><span><?= $fr ? 'Expérience bilingue' : 'Bilingual experience' ?></span></div>
+          <div class="side-item"><span class="check"><i class="fa-solid fa-leaf"></i></span><span><?= $fr ? 'Objectif de livraison zéro émission' : 'Zero-emission delivery goal' ?></span></div>
         </div>
-      <?php endif; ?>
 
-      <!-- Flash messages -->
-      <?php if (hasFlash('error')): ?>
-        <div class="alert alert-error"><?= getFlash('error') ?></div>
-      <?php endif; ?>
-      <?php if (hasFlash('success')): ?>
-        <div class="alert alert-success"><?= htmlspecialchars(getFlash('success')) ?></div>
-      <?php endif; ?>
-      <?php if (hasFlash('info')): ?>
-        <div class="alert alert-info"><?= htmlspecialchars(getFlash('info')) ?></div>
-      <?php endif; ?>
+        <div class="side-foot"><?= $fr
+          ? "OCSAPP · L'infrastructure numérique tout-en-un du commerce local."
+          : 'OCSAPP · The all-in-one digital infrastructure for local commerce.' ?></div>
+      </aside>
 
-      <!-- ── CUSTOMER / SELLER ── -->
-      <div class="tab-panel active" id="tab-panel-customer" role="tabpanel">
+      <!-- ── Right form panel ── -->
+      <div class="auth-main">
+        <div class="main-kicker">
+          <span><?= $fr ? 'Choisissez votre accès' : 'Choose your access' ?></span>
+          <a class="ecosystem-link" href="<?= url('') ?>"><?= $fr ? "Voir l'écosystème" : 'View the ecosystem' ?> <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+        </div>
 
-        <?php if ($redirect === '/checkout' && isset($_SESSION['pending_checkout_cart'])): ?>
-        <div class="checkout-notice">
-          <div class="checkout-notice-title">
-            <i class="fa-solid fa-cart-shopping"></i> <?= $lx['checkout_title'] ?>
+        <div class="role-strip" role="tablist" aria-label="<?= $fr ? 'Sélection du portail de connexion' : 'Login portal selection' ?>">
+          <?php foreach ($roles as $key => $r): ?>
+            <button type="button"
+                    class="role-btn<?= $key === $defaultRole ? ' active' : '' ?>"
+                    role="tab"
+                    aria-selected="<?= $key === $defaultRole ? 'true' : 'false' ?>"
+                    data-role="<?= $key ?>"
+                    data-action="<?= htmlspecialchars($r['action']) ?>"
+                    data-forgot="<?= htmlspecialchars($r['forgot']) ?>"
+                    data-cta="<?= htmlspecialchars($r['cta']) ?>"
+                    data-cta-checkout="<?= htmlspecialchars($r['ctaCheckout'] ?? '') ?>"
+                    data-fa="<?= htmlspecialchars($r['fa']) ?>"
+                    data-context-label="<?= htmlspecialchars($r['contextLabel']) ?>"
+                    data-learn-url="<?= htmlspecialchars($r['learnUrl']) ?>"
+                    data-learn-label="<?= htmlspecialchars($r['learnLabel']) ?>"
+                    data-no-account="<?= htmlspecialchars($r['noAccount']) ?>">
+              <span class="role-art"><img src="<?= asset('images/login-roles/' . $r['icon']) ?>" alt="<?= htmlspecialchars($fr ? 'Icône officielle ' . $r['contextLabel'] : 'Official ' . $r['contextLabel'] . ' icon') ?>"></span>
+              <span class="role-label"><?= htmlspecialchars($r['labelLine1']) ?><br><?= htmlspecialchars($r['labelLine2']) ?></span>
+            </button>
+          <?php endforeach; ?>
+        </div>
+
+        <div class="auth-head">
+          <h2 id="formHeading"><?= $fr ? 'Bienvenue' : 'Welcome back' ?></h2>
+          <p><?= $fr ? 'Connectez-vous pour accéder à votre espace OCSAPP.' : 'Sign in to access your OCSAPP space.' ?></p>
+        </div>
+        <div class="role-context" id="roleContext"><i class="fa-solid <?= htmlspecialchars($dr['fa']) ?>"></i> <span id="roleContextLabel"><?= htmlspecialchars($dr['contextLabel']) ?></span></div>
+
+        <?php if ($driverVerified): ?>
+          <div class="alert alert-success" id="driverVerifiedNotice"<?= $defaultRole !== 'driver' ? ' hidden' : '' ?>>
+            <i class="fa-solid fa-circle-check"></i> <?= htmlspecialchars($driverVerifiedMsg) ?>
           </div>
-          <div class="checkout-notice-desc">
-            <?= $lx['checkout_desc'] ?> <strong><?= count($_SESSION['pending_checkout_cart']) ?> <?= $lx['items_order'] ?></strong>
-          </div>
-        </div>
         <?php endif; ?>
 
-        <form method="POST" action="<?= url('login') ?>">
+        <?php if (hasFlash('error')): ?>
+          <div class="alert alert-error"><?= getFlash('error') ?></div>
+        <?php endif; ?>
+        <?php if (hasFlash('success')): ?>
+          <div class="alert alert-success"><?= htmlspecialchars(getFlash('success')) ?></div>
+        <?php endif; ?>
+        <?php if (hasFlash('info')): ?>
+          <div class="alert alert-info"><?= htmlspecialchars(getFlash('info')) ?></div>
+        <?php endif; ?>
+
+        <?php if ($isCheckout && isset($_SESSION['pending_checkout_cart'])): ?>
+          <div class="checkout-notice" id="checkoutNotice"<?= $defaultRole !== 'buyer' ? ' hidden' : '' ?>>
+            <div class="checkout-notice-title">
+              <i class="fa-solid fa-cart-shopping"></i> <?= $fr ? 'Complétez votre commande' : 'Complete Your Order' ?>
+            </div>
+            <div class="checkout-notice-desc">
+              <?= $fr ? 'Connectez-vous pour procéder avec votre commande de' : 'Sign in to proceed with your' ?>
+              <strong><?= count($_SESSION['pending_checkout_cart']) ?> <?= $fr ? 'article(s)' : 'item(s)' ?></strong>
+            </div>
+          </div>
+        <?php endif; ?>
+
+        <form id="loginForm" method="POST" action="<?= htmlspecialchars($dr['action']) ?>">
           <?= csrfField() ?>
           <?php if ($redirect): ?>
             <input type="hidden" name="redirect" value="<?= htmlspecialchars($redirect) ?>">
           <?php endif; ?>
 
           <div class="form-group">
-            <label for="email" class="form-label"><?= $lx['email'] ?></label>
+            <label for="email"><?= $fr ? 'Adresse courriel' : 'Email address' ?></label>
             <div class="input-wrap">
-              <i class="fa-regular fa-envelope input-icon"></i>
-              <input type="email" id="email" name="email"
-                value="<?= htmlspecialchars(old('email') ?? '') ?>"
-                class="form-input" placeholder="<?= $lx['email_ph'] ?>"
-                required autofocus>
+              <i class="fa-regular fa-envelope"></i>
+              <input id="email" name="email" type="email" autocomplete="email"
+                     value="<?= htmlspecialchars(old('email') ?? '') ?>"
+                     placeholder="<?= $fr ? 'vous@exemple.com' : 'you@example.com' ?>" required autofocus>
             </div>
           </div>
 
           <div class="form-group">
-            <label for="password" class="form-label"><?= $lx['password'] ?></label>
+            <label for="password"><?= $fr ? 'Mot de passe' : 'Password' ?></label>
             <div class="input-wrap">
-              <i class="fa-solid fa-lock input-icon"></i>
-              <input type="password" id="password" name="password"
-                class="form-input" style="padding-right:42px;"
-                placeholder="<?= $lx['password_ph'] ?>" required>
-              <button type="button" class="pw-toggle" data-toggle="password" aria-label="Show password">
-                <i class="fa-solid fa-eye"></i>
+              <i class="fa-solid fa-lock"></i>
+              <input id="password" name="password" type="password" autocomplete="current-password"
+                     placeholder="••••••••" required>
+              <button class="toggle-pass" type="button" aria-label="<?= $fr ? 'Afficher le mot de passe' : 'Show password' ?>">
+                <i class="fa-regular fa-eye"></i>
               </button>
             </div>
           </div>
@@ -255,205 +289,170 @@ $lx = $lx_strings[$currentLang] ?? $lx_strings['en'];
           <div class="form-options">
             <div class="checkbox-row">
               <input type="checkbox" id="remember" name="remember" class="form-checkbox">
-              <label for="remember" class="checkbox-label"><?= $lx['remember_me'] ?></label>
+              <label for="remember" class="checkbox-label"><?= $fr ? 'Se souvenir' : 'Remember me' ?></label>
             </div>
-            <a href="<?= url('forgot-password') ?>" class="forgot-link"><?= $lx['forgot_password'] ?></a>
+            <a id="forgotLink" href="<?= htmlspecialchars($dr['forgot']) ?>" class="forgot-link"><?= $fr ? 'Mot de passe oublié?' : 'Forgot password?' ?></a>
           </div>
 
-          <button type="submit" class="btn-submit">
-            <?php if ($redirect === '/checkout'): ?>
-              <i class="fa-solid fa-cart-shopping"></i> <?= $lx['sign_in_checkout'] ?>
-            <?php else: ?>
-              <i class="fa-solid fa-arrow-right-to-bracket"></i> <?= $lx['sign_in'] ?>
-            <?php endif; ?>
+          <button class="submit" id="submitBtn" type="submit">
+            <i class="fa-solid fa-arrow-right-to-bracket" id="submitIcon"></i>
+            <span id="submitText"><?= htmlspecialchars($isCheckout && $defaultRole === 'buyer' && $dr['ctaCheckout'] ? $dr['ctaCheckout'] : $dr['cta']) ?></span>
           </button>
         </form>
 
-        <div class="register-row">
-          <?= $lx['no_account'] ?> <a href="<?= url('register' . ($redirect ? '?redirect=' . urlencode($redirect) : '')) ?>"><?= $lx['sign_up'] ?></a>
+        <div class="below">
+          <span id="noAccountText"><?= htmlspecialchars($dr['noAccount']) ?></span>
+          <a id="learnLink" href="<?= htmlspecialchars($dr['learnUrl']) ?>"><?= htmlspecialchars($dr['learnLabel']) ?></a>
         </div>
-      </div>
-
-      <!-- ── SUPPLIER ── -->
-      <div class="tab-panel" id="tab-panel-supplier" role="tabpanel">
-        <form method="POST" action="<?= url('supplier/login') ?>">
-          <?= csrfField() ?>
-
-          <div class="form-group">
-            <label for="sup-email" class="form-label"><?= $lx['email'] ?></label>
-            <div class="input-wrap">
-              <i class="fa-regular fa-envelope input-icon"></i>
-              <input type="email" id="sup-email" name="email"
-                class="form-input" placeholder="<?= $lx['email_ph'] ?>" required>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="sup-password" class="form-label"><?= $lx['password'] ?></label>
-            <div class="input-wrap">
-              <i class="fa-solid fa-lock input-icon"></i>
-              <input type="password" id="sup-password" name="password"
-                class="form-input" style="padding-right:42px;"
-                placeholder="<?= $lx['password_ph'] ?>" required>
-              <button type="button" class="pw-toggle" data-toggle="sup-password" aria-label="Show password">
-                <i class="fa-solid fa-eye"></i>
-              </button>
-            </div>
-          </div>
-
-          <div class="form-options">
-            <div></div>
-            <a href="<?= url('supplier/forgot-password') ?>" class="forgot-link"><?= $lx['forgot_password'] ?></a>
-          </div>
-
-          <button type="submit" class="btn-submit">
-            <i class="fa-solid fa-boxes-stacked"></i> <?= $lx['access_supplier'] ?>
-          </button>
-        </form>
-
-        <div class="register-row">
-          <?= $lx['not_supplier_yet'] ?> <a href="<?= url('supplier-central') ?>"><?= $lx['learn_more'] ?></a>
-        </div>
-      </div>
-
-      <!-- ── DISTRIBUTION ── -->
-      <div class="tab-panel" id="tab-panel-distribution" role="tabpanel">
-        <form method="POST" action="<?= url('distribution/login') ?>">
-          <?= csrfField() ?>
-
-          <div class="form-group">
-            <label for="dist-email" class="form-label"><?= $lx['email'] ?></label>
-            <div class="input-wrap">
-              <i class="fa-regular fa-envelope input-icon"></i>
-              <input type="email" id="dist-email" name="email"
-                class="form-input" placeholder="<?= $lx['email_ph'] ?>" required>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="dist-password" class="form-label"><?= $lx['password'] ?></label>
-            <div class="input-wrap">
-              <i class="fa-solid fa-lock input-icon"></i>
-              <input type="password" id="dist-password" name="password"
-                class="form-input" style="padding-right:42px;"
-                placeholder="<?= $lx['password_ph'] ?>" required>
-              <button type="button" class="pw-toggle" data-toggle="dist-password" aria-label="Show password">
-                <i class="fa-solid fa-eye"></i>
-              </button>
-            </div>
-          </div>
-
-          <div class="form-options">
-            <div></div>
-            <a href="<?= url('forgot-password?portal=business') ?>" class="forgot-link"><?= $lx['forgot_password'] ?></a>
-          </div>
-
-          <button type="submit" class="btn-submit">
-            <i class="fa-solid fa-building"></i> <?= $lx['access_distribution'] ?>
-          </button>
-        </form>
-
-        <div class="register-row">
-          <?= $lx['new_partner'] ?> <a href="<?= url('distribution/register') ?>"><?= $lx['register'] ?></a>
-        </div>
-      </div>
-
-      <!-- ── DRIVER ── -->
-      <div class="tab-panel" id="tab-panel-driver" role="tabpanel">
-        <form method="POST" action="<?= url('login') ?>">
-          <?= csrfField() ?>
-
-          <div class="form-group">
-            <label for="driver-email" class="form-label"><?= $lx['email'] ?></label>
-            <div class="input-wrap">
-              <i class="fa-regular fa-envelope input-icon"></i>
-              <input type="email" id="driver-email" name="email"
-                class="form-input" placeholder="<?= $lx['email_ph'] ?>" required>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="driver-password" class="form-label"><?= $lx['password'] ?></label>
-            <div class="input-wrap">
-              <i class="fa-solid fa-lock input-icon"></i>
-              <input type="password" id="driver-password" name="password"
-                class="form-input" style="padding-right:42px;"
-                placeholder="<?= $lx['password_ph'] ?>" required>
-              <button type="button" class="pw-toggle" data-toggle="driver-password" aria-label="Show password">
-                <i class="fa-solid fa-eye"></i>
-              </button>
-            </div>
-          </div>
-
-          <div class="form-options">
-            <div></div>
-            <a href="<?= url('forgot-password') ?>" class="forgot-link"><?= $lx['forgot_password'] ?></a>
-          </div>
-
-          <button type="submit" class="btn-submit" style="margin-top:8px;">
-            <i class="fa-solid fa-truck"></i> <?= $lx['access_driver'] ?>
-          </button>
-        </form>
-
-        <div class="register-row">
-          <?= $lx['drive_interest'] ?> <a href="<?= url('driver-central') ?>"><?= $lx['learn_more'] ?></a>
-        </div>
-      </div>
-
-      <!-- Quick links -->
-      <div class="quick-section">
-        <p class="quick-label"><?= $lx['or'] ?></p>
-        <div class="quick-links">
-          <a href="<?= url('home') ?>" class="quick-link">
-            <i class="fa-solid fa-basket-shopping"></i> <?= $lx['shop_now'] ?>
-          </a>
-          <a href="<?= url('seller-central') ?>" class="quick-link">
-            <i class="fa-solid fa-store"></i> <?= $lx['become_seller'] ?>
-          </a>
-          <a href="<?= url('driver-central') ?>" class="quick-link">
-            <i class="fa-solid fa-truck"></i> <?= $lx['become_driver'] ?>
-          </a>
-        </div>
-      </div>
-
-    </div><!-- /form-panel -->
-  </div><!-- /login-split -->
+        <div class="divider"></div>
+        <div class="register-note"><?= $fr ? 'Nouveau sur OCSAPP?' : 'New to OCSAPP?' ?> <a href="<?= url('waitlist') ?>"><?= $fr ? "Rejoindre la liste d'attente" : 'Join the waitlist' ?></a></div>
+      </div><!-- /auth-main -->
+    </section>
+  </div>
 </main>
 
-<?php include __DIR__ . '/../components/footer.php'; ?>
+<footer class="mc-footer">
+  <div class="mc-footer-wrap">
+    <div class="mc-footer-top">
+      <div class="mc-footer-brand-col">
+        <div class="mc-footer-brand">
+          <img src="<?= asset('images/logo.png') ?>" alt="<?= $fr ? 'Logo OCSAPP' : 'OCSAPP Logo' ?>">
+          <span class="mc-footer-logo-text">OCSAPP</span>
+        </div>
+        <p class="mc-footer-tagline"><?= $fr ? "L'infrastructure numérique tout-en-un du commerce local." : 'The all-in-one digital infrastructure for local commerce.' ?></p>
+        <p><?= $fr
+          ? 'OCSAPP Inc. · Constituée sous le régime fédéral de la Loi canadienne sur les sociétés par actions (n<sup>o</sup> de société 1750354-7) · Numéro d\'entreprise du Québec (NEQ) 1181584997'
+          : 'OCSAPP Inc. · Federally incorporated under the Canada Business Corporations Act (Corporation No. 1750354-7) · Quebec enterprise number (NEQ) 1181584997'
+        ?></p>
+        <p><?= $fr ? 'Siège social : Laval, Québec (H7H)' : 'Registered office: Laval, Québec (H7H)' ?></p>
+      </div>
+
+      <div class="mc-footer-col">
+        <h5><?= $fr ? 'Apprenez à nous connaître' : 'Get to Know Us' ?></h5>
+        <a href="<?= url('about') ?>"><?= $fr ? "À propos d'OCSAPP" : 'About OCSAPP' ?></a>
+        <a href="<?= url('contact') ?>"><?= $fr ? 'Contactez-nous' : 'Contact Us' ?></a>
+      </div>
+
+      <div class="mc-footer-col">
+        <h5><?= $fr ? 'Écosystème OCSAPP' : 'OCSAPP Ecosystem' ?></h5>
+        <a href="<?= url('home') ?>"><?= $fr ? 'Marché Central' : 'Marketplace Central' ?></a>
+        <a href="<?= url('buyer-central') ?>"><?= $fr ? 'Acheteur Central' : 'Buyer Central' ?></a>
+        <a href="<?= url('seller-central') ?>"><?= $fr ? 'Vendeur Central' : 'Seller Central' ?></a>
+        <a href="<?= url('supplier-central') ?>"><?= $fr ? 'Fournisseur Central' : 'Supplier Central' ?></a>
+        <a href="<?= url('driver-central') ?>"><?= $fr ? 'Livreur Central · ODA' : 'Driver Central · ODA' ?></a>
+        <a href="<?= url('distribution') ?>"><?= $fr ? 'Entreprise Centrale' : 'Business Central' ?></a>
+      </div>
+
+      <div class="mc-footer-col">
+        <h5><?= $fr ? 'Connectez-vous avec nous' : 'Connect With Us' ?></h5>
+        <a href="https://www.facebook.com/ocsapp.ca" target="_blank" rel="noopener">Facebook</a>
+        <a href="https://www.instagram.com/ocsapp.ca" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://www.linkedin.com/company/ocsapp" target="_blank" rel="noopener">LinkedIn</a>
+      </div>
+    </div>
+
+    <div class="mc-footer-bottom">
+      <p>OCSAPP &copy; <?= date('Y') ?>. <?= $fr ? 'Tous droits réservés.' : 'All rights reserved.' ?></p>
+      <div class="mc-footer-legal">
+        <a href="<?= url('privacy') ?>"><?= $fr ? 'Politique de confidentialité' : 'Privacy Policy' ?></a>
+        <a href="<?= url('terms') ?>"><?= $fr ? "Conditions d'utilisation" : 'Terms of Service' ?></a>
+        <a href="<?= url('cookies') ?>"><?= $fr ? 'Politique de cookies' : 'Cookie Policy' ?></a>
+        <a href="<?= url('returns') ?>"><?= $fr ? 'Retours' : 'Returns' ?></a>
+        <a href="<?= url('accessibility') ?>"><?= $fr ? 'Accessibilité' : 'Accessibility' ?></a>
+      </div>
+    </div>
+  </div>
+</footer>
 
 <script>
-  const TABS = ['customer', 'supplier', 'distribution', 'driver'];
-
-  function switchTab(tab) {
-    TABS.forEach(id => {
-      const btn   = document.getElementById('tab-btn-' + id);
-      const panel = document.getElementById('tab-panel-' + id);
-      const active = id === tab;
-      btn.classList.toggle('active', active);
-      btn.setAttribute('aria-selected', active);
-      panel.classList.toggle('active', active);
+(function(){
+  var navToggle = document.getElementById('navToggle');
+  var mobileMenu = document.getElementById('mobileMenu');
+  if (navToggle && mobileMenu) {
+    navToggle.addEventListener('click', function(){
+      var open = mobileMenu.classList.toggle('open');
+      navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      navToggle.innerHTML = open ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-bars"></i>';
     });
-    try { localStorage.setItem('ocsLoginTab', tab); } catch(e) {}
+    mobileMenu.querySelectorAll('a').forEach(function(link){
+      link.addEventListener('click', function(){
+        mobileMenu.classList.remove('open');
+        navToggle.setAttribute('aria-expanded', 'false');
+        navToggle.innerHTML = '<i class="fa-solid fa-bars"></i>';
+      });
+    });
+  }
+})();
+
+(function(){
+  const isCheckout = <?= $isCheckout ? 'true' : 'false' ?>;
+  const roleButtons = [...document.querySelectorAll('.role-btn')];
+  const form = document.getElementById('loginForm');
+  const submitText = document.getElementById('submitText');
+  const forgot = document.getElementById('forgotLink');
+  const contextIcon = document.querySelector('#roleContext i');
+  const contextLabel = document.getElementById('roleContextLabel');
+  const learnLink = document.getElementById('learnLink');
+  const noAccountText = document.getElementById('noAccountText');
+  const checkoutNotice = document.getElementById('checkoutNotice');
+  const driverNotice = document.getElementById('driverVerifiedNotice');
+
+  function selectRole(role, persist) {
+    const btn = roleButtons.find(b => b.dataset.role === role);
+    if (!btn) return;
+
+    roleButtons.forEach(b => {
+      b.classList.remove('active');
+      b.setAttribute('aria-selected', 'false');
+    });
+    btn.classList.add('active');
+    btn.setAttribute('aria-selected', 'true');
+
+    form.action = btn.dataset.action;
+    submitText.textContent = (isCheckout && role === 'buyer' && btn.dataset.ctaCheckout)
+      ? btn.dataset.ctaCheckout
+      : btn.dataset.cta;
+    forgot.href = btn.dataset.forgot;
+    contextIcon.className = 'fa-solid ' + btn.dataset.fa;
+    contextLabel.textContent = btn.dataset.contextLabel;
+    learnLink.href = btn.dataset.learnUrl;
+    learnLink.textContent = btn.dataset.learnLabel;
+    noAccountText.textContent = btn.dataset.noAccount;
+
+    if (checkoutNotice) checkoutNotice.hidden = (role !== 'buyer');
+    if (driverNotice) driverNotice.hidden = (role !== 'driver');
+
+    if (persist) {
+      try { localStorage.setItem('ocsLoginRole', role); } catch(e) {}
+    }
   }
 
-  (function() {
-    try {
-      const saved = localStorage.getItem('ocsLoginTab');
-      if (saved && TABS.includes(saved) && saved !== 'customer') switchTab(saved);
-    } catch(e) {}
-  })();
-
-  document.querySelectorAll('.pw-toggle').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const input = document.getElementById(btn.dataset.toggle);
-      if (!input) return;
-      const show = input.type === 'password';
-      input.type = show ? 'text' : 'password';
-      btn.querySelector('i').className = show ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
-      btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
-    });
+  roleButtons.forEach(btn => {
+    btn.addEventListener('click', () => selectRole(btn.dataset.role, true));
   });
+
+  // Restore the last-used role, unless the server already forced one
+  // (checkout always forces buyer; a verified driver link forces driver).
+  if (!isCheckout && !<?= $driverVerified ? 'true' : 'false' ?>) {
+    try {
+      const saved = localStorage.getItem('ocsLoginRole');
+      if (saved && roleButtons.some(b => b.dataset.role === saved) && saved !== '<?= $defaultRole ?>') {
+        selectRole(saved, false);
+      }
+    } catch(e) {}
+  }
+
+  const pass = document.getElementById('password');
+  document.querySelector('.toggle-pass').addEventListener('click', function(){
+    pass.type = pass.type === 'password' ? 'text' : 'password';
+    this.innerHTML = pass.type === 'password'
+      ? '<i class="fa-regular fa-eye"></i>'
+      : '<i class="fa-regular fa-eye-slash"></i>';
+    this.setAttribute('aria-label', pass.type === 'password'
+      ? '<?= $fr ? "Afficher le mot de passe" : "Show password" ?>'
+      : '<?= $fr ? "Masquer le mot de passe" : "Hide password" ?>');
+  });
+})();
 </script>
 </body>
 </html>

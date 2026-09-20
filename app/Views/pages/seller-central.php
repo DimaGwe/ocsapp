@@ -6,6 +6,9 @@
  * (Updates.zip): weight-field messaging, buyer-paid surcharge disclosure,
  * Monday payout terms, expanded FAQ.
  */
+use App\Helpers\VisitorTracker;
+VisitorTracker::track();
+
 $currentLang = $_SESSION['language'] ?? 'fr';
 $fr = ($currentLang === 'fr');
 ?>
@@ -16,20 +19,66 @@ $fr = ($currentLang === 'fr');
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?= $fr ? "Espace Vendeur - Ouvrez votre boutique - OCSAPP" : "Seller Central - Open Your Shop - OCSAPP" ?></title>
   <meta name="description" content="<?= $fr
-    ? "Ouvrez votre boutique sur la Marketplace OCSAPP : 4 forfaits dès 0 $, commission fixe et affichée, livraison zéro émission incluse."
-    : "Open your shop on the OCSAPP Marketplace: 4 plans starting at $0, fixed disclosed commission, zero-emission delivery included." ?>">
+    ? "Ouvrez votre boutique sur la Marketplace OCSAPP : 4 forfaits dès 0 $, commission fixe et affichée, livraison à objectif zéro émission incluse."
+    : "Open your shop on the OCSAPP Marketplace: 4 plans starting at $0, fixed disclosed commission, delivery with a zero-emission objective included." ?>">
   <link rel="icon" type="image/png" href="<?= asset('images/logo.png') ?>">
   <meta name="theme-color" content="#00b207">
   <?= csrfMeta() ?>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="<?= asset('css/global.css') ?>">
-  <link rel="stylesheet" href="<?= asset('css/components/header.css') ?>">
+  <link rel="stylesheet" href="<?= asset('css/components/eco-header.css') ?>">
   <link rel="stylesheet" href="<?= asset('css/components/footer.css') ?>">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
   <link rel="stylesheet" href="<?= asset('css/pages/seller-central.css') ?>">
 </head>
 <body class="seller-central-page<?= $fr ? ' lang-fr' : '' ?>">
-<?php include __DIR__ . '/../components/header.php'; ?>
+<div class="eco-beta">
+  <span class="eco-beta-badge"><?= $fr ? 'Bêta' : 'Beta' ?></span>
+  <span class="eco-beta-full"><?= $fr
+      ? 'Plateforme en cours de développement. Certaines fonctionnalités ne sont pas encore disponibles.'
+      : 'Platform under development. Some features are not yet available.'
+  ?></span>
+  <a href="<?= url('waitlist') ?>"><?= $fr ? "Rejoindre la liste d'attente" : 'Join the waitlist' ?></a>
+</div>
+
+<header class="eco-header">
+  <div class="eco-wrap eco-header-inner">
+    <a class="eco-brand" href="<?= url('') ?>" aria-label="<?= $fr ? 'OCSAPP - Accueil' : 'OCSAPP - Home' ?>">
+      <img src="<?= asset('images/logo.png') ?>" alt="Logo OCSAPP">
+      <span class="eco-brand-text">OCSAPP</span>
+    </a>
+
+    <nav aria-label="<?= $fr ? 'Navigation principale' : 'Main navigation' ?>">
+      <a class="eco-nav-link" href="<?= url('') ?>#ecosysteme"><?= $fr ? 'Écosystème' : 'Ecosystem' ?></a>
+      <a class="eco-nav-link" href="<?= url('') ?>#centrales"><?= $fr ? 'Nos Centrales' : 'Our Centrals' ?></a>
+      <a class="eco-nav-link" href="<?= url('') ?>#fonctionnement"><?= $fr ? 'Comment ça fonctionne' : 'How it works' ?></a>
+      <a class="eco-nav-link" href="<?= url('about') ?>"><?= $fr ? 'À propos' : 'About' ?></a>
+      <div class="eco-lang" aria-label="<?= $fr ? 'Langue' : 'Language' ?>">
+        <a href="?lang=fr" class="<?= $fr ? 'active' : '' ?>" aria-current="<?= $fr ? 'page' : 'false' ?>">FR</a>
+        <a href="?lang=en" class="<?= !$fr ? 'active' : '' ?>" aria-current="<?= !$fr ? 'page' : 'false' ?>">EN</a>
+      </div>
+      <a class="eco-btn eco-btn-secondary" href="<?= url('login') ?>"><i class="fa-solid fa-arrow-right-to-bracket"></i> <?= $fr ? 'Se connecter' : 'Sign in' ?></a>
+      <a class="eco-btn eco-btn-primary eco-header-join" href="<?= url('waitlist') ?>"><?= $fr ? 'Rejoindre OCSAPP' : 'Join OCSAPP' ?></a>
+      <button type="button" class="eco-mobile-toggle" id="navToggle" aria-label="Menu" aria-expanded="false" aria-controls="mobileMenu">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+    </nav>
+  </div>
+  <div class="eco-wrap">
+    <div class="eco-mobile-menu" id="mobileMenu">
+      <a class="eco-mobile-menu-link" href="<?= url('') ?>#ecosysteme"><?= $fr ? 'Écosystème' : 'Ecosystem' ?></a>
+      <a class="eco-mobile-menu-link" href="<?= url('') ?>#centrales"><?= $fr ? 'Nos Centrales' : 'Our Centrals' ?></a>
+      <a class="eco-mobile-menu-link" href="<?= url('') ?>#fonctionnement"><?= $fr ? 'Comment ça fonctionne' : 'How it works' ?></a>
+      <a class="eco-mobile-menu-link" href="<?= url('about') ?>"><?= $fr ? 'À propos' : 'About' ?></a>
+      <a class="eco-mobile-menu-link" href="<?= url('login') ?>"><?= $fr ? 'Se connecter' : 'Sign in' ?></a>
+      <div class="eco-mobile-menu-lang" aria-label="<?= $fr ? 'Langue' : 'Language' ?>">
+        <a href="?lang=fr" class="<?= $fr ? 'active' : '' ?>" aria-current="<?= $fr ? 'page' : 'false' ?>">FR</a>
+        <a href="?lang=en" class="<?= !$fr ? 'active' : '' ?>" aria-current="<?= !$fr ? 'page' : 'false' ?>">EN</a>
+      </div>
+      <a class="eco-btn eco-btn-primary" style="width:100%" href="<?= url('waitlist') ?>"><?= $fr ? 'Rejoindre OCSAPP' : 'Join OCSAPP' ?></a>
+    </div>
+  </div>
+</header>
 
 <div class="beta-strip"><p><?= $fr
   ? "⚠️ Version bêta - veuillez ne pas effectuer d'achats réels pour le moment"
@@ -38,13 +87,13 @@ $fr = ($currentLang === 'fr');
 <!-- HERO -->
 <section class="hero">
   <div class="wrap">
-    <span class="eyebrow"><?= $fr ? "PROGRAMME VENDEUR" : "SELLER PROGRAM" ?></span>
+    <span class="eyebrow"><?= $fr ? "VENDEUR CENTRAL" : "SELLER CENTRAL" ?></span>
     <h1><?= $fr ? "Ouvrez votre boutique sur la <span>Marketplace OCSAPP</span>" : "Open Your Shop on the <span>OCSAPP Marketplace</span>" ?></h1>
     <p class="hero-sub"><?= $fr
       ? "Rejoignez le marché hyperlocal en pleine croissance dans l'Ouest-de-l'Île, avec Laval et le centre-ville de Montréal à venir bientôt. Listez vos produits, gérez vos commandes, et laissez OCSAPP s'occuper de la livraison - depuis un seul tableau de bord."
       : "Join the growing hyperlocal marketplace in the West Island, with Laval and downtown Montreal coming soon. List your products, manage your orders, and let OCSAPP handle delivery - from a single dashboard." ?></p>
     <div class="hero-actions">
-      <a class="btn" href="<?= url('register') ?>?role=seller"><?= $fr ? "Ouvrir ma boutique - c'est gratuit →" : "Open My Shop - It's Free →" ?></a>
+      <a class="btn" href="<?= url('seller/apply') ?>"><?= $fr ? "Ouvrir ma boutique - c'est gratuit →" : "Open My Shop - It's Free →" ?></a>
       <a class="btn-secondary" href="<?= url('seller/login') ?>"><?= $fr ? "Connexion vendeur" : "Seller Login" ?></a>
     </div>
     <div class="hero-proof-row">
@@ -69,8 +118,8 @@ $fr = ($currentLang === 'fr');
   <div class="wrap">
     <h2><?= $fr ? "Vendre localement ne devrait pas coûter 30 % de commission." : "Selling locally shouldn't cost you 30% in commission." ?></h2>
     <p><?= $fr
-      ? "Sur les grandes plateformes de livraison, une commission de 15 à 30 % ampute chaque vente avant même de couvrir vos frais. OCSAPP a été bâti pour les commerces indépendants du Québec : des forfaits qui commencent à 15 % et descendent jusqu'à 10 %, une commission toujours affichée avant votre inscription, et un réseau de livraison zéro émission inclus - jamais facturé en double."
-      : "On the big delivery platforms, a 15–30% commission eats into every sale before you've even covered your own costs. OCSAPP was built for independent Quebec businesses: plans that start at 15% and drop as low as 10%, a commission that's always disclosed before you sign up, and a zero-emission delivery network included - never billed twice." ?></p>
+      ? "Sur les grandes plateformes de livraison, une commission de 15 à 30 % ampute chaque vente avant même de couvrir vos frais. OCSAPP a été bâti pour les commerces indépendants du Québec : des forfaits qui commencent à 15 % et descendent jusqu'à 10 %, une commission toujours affichée avant votre inscription, et un réseau de livraison à objectif zéro émission inclus - jamais facturé en double."
+      : "On the big delivery platforms, a 15–30% commission eats into every sale before you've even covered your own costs. OCSAPP was built for independent Quebec businesses: plans that start at 15% and drop as low as 10%, a commission that's always disclosed before you sign up, and a delivery network working toward a zero-emission objective included - never billed twice." ?></p>
   </div>
 </section>
 
@@ -81,7 +130,7 @@ $fr = ($currentLang === 'fr');
     <h2><?= $fr ? "Vendre sur OCSAPP, c'est simple." : "Selling on OCSAPP is simple." ?></h2>
     <p class="section-lead"><?= $fr
       ? "OCSAPP est un écosystème numérique tout-en-un québécois connectant vendeurs et acheteurs à travers un réseau de livraison hyperlocal à objectif zéro émission."
-      : "OCSAPP is an all-in-one Quebec digital ecosystem connecting sellers and buyers through a hyperlocal, zero-emission delivery network." ?></p>
+      : "OCSAPP is an all-in-one Quebec digital ecosystem connecting sellers and buyers through a hyperlocal delivery network with a zero-emission objective." ?></p>
     <div class="why-grid">
       <article class="why-card">
         <div class="why-num">01</div>
@@ -101,7 +150,7 @@ $fr = ($currentLang === 'fr');
         <div class="why-num">03</div>
         <h3><?= $fr ? "OCSAPP livre pour vous" : "OCSAPP delivers for you" ?></h3>
         <p><?= $fr
-          ? "Notre réseau de chauffeurs ODA passe chez vous et livre aux acheteurs - 100 % des livraisons, sans exception. Vous gérez le produit, nous gérons le dernier kilomètre, avec suivi en direct."
+          ? "Notre réseau de livreurs ODA passe chez vous et livre aux acheteurs - 100 % des livraisons, sans exception. Vous gérez le produit, nous gérons le dernier kilomètre, avec suivi en direct."
           : "Our network of ODA drivers picks up from your shop and delivers to buyers - 100% of deliveries, no exceptions. You handle the product, we handle the last mile, with live tracking throughout." ?></p>
       </article>
     </div>
@@ -149,7 +198,7 @@ $fr = ($currentLang === 'fr');
         <div class="why-num">03</div>
         <h3><?= $fr ? "Commencez à vendre" : "Start selling" ?></h3>
         <p><?= $fr
-          ? "Votre boutique est en ligne sur OCSAPP. Ajoutez vos produits, recevez des commandes et laissez les chauffeurs ODA s'occuper de la livraison - vous encaissez."
+          ? "Votre boutique est en ligne sur OCSAPP. Ajoutez vos produits, recevez des commandes et laissez les livreurs ODA s'occuper de la livraison - vous encaissez."
           : "Your shop goes live on OCSAPP. Add your products, receive orders, and let ODA drivers handle delivery - you collect the payout." ?></p>
         <span class="step-time"><?= $fr ? "Dès le premier jour" : "From day one" ?></span>
       </article>
@@ -198,8 +247,8 @@ $fr = ($currentLang === 'fr');
         <span class="feature-icon feature-icon-3d" aria-hidden="true"><svg viewBox="0 0 64 64"><defs><linearGradient id="g5" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#1fe528"/><stop offset="1" stop-color="#08730c"/></linearGradient></defs><path d="M8 24h31v20H8z" fill="url(#g5)"/><path d="M39 29h10l7 8v7H39z" fill="#0b8d10"/><circle cx="20" cy="47" r="6" fill="#082d0a"/><circle cx="47" cy="47" r="6" fill="#082d0a"/><circle cx="20" cy="47" r="2.5" fill="#baffbd"/><circle cx="47" cy="47" r="2.5" fill="#baffbd"/><path d="M44 32h5l4 5h-9z" fill="#dffff0"/></svg></span>
         <h3><?= $fr ? "Livraison ODA incluse" : "ODA delivery included" ?></h3>
         <p><?= $fr
-          ? "Les chauffeurs ODA ramassent les commandes chez vous et les livrent aux acheteurs. Aucune logistique propre requise - objectif zéro émission sur chaque livraison."
-          : "ODA drivers pick up orders from your shop and deliver them to buyers. No logistics of your own required - zero-emission on every delivery." ?></p>
+          ? "Les livreurs ODA ramassent les commandes chez vous et les livrent aux acheteurs. Aucune logistique propre requise - objectif zéro émission sur chaque livraison."
+          : "ODA drivers pick up orders from your shop and deliver them to buyers. No logistics of your own required - a zero-emission objective on every delivery." ?></p>
       </article>
       <article class="feature-card">
         <span class="feature-icon feature-icon-3d" aria-hidden="true"><svg viewBox="0 0 64 64"><defs><linearGradient id="g6" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#23e72b"/><stop offset="1" stop-color="#086d0b"/></linearGradient></defs><rect x="19" y="7" width="26" height="50" rx="7" fill="url(#g6)"/><rect x="23" y="13" width="18" height="34" rx="3" fill="#f6fff6"/><circle cx="32" cy="52" r="2.3" fill="#d6ffda"/><path d="M27 26h10M27 32h7" stroke="#00B207" stroke-width="2.6" stroke-linecap="round"/></svg></span>
@@ -275,7 +324,7 @@ $fr = ($currentLang === 'fr');
           <li><?= $fr ? "Messagerie client" : "Customer messaging" ?></li>
           <li><?= $fr ? "Gestion depuis mobile" : "Mobile management" ?></li>
         </ul>
-        <a class="pricing-cta" href="<?= url('register') ?>?role=seller"><?= $fr ? "Commencer gratuitement" : "Start for Free" ?></a>
+        <a class="pricing-cta" href="<?= url('seller/apply') ?>"><?= $fr ? "Commencer gratuitement" : "Start for Free" ?></a>
       </div>
       <div class="pricing-card popular">
         <span class="pricing-badge"><?= $fr ? "Le plus populaire" : "Most Popular" ?></span>
@@ -331,8 +380,33 @@ $fr = ($currentLang === 'fr');
         ? "Tous les nouveaux comptes démarrent sur Essential sans frais. Les forfaits Experience (39 $/mois) et Prestige (89 $/mois) sont facturés mensuellement, en plus du taux de commission réduit. Pour passer à niveau, contactez <strong>sellers@ocsapp.ca</strong> ou votre gestionnaire de compte - les changements prennent effet dans un délai d'un jour ouvrable."
         : "All new accounts start on Essential at no cost. The Experience ($39/month) and Prestige ($89/month) plans are billed monthly, in addition to the reduced commission rate. To upgrade, contact <strong>sellers@ocsapp.ca</strong> or your account manager - changes take effect within one business day." ?></p>
       <p><strong><?= $fr ? "Frais de traitement des paiements :" : "Payment processing fee:" ?></strong> <?= $fr
-        ? "les frais standards (2,9 % + 0,30 $ CAD) sont absorbés par le vendeur et déduits du montant net avant paiement, aux côtés de la commission - ils ne sont jamais ajoutés comme frais séparé à la facture de l'acheteur."
-        : "the standard rate (2.9% + $0.30 CAD) is absorbed by the seller and deducted from net proceeds before payout, alongside commission - it is never added as a separate line item to the buyer's bill." ?></p>
+        ? "les frais standards (2,9 % + 0,30 $ CAD), prélevés par nos processeurs de paiement (Stripe et/ou PayPal), sont absorbés par le vendeur et déduits du montant net avant paiement, aux côtés de la commission - ils ne sont jamais ajoutés comme frais séparé à la facture de l'acheteur."
+        : "the standard rate (2.9% + $0.30 CAD), charged by our payment processors (Stripe and/or PayPal), is absorbed by the seller and deducted from net proceeds before payout, alongside commission - it is never added as a separate line item to the buyer's bill." ?></p>
+    </div>
+  </div>
+</section>
+
+<!-- FOUNDING PARTNER PROGRAM -->
+<section class="card-section">
+  <div class="wrap">
+    <div class="section-eyebrow"><?= $fr ? "PROGRAMME PARTENAIRE FONDATEUR" : "FOUNDING PARTNER PROGRAM" ?></div>
+    <h2><?= $fr ? "Rejoignez nos 20 tout premiers vendeurs" : "Join our first 20 sellers" ?></h2>
+    <div class="requirements-box">
+      <h4><?= $fr ? "Réservé aux 20 premières boutiques approuvées :" : "Reserved for the first 20 approved shops:" ?></h4>
+      <ul style="grid-template-columns:1fr;">
+        <li><?= $fr
+          ? "Taux de commission Experience verrouillé 12 mois - 12 % livraison / 6 % ramassage, 0 $ de frais mensuels (le forfait Experience coûte normalement 39 $/mois)."
+          : "Experience-tier commission locked for 12 months - 12% delivery / 6% pickup, $0 monthly fee (the Experience plan normally costs $39/month)." ?></li>
+        <li><?= $fr
+          ? "Vos 5 premières commandes de livraison, sans commission (les frais de livraison de l'acheteur et la paie du livreur ne sont pas affectés)."
+          : "Your first 5 delivery orders, commission-free (the buyer's delivery fee and driver pay are unaffected)." ?></li>
+        <li><?= $fr
+          ? "Placement en vedette 3 mois sur la page d'accueil et les catégories, intégration personnalisée, et un insigne Partenaire Fondateur permanent sur votre profil de boutique."
+          : "3 months of featured placement on the homepage and category pages, personalized onboarding, and a permanent Founding Partner badge on your shop profile." ?></li>
+        <li><?= $fr
+          ? "Aucune démarche à faire : votre statut est confirmé automatiquement à l'approbation de votre boutique, tant que la cohorte n'est pas fermée."
+          : "Nothing to request: your status is confirmed automatically when your shop is approved, as long as the cohort isn't already closed." ?></li>
+      </ul>
     </div>
   </div>
 </section>
@@ -361,7 +435,7 @@ $fr = ($currentLang === 'fr');
       <div class="faq-item">
         <h4><?= $fr ? "Comment fonctionne la livraison ? Est-ce que j'envoie les commandes moi-même ?" : "How does delivery work? Do I ship orders myself?" ?></h4>
         <p><?= $fr
-          ? "Non - vous n'expédiez pas les commandes vous-même. Le réseau de chauffeurs ODA d'OCSAPP gère 100 % des livraisons. Lorsqu'une commande est prête, un chauffeur ODA est envoyé pour la ramasser chez vous et la livrer directement au client."
+          ? "Non - vous n'expédiez pas les commandes vous-même. Le réseau de livreurs ODA d'OCSAPP gère 100 % des livraisons. Lorsqu'une commande est prête, un livreur ODA est envoyé pour la ramasser chez vous et la livrer directement au client."
           : "No - you never ship orders yourself. OCSAPP's ODA driver network handles 100% of deliveries. When an order is ready, an ODA driver is dispatched to pick it up from your shop and deliver it directly to the customer." ?></p>
       </div>
       <div class="faq-item">
@@ -385,13 +459,13 @@ $fr = ($currentLang === 'fr');
       <div class="faq-item new">
         <h4><?= $fr ? "Qu'est-ce que le champ « poids » et pourquoi dois-je le remplir ?" : "What's the \"weight\" field, and why is it required?" ?></h4>
         <p><?= $fr
-          ? "Le poids est un champ obligatoire sur chaque fiche produit - pas un détail facultatif. OCSAPP additionne le poids déclaré pour chaque article du panier d'un acheteur, à la caisse, pour déterminer si un supplément pour commande volumineuse s'applique. L'acheteur n'estime jamais lui-même le poids : votre valeur déclarée est la seule donnée utilisée pour ce calcul. Si un chauffeur constate à la cueillette un écart important avec le poids déclaré, OCSAPP peut ajuster le supplément rétroactivement à partir d'une preuve photo ou de balayage."
+          ? "Le poids est un champ obligatoire sur chaque fiche produit - pas un détail facultatif. OCSAPP additionne le poids déclaré pour chaque article du panier d'un acheteur, à la caisse, pour déterminer si un supplément pour commande volumineuse s'applique. L'acheteur n'estime jamais lui-même le poids : votre valeur déclarée est la seule donnée utilisée pour ce calcul. Si un livreur constate à la cueillette un écart important avec le poids déclaré, OCSAPP peut ajuster le supplément rétroactivement à partir d'une preuve photo ou de balayage."
           : "Weight is a mandatory field on every product listing - not an optional detail. OCSAPP sums the weight you declare across every item in a buyer's cart, at checkout, to determine whether an oversize order surcharge applies. Buyers never estimate weight themselves: your declared figure is the only data used for that calculation. If a driver's inspection at pickup shows a material discrepancy with the declared weight, OCSAPP may adjust the surcharge retroactively based on photo or scan evidence." ?></p>
       </div>
       <div class="faq-item new">
         <h4><?= $fr ? "Que se passe-t-il si un acheteur retourne un article ou demande un remboursement ?" : "What happens if a buyer returns an item or requests a refund?" ?></h4>
         <p><?= $fr
-          ? "Les retours sont gérés par la Politique de retours et remboursements d'OCSAPP. Si le système détermine, à partir d'une preuve photo et de balayage, qu'un retour est lié à une erreur ou un défaut présent au moment où vous avez remis la commande au chauffeur, les frais de logistique inverse et la valeur de l'article remboursé sont déduits de votre prochain versement. Vous n'êtes jamais facturé pour un problème survenu après la prise en charge par le chauffeur, ni pour un simple changement d'avis de l'acheteur - et vous disposez de 5 jours ouvrables pour contester une déduction directement depuis votre tableau de bord."
+          ? "Les retours sont gérés par la Politique de retours et remboursements d'OCSAPP. Si le système détermine, à partir d'une preuve photo et de balayage, qu'un retour est lié à une erreur ou un défaut présent au moment où vous avez remis la commande au livreur, les frais de logistique inverse et la valeur de l'article remboursé sont déduits de votre prochain versement. Vous n'êtes jamais facturé pour un problème survenu après la prise en charge par le livreur, ni pour un simple changement d'avis de l'acheteur - et vous disposez de 5 jours ouvrables pour contester une déduction directement depuis votre tableau de bord."
           : "Returns are governed by OCSAPP's Returns &amp; Refund Policy. If the system determines, from photo and scan evidence, that a return is linked to an error or defect present when you handed the order to the driver, the reverse-logistics fee and the refunded item's value are deducted from your next payout. You're never charged for an issue that occurred after the driver took custody, or for a simple change of mind by the buyer - and you have 5 business days to dispute a deduction directly from your dashboard." ?></p>
       </div>
       <div class="faq-item new">
@@ -399,6 +473,24 @@ $fr = ($currentLang === 'fr');
         <p><?= $fr
           ? "Non. Le supplément pour commande volumineuse, les frais d'arrêt additionnel et le supplément longue distance sont payés par l'acheteur et servent uniquement à financer la livraison. Aucun des trois ne change le pourcentage de commission de votre forfait."
           : "No. The oversize order surcharge, the additional-stop fee, and the long-distance surcharge are all paid by the buyer and go entirely toward funding delivery. None of the three changes your plan's commission percentage." ?></p>
+      </div>
+      <div class="faq-item new">
+        <h4><?= $fr ? "Comment sont résolus les différends avec OCSAPP ?" : "How are disputes with OCSAPP resolved?" ?></h4>
+        <p><?= $fr
+          ? "OCSAPP et vous tenterez d'abord de résoudre tout différend par la négociation de bonne foi. Si le différend n'est pas résolu dans les 30 jours, il peut être soumis aux tribunaux du district judiciaire de Montréal, Québec, à la compétence exclusive desquels vous et OCSAPP vous soumettez. OCSAPP n'exige aucun arbitrage obligatoire dans votre entente."
+          : "OCSAPP and you will first attempt to resolve any dispute through good-faith negotiation. If unresolved within 30 days, it may be submitted to the courts of the judicial district of Montréal, Québec, to whose exclusive jurisdiction you and OCSAPP submit. OCSAPP does not require mandatory arbitration in your agreement." ?></p>
+      </div>
+      <div class="faq-item new">
+        <h4><?= $fr ? "Y a-t-il des exigences d'étiquetage en français pour mes produits ?" : "Are there French labelling requirements for my products?" ?></h4>
+        <p><?= $fr
+          ? "Depuis le 1er juin 2025, les termes génériques ou descriptifs associés à une marque de commerce - par exemple un nom de saveur ou un ingrédient - doivent apparaître en français sur le produit lui-même, même si la marque elle-même peut demeurer dans une autre langue. Une période de transition s'applique jusqu'au 1er juin 2027 pour les produits fabriqués avant le 1er juin 2025. Vous êtes responsable de la conformité de l'emballage de vos produits avant de les lister sur la Plateforme."
+          : "Since June 1, 2025, generic or descriptive terms tied to a trademark - like a flavour name or an ingredient - must appear in French on the product itself, even if the trademark itself can stay in another language. A transition period runs until June 1, 2027 for products manufactured before June 1, 2025. You're responsible for your product packaging being compliant before listing it on the Platform." ?></p>
+      </div>
+      <div class="faq-item new">
+        <h4><?= $fr ? "Comment fonctionne le programme Partenaire Fondateur ?" : "How does the Founding Partner Program work?" ?></h4>
+        <p><?= $fr
+          ? "Les 20 premières boutiques approuvées sur OCSAPP obtiennent automatiquement le statut de Partenaire Fondateur - aucune candidature séparée requise. Vous obtenez le taux Experience (12 %/6 %) verrouillé 12 mois sans frais mensuel, vos 5 premières livraisons sans commission, et un insigne permanent. Votre position dans la cohorte est confirmée à l'approbation de votre boutique et visible sur votre tableau de bord."
+          : "The first 20 approved shops on OCSAPP automatically get Founding Partner status - no separate application needed. You get the Experience rate (12%/6%) locked for 12 months at no monthly fee, your first 5 deliveries commission-free, and a permanent badge. Your cohort position is confirmed when your shop is approved and shown on your dashboard." ?></p>
       </div>
     </div>
   </div>
@@ -416,7 +508,7 @@ $fr = ($currentLang === 'fr');
       <div class="support-card">
         <h4><?= $fr ? "Téléphone" : "Phone" ?></h4>
         <p class="support-main">514-746-3789</p>
-        <p><?= $fr ? "Lun–Sam · 8h – 20h" : "Mon–Sat · 8am – 8pm" ?></p>
+        <p><?= $fr ? "Lun–Dim · 7h – 23h" : "Mon–Sun · 7am – 11pm" ?></p>
       </div>
       <div class="support-card">
         <h4><?= $fr ? "Info générale" : "General Info" ?></h4>
@@ -435,23 +527,84 @@ $fr = ($currentLang === 'fr');
       ? "Inscrivez-vous en quelques minutes. Approuvé en 2 à 5 jours. Sans frais pour commencer - jamais."
       : "Sign up in minutes. Approved in 2–5 days. No cost to get started - ever." ?></p>
     <div class="cta-actions">
-      <a class="btn" href="<?= url('register') ?>?role=seller"><?= $fr ? "Ouvrir ma boutique gratuitement" : "Open My Shop for Free" ?></a>
-      <a class="btn-secondary" href="mailto:sellers@ocsapp.ca"><?= $fr ? "Contacter notre équipe" : "Contact Our Team" ?></a>
+      <a class="btn" href="<?= url('seller/apply') ?>"><?= $fr ? "Ouvrir ma boutique gratuitement" : "Open My Shop for Free" ?></a>
+      <a class="btn-secondary" href="<?= url('contact') ?>"><?= $fr ? "Contacter notre équipe" : "Contact Our Team" ?></a>
     </div>
   </div>
 </section>
 
-<!-- LEGAL IDENTITY -->
-<section class="legal-identity">
-  <div class="wrap">
-    <p class="foot-tagline"><?= $fr ? "L'infrastructure numérique tout-en-un du commerce local." : "The all-in-one digital infrastructure for local commerce." ?></p>
-    <p><?= $fr
-      ? "OCSAPP Inc. · Constituée sous le régime fédéral de la Loi canadienne sur les sociétés par actions (n° de société 1750354-7) · Numéro d'entreprise du Québec (NEQ) 1181584997"
-      : "OCSAPP Inc. · Federally incorporated under the Canada Business Corporations Act (Corporation No. 1750354-7) · Quebec enterprise number (NEQ) 1181584997" ?></p>
-    <p><?= $fr ? "Siège social : Laval, Québec (H7H)" : "Registered office: Laval, Québec (H7H)" ?></p>
-  </div>
-</section>
+<footer class="mc-footer">
+  <div class="mc-footer-wrap">
+    <div class="mc-footer-top">
+      <div class="mc-footer-brand-col">
+        <div class="mc-footer-brand">
+          <img src="<?= asset('images/logo.png') ?>" alt="<?= $fr ? 'Logo OCSAPP' : 'OCSAPP Logo' ?>">
+          <span class="mc-footer-logo-text">OCSAPP</span>
+        </div>
+        <p class="mc-footer-tagline"><?= $fr ? "L'infrastructure numérique tout-en-un du commerce local." : 'The all-in-one digital infrastructure for local commerce.' ?></p>
+        <p><?= $fr
+          ? 'OCSAPP Inc. · Constituée sous le régime fédéral de la Loi canadienne sur les sociétés par actions (n<sup>o</sup> de société 1750354-7) · Numéro d\'entreprise du Québec (NEQ) 1181584997'
+          : 'OCSAPP Inc. · Federally incorporated under the Canada Business Corporations Act (Corporation No. 1750354-7) · Quebec enterprise number (NEQ) 1181584997'
+        ?></p>
+        <p><?= $fr ? 'Siège social : Laval, Québec (H7H)' : 'Registered office: Laval, Québec (H7H)' ?></p>
+      </div>
 
-<?php include __DIR__ . '/../components/footer.php'; ?>
+      <div class="mc-footer-col">
+        <h5><?= $fr ? 'Apprenez à nous connaître' : 'Get to Know Us' ?></h5>
+        <a href="<?= url('about') ?>"><?= $fr ? "À propos d'OCSAPP" : 'About OCSAPP' ?></a>
+        <a href="<?= url('contact') ?>"><?= $fr ? 'Contactez-nous' : 'Contact Us' ?></a>
+      </div>
+
+      <div class="mc-footer-col">
+        <h5><?= $fr ? 'Écosystème OCSAPP' : 'OCSAPP Ecosystem' ?></h5>
+        <a href="<?= url('home') ?>"><?= $fr ? 'Marché Central' : 'Marketplace Central' ?></a>
+        <a href="<?= url('buyer-central') ?>"><?= $fr ? 'Acheteur Central' : 'Buyer Central' ?></a>
+        <a href="<?= url('seller-central') ?>"><?= $fr ? 'Vendeur Central' : 'Seller Central' ?></a>
+        <a href="<?= url('supplier-central') ?>"><?= $fr ? 'Fournisseur Central' : 'Supplier Central' ?></a>
+        <a href="<?= url('driver-central') ?>"><?= $fr ? 'Livreur Central · ODA' : 'Driver Central · ODA' ?></a>
+        <a href="<?= url('distribution') ?>"><?= $fr ? 'Entreprise Centrale' : 'Business Central' ?></a>
+      </div>
+
+      <div class="mc-footer-col">
+        <h5><?= $fr ? 'Connectez-vous avec nous' : 'Connect With Us' ?></h5>
+        <a href="https://www.facebook.com/ocsapp.ca" target="_blank" rel="noopener">Facebook</a>
+        <a href="https://www.instagram.com/ocsapp.ca" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://www.linkedin.com/company/ocsapp" target="_blank" rel="noopener">LinkedIn</a>
+      </div>
+    </div>
+
+    <div class="mc-footer-bottom">
+      <p>OCSAPP &copy; <?= date('Y') ?>. <?= $fr ? 'Tous droits réservés.' : 'All rights reserved.' ?></p>
+      <div class="mc-footer-legal">
+        <a href="<?= url('privacy') ?>"><?= $fr ? 'Politique de confidentialité' : 'Privacy Policy' ?></a>
+        <a href="<?= url('terms') ?>"><?= $fr ? "Conditions d'utilisation" : 'Terms of Service' ?></a>
+        <a href="<?= url('cookies') ?>"><?= $fr ? 'Politique de cookies' : 'Cookie Policy' ?></a>
+        <a href="<?= url('returns') ?>"><?= $fr ? 'Retours' : 'Returns' ?></a>
+        <a href="<?= url('accessibility') ?>"><?= $fr ? 'Accessibilité' : 'Accessibility' ?></a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var navToggle = document.getElementById('navToggle');
+  var mobileMenu = document.getElementById('mobileMenu');
+  if (navToggle && mobileMenu) {
+    navToggle.addEventListener('click', function(){
+      var open = mobileMenu.classList.toggle('open');
+      navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      navToggle.innerHTML = open ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-bars"></i>';
+    });
+    mobileMenu.querySelectorAll('a').forEach(function(link){
+      link.addEventListener('click', function(){
+        mobileMenu.classList.remove('open');
+        navToggle.setAttribute('aria-expanded', 'false');
+        navToggle.innerHTML = '<i class="fa-solid fa-bars"></i>';
+      });
+    });
+  }
+})();
+</script>
 </body>
 </html>

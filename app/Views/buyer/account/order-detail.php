@@ -9,6 +9,7 @@ $od = [
         'nav_addresses'  => 'Addresses',
         'nav_wishlist'   => 'Wishlist',
         'nav_settings'   => 'Settings',
+        'nav_logout'     => 'Logout',
         'back'           => 'Back to Orders',
         'order_prefix'   => 'Order #',
         'placed_on'      => 'Placed on',
@@ -49,6 +50,7 @@ $od = [
         'nav_addresses'  => 'Adresses',
         'nav_wishlist'   => 'Liste de souhaits',
         'nav_settings'   => 'Paramètres',
+        'nav_logout'     => 'Déconnexion',
         'back'           => 'Retour aux commandes',
         'order_prefix'   => 'Commande #',
         'placed_on'      => 'Passée le',
@@ -186,6 +188,7 @@ $sc = $statusColors[$order['status'] ?? ''] ?? ['bg'=>'#f5f5f5','color'=>'#555']
                 <a href="<?= url('account/addresses') ?>"><i class="fas fa-map-marker-alt"></i> <?= $od['nav_addresses'] ?></a>
                 <a href="<?= url('account/wishlist') ?>"><i class="fas fa-heart"></i> <?= $od['nav_wishlist'] ?></a>
                 <a href="<?= url('account/settings') ?>"><i class="fas fa-cog"></i> <?= $od['nav_settings'] ?></a>
+                <a href="<?= url('logout') ?>" style="color:#c62828;border-top:1px solid #f0f0f0;margin-top:8px;padding-top:18px;"><i class="fas fa-sign-out-alt"></i> <?= $od['nav_logout'] ?></a>
             </nav>
         </div>
     </aside>

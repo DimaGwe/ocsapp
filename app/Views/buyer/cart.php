@@ -31,8 +31,12 @@ if (!empty($_SESSION['cart'])) {
     $cart = [];
 }
 /**
- * Shopping Cart Page - Styled to match Checkout
+ * Shopping Cart Page
  * File: app/Views/buyer/cart.php
+ * Updated 2026-09-09: moved onto the mc-header/mc-footer ecosystem standard
+ * shared by /home, /categories and /shops; added EN/FR bilingual text
+ * (previously hardcoded English throughout). Cart AJAX logic (quantity
+ * update, remove item, checkout handoff) is unchanged.
  */
 
 $cartItems = $cartItems ?? [];
@@ -42,13 +46,14 @@ $cartCount = $cartCount ?? 0;
 
 // Get current language
 $currentLang = $_SESSION['language'] ?? 'fr';
+$fr = ($currentLang === 'fr');
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo htmlspecialchars($currentLang); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shopping Cart - OCSAPP</title>
+    <title><?= $fr ? 'Panier - Marché Central' : 'Cart - Marché Central' ?> | OCSAPP</title>
     <?php echo csrfMeta(); ?>
 
     <!-- Favicon -->
@@ -59,425 +64,258 @@ $currentLang = $_SESSION['language'] ?? 'fr';
     <!-- Modular CSS Architecture -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <link rel="stylesheet" href="<?php echo asset('css/global.css'); ?>">
     <link rel="stylesheet" href="<?php echo asset('css/components/header.css'); ?>">
     <link rel="stylesheet" href="<?php echo asset('css/components/footer.css'); ?>">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html { height: 100%; }
-        body { font-family: 'Poppins', sans-serif; background: #f8f9fa; min-height: 100%; display: flex; flex-direction: column; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; flex: 1; }
-        .footer { margin-top: auto; }
-
-        /* Header matching checkout */
-        .cart-header {
-            background: white;
-            padding: 20px 24px;
-            border-radius: 12px;
-            margin-bottom: 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-        .cart-header h1 { font-size: 24px; color: #1a1a1a; }
-        .cart-header .back-link {
-            color: #666;
-            text-decoration: none;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .cart-header .back-link:hover { color: #00b207; }
-
-        /* Grid layout matching checkout */
-        .cart-content {
-            display: grid;
-            grid-template-columns: 1fr 400px;
-            gap: 24px;
-            align-items: start;
-        }
-
-        /* Card styling matching checkout */
-        .card {
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            margin-bottom: 20px;
-        }
-
-        .card-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #1a1a1a;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #f0f0f0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .card-title i { color: #00b207; }
-
-        /* Shop group matching checkout */
-        .shop-group {
-            border: 1px solid #e9ecef;
-            border-radius: 10px;
-            padding: 16px;
-            margin-bottom: 16px;
-        }
-        .shop-group:last-child { margin-bottom: 0; }
-        .shop-name {
-            font-size: 14px;
-            font-weight: 600;
-            color: #00b207;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* Cart items */
-        .cart-item {
-            display: flex;
-            gap: 12px;
-            padding: 12px 0;
-            border-bottom: 1px solid #f5f5f5;
-        }
-        .cart-item:last-child { border-bottom: none; }
-        .item-image {
-            width: 80px;
-            height: 80px;
-            border-radius: 8px;
-            background: #f8f9fa;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            border: 1px solid #e9ecef;
-        }
-        .item-image img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
-        .item-details { flex: 1; }
-        .item-name { font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; }
-        .item-price { font-size: 14px; font-weight: 700; color: #00b207; }
-        .old-price { font-size: 12px; color: #999; text-decoration: line-through; margin-left: 8px; }
-        .item-actions { display: flex; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
-        .qty-control { display: flex; align-items: center; gap: 5px; }
-        .qty-btn {
-            width: 28px;
-            height: 28px;
-            border: 1px solid #ddd;
-            background: white;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
-            font-size: 14px;
-        }
-        .qty-btn:not(:disabled):hover { background: #f0fdf4; border-color: #00b207; }
-        .qty-btn:disabled { opacity: 0.5; cursor: not-allowed; background: #f5f5f5; }
-        .qty-input {
-            width: 45px;
-            height: 28px;
-            text-align: center;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-weight: 600;
-            font-size: 13px;
-        }
-        .remove-btn {
-            color: #dc3545;
-            cursor: pointer;
-            padding: 4px 10px;
-            border: 1px solid #dc3545;
-            border-radius: 5px;
-            font-size: 12px;
-            background: white;
-            transition: all 0.2s;
-        }
-        .remove-btn:hover { background: #dc3545; color: white; }
-        .stock-warning { color: #dc3545; font-size: 11px; margin-top: 4px; }
-        .stock-info { font-size: 11px; color: #888; }
-        .item-total-row { margin-top: 8px; font-size: 13px; font-weight: 600; color: #1a1a1a; }
-
-        /* Summary sticky matching checkout */
-        .summary-sticky { position: sticky; top: 20px; }
-
-        .summary-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            font-size: 14px;
-            color: #555;
-        }
-        .summary-row.total {
-            font-size: 18px;
-            font-weight: 700;
-            color: #1a1a1a;
-            border-top: 2px solid #e9ecef;
-            margin-top: 8px;
-            padding-top: 14px;
-        }
-        .summary-row .free-badge { color: #00b207; font-weight: 600; }
-
-        .savings-badge {
-            background: #d4edda;
-            color: #155724;
-            padding: 10px 14px;
-            border-radius: 8px;
-            font-size: 13px;
-            margin-bottom: 16px;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .checkout-btn {
-            width: 100%;
-            padding: 16px;
-            background: #00b207;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 700;
-            font-family: inherit;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-top: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-        .checkout-btn:hover { background: #009906; transform: translateY(-1px); }
-
-        .continue-shopping {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            text-align: center;
-            color: #666;
-            text-decoration: none;
-            margin-top: 14px;
-            font-size: 14px;
-        }
-        .continue-shopping:hover { color: #00b207; }
-
-        .secure-badge {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            font-size: 12px;
-            color: #888;
-            margin-top: 12px;
-        }
-        .secure-badge i { color: #00b207; }
-
-        /* Empty cart */
-        .empty-cart { text-align: center; padding: 60px 20px; }
-        .empty-cart-icon { font-size: 80px; margin-bottom: 20px; color: #ddd; }
-        .empty-cart h2 { color: #1a1a1a; margin-bottom: 10px; font-size: 20px; }
-        .empty-cart p { color: #888; margin-bottom: 24px; font-size: 14px; }
-        .shop-now-btn {
-            background: #00b207;
-            color: white;
-            padding: 14px 32px;
-            border-radius: 10px;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 600;
-            font-size: 15px;
-            transition: all 0.2s;
-        }
-        .shop-now-btn:hover { background: #009906; transform: translateY(-1px); }
-
-        @media (max-width: 900px) {
-            .cart-content { grid-template-columns: 1fr; }
-            .summary-sticky { position: static; }
-        }
-        @media (max-width: 480px) {
-            .cart-item { flex-direction: column; }
-            .item-image { width: 100%; height: 160px; }
-            .item-actions { justify-content: flex-start; }
-        }
-    </style>
+    <link rel="stylesheet" href="<?php echo asset('css/pages/cart.css'); ?>">
 </head>
 <body>
+    <!-- Header (Marché Central variant, consistent with /home, /categories and /shops) -->
+    <?php $useMarcheHeader = true; ?>
     <?php include __DIR__ . '/../components/header.php'; ?>
 
-    <div class="container">
-        <div class="cart-header">
-            <a href="<?php echo url('home'); ?>" class="back-link">
-                <i class="fas fa-arrow-left"></i> Continue Shopping
-            </a>
-            <h1>Shopping Cart</h1>
-        </div>
+    <div class="mc-shell" id="main-content" tabindex="-1">
+        <div class="mc-wrap">
+            <nav class="mc-breadcrumb" aria-label="<?= $fr ? "Fil d'Ariane" : 'Breadcrumb' ?>">
+                <a href="<?= url('home') ?>"><i class="fas fa-store"></i><span><?= $fr ? 'Marché Central' : 'Marketplace Central' ?></span></a>
+                <span class="mc-sep">/</span>
+                <span aria-current="page"><i class="fas fa-cart-shopping"></i> <?= $fr ? 'Panier' : 'Cart' ?></span>
+            </nav>
 
-        <?php if (empty($cartItems)): ?>
-            <div class="card">
-                <div class="empty-cart">
-                    <div class="empty-cart-icon"><i class="fas fa-shopping-cart"></i></div>
-                    <h2>Your cart is empty</h2>
-                    <p>Add some products to get started!</p>
-                    <a href="<?php echo url('home'); ?>" class="shop-now-btn">
-                        <i class="fas fa-shopping-bag"></i> Start Shopping
-                    </a>
-                </div>
+            <div class="cart-header">
+                <h1><?= $fr ? 'Votre panier' : 'Shopping Cart' ?></h1>
+                <a href="<?php echo url('home'); ?>" class="back-link">
+                    <i class="fas fa-arrow-left"></i> <?= $fr ? 'Continuer mes achats' : 'Continue Shopping' ?>
+                </a>
             </div>
-        <?php else: ?>
-            <?php
-            // Group items by shop
-            $itemsByShop = [];
-            foreach ($cartItems as $item) {
-                $shopId = $item['shop_id'] ?? 0;
-                $shopName = $item['shop_name'] ?? 'OCSAPP Store';
-                if (!isset($itemsByShop[$shopId])) {
-                    $itemsByShop[$shopId] = [
-                        'shop_name' => $shopName,
-                        'items' => []
-                    ];
+
+            <?php if (empty($cartItems)): ?>
+                <div class="card">
+                    <div class="empty-cart">
+                        <div class="empty-cart-icon"><i class="fas fa-shopping-cart"></i></div>
+                        <h2><?= $fr ? 'Votre panier est vide' : 'Your cart is empty' ?></h2>
+                        <p><?= $fr ? 'Ajoutez des produits pour commencer !' : 'Add some products to get started!' ?></p>
+                        <a href="<?php echo url('home'); ?>" class="shop-now-btn">
+                            <i class="fas fa-shopping-bag"></i> <?= $fr ? 'Commencer à magasiner' : 'Start Shopping' ?>
+                        </a>
+                    </div>
+                </div>
+            <?php else: ?>
+                <?php
+                // Group items by shop
+                $itemsByShop = [];
+                foreach ($cartItems as $item) {
+                    $shopId = $item['shop_id'] ?? 0;
+                    $shopName = $item['shop_name'] ?? 'OCSAPP Store';
+                    if (!isset($itemsByShop[$shopId])) {
+                        $itemsByShop[$shopId] = [
+                            'shop_name' => $shopName,
+                            'items' => []
+                        ];
+                    }
+                    $itemsByShop[$shopId]['items'][] = $item;
                 }
-                $itemsByShop[$shopId]['items'][] = $item;
-            }
-            ?>
-            <div class="cart-content">
-                <!-- LEFT COLUMN: Cart Items -->
-                <div>
-                    <div class="card">
-                        <h2 class="card-title">
-                            <i class="fas fa-shopping-bag"></i>
-                            Your Items (<?php echo $cartCount; ?> item<?php echo $cartCount !== 1 ? 's' : ''; ?>)
-                        </h2>
+                ?>
+                <div class="cart-content">
+                    <!-- LEFT COLUMN: Cart Items -->
+                    <div>
+                        <div class="card">
+                            <h2 class="card-title">
+                                <i class="fas fa-shopping-bag"></i>
+                                <?= $fr ? 'Vos articles' : 'Your Items' ?> (<?php echo $cartCount; ?> <?= $fr
+                                    ? ($cartCount > 1 ? 'articles' : 'article')
+                                    : ($cartCount !== 1 ? 'items' : 'item') ?>)
+                            </h2>
 
-                        <?php foreach ($itemsByShop as $shopId => $shop): ?>
-                            <div class="shop-group">
-                                <div class="shop-name">
-                                    <i class="fas fa-store"></i>
-                                    <?php echo htmlspecialchars($shop['shop_name']); ?>
-                                </div>
+                            <?php foreach ($itemsByShop as $shopId => $shop): ?>
+                                <div class="shop-group">
+                                    <div class="shop-name">
+                                        <i class="fas fa-store"></i>
+                                        <?php echo htmlspecialchars($shop['shop_name']); ?>
+                                    </div>
 
-                                <?php foreach ($shop['items'] as $item): ?>
-                                    <div class="cart-item" data-key="<?php echo $item['key']; ?>" data-max-stock="<?php echo $item['stock_quantity']; ?>">
-                                        <div class="item-image">
-                                            <?php if ($item['image']): ?>
-                                                <img src="<?php echo asset($item['image']); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>">
-                                            <?php else: ?>
-                                                <i class="fas fa-box" style="font-size: 32px; color: #ccc;"></i>
-                                            <?php endif; ?>
-                                        </div>
-
-                                        <div class="item-details">
-                                            <div class="item-name"><?php echo htmlspecialchars($item['name']); ?></div>
-                                            <div class="item-price">
-                                                <?php echo currency($item['price']); ?>
-                                                <?php if ($item['compare_at_price'] > $item['price']): ?>
-                                                    <span class="old-price"><?php echo currency($item['compare_at_price']); ?></span>
+                                    <?php foreach ($shop['items'] as $item): ?>
+                                        <div class="cart-item" data-key="<?php echo $item['key']; ?>" data-max-stock="<?php echo $item['stock_quantity']; ?>">
+                                            <div class="item-image">
+                                                <?php if ($item['image']): ?>
+                                                    <img src="<?php echo asset($item['image']); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>">
+                                                <?php else: ?>
+                                                    <i class="fas fa-box" style="font-size: 32px; color: #ccc;"></i>
                                                 <?php endif; ?>
                                             </div>
 
-                                            <?php if ($item['stock_quantity'] < 10): ?>
-                                                <div class="stock-warning">
-                                                    <i class="fas fa-exclamation-circle"></i> Only <?php echo $item['stock_quantity']; ?> left in stock
-                                                </div>
-                                            <?php endif; ?>
-
-                                            <div class="item-actions">
-                                                <div class="qty-control">
-                                                    <button class="qty-btn qty-minus"
-                                                            data-action="minus"
-                                                            <?php echo $item['quantity'] <= 1 ? 'disabled' : ''; ?>>−</button>
-                                                    <input type="number"
-                                                        class="qty-input"
-                                                        value="<?php echo $item['quantity']; ?>"
-                                                        min="1"
-                                                        max="<?php echo $item['stock_quantity']; ?>"
-                                                        readonly>
-                                                    <button class="qty-btn qty-plus"
-                                                            data-action="plus"
-                                                            <?php echo $item['quantity'] >= $item['stock_quantity'] ? 'disabled' : ''; ?>>+</button>
+                                            <div class="item-details">
+                                                <div class="item-name"><?php echo htmlspecialchars($item['name']); ?></div>
+                                                <div class="item-price">
+                                                    <?php echo currency($item['price']); ?>
+                                                    <?php if ($item['compare_at_price'] > $item['price']): ?>
+                                                        <span class="old-price"><?php echo currency($item['compare_at_price']); ?></span>
+                                                    <?php endif; ?>
                                                 </div>
 
-                                                <span class="stock-info">(<?php echo $item['stock_quantity']; ?> available)</span>
+                                                <?php if ($item['stock_quantity'] < 10): ?>
+                                                    <div class="stock-warning">
+                                                        <i class="fas fa-exclamation-circle"></i> <?= $fr
+                                                            ? "Plus que {$item['stock_quantity']} en stock"
+                                                            : "Only {$item['stock_quantity']} left in stock" ?>
+                                                    </div>
+                                                <?php endif; ?>
 
-                                                <button class="remove-btn" data-remove="<?php echo $item['key']; ?>">
-                                                    <i class="fas fa-trash-alt"></i> Remove
-                                                </button>
-                                            </div>
+                                                <div class="item-actions">
+                                                    <div class="qty-control">
+                                                        <button class="qty-btn qty-minus"
+                                                                data-action="minus"
+                                                                <?php echo $item['quantity'] <= 1 ? 'disabled' : ''; ?>>−</button>
+                                                        <input type="number"
+                                                            class="qty-input"
+                                                            value="<?php echo $item['quantity']; ?>"
+                                                            min="1"
+                                                            max="<?php echo $item['stock_quantity']; ?>"
+                                                            readonly>
+                                                        <button class="qty-btn qty-plus"
+                                                                data-action="plus"
+                                                                <?php echo $item['quantity'] >= $item['stock_quantity'] ? 'disabled' : ''; ?>>+</button>
+                                                    </div>
 
-                                            <div class="item-total-row">
-                                                Item Total: <span class="item-total"><?php echo currency($item['item_total']); ?></span>
+                                                    <span class="stock-info">(<?php echo $item['stock_quantity']; ?> <?= $fr ? 'disponibles' : 'available' ?>)</span>
+
+                                                    <button class="remove-btn" data-remove="<?php echo $item['key']; ?>">
+                                                        <i class="fas fa-trash-alt"></i> <?= $fr ? 'Retirer' : 'Remove' ?>
+                                                    </button>
+                                                </div>
+
+                                                <div class="item-total-row">
+                                                    <?= $fr ? "Total de l'article :" : 'Item Total:' ?> <span class="item-total"><?php echo currency($item['item_total']); ?></span>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                <?php endforeach; ?>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT COLUMN: Order Summary -->
+                    <div class="summary-sticky">
+                        <div class="card">
+                            <h2 class="card-title">
+                                <i class="fas fa-receipt"></i>
+                                <?= $fr ? 'Total de la commande' : 'Order Total' ?>
+                            </h2>
+
+                            <?php if ($totalSavings > 0): ?>
+                                <div class="savings-badge">
+                                    <i class="fas fa-tag"></i> <?= $fr
+                                        ? 'Vous économisez ' . currency($totalSavings) . ' !'
+                                        : "You're saving " . currency($totalSavings) . '!' ?>
+                                </div>
+                            <?php endif; ?>
+
+                            <div class="summary-row">
+                                <span><?= $fr ? 'Sous-total' : 'Subtotal' ?> (<?php echo $cartCount; ?> <?= $fr
+                                    ? ($cartCount > 1 ? 'articles' : 'article')
+                                    : ($cartCount !== 1 ? 'items' : 'item') ?>)</span>
+                                <span id="subtotalAmount"><?php echo currency($subtotal); ?></span>
                             </div>
-                        <?php endforeach; ?>
+
+                            <div class="summary-row">
+                                <span><?= $fr ? 'Frais de livraison' : 'Delivery Fee' ?></span>
+                                <span class="free-badge"><?= $fr ? 'GRATUIT' : 'FREE' ?></span>
+                            </div>
+
+                            <div class="summary-row total">
+                                <span>Total</span>
+                                <span id="totalAmount"><?php echo currency($subtotal); ?> CAD</span>
+                            </div>
+
+                            <button class="checkout-btn" onclick="proceedToCheckout()">
+                                <i class="fas fa-lock"></i>
+                                <?= $fr ? 'Procéder au paiement' : 'Proceed to Checkout' ?>
+                            </button>
+
+                            <a href="<?php echo url('home'); ?>" class="continue-shopping">
+                                <i class="fas fa-arrow-left"></i> <?= $fr ? 'Continuer mes achats' : 'Continue Shopping' ?>
+                            </a>
+
+                            <div class="secure-badge">
+                                <i class="fas fa-shield-alt"></i>
+                                <?= $fr ? 'Paiement sécurisé - vos données sont chiffrées' : 'Secure checkout - Your data is encrypted' ?>
+                            </div>
+                        </div>
                     </div>
                 </div>
+            <?php endif; ?>
+        </div>
+    </div>
 
-                <!-- RIGHT COLUMN: Order Summary -->
-                <div class="summary-sticky">
-                    <div class="card">
-                        <h2 class="card-title">
-                            <i class="fas fa-receipt"></i>
-                            Order Total
-                        </h2>
-
-                        <?php if ($totalSavings > 0): ?>
-                            <div class="savings-badge">
-                                <i class="fas fa-tag"></i> You're saving <?php echo currency($totalSavings); ?>!
-                            </div>
-                        <?php endif; ?>
-
-                        <div class="summary-row">
-                            <span>Subtotal (<?php echo $cartCount; ?> item<?php echo $cartCount !== 1 ? 's' : ''; ?>)</span>
-                            <span id="subtotalAmount"><?php echo currency($subtotal); ?></span>
-                        </div>
-
-                        <div class="summary-row">
-                            <span>Delivery Fee</span>
-                            <span class="free-badge">FREE</span>
-                        </div>
-
-                        <div class="summary-row total">
-                            <span>Total</span>
-                            <span id="totalAmount"><?php echo currency($subtotal); ?> CAD</span>
-                        </div>
-
-                        <button class="checkout-btn" onclick="proceedToCheckout()">
-                            <i class="fas fa-lock"></i>
-                            Proceed to Checkout
-                        </button>
-
-                        <a href="<?php echo url('home'); ?>" class="continue-shopping">
-                            <i class="fas fa-arrow-left"></i> Continue Shopping
-                        </a>
-
-                        <div class="secure-badge">
-                            <i class="fas fa-shield-alt"></i>
-                            Secure checkout - Your data is encrypted
-                        </div>
+    <!-- Footer (Marché Central variant, matches /home, /categories and /shops) -->
+    <footer class="mc-footer">
+        <div class="mc-footer-wrap">
+            <div class="mc-footer-top">
+                <div class="mc-footer-brand-col">
+                    <div class="mc-footer-brand">
+                        <img src="<?= asset('images/logo.png') ?>" alt="<?= $fr ? 'Logo OCSAPP' : 'OCSAPP Logo' ?>">
+                        <span class="mc-footer-logo-text">OCSAPP</span>
                     </div>
+                    <p class="mc-footer-tagline"><?= $fr ? "L'infrastructure numérique tout-en-un du commerce local." : 'The all-in-one digital infrastructure for local commerce.' ?></p>
+                    <p><?= $fr
+                        ? 'OCSAPP Inc. · Constituée sous le régime fédéral de la Loi canadienne sur les sociétés par actions (n<sup>o</sup> de société 1750354-7) · Numéro d\'entreprise du Québec (NEQ) 1181584997'
+                        : 'OCSAPP Inc. · Federally incorporated under the Canada Business Corporations Act (Corporation No. 1750354-7) · Quebec enterprise number (NEQ) 1181584997'
+                    ?></p>
+                    <p><?= $fr ? 'Siège social : Laval, Québec (H7H)' : 'Registered office: Laval, Québec (H7H)' ?></p>
+                </div>
+
+                <div class="mc-footer-col">
+                    <h5><?= $fr ? 'Apprenez à nous connaître' : 'Get to Know Us' ?></h5>
+                    <a href="<?= url('about') ?>"><?= $fr ? "À propos d'OCSAPP" : 'About OCSAPP' ?></a>
+                    <a href="<?= url('contact') ?>"><?= $fr ? 'Contactez-nous' : 'Contact Us' ?></a>
+                </div>
+
+                <div class="mc-footer-col">
+                    <h5><?= $fr ? 'Écosystème OCSAPP' : 'OCSAPP Ecosystem' ?></h5>
+                    <a href="<?= url('home') ?>"><?= $fr ? 'Marché Central' : 'Marketplace Central' ?></a>
+                    <a href="<?= url('buyer-central') ?>"><?= $fr ? 'Acheteur Central' : 'Buyer Central' ?></a>
+                    <a href="<?= url('seller-central') ?>"><?= $fr ? 'Vendeur Central' : 'Seller Central' ?></a>
+                    <a href="<?= url('supplier-central') ?>"><?= $fr ? 'Fournisseur Central' : 'Supplier Central' ?></a>
+                    <a href="<?= url('driver-central') ?>"><?= $fr ? 'Livreur Central · ODA' : 'Driver Central · ODA' ?></a>
+                    <a href="<?= url('distribution') ?>"><?= $fr ? 'Entreprise Centrale' : 'Business Central' ?></a>
+                </div>
+
+                <div class="mc-footer-col">
+                    <h5><?= $fr ? 'Connectez-vous avec nous' : 'Connect With Us' ?></h5>
+                    <a href="https://www.facebook.com/ocsapp.ca" target="_blank" rel="noopener">Facebook</a>
+                    <a href="https://www.instagram.com/ocsapp.ca" target="_blank" rel="noopener">Instagram</a>
+                    <a href="https://www.linkedin.com/company/ocsapp" target="_blank" rel="noopener">LinkedIn</a>
                 </div>
             </div>
-        <?php endif; ?>
-    </div>
+
+            <div class="mc-footer-bottom">
+                <p>OCSAPP &copy; <?= date('Y') ?>. <?= $fr ? 'Tous droits réservés.' : 'All rights reserved.' ?></p>
+                <div class="mc-footer-legal">
+                    <a href="<?= url('privacy') ?>"><?= $fr ? 'Politique de confidentialité' : 'Privacy Policy' ?></a>
+                    <a href="<?= url('terms') ?>"><?= $fr ? "Conditions d'utilisation" : 'Terms of Service' ?></a>
+                    <a href="<?= url('cookies') ?>"><?= $fr ? 'Politique de cookies' : 'Cookie Policy' ?></a>
+                    <a href="<?= url('returns') ?>"><?= $fr ? 'Retours' : 'Returns' ?></a>
+                    <a href="<?= url('accessibility') ?>"><?= $fr ? 'Accessibilité' : 'Accessibility' ?></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <?php include __DIR__ . '/../components/auth-popup.php'; ?>
 
     <script>
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
         const csrfName = '<?php echo env('CSRF_TOKEN_NAME', '_csrf_token'); ?>';
+        const cartText = <?php echo json_encode([
+            'confirmRemove' => $fr ? 'Retirer cet article du panier ?' : 'Remove this item from cart?',
+            'updateFailed' => $fr ? "Échec de la mise à jour de la quantité" : 'Failed to update quantity',
+            'removeFailed' => $fr ? "Échec du retrait de l'article" : 'Failed to remove item',
+            'genericError' => $fr ? 'Une erreur est survenue. Veuillez réessayer.' : 'An error occurred. Please try again.',
+        ]); ?>;
 
         // Initialize event listeners
         document.addEventListener('DOMContentLoaded', function() {
@@ -547,7 +385,7 @@ $currentLang = $_SESSION['language'] ?? 'fr';
                     minusBtn.disabled = (newQuantity <= 1);
                     plusBtn.disabled = (newQuantity >= maxStock);
                 } else {
-                    alert(data.message || 'Failed to update quantity');
+                    alert(data.message || cartText.updateFailed);
                     input.style.opacity = '1';
                     minusBtn.disabled = false;
                     plusBtn.disabled = false;
@@ -555,7 +393,7 @@ $currentLang = $_SESSION['language'] ?? 'fr';
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('An error occurred. Please try again.');
+                alert(cartText.genericError);
                 input.style.opacity = '1';
                 minusBtn.disabled = false;
                 plusBtn.disabled = false;
@@ -563,7 +401,7 @@ $currentLang = $_SESSION['language'] ?? 'fr';
         }
 
         function removeItem(cartKey) {
-            if (!confirm('Remove this item from cart?')) return;
+            if (!confirm(cartText.confirmRemove)) return;
 
             fetch('<?php echo url('cart/remove'); ?>', {
                 method: 'POST',
@@ -580,12 +418,12 @@ $currentLang = $_SESSION['language'] ?? 'fr';
                     // Reload page to show updated cart
                     location.reload();
                 } else {
-                    alert(data.message || 'Failed to remove item');
+                    alert(data.message || cartText.removeFailed);
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('An error occurred. Please try again.');
+                alert(cartText.genericError);
             });
         }
 
@@ -598,8 +436,5 @@ $currentLang = $_SESSION['language'] ?? 'fr';
             return symbol + parseFloat(amount).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
         }
     </script>
-
-    <!-- Footer -->
-    <?php include __DIR__ . '/../components/footer.php'; ?>
 </body>
 </html>

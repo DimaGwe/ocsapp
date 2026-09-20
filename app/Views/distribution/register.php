@@ -1,10 +1,14 @@
 <?php
 $currentLang = $_SESSION['language'] ?? 'fr';
+$fr = ($currentLang === 'fr');
 $translations = [
     'en' => [
-        'page_title'              => 'Register Business - OCSAPP Distribution',
-        'heading'                 => 'Register Your Business',
-        'subtext'                 => 'Create an account to start using our procurement service',
+        'page_title'              => 'Create account - Business Central - OCSAPP',
+        'hero_eyebrow'            => 'BUSINESS CENTRAL',
+        'hero_p'                  => 'Register your organization for procurement and distribution services through Business Central.',
+        'card_kicker'             => 'BUSINESS APPLICATION',
+        'card_h2'                 => 'Register your business',
+        'card_p'                  => 'Provide your business, Québec registration and account information for review.',
         'sec_company'             => 'Company Information',
         'sec_company_desc'        => 'Tell us about your business.',
         'company_name'            => 'Company Name',
@@ -29,7 +33,7 @@ $translations = [
         'sec_docs'                => 'Verification Documents',
         'sec_docs_desc'           => 'You can upload your business registration document now or later from your portal. A document is required before your account can be fully approved.',
         'doc_cert'                => 'Certificate of Incorporation / Declaration of Registration',
-        'doc_cert_hint'           => 'PDF, JPG, or PNG — max 5MB.',
+        'doc_cert_hint'           => 'PDF, JPG, or PNG - max 5MB.',
         'doc_later'               => 'Skipping for now? You can upload it anytime from your portal settings.',
         'doc_upload'              => 'Click to upload',
         'doc_drag'                => 'or drag and drop',
@@ -74,9 +78,12 @@ $translations = [
         'pw_rule_special'         => 'One special character (!@#$%^&*)',
     ],
     'fr' => [
-        'page_title'              => 'Inscrire votre entreprise - OCSAPP Distribution',
-        'heading'                 => 'Inscrire votre entreprise',
-        'subtext'                 => 'Créez un compte pour utiliser notre service d\'approvisionnement',
+        'page_title'              => 'Créer un compte - Entreprise Centrale - OCSAPP',
+        'hero_eyebrow'            => 'ENTREPRISE CENTRALE',
+        'hero_p'                  => 'Inscrivez votre organisation pour les services d\'approvisionnement et de distribution via Entreprise Centrale.',
+        'card_kicker'             => 'DEMANDE ENTREPRISE',
+        'card_h2'                 => 'Inscrire votre entreprise',
+        'card_p'                  => 'Fournissez les informations sur votre entreprise, votre immatriculation au Québec et votre compte pour révision.',
         'sec_company'             => 'Informations sur l\'entreprise',
         'sec_company_desc'        => 'Parlez-nous de votre entreprise.',
         'company_name'            => 'Nom de l\'entreprise',
@@ -101,7 +108,7 @@ $translations = [
         'sec_docs'                => 'Documents de vérification',
         'sec_docs_desc'           => 'Vous pouvez télécharger votre document d\'immatriculation maintenant ou plus tard depuis votre portail. Un document est requis avant que votre compte puisse être entièrement approuvé.',
         'doc_cert'                => 'Certificat de constitution / Déclaration d\'immatriculation',
-        'doc_cert_hint'           => 'PDF, JPG ou PNG — max 5 Mo.',
+        'doc_cert_hint'           => 'PDF, JPG ou PNG - max 5 Mo.',
         'doc_later'               => 'Vous passez pour l\'instant? Vous pouvez le télécharger à tout moment depuis les paramètres de votre portail.',
         'doc_upload'              => 'Cliquez pour télécharger',
         'doc_drag'                => 'ou glissez-déposez',
@@ -153,145 +160,30 @@ $tr = $translations[$currentLang] ?? $translations['en'];
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="<?= generateCsrfToken() ?>">
+    <meta name="theme-color" content="#00B207">
     <title><?= $tr['page_title'] ?></title>
-    <link rel="stylesheet" href="<?= asset('css/global.css') ?>">
-    <link rel="stylesheet" href="<?= asset('css/components/header.css') ?>">
-    <link rel="stylesheet" href="<?= asset('css/components/footer.css') ?>">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <?= csrfMeta() ?>
+    <link rel="icon" type="image/png" href="<?= asset('images/logo.png') ?>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="<?= asset('css/pages/portal-register.css') ?>">
     <style>
         body { font-family: 'Inter', 'Segoe UI', sans-serif; }
-        /* ── Page background ── */
-        main.page { background: #f3f4f6; }
 
-        /* ── Dark hero banner ── */
-        .dist-reg-hero {
-            background: linear-gradient(135deg, #0a1628 0%, #0d2137 50%, #071220 100%);
-            color: white;
-            text-align: center;
-            padding: 56px 24px 48px;
-            position: relative;
-            overflow: hidden;
-            margin-bottom: 0;
-        }
-        .dist-reg-hero::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-            pointer-events: none;
-        }
-        .dist-reg-hero-badge {
-            display: inline-block;
-            background: rgba(0,178,7,0.18);
-            color: #4ade80;
-            border: 1px solid rgba(0,178,7,0.35);
-            padding: 6px 18px;
-            border-radius: 50px;
-            font-size: 12px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            margin-bottom: 20px;
-        }
-        .dist-reg-hero h1 {
-            font-size: clamp(24px, 4vw, 36px);
-            font-weight: 800;
-            color: white;
-            margin-bottom: 10px;
-            line-height: 1.2;
-        }
-        .dist-reg-hero h1 span { color: #4ade80; }
-        .dist-reg-hero p {
-            font-size: 15px;
-            color: rgba(255,255,255,0.72);
-            max-width: 480px;
-            margin: 0 auto;
-            line-height: 1.6;
-        }
-        .dist-reg-hero-back {
-            position: absolute;
-            top: 20px;
-            left: 24px;
-            color: rgba(255,255,255,0.55);
-            font-size: 13px;
-            font-weight: 500;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: color 0.2s;
-        }
-        .dist-reg-hero-back:hover { color: #4ade80; }
-
-        /* ── Page wrapper ── */
-        .dist-register-page {
-            max-width: 700px;
-            margin: 0 auto;
-            padding: 32px 20px 64px;
-        }
-
-        /* ── Form sections ── */
-        .form-section {
-            background: #fff;
-            border: 1px solid #e5e7eb;
-            border-radius: 14px;
-            padding: 28px 32px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            border-top: 3px solid #00b207;
-        }
-        .form-section-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: #1a1a1a;
-            margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .form-section-title i { color: #00b207; font-size: 17px; }
-        .form-section-desc { font-size: 13px; color: #9ca3af; margin-bottom: 20px; }
-
-        /* ── Form layout ── */
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .form-row.single { grid-template-columns: 1fr; }
-        .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+        /* ── Leftover component styling not covered by portal-register.css ── */
         .form-group label .required { color: #ef4444; }
-
-        /* ── Inputs ── */
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 11px 14px;
-            border: 1.5px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: inherit;
-            color: #1a1a1a;
-            background: #fff;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            box-sizing: border-box;
-        }
-        .form-group input:focus,
-        .form-group select:focus { outline: none; border-color: #00b207; box-shadow: 0 0 0 3px rgba(0,178,7,0.1); }
-        .form-group input.error,
-        .form-group select.error { border-color: #ef4444; }
+        .form-group input.error, .form-group select.error { border-color: #ef4444 !important; }
         .error-text { color: #ef4444; font-size: 12px; margin-top: 4px; }
-        .hint { display: block; font-size: 12px; color: #9ca3af; margin-top: 4px; }
 
-        /* ── NEQ counter ── */
-        .neq-input-wrapper { position: relative; }
-        .neq-input-wrapper input { padding-right: 52px; }
+        .neq-input-wrapper input { padding-right: 52px !important; }
         .neq-counter {
             position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
             font-size: 12px; color: #9ca3af; pointer-events: none;
         }
 
-        /* ── Password ── */
-        .pw-input-wrap { position: relative; }
-        .pw-input-wrap input { padding-right: 44px; }
+        .pw-input-wrap input { padding-right: 44px !important; }
         .pw-toggle {
             position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
             background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 16px; padding: 0; line-height: 1;
@@ -302,68 +194,20 @@ $tr = $translations[$currentLang] ?? $translations['en'];
         .pw-rule-ok   { color: #00b207; }
         .pw-rule i    { font-size: 12px; }
 
-        /* ── Document upload ── */
-        .doc-upload-group { margin-bottom: 20px; }
-        .doc-upload-group > label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px; }
-        .doc-upload-area {
-            position: relative; border: 2px dashed #d1d5db; border-radius: 10px;
-            padding: 24px 20px; text-align: center; cursor: pointer;
-            transition: border-color 0.2s, background 0.2s; background: #fafafa;
-        }
-        .doc-upload-area:hover,
-        .doc-upload-area.has-file { border-color: #00b207; background: #f0fdf4; }
+        .doc-upload-area { position: relative; cursor: pointer; }
         .doc-upload-area input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
         .doc-upload-icon { font-size: 28px; color: #9ca3af; margin-bottom: 8px; }
         .doc-upload-area.has-file .doc-upload-icon { color: #00b207; }
         .doc-upload-text { font-size: 14px; color: #6b7280; }
         .doc-upload-text strong { color: #374151; }
-        .doc-file-name { margin-top: 6px; font-size: 13px; color: #00b207; font-weight: 600; word-break: break-all; }
-        .doc-upload-hint { font-size: 12px; color: #9ca3af; margin-top: 6px; }
+        .doc-file-name { margin-top: 6px; font-size: 13px; font-weight: 600; word-break: break-all; }
 
-        /* ── Info box ── */
-        .info-box {
-            background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;
-            padding: 12px 16px; margin-top: 8px; margin-bottom: 0;
-            font-size: 13px; color: #166534; line-height: 1.6;
-        }
-        .info-box p { margin: 0; }
-        .info-box p + p { margin-top: 8px; }
-        .info-box i { margin-right: 6px; }
-        .info-box a { color: #15803d; font-weight: 600; }
-
-        /* ── Flash ── */
-        .flash-message { padding: 14px 18px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; display: flex; align-items: center; gap: 10px; }
-        .flash-error   { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
-        .flash-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
-
-        /* ── Checkbox ── */
-        .checkbox-group { display: flex; align-items: flex-start; gap: 10px; margin: 8px 0 20px; }
-        .checkbox-group input[type="checkbox"] { width: 18px; height: 18px; margin-top: 2px; accent-color: #00b207; flex-shrink: 0; }
-        .checkbox-group label { font-size: 13px; color: #6b7280; line-height: 1.6; }
-        .checkbox-group label a { color: #00b207; font-weight: 600; text-decoration: none; }
-        .checkbox-group label a:hover { text-decoration: underline; }
-
-        /* ── Synced delivery fields ── */
         .form-group input:disabled,
         .form-group select:disabled {
-            background: #f3f4f6;
-            color: #9ca3af;
-            border-color: #e5e7eb;
-            cursor: not-allowed;
+            background: #f3f4f6; color: #9ca3af; border-color: #e5e7eb !important; cursor: not-allowed;
         }
 
-        /* ── Submit ── */
         .submit-section { padding-top: 8px; }
-        .btn-submit {
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            width: 100%; padding: 15px 24px;
-            background: linear-gradient(135deg, #00b207 0%, #008505 100%);
-            color: white; border: none; border-radius: 10px;
-            font-size: 16px; font-weight: 700; cursor: pointer;
-            transition: all 0.3s; font-family: inherit;
-        }
-        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,178,7,0.3); }
-        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
         .btn-submit .spinner {
             display: none; width: 20px; height: 20px;
             border: 2px solid rgba(255,255,255,0.3); border-top-color: white;
@@ -373,48 +217,42 @@ $tr = $translations[$currentLang] ?? $translations['en'];
         .btn-submit.loading .btn-text { display: none; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ── Bottom links ── */
-        .register-links { text-align: center; margin-top: 24px; font-size: 14px; color: #6b7280; line-height: 2; }
-        .register-links a { color: #00b207; font-weight: 600; text-decoration: none; }
-        .register-links a:hover { text-decoration: underline; }
-
-        /* ── Responsive ── */
         @media (max-width: 640px) {
-            .dist-reg-hero { padding: 48px 20px 36px; }
-            .dist-reg-hero-back { font-size: 12px; }
-            .dist-register-page { padding: 20px 16px 48px; }
-            .form-section { padding: 20px 16px; }
-            .form-row { grid-template-columns: 1fr; }
             .doc-upload-area { padding: 20px 12px; }
         }
-
-        /* suppress global header/footer spacing against colored sections */
-        .header { margin-bottom: 0; }
-        footer.footer { margin-top: 0; }
     </style>
 </head>
 <body>
+<header class="auth-topbar">
+  <a class="auth-logo" href="<?= url('/') ?>" aria-label="OCSAPP">OCSAPP</a>
+  <nav class="auth-toplinks" aria-label="<?= $fr ? "Navigation d'inscription" : 'Registration navigation' ?>">
+    <a href="<?= url('/') ?>"><?= $fr ? 'Écosystème' : 'Ecosystem' ?></a>
+    <a href="<?= url('home') ?>"><?= $fr ? 'Marché Central' : 'Market Central' ?></a>
+    <a class="central-link" href="<?= url('distribution') ?>"><?= $fr ? 'Entreprise Centrale' : 'Business Central' ?></a>
+  </nav>
+</header>
 
-<?php include __DIR__ . '/../components/header.php'; ?>
-
-<!-- Dark hero banner -->
-<div class="dist-reg-hero">
-    <a href="<?= url('distribution') ?>" class="dist-reg-hero-back">
-        <i class="fas fa-arrow-left"></i> <?= $tr['back_dist'] ?>
-    </a>
-    <div class="dist-reg-hero-badge">
-        <i class="fas fa-building"></i>
-        <?= $currentLang === 'fr' ? 'Portail Distribution' : 'Distribution Portal' ?>
+<main class="register-shell">
+  <section class="brand-panel" aria-label="<?= $fr ? 'Entreprise Centrale' : 'Business Central' ?>">
+    <div class="brand-content">
+      <div class="eyebrow"><?= $tr['hero_eyebrow'] ?></div>
+      <div class="central-icon"><img src="<?= asset('images/about/central-business.png') ?>" alt="<?= $fr ? 'Entreprise Centrale' : 'Business Central' ?>"></div>
+      <h1><?= $fr ? 'Entreprise Centrale' : 'Business Central' ?></h1>
+      <p><?= $tr['hero_p'] ?></p>
+      <p class="ecosystem-note"><strong><?= $fr ? 'Un seul écosystème OCSAPP.' : 'One OCSAPP ecosystem.' ?></strong><br><?= $fr ? 'Votre compte est lié au Central correspondant à votre rôle.' : 'Your account is connected to the Central associated with your role.' ?></p>
     </div>
-    <h1><?= $currentLang === 'fr' ? 'Inscrire votre <span>entreprise</span>' : 'Register Your <span>Business</span>' ?></h1>
-    <p><?= $tr['subtext'] ?></p>
-</div>
+  </section>
 
-<main class="page">
-<div class="dist-register-page">
+  <section class="form-panel">
+    <div class="register-card">
+      <div class="card-head">
+        <div class="card-kicker"><?= $tr['card_kicker'] ?></div>
+        <h2><?= $tr['card_h2'] ?></h2>
+        <p><?= $tr['card_p'] ?></p>
+      </div>
 
     <?php if (!empty($errors['general'])): ?>
-        <div class="flash-message flash-error">
+        <div class="alert alert-error">
             <i class="fas fa-exclamation-circle"></i>
             <?= htmlspecialchars($errors['general']) ?>
         </div>
@@ -828,19 +666,23 @@ $tr = $translations[$currentLang] ?? $translations['en'];
         </div>
 
     </form>
-
-    <!-- Bottom links -->
-    <div class="register-links">
-        <?= $tr['already_account'] ?> <a href="<?= url('distribution/login') ?>"><?= $tr['sign_in'] ?></a>
+      <div class="apply-links"><a href="<?= url('distribution/login') ?>"><?= $fr ? 'Déjà inscrit? Se connecter' : 'Already registered? Sign in' ?></a></div>
+      <div class="security-note"><?= $fr
+        ? 'Pour votre sécurité, ne saisissez jamais d\'information de carte de paiement et ne partagez pas un mot de passe existant en dehors des champs OCSAPP désignés.'
+        : 'For your security, never enter payment card information or share an existing password outside the designated OCSAPP fields.' ?></div>
+      <div class="legal-links">
+        <a href="<?= url('privacy') ?>"><?= $fr ? 'Confidentialité' : 'Privacy' ?></a> ·
+        <a href="<?= url('terms') ?>"><?= $fr ? 'Conditions' : 'Terms' ?></a> ·
+        <a href="<?= url('cookies') ?>"><?= $fr ? 'Cookies' : 'Cookies' ?></a> ·
+        <a href="<?= url('returns') ?>"><?= $fr ? 'Retours' : 'Returns' ?></a> ·
+        <a href="<?= url('accessibility') ?>"><?= $fr ? 'Accessibilité' : 'Accessibility' ?></a>
+      </div>
     </div>
-
-</div>
+  </section>
 </main>
 
-<?php include __DIR__ . '/../components/footer.php'; ?>
-
 <script>
-// NEQ input — digits only + counter
+// NEQ input - digits only + counter
 function updateNeqCounter(input) {
     input.value = input.value.replace(/[^0-9]/g, '');
     const counter = document.getElementById('neqCounter');

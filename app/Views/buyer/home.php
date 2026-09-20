@@ -30,7 +30,11 @@ $cartCount = $cartCount ?? 0;
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OCSAPP – Zero-Emission Grocery Delivery</title>
+  <title><?= $currentLang === 'fr' ? 'Marché Central - Magasinez local sur OCSAPP' : 'Marketplace Central - Shop Local on OCSAPP' ?></title>
+  <meta name="description" content="<?= $currentLang === 'fr'
+      ? "Découvrez les commerces, boutiques, restaurants et produits d'ici dans Marché Central, la couche commerce de l'écosystème OCSAPP."
+      : 'Discover local shops, boutiques, restaurants and homegrown products in Marketplace Central, the commerce layer of the OCSAPP ecosystem.'
+  ?>">
   <?= csrfMeta() ?>
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="<?= asset('images/logo.png') ?>">
@@ -48,795 +52,326 @@ $cartCount = $cartCount ?? 0;
   <link rel="stylesheet" href="<?= asset('css/pages/home.css') ?>">
 </head>
 <body>
-  <!-- Header (includes beta notice and top banner) -->
+  <!-- Header (includes beta notice, top banner, location modal, mobile nav) -->
+  <?php $useMarcheHeader = true; ?>
   <?php include __DIR__ . '/../components/header.php'; ?>
 
   <!-- Main Content -->
   <main class="page">
-    <!-- Hero Slider -->
-    <section class="hero-slider" aria-label="Promotional Banners">
-      <div class="slides-wrapper" id="heroSlider">
-        <!-- Intro Slide - Welcome to OCSAPP -->
-        <div class="slide active" data-bg="<?= asset('images/hero/hero1.png') ?>">
-          <div class="slide-content">
-            <h2><?= $t['hero_title_intro'] ?></h2>
-            <p><?= $t['hero_desc_intro'] ?></p>
-            <button class="slide-btn" onclick="window.location.href='<?= url('categories') ?>'"><?= $t['shop_now'] ?></button>
-          </div>
-        </div>
-
-        <!-- Slide 1 -->
-        <div class="slide" data-bg="<?= asset('images/hero/hero1.png') ?>">
-          <div class="slide-content">
-            <h2><?= $t['hero_title_1'] ?></h2>
-            <p><?= $t['hero_desc_1'] ?></p>
-            <button class="slide-btn" onclick="window.location.href='<?= url('categories') ?>'"><?= $t['shop_now'] ?></button>
-          </div>
-        </div>
-
-        <!-- Slide 2 -->
-        <div class="slide" data-bg="<?= asset('images/hero/hero2.jpg') ?>">
-          <div class="slide-content">
-            <h2><?= $t['hero_title_2'] ?></h2>
-            <p><?= $t['hero_desc_2'] ?></p>
-            <button class="slide-btn" onclick="window.location.href='<?= url('deals') ?>'"><?= $t['view_deals'] ?></button>
-          </div>
-        </div>
-        
-        <!-- Slide 3 -->
-        <div class="slide" data-bg="<?= asset('images/hero/hero3.jpg') ?>">
-          <div class="slide-content">
-            <h2><?= $t['hero_title_3'] ?></h2>
-            <p><?= $t['hero_desc_3'] ?></p>
-            <button class="slide-btn" onclick="window.location.href='<?= url('categories') ?>'"><?= $t['explore_local'] ?></button>
-          </div>
-        </div>
-        
-        <!-- Slide 4 -->
-        <div class="slide" data-bg="<?= asset('images/feature/low-cost-groceries.png') ?>">
-          <div class="slide-content">
-            <h2><?= $t['hero_title_4'] ?></h2>
-            <p><?= $t['hero_desc_4'] ?></p>
-            <button class="slide-btn" onclick="window.location.href='<?= url('categories') ?>'"><?= $t['shop_now'] ?></button>
-          </div>
-        </div>
-        
-        <!-- Slide 5 -->
-        <div class="slide" data-bg="<?= asset('images/feature/local-products.png') ?>">
-          <div class="slide-content">
-            <h2><?= $t['hero_title_5'] ?></h2>
-            <p><?= $t['hero_desc_5'] ?></p>
-            <button class="slide-btn" onclick="window.location.href='<?= url('categories') ?>'"><?= $t['shop_now'] ?></button>
-          </div>
-        </div>
-        
-        <!-- Slide 6 -->
-        <div class="slide" data-bg="<?= asset('images/feature/international-brands.png') ?>">
-          <div class="slide-content">
-            <h2><?= $t['hero_title_6'] ?></h2>
-            <p><?= $t['hero_desc_6'] ?></p>
-            <button class="slide-btn" onclick="window.location.href='<?= url('categories') ?>'"><?= $t['shop_now'] ?></button>
-          </div>
-        </div>
-      </div>
-      <button class="hero-nav prev" aria-label="Previous Slide">‹</button>
-      <button class="hero-nav next" aria-label="Next Slide">›</button>
-      <div class="hero-dots" role="tablist"></div>
-    </section>
-
-    <!-- Promo Banner - Admin Managed (products from Sales Management) -->
-    <?php if (!empty($promoBanner)): ?>
-    <?php
-      // Get language-specific promo banner text
-      $promoTitle = $currentLang === 'fr' ? ($promoBanner['title_fr'] ?? $promoBanner['title_en']) : $promoBanner['title_en'];
-      $promoSubtitle = $currentLang === 'fr' ? ($promoBanner['subtitle_fr'] ?? $promoBanner['subtitle_en'] ?? '') : ($promoBanner['subtitle_en'] ?? '');
-      $promoDiscountBadge = $currentLang === 'fr' ? ($promoBanner['discount_badge_fr'] ?? $promoBanner['discount_badge_en'] ?? '20% DE RABAIS') : ($promoBanner['discount_badge_en'] ?? '20% OFF');
-      $promoButtonText = $currentLang === 'fr' ? ($promoBanner['button_text_fr'] ?? $promoBanner['button_text_en'] ?? 'Magasiner maintenant') : ($promoBanner['button_text_en'] ?? 'Shop Now');
-    ?>
-    <section class="promo-banner">
-      <div class="promo-text">
-        <div class="discount-badge">
-          <?php
-            // Split discount badge into percentage and label (e.g., "20% OFF" -> "20%" + "OFF")
-            $badgeParts = explode(' ', $promoDiscountBadge, 2);
-            $percentage = $badgeParts[0] ?? '20%';
-            $label = $badgeParts[1] ?? 'OFF';
-          ?>
-          <div class="discount-percent"><?= htmlspecialchars($percentage) ?></div>
-          <div class="discount-label"><?= htmlspecialchars($label) ?></div>
-        </div>
-        <div class="promo-content">
-          <h2><?= htmlspecialchars($promoTitle) ?></h2>
-          <?php if (!empty($promoSubtitle)): ?>
-            <p><?= htmlspecialchars($promoSubtitle) ?></p>
-          <?php endif; ?>
-        </div>
-      </div>
-
-      <div class="promo-image-slider">
-        <?php
-        // Automatically use sale products from Sales Management, fallback to default images
-        $promoImages = [];
-
-        if (!empty($saleProducts)) {
-          foreach (array_slice($saleProducts, 0, 5) as $product) {
-            if (!empty($product['image'])) {
-              $promoImages[] = url($product['image']);
-            }
-          }
-        }
-
-        if (empty($promoImages)) {
-          $promoImages = [
-            asset('images/products/promo1.jpeg'),
-            asset('images/products/promo2.jpg'),
-            asset('images/products/promo3.jpg'),
-            asset('images/products/promo4.jpg'),
-            asset('images/products/promo5.jpg'),
-          ];
-        }
-        ?>
-
-        <div class="promo-slides-container">
-          <?php foreach ($promoImages as $index => $image): ?>
-            <div class="promo-slide <?= $index === 0 ? 'active' : '' ?> <?= $index === 1 ? 'next' : '' ?>"
-                 style="background-image: url('<?= $image ?>');">
-            </div>
-          <?php endforeach; ?>
-        </div>
-      </div>
-
-      <a href="<?= url($promoBanner['button_url'] ?? 'deals') ?>" class="promo-cta">
-        <?= htmlspecialchars($promoButtonText) ?> →
-      </a>
-    </section>
-    <?php endif; ?>
-    <!-- Delivery Features -->
-    <section class="promo-duo">
-      <div class="section-header section-header-centered">
-        <h2 class="section-title section-title-large"><?= $t['delivery_title'] ?></h2>
-      </div>
-
-      <ul class="check-strip">
-        <li><span class="tick">✔</span><span><?= $t['electric_delivery'] ?></span></li>
-        <li><span class="tick">✔</span><span><?= $t['same_day_pickup'] ?></span></li>
-        <li><span class="tick">✔</span><span><?= $t['freshness_guarantee'] ?></span></li>
-      </ul>
-    </section>
-
-    <?php
-      // True once at least one shop-backed section has something to show.
-      // All of Most Selling / Best Sellers / Top Shops / the 4 Virtual Mall
-      // rows depend on active+approved shops, so they go empty together.
-      $hasVirtualMalls = !empty($groceryStoreShops) || !empty($foodCourtShops) || !empty($storesShops) || !empty($productsShops);
-      $hasMarketplaceContent = !empty($mostSellingProducts) || !empty($featuredProducts) || !empty($topVendors) || $hasVirtualMalls;
-    ?>
-
-    <!-- Empty Marketplace State (shown when no seller shops are active yet) -->
-    <?php if (!$hasMarketplaceContent): ?>
-    <section class="marketplace-empty-state">
-      <div class="marketplace-empty-content">
-        <div class="marketplace-empty-icon">🏪</div>
-        <h2><?= $t['empty_marketplace_title'] ?? 'New shops joining soon!' ?></h2>
-        <p><?= $t['empty_marketplace_desc'] ?? "We're onboarding independent local sellers right now. Check back soon, or if you run a local business, join OCSAPP and be one of our first sellers." ?></p>
-        <a href="<?= url('seller-central') ?>" class="marketplace-empty-cta">
-          <?= $t['empty_marketplace_cta'] ?? 'Become a Seller' ?> →
-        </a>
-      </div>
-    </section>
-    <?php endif; ?>
-
-    <!-- Most Selling Products -->
-    <?php if (!empty($mostSellingProducts)): ?>
-<section class="section">
-  <div class="section-header">
-    <h2 class="section-title"><?= $t['most_selling'] ?></h2>
-    <a href="<?= url('best-sellers') ?>" class="view-all"><?= $t['view_all'] ?> →</a>
-  </div>
-
-  <div class="products-scroll-container">
-    <button class="scroll-btn scroll-btn-left" data-scroll-target="mostSellingScroll" aria-label="Scroll left">‹</button>
-    <button class="scroll-btn scroll-btn-right" data-scroll-target="mostSellingScroll" aria-label="Scroll right">›</button>
-    <div class="products-scroll-grid" id="mostSellingScroll">
-    <?php foreach ($mostSellingProducts as $product):
-        $discount = $product['discount_percentage'] ?? 0;
-        $productTags = $product['tags'] ?? [];
-        if (is_string($productTags)) {
-            $productTags = json_decode($productTags, true) ?: [];
-        }
-        $stock = $product['stock_quantity'] ?? 100;
-    ?>
-        <article class="product-card">
-            <div class="product-badges">
-                <?php if ($discount > 0): ?>
-                    <div class="product-badge sale"><?= $t['sale'] ?? 'Sale' ?> <?= $discount ?>%</div>
-                <?php endif; ?>
-
-                <?php if (!empty($product['is_featured'])): ?>
-                    <div class="product-badge featured">⭐ <?= $t['featured'] ?? 'Featured' ?></div>
-                <?php endif; ?>
-            </div>
-
-            <!-- Wishlist Button (Top Right) -->
-            <button class="wishlist-btn" onclick="toggleWishlist(<?= $product['id'] ?>)" aria-label="Add to wishlist">
-                <i class="far fa-heart"></i>
-            </button>
-
-            <a href="<?= url('product/' . ($product['slug'] ?? $product['id'])) ?>" class="product-image">
-                <?php if (!empty($product['image'])): ?>
-                    <img src="<?= url($product['image']) ?>"
-                         alt="<?= htmlspecialchars($product['name']) ?>"
-                         loading="lazy">
-                <?php else: ?>
-                    <div class="product-placeholder">📦</div>
-                <?php endif; ?>
-            </a>
-
-            <div class="product-info">
-                <?php if (!empty($product['category_name'])): ?>
-                    <div class="product-category"><?= htmlspecialchars($product['category_name']) ?></div>
-                <?php endif; ?>
-
-                <h3 class="product-name">
-                    <a href="<?= url('product/' . ($product['slug'] ?? $product['id'])) ?>">
-                        <?= htmlspecialchars($product['name']) ?>
-                    </a>
-                </h3>
-
-                <?php if (!empty($product['show_on_home'])): ?>
-                    <div class="banner-tag">
-                        🏆 <?= $t['bestseller'] ?? 'Best Seller' ?>
-                    </div>
-                <?php endif; ?>
-
-                <!-- Stars Rating -->
-                <div class="product-rating">
-                    <?php $rating = $product['average_rating'] ?? 0; ?>
-                    <span class="stars">
-                        <?php for($i = 1; $i <= 5; $i++): ?>
-                            <?php if ($i <= floor($rating)): ?>
-                                <i class="fas fa-star"></i>
-                            <?php elseif ($i - 0.5 <= $rating): ?>
-                                <i class="fas fa-star-half-alt"></i>
-                            <?php else: ?>
-                                <i class="far fa-star"></i>
-                            <?php endif; ?>
-                        <?php endfor; ?>
-                    </span>
-                    <?php if ($rating > 0): ?>
-                        <span class="rating-number"><?= number_format($rating, 1) ?></span>
-                    <?php endif; ?>
-                </div>
-
-                <div class="product-price">
-                    <?= currency($product['price']) ?>
-                    <?php if (!empty($product['compare_at_price']) && $product['compare_at_price'] > $product['price']): ?>
-                        <span class="old-price"><?= currency($product['compare_at_price']) ?></span>
-                    <?php endif; ?>
-                </div>
-
-                <div class="stock-status <?= $stock > 10 ? 'in-stock' : ($stock > 0 ? 'low-stock' : 'out-of-stock') ?>">
-                    <?php if ($stock > 10): ?>
-                        <i class="fas fa-check-circle"></i>
-                        <?= $t['in_stock'] ?? 'In Stock' ?>
-                    <?php elseif ($stock > 0): ?>
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <?= sprintf($t['low_stock'] ?? 'Only %d left', $stock) ?>
-                    <?php else: ?>
-                        <i class="fas fa-times-circle"></i>
-                        <?= $t['out_of_stock'] ?? 'Out of Stock' ?>
-                    <?php endif; ?>
-                </div>
-
-                <button class="add-to-cart"
-                        data-product-id="<?= $product['id'] ?>"
-                        <?= $stock <= 0 ? 'disabled' : '' ?>
-                        aria-label="<?= $t['add_to_cart'] ?? 'Add to Cart' ?>">
-                    <i class="fas fa-shopping-cart"></i>
-                    <?= $t['add_to_cart'] ?? 'Add to Cart' ?>
-                </button>
-            </div>
-        </article>
-    <?php endforeach; ?>
-    </div>
-  </div>
-</section>
-<?php endif; ?>
-
-    <!-- Best Sellers (Horizontal Scrollable) -->
-    <?php if (!empty($featuredProducts)): ?>
-<section class="section">
-  <div class="section-header">
-    <h2 class="section-title"><?= $t['best_sellers'] ?></h2>
-    <a href="<?= url('best-sellers') ?>" class="view-all"><?= $t['view_all'] ?> →</a>
-  </div>
-
-  <div class="products-scroll-container">
-    <button class="scroll-btn scroll-btn-left" aria-label="Scroll left">‹</button>
-    <button class="scroll-btn scroll-btn-right" aria-label="Scroll right">›</button>
-    <div class="products-scroll-grid" id="bestSellersScroll">
-    <?php foreach ($featuredProducts as $product):
-        $discount = $product['discount_percentage'] ?? 0;
-        $productTags = $product['tags'] ?? [];
-        if (is_string($productTags)) {
-            $productTags = json_decode($productTags, true) ?: [];
-        }
-        $stock = $product['stock_quantity'] ?? 100;
-    ?>
-        <article class="product-card">
-            <div class="product-badges">
-                <?php if ($discount > 0): ?>
-                    <div class="product-badge sale"><?= $t['sale'] ?? 'Sale' ?> <?= $discount ?>%</div>
-                <?php endif; ?>
-
-                <?php if (!empty($product['is_featured'])): ?>
-                    <div class="product-badge featured">⭐ <?= $t['featured'] ?? 'Featured' ?></div>
-                <?php endif; ?>
-            </div>
-
-            <!-- Wishlist Button (Top Right) -->
-            <button class="wishlist-btn" onclick="toggleWishlist(<?= $product['id'] ?>)" aria-label="Add to wishlist">
-                <i class="far fa-heart"></i>
-            </button>
-
-            <a href="<?= url('product/' . ($product['slug'] ?? $product['id'])) ?>" class="product-image">
-                <?php if (!empty($product['image'])): ?>
-                    <img src="<?= url($product['image']) ?>"
-                         alt="<?= htmlspecialchars($product['name']) ?>"
-                         loading="lazy">
-                <?php else: ?>
-                    <div class="product-placeholder">📦</div>
-                <?php endif; ?>
-            </a>
-
-            <div class="product-info">
-                <?php if (!empty($product['category_name'])): ?>
-                    <div class="product-category"><?= htmlspecialchars($product['category_name']) ?></div>
-                <?php endif; ?>
-
-                <h3 class="product-name">
-                    <a href="<?= url('product/' . ($product['slug'] ?? $product['id'])) ?>">
-                        <?= htmlspecialchars($product['name']) ?>
-                    </a>
-                </h3>
-
-                <?php if (!empty($product['show_on_home'])): ?>
-                    <div class="banner-tag">
-                        🏆 <?= $t['bestseller'] ?? 'Best Seller' ?>
-                    </div>
-                <?php endif; ?>
-
-                <!-- Stars Rating -->
-                <div class="product-rating">
-                    <?php $rating = $product['average_rating'] ?? 0; ?>
-                    <span class="stars">
-                        <?php for($i = 1; $i <= 5; $i++): ?>
-                            <?php if ($i <= floor($rating)): ?>
-                                <i class="fas fa-star"></i>
-                            <?php elseif ($i - 0.5 <= $rating): ?>
-                                <i class="fas fa-star-half-alt"></i>
-                            <?php else: ?>
-                                <i class="far fa-star"></i>
-                            <?php endif; ?>
-                        <?php endfor; ?>
-                    </span>
-                    <?php if ($rating > 0): ?>
-                        <span class="rating-number"><?= number_format($rating, 1) ?></span>
-                    <?php endif; ?>
-                </div>
-
-                <div class="product-price">
-                    <?= currency($product['price']) ?>
-                    <?php if (!empty($product['compare_at_price']) && $product['compare_at_price'] > $product['price']): ?>
-                        <span class="old-price"><?= currency($product['compare_at_price']) ?></span>
-                    <?php endif; ?>
-                </div>
-
-                <div class="stock-status <?= $stock > 10 ? 'in-stock' : ($stock > 0 ? 'low-stock' : 'out-of-stock') ?>">
-                    <?php if ($stock > 10): ?>
-                        <i class="fas fa-check-circle"></i>
-                        <?= $t['in_stock'] ?? 'In Stock' ?>
-                    <?php elseif ($stock > 0): ?>
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <?= sprintf($t['low_stock'] ?? 'Only %d left', $stock) ?>
-                    <?php else: ?>
-                        <i class="fas fa-times-circle"></i>
-                        <?= $t['out_of_stock'] ?? 'Out of Stock' ?>
-                    <?php endif; ?>
-                </div>
-
-                <button class="add-to-cart"
-                        data-product-id="<?= $product['id'] ?>"
-                        <?= $stock <= 0 ? 'disabled' : '' ?>
-                        aria-label="<?= $t['add_to_cart'] ?? 'Add to Cart' ?>">
-                    <i class="fas fa-shopping-cart"></i>
-                    <?= $t['add_to_cart'] ?? 'Add to Cart' ?>
-                </button>
-            </div>
-        </article>
-    <?php endforeach; ?>
-    </div>
-  </div>
-</section>
-<?php endif; ?>
-
-    <!-- Categories -->
-    <?php if (!empty($categories)): ?>
-    <section class="section">
-      <div class="section-header">
-        <h2 class="section-title"><?= $t['popular_categories'] ?></h2>
-        <a href="<?= url('categories') ?>" class="view-all"><?= $t['view_all'] ?> →</a>
-      </div>
-
-      <div class="products-scroll-container">
-        <button class="scroll-btn scroll-btn-left" data-scroll-target="categoriesScroll" aria-label="Scroll left">‹</button>
-        <button class="scroll-btn scroll-btn-right" data-scroll-target="categoriesScroll" aria-label="Scroll right">›</button>
-        <div class="products-scroll-grid" id="categoriesScroll">
-          <?php foreach ($categories as $category): ?>
-          <a href="<?= url('category/' . $category['slug']) ?>" class="category-card">
-            <div class="category-icon">
-              <?php if (!empty($category['image'])): ?>
-                <img src="<?= url($category['image']) ?>" alt="<?= htmlspecialchars($category['name']) ?>">
-              <?php else: ?>
-                <span class="category-icon-placeholder">📦</span>
-              <?php endif; ?>
-            </div>
-            <div class="category-name"><?= htmlspecialchars($category['name']) ?></div>
-          </a>
-          <?php endforeach; ?>
-        </div>
-      </div>
-    </section>
-    <?php endif; ?>
-
-    <!-- Top Shops (Most Products) -->
-    <?php if (!empty($topVendors)): ?>
-<section class="brands-section">
-  <div class="section-header">
-    <h2 class="section-title"><?= $t['top_shops'] ?? 'Popular Shops' ?></h2>
-    <a href="<?= url('shops') ?>" class="view-all"><?= $t['view_all'] ?> →</a>
-  </div>
-
-  <div class="products-scroll-container">
-    <button class="scroll-btn scroll-btn-left" data-scroll-target="topShopsScroll" aria-label="Scroll left">‹</button>
-    <button class="scroll-btn scroll-btn-right" data-scroll-target="topShopsScroll" aria-label="Scroll right">›</button>
-    <div class="products-scroll-grid" id="topShopsScroll">
-    <?php foreach ($topVendors as $shop): ?>
-    <div class="brand-card">
-      <div class="brand-logo">
-        <?php if (!empty($shop['logo'])): ?>
-          <img src="<?= url($shop['logo']) ?>" alt="<?= htmlspecialchars($shop['company_name']) ?>">
-        <?php else: ?>
-          <div class="brand-logo-placeholder">
-            <?= strtoupper(substr($shop['company_name'], 0, 2)) ?>
-          </div>
-        <?php endif; ?>
-      </div>
-      <div class="product-name"><?= htmlspecialchars($shop['company_name']) ?></div>
-      <div class="product-price"><?= $t['from'] ?> <?= currency($shop['min_price'] ?? 0) ?></div>
-      <button class="add-to-cart" onclick="window.location.href='<?= url('shops/' . ($shop['slug'] ?? '')) ?>'">
-        <?= $t['visit_shop'] ?? 'Visit Shop' ?>
-      </button>
-    </div>
-    <?php endforeach; ?>
-    </div>
-  </div> 
-</section>
-<?php endif; ?>
-
-
+    <?php $fr = ($currentLang === 'fr'); ?>
 
     <!-- ============================================ -->
-<!-- UPDATED VIRTUAL MALLS SECTIONS -->
-<!-- Replace lines 400-550 in your home.php view -->
-<!-- ============================================ -->
+    <!-- MARCHÉ CENTRAL REDESIGN (staging, 2026-09-05) -->
+    <!-- ============================================ -->
 
-<!-- Virtual Mall Main Header -->
-<?php if ($hasVirtualMalls): ?>
-<section class="malls-header">
-  <div class="malls-header-content">
-    <h2><?= $t['virtual_mall'] ?? 'OCSAPP Virtual Mall' ?></h2>
-    <p><?= $t['virtual_mall_desc'] ?? 'Discover more than groceries! Explore restaurants, stores, and specialty shops. All in one place.' ?></p>
-  </div>
-</section>
-<?php endif; ?>
-
-<!-- VIRTUAL MALL: Grocery Stores (NEW!) -->
-<?php if (!empty($groceryStoreShops)): ?>
-<section class="section">
-  <div class="section-header">
-    <div>
-      <h2 class="section-title"><?= $t['grocery_stores'] ?? 'Grocery Stores' ?></h2>
-      <p class="mall-subtitle"><?= $t['grocery_stores_desc'] ?? 'Fresh produce, meats & daily essentials' ?></p>
-    </div>
-    <a href="<?= url('shops?type=grocery_store') ?>" class="view-all"><?= $t['view_all'] ?> →</a>
-  </div>
-
-  <div class="products-scroll-container">
-    <button class="scroll-btn scroll-btn-left" data-scroll-target="groceryStoresScroll" aria-label="Scroll left">‹</button>
-    <button class="scroll-btn scroll-btn-right" data-scroll-target="groceryStoresScroll" aria-label="Scroll right">›</button>
-    <div class="products-scroll-grid" id="groceryStoresScroll">
-    <?php foreach ($groceryStoreShops as $shop): ?>
-    <a href="<?= url('shops/' . $shop['slug']) ?>" class="shop-card">
-      <!-- Shop Type Badge -->
-      <?php $rating = $shop['average_rating'] ?? 0; $packagingTime = $shop['packaging_time'] ?? 30; ?>
-      <div class="shop-badges">
-        <span class="shop-badge grocery">
-          <?= $t['grocery_store'] ?? 'Grocery' ?>
-        </span>
-      </div>
-
-      <div class="category-icon shop-mall-logo">
-        <?php if (!empty($shop['logo'])): ?>
-          <img src="<?= url($shop['logo']) ?>" alt="<?= htmlspecialchars($shop['name']) ?>">
-        <?php else: ?>
-          <span class="category-icon-placeholder">🛒</span>
-        <?php endif; ?>
-      </div>
-      <div class="category-name"><?= htmlspecialchars($shop['name']) ?></div>
-      <?php if (!empty($shop['description'])): ?>
-        <div class="shop-mall-description"><?= htmlspecialchars(substr($shop['description'], 0, 80)) ?><?= strlen($shop['description']) > 80 ? '...' : '' ?></div>
-      <?php endif; ?>
-      <div class="shop-meta">
-        <div class="shop-rating">
-          <span class="stars">
-            <?php
-              for($i = 0; $i < 5; $i++):
-                echo ($i < floor($rating)) ? '⭐' : '☆';
-              endfor;
-            ?>
-          </span>
-          <span><?= number_format($rating, 1) ?></span>
+    <!-- Hero -->
+    <section class="mc-hero">
+      <div class="mc-hero-grid">
+        <div>
+          <span class="mc-eyebrow"><?= $fr ? 'Marché Central · OCSAPP' : 'Marketplace Central · OCSAPP' ?></span>
+          <?php if ($fr): ?>
+            <h1 class="mc-h1">Découvrez ce qui se passe <span>près de chez vous.</span></h1>
+          <?php else: ?>
+            <h1 class="mc-h1">Discover what's happening <span>near you.</span></h1>
+          <?php endif; ?>
+          <p class="mc-hero-sub"><?= $fr
+            ? "Commerces locaux, restaurants, épiceries, boutiques spécialisées et produits d'ici - réunis dans une expérience de magasinage connectée à l'écosystème OCSAPP."
+            : 'Local shops, restaurants, groceries, specialty boutiques and homegrown products - brought together in one shopping experience connected to the OCSAPP ecosystem.'
+          ?></p>
+          <div class="mc-hero-actions">
+            <a class="mc-btn mc-btn-primary" href="<?= url('shops') ?>"><?= $fr ? 'Explorer les commerces' : 'Explore shops' ?></a>
+            <a class="mc-btn mc-btn-secondary" href="<?= url('categories') ?>"><?= $fr ? 'Voir les catégories' : 'Browse categories' ?></a>
+          </div>
+          <div class="mc-hero-note"><i class="fa-solid fa-location-dot"></i><span><?= $fr
+            ? "Votre expérience s'adapte à la zone de magasinage sélectionnée."
+            : 'Your experience adapts to your selected shopping zone.'
+          ?></span></div>
         </div>
-        <div class="category-count">⚡ <?= $packagingTime ?> <?= $t['mins'] ?? 'mins' ?></div>
-      </div>
-    </a>
-    <?php endforeach; ?>
-    </div>
-  </div>
-</section>
-<?php endif; ?>
-
-<!-- VIRTUAL MALL: Food Court -->
-<?php if (!empty($foodCourtShops)): ?>
-<section class="section">
-  <div class="section-header">
-    <div>
-      <h2 class="section-title"><?= $t['food_court'] ?? 'Food Court' ?></h2>
-      <p class="mall-subtitle"><?= $t['food_court_desc'] ?? 'Restaurants, fast food & dining' ?></p>
-    </div>
-    <a href="<?= url('shops?type=food_court') ?>" class="view-all"><?= $t['view_all'] ?> →</a>
-  </div>
-
-  <div class="products-scroll-container">
-    <button class="scroll-btn scroll-btn-left" data-scroll-target="foodCourtScroll" aria-label="Scroll left">‹</button>
-    <button class="scroll-btn scroll-btn-right" data-scroll-target="foodCourtScroll" aria-label="Scroll right">›</button>
-    <div class="products-scroll-grid" id="foodCourtScroll">
-    <?php foreach ($foodCourtShops as $shop): ?>
-    <a href="<?= url('shops/' . $shop['slug']) ?>" class="shop-card">
-      <!-- Shop Type Badge -->
-      <?php $rating = $shop['average_rating'] ?? 0; $packagingTime = $shop['packaging_time'] ?? 30; ?>
-      <div class="shop-badges">
-        <span class="shop-badge foodcourt">
-          <?= $t['food_court'] ?? 'Food Court' ?>
-        </span>
-      </div>
-
-      <div class="category-icon shop-mall-logo">
-        <?php if (!empty($shop['logo'])): ?>
-          <img src="<?= url($shop['logo']) ?>" alt="<?= htmlspecialchars($shop['name']) ?>">
-        <?php else: ?>
-          <span class="category-icon-placeholder">🍽️</span>
-        <?php endif; ?>
-      </div>
-      <div class="category-name"><?= htmlspecialchars($shop['name']) ?></div>
-      <?php if (!empty($shop['description'])): ?>
-        <div class="shop-mall-description"><?= htmlspecialchars(substr($shop['description'], 0, 80)) ?><?= strlen($shop['description']) > 80 ? '...' : '' ?></div>
-      <?php endif; ?>
-      <div class="shop-meta">
-        <div class="shop-rating">
-          <span class="stars">
-            <?php
-              for($i = 0; $i < 5; $i++):
-                echo ($i < floor($rating)) ? '⭐' : '☆';
-              endfor;
-            ?>
-          </span>
-          <span><?= number_format($rating, 1) ?></span>
-        </div>
-        <div class="category-count">⚡ <?= $packagingTime ?> <?= $t['mins'] ?? 'mins' ?></div>
-      </div>
-    </a>
-    <?php endforeach; ?>
-    </div>
-  </div>
-</section>
-<?php endif; ?>
-
-<!-- VIRTUAL MALL: Stores (FIXED - changed from 'stores' to 'store') -->
-<?php if (!empty($storesShops)): ?>
-<section class="section">
-  <div class="section-header">
-    <div>
-      <h2 class="section-title"><?= $t['stores'] ?? 'Stores' ?></h2>
-      <p class="mall-subtitle"><?= $t['stores_desc'] ?? 'Clothing, services & specialty shops' ?></p>
-    </div>
-    <a href="<?= url('shops?type=store') ?>" class="view-all"><?= $t['view_all'] ?> →</a>
-  </div>
-
-  <div class="products-scroll-container">
-    <button class="scroll-btn scroll-btn-left" data-scroll-target="storesScroll" aria-label="Scroll left">‹</button>
-    <button class="scroll-btn scroll-btn-right" data-scroll-target="storesScroll" aria-label="Scroll right">›</button>
-    <div class="products-scroll-grid" id="storesScroll">
-    <?php foreach ($storesShops as $shop): ?>
-    <a href="<?= url('shops/' . $shop['slug']) ?>" class="shop-card">
-      <!-- Shop Type Badge -->
-      <?php $rating = $shop['average_rating'] ?? 0; $packagingTime = $shop['packaging_time'] ?? 30; ?>
-      <div class="shop-badges">
-        <span class="shop-badge store">
-          <?= $t['store'] ?? 'Store' ?>
-        </span>
-      </div>
-
-      <div class="category-icon shop-mall-logo">
-        <?php if (!empty($shop['logo'])): ?>
-          <img src="<?= url($shop['logo']) ?>" alt="<?= htmlspecialchars($shop['name']) ?>">
-        <?php else: ?>
-          <span class="category-icon-placeholder">🛍️</span>
-        <?php endif; ?>
-      </div>
-      <div class="category-name"><?= htmlspecialchars($shop['name']) ?></div>
-      <?php if (!empty($shop['description'])): ?>
-        <div class="shop-mall-description"><?= htmlspecialchars(substr($shop['description'], 0, 80)) ?><?= strlen($shop['description']) > 80 ? '...' : '' ?></div>
-      <?php endif; ?>
-      <div class="shop-meta">
-        <div class="shop-rating">
-          <span class="stars">
-            <?php
-              for($i = 0; $i < 5; $i++):
-                echo ($i < floor($rating)) ? '⭐' : '☆';
-              endfor;
-            ?>
-          </span>
-          <span><?= number_format($rating, 1) ?></span>
-        </div>
-        <div class="category-count">⚡ <?= $packagingTime ?> <?= $t['mins'] ?? 'mins' ?></div>
-      </div>
-    </a>
-    <?php endforeach; ?>
-    </div>
-  </div>
-</section>
-<?php endif; ?>
-
-<!-- VIRTUAL MALL: More Products -->
-<?php if (!empty($productsShops)): ?>
-<section class="section">
-  <div class="section-header">
-    <div>
-      <h2 class="section-title"><?= $t['more_products'] ?? 'More Products' ?></h2>
-      <p class="mall-subtitle"><?= $t['more_products_desc'] ?? 'Electronics, furniture, toys & more' ?></p>
-    </div>
-    <a href="<?= url('shops?type=products') ?>" class="view-all"><?= $t['view_all'] ?> →</a>
-  </div>
-
-  <div class="products-scroll-container">
-    <button class="scroll-btn scroll-btn-left" data-scroll-target="moreProductsScroll" aria-label="Scroll left">‹</button>
-    <button class="scroll-btn scroll-btn-right" data-scroll-target="moreProductsScroll" aria-label="Scroll right">›</button>
-    <div class="products-scroll-grid" id="moreProductsScroll">
-    <?php foreach ($productsShops as $shop): ?>
-    <a href="<?= url('shops/' . $shop['slug']) ?>" class="category-card shop-card">
-      <div class="category-icon shop-mall-logo">
-        <?php if (!empty($shop['logo'])): ?>
-          <img src="<?= url($shop['logo']) ?>" alt="<?= htmlspecialchars($shop['name']) ?>">
-        <?php else: ?>
-          <span class="category-icon-placeholder">🎁</span>
-        <?php endif; ?>
-      </div>
-      <div class="category-name"><?= htmlspecialchars($shop['name']) ?></div>
-      <?php if (!empty($shop['description'])): ?>
-        <div class="shop-mall-description"><?= htmlspecialchars(substr($shop['description'], 0, 80)) ?><?= strlen($shop['description']) > 80 ? '...' : '' ?></div>
-      <?php endif; ?>
-      <div class="shop-meta">
-        <div class="shop-rating">
-          <span class="stars">
-            <?php 
-              $rating = $shop['average_rating'] ?? 0;
-              for($i = 0; $i < 5; $i++): 
-                echo ($i < floor($rating)) ? '⭐' : '☆';
-              endfor; 
-            ?>
-          </span>
-          <span><?= number_format($rating, 1) ?></span>
-        </div>
-        <div class="category-count">⚡ <?= $shop['packaging_time'] ?? 30 ?> <?= $t['mins'] ?? 'mins' ?></div>
-      </div>
-    </a>
-    <?php endforeach; ?>
-    </div>
-  </div>
-</section>
-<?php endif; ?>
-
-    <!-- Sustainability -->
-    <section class="sustainability">
-      <div class="section-header">
-        <h2 class="section-title"><?= $t['zero_carbon_title'] ?></h2>
-        <a href="<?= url('about') ?>" class="view-all"><?= $t['learn_more'] ?> →</a>
-      </div>
-      <p><?= $t['zero_carbon_desc'] ?></p>
-      <div class="s-grid">
-        <div class="stat">
-          <h3><?= $t['electric_fleet'] ?></h3>
-          <p><?= $t['electric_fleet_desc'] ?></p>
-        </div>
-        <div class="stat">
-          <h3><?= $t['zero_emissions'] ?></h3>
-          <p><?= $t['zero_emissions_desc'] ?></p>
-        </div>
-        <div class="stat">
-          <h3><?= $t['smart_routing'] ?></h3>
-          <p><?= $t['smart_routing_desc'] ?></p>
+        <div class="mc-hero-visual">
+          <div class="mc-market-icon"><img src="<?= asset('images/centrals/icon-marketplace.jpg') ?>" alt="<?= $fr ? 'Icône officielle Marché Central' : 'Official Marketplace Central icon' ?>"></div>
+          <h3><?= $fr ? 'Votre marché local, dans un seul endroit.' : 'Your local market, all in one place.' ?></h3>
+          <p><?= $fr
+            ? "Magasinez selon ce dont vous avez besoin, pas selon la plateforme qu'il faut ouvrir."
+            : 'Shop by what you need, not by which app you have to open.'
+          ?></p>
+          <div class="mc-market-tags">
+            <span><?= $fr ? 'Restauration' : 'Food &amp; Dining' ?></span>
+            <span><?= $fr ? 'Épicerie' : 'Grocery' ?></span>
+            <span><?= $fr ? 'Santé &amp; pharmacie' : 'Health &amp; Pharmacy' ?></span>
+            <span><?= $fr ? 'Mode &amp; boutiques' : 'Fashion &amp; Boutiques' ?></span>
+            <span><?= $fr ? 'Bien-être &amp; beauté' : 'Wellness &amp; Beauty' ?></span>
+            <span><?= $fr ? 'Événements &amp; traiteur' : 'Events &amp; Catering' ?></span>
+            <span><?= $fr ? 'Artisans locaux' : 'Local Artisans' ?></span>
+            <span><?= $fr ? 'Pièces auto &amp; industrielles' : 'Auto &amp; Industrial Parts' ?></span>
+            <span><?= $fr ? 'Maison &amp; quotidien' : 'Home &amp; Everyday' ?></span>
+            <span><?= $fr ? 'Électronique &amp; technologie' : 'Electronics &amp; Tech' ?></span>
+            <span><?= $fr ? 'Saveurs du monde' : 'World Flavors' ?></span>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Customer Reviews -->
-    <section class="section">
-      <div class="section-header">
-        <h2 class="section-title"><?= $t['customer_reviews'] ?></h2>
+    <!-- Quick links -->
+    <section class="mc-quick">
+      <div class="mc-quick-grid">
+        <a class="mc-quick-card" href="<?= url('categories') ?>"><div class="mc-quick-ico"><i class="fa-solid fa-table-cells-large"></i></div><div><strong><?= $fr ? 'Catégories' : 'Categories' ?></strong><span><?= $fr ? 'Explorer par besoin' : 'Browse by need' ?></span></div></a>
+        <a class="mc-quick-card" href="<?= url('shops') ?>"><div class="mc-quick-ico"><i class="fa-solid fa-store"></i></div><div><strong><?= $fr ? 'Commerces' : 'Shops' ?></strong><span><?= $fr ? 'Voir les boutiques' : 'View storefronts' ?></span></div></a>
+        <a class="mc-quick-card" href="#mc-nearby"><div class="mc-quick-ico"><i class="fa-solid fa-location-crosshairs"></i></div><div><strong><?= $fr ? 'À proximité' : 'Nearby' ?></strong><span><?= $fr ? 'Découvrir autour de vous' : 'Discover around you' ?></span></div></a>
+        <a class="mc-quick-card" href="#mc-produits"><div class="mc-quick-ico"><i class="fa-solid fa-bag-shopping"></i></div><div><strong><?= $fr ? 'Produits' : 'Products' ?></strong><span><?= $fr ? 'Magasiner maintenant' : 'Shop now' ?></span></div></a>
+        <a class="mc-quick-card" href="<?= url('deals') ?>"><div class="mc-quick-ico"><i class="fa-solid fa-truck-fast"></i></div><div><strong><?= $fr ? 'Livraison' : 'Delivery' ?></strong><span><?= $fr ? 'Rapide ou planifiée' : 'Fast or scheduled' ?></span></div></a>
       </div>
-      <div class="testimonials">
-        <?php 
-          $testimonials = [
-            ['name' => 'Rachel Davis', 'initials' => 'RD', 'review' => $t['review_1']],
-            ['name' => 'Michael Johnson', 'initials' => 'MJ', 'review' => $t['review_2']],
-            ['name' => 'Sarah Lopez', 'initials' => 'SL', 'review' => $t['review_3']]
-          ];
-          
-          foreach ($testimonials as $testimonial):
+    </section>
+
+    <!-- Category taxonomy (informational) -->
+    <section class="mc-section mc-section-soft">
+      <div class="mc-section-head">
+        <div><span class="mc-eyebrow"><?= $fr ? 'Magasinez par besoin' : 'Shop by need' ?></span><h2><?= $fr ? 'Tout ce qu\'il vous faut, plus simplement.' : 'Everything you need, more simply.' ?></h2></div>
+        <a class="mc-see-all" href="<?= url('categories') ?>"><?= $fr ? 'Voir toutes les catégories' : 'See all categories' ?> →</a>
+      </div>
+      <div class="mc-taxonomy-grid">
+        <?php
+        $taxonomy = [
+          ['icon-food-dining', $fr ? 'Restauration' : 'Food & Dining', $fr ? 'Restaurants, prêts-à-manger et saveurs locales.' : 'Restaurants, ready-to-eat and local flavors.'],
+          ['icon-grocery', $fr ? 'Épicerie' : 'Grocery', $fr ? 'Produits frais et essentiels du quotidien.' : 'Fresh produce and everyday essentials.'],
+          ['icon-health-pharmacy', $fr ? 'Santé & pharmacie' : 'Health & Pharmacy', $fr ? 'Produits de santé, soins et essentiels bien-être.' : 'Health products, care and wellness essentials.'],
+          ['icon-boutique', $fr ? 'Mode & boutiques' : 'Fashion & Boutiques', $fr ? 'Mode, accessoires et commerces spécialisés.' : 'Fashion, accessories and specialty shops.'],
+          ['icon-wellness-beauty', $fr ? 'Bien-être & beauté' : 'Wellness & Beauty', $fr ? 'Soins personnels, beauté et mieux-être.' : 'Personal care, beauty and wellbeing.'],
+          ['icon-events-catering', $fr ? 'Événements & traiteur' : 'Events & Catering', $fr ? 'Services et produits pour vos occasions.' : 'Services and products for your occasions.'],
+          ['icon-local-gems', $fr ? 'Artisans locaux' : 'Local Artisans', $fr ? 'Créateurs, produits faits ici et petites séries.' : 'Makers, locally-made goods and small batches.'],
+          ['icon-automotive', $fr ? 'Pièces auto & industrielles' : 'Auto & Industrial Parts', $fr ? 'Pièces, fournitures et besoins spécialisés.' : 'Parts, supplies and specialized needs.'],
+          ['icon-home-everyday', $fr ? 'Maison & quotidien' : 'Home & Everyday', $fr ? 'Essentiels pour la maison et la vie courante.' : 'Essentials for home and everyday life.'],
+          ['icon-electronics', $fr ? 'Électronique & technologie' : 'Electronics & Tech', $fr ? 'Technologie, accessoires et appareils utiles.' : 'Technology, accessories and useful devices.'],
+          ['icon-world-flavors', $fr ? 'Saveurs du monde' : 'World Flavors', $fr ? 'Produits et cuisines qui reflètent nos communautés.' : 'Products and cuisines that reflect our communities.'],
+        ];
+        foreach ($taxonomy as $cat):
         ?>
-        <div class="testimonial-card">
-          <div class="testimonial-author">
-            <div class="author-avatar"><?= $testimonial['initials'] ?></div>
-            <div class="testimonial-author-info">
-              <div class="testimonial-author-name"><?= $testimonial['name'] ?></div>
-              <div class="testimonial-author-role"><?= $t['customer'] ?></div>
-            </div>
-          </div>
-          <div class="testimonial-text"><?= $testimonial['review'] ?></div>
-          <div class="product-rating testimonial-rating">
-            <span class="stars">⭐⭐⭐⭐⭐</span>
-          </div>
-        </div>
+          <a class="mc-taxonomy-card" href="<?= url('categories') ?>">
+            <div class="mc-taxonomy-art"><img src="<?= asset('images/marketplace-categories/' . $cat[0] . '.jpg') ?>" alt=""></div>
+            <h3><?= $cat[1] ?></h3>
+            <p><?= $cat[2] ?></p>
+          </a>
         <?php endforeach; ?>
       </div>
     </section>
 
-    <!-- App Download -->
-    <section class="app-download">
-      <div class="phone-mockup"></div>
-      <div>
-        <h2><?= $t['download_app'] ?></h2>
-        <p><?= $t['download_desc'] ?></p>
-        <div class="app-download-info"><?= $t['download_from'] ?></div>
-        <div class="download-buttons">
-          <a href="#" class="download-btn">
-            <span class="download-btn-icon">▶</span>
-            <span><?= $t['google_play'] ?></span>
+    <!-- Nearby shops (real data) -->
+    <section class="mc-section" id="mc-nearby">
+      <div class="mc-section-head">
+        <div><span class="mc-eyebrow"><?= $fr ? 'À proximité' : 'Nearby' ?></span><h2><?= $fr ? 'Découvrez les commerces autour de vous.' : 'Discover shops around you.' ?></h2><p><?= $fr ? "Votre zone sélectionnée aide Marché Central à mettre de l'avant les options locales pertinentes." : 'Your selected zone helps Marketplace Central surface relevant local options.' ?></p></div>
+        <a class="mc-see-all" href="<?= url('shops') ?>"><?= $fr ? 'Voir tous les commerces' : 'See all shops' ?> →</a>
+      </div>
+      <?php
+      $shopTypeMeta = [
+        'grocery_store'   => [$fr ? 'Épicerie' : 'Grocery', 'fa-basket-shopping'],
+        'food_dining'     => [$fr ? 'Restauration' : 'Food & Dining', 'fa-bowl-food'],
+        'boutique'        => [$fr ? 'Mode & boutiques' : 'Fashion & Boutiques', 'fa-bag-shopping'],
+        'home_everyday'   => [$fr ? 'Maison & quotidien' : 'Home & Everyday', 'fa-house'],
+        'health_pharmacy' => [$fr ? 'Santé & pharmacie' : 'Health & Pharmacy', 'fa-briefcase-medical'],
+        'local_gems'      => [$fr ? 'Artisans locaux' : 'Local Artisans', 'fa-gem'],
+        'home_services'   => [$fr ? 'Services à domicile' : 'Home Services', 'fa-screwdriver-wrench'],
+        'wellness_beauty' => [$fr ? 'Bien-être & beauté' : 'Wellness & Beauty', 'fa-spa'],
+        'events_catering' => [$fr ? 'Événements & traiteur' : 'Events & Catering', 'fa-champagne-glasses'],
+      ];
+      $nearbyShops = array_slice($topVendors, 0, 6);
+      ?>
+      <?php if (!empty($nearbyShops)): ?>
+      <div class="mc-shop-grid">
+        <?php foreach ($nearbyShops as $shop):
+          $typeMeta = $shopTypeMeta[$shop['shop_type'] ?? ''] ?? [$fr ? 'Commerce local' : 'Local shop', 'fa-store'];
+        ?>
+          <a class="mc-shop-card" href="<?= url('shops/' . ($shop['slug'] ?? '')) ?>">
+            <div class="mc-shop-cover">
+              <?php if (!empty($shop['logo'])): ?>
+                <img src="<?= url($shop['logo']) ?>" alt="<?= htmlspecialchars($shop['company_name']) ?>">
+              <?php else: ?>
+                <i class="fa-solid <?= $typeMeta[1] ?>"></i>
+              <?php endif; ?>
+            </div>
+            <div class="mc-shop-body">
+              <h3><?= htmlspecialchars($shop['company_name']) ?></h3>
+              <p><?= $fr
+                  ? ($shop['product_count'] . ' produits disponibles')
+                  : ($shop['product_count'] . ' products available')
+              ?></p>
+              <div class="mc-shop-meta">
+                <span class="mc-chip"><?= $typeMeta[0] ?></span>
+                <?php if (!empty($shop['min_price'])): ?>
+                  <span class="mc-chip"><?= $fr ? 'Dès' : 'From' ?> <?= currency($shop['min_price']) ?></span>
+                <?php endif; ?>
+              </div>
+              <span class="mc-shop-link"><?= $fr ? 'Visiter' : 'Visit' ?> →</span>
+            </div>
           </a>
-          <a href="#" class="download-btn">
-            <span class="download-btn-icon">🍎</span>
-            <span><?= $t['app_store'] ?></span>
-          </a>
+        <?php endforeach; ?>
+      </div>
+      <?php else: ?>
+        <p class="mc-empty-note"><?= $fr ? 'Aucun commerce actif pour le moment.' : 'No active shops right now.' ?></p>
+      <?php endif; ?>
+    </section>
+
+    <!-- Products to discover (real data) -->
+    <section class="mc-section mc-section-soft" id="mc-produits">
+      <div class="mc-section-head">
+        <div><span class="mc-eyebrow"><?= $fr ? 'Produits à découvrir' : 'Products to discover' ?></span><h2><?= $fr ? 'Une vitrine locale qui évolue avec votre secteur.' : 'A local showcase that evolves with your area.' ?></h2><p><?= $fr ? "Les produits affichés proviennent des commerces et vendeurs actifs dans l'écosystème OCSAPP." : 'Products shown come from active shops and sellers in the OCSAPP ecosystem.' ?></p></div>
+        <a class="mc-see-all" href="<?= url('best-sellers') ?>"><?= $fr ? 'Voir plus de produits' : 'See more products' ?> →</a>
+      </div>
+      <?php $discoverProducts = array_slice($mostSellingProducts, 0, 8); ?>
+      <?php if (!empty($discoverProducts)): ?>
+      <div class="mc-product-grid">
+        <?php foreach ($discoverProducts as $product):
+            $discount = $product['discount_percentage'] ?? 0;
+            $stock = $product['stock_quantity'] ?? 100;
+        ?>
+            <article class="product-card">
+                <div class="product-badges">
+                    <?php if ($discount > 0): ?>
+                        <div class="product-badge sale"><?= $fr ? 'Solde' : 'Sale' ?> <?= $discount ?>%</div>
+                    <?php endif; ?>
+                    <?php if (!empty($product['is_featured'])): ?>
+                        <div class="product-badge featured">⭐ <?= $fr ? 'Vedette' : 'Featured' ?></div>
+                    <?php endif; ?>
+                </div>
+                <button class="wishlist-btn" onclick="toggleWishlist(<?= $product['id'] ?>)" aria-label="<?= $fr ? 'Ajouter aux favoris' : 'Add to wishlist' ?>">
+                    <i class="far fa-heart"></i>
+                </button>
+                <a href="<?= url('product/' . ($product['slug'] ?? $product['id'])) ?>" class="product-image">
+                    <?php if (!empty($product['image'])): ?>
+                        <img src="<?= url($product['image']) ?>" alt="<?= htmlspecialchars($product['name']) ?>" loading="lazy">
+                    <?php else: ?>
+                        <div class="product-placeholder">📦</div>
+                    <?php endif; ?>
+                </a>
+                <div class="product-info">
+                    <?php if (!empty($product['category_name'])): ?>
+                        <div class="product-category"><?= htmlspecialchars($product['category_name']) ?></div>
+                    <?php endif; ?>
+                    <h3 class="product-name">
+                        <a href="<?= url('product/' . ($product['slug'] ?? $product['id'])) ?>"><?= htmlspecialchars($product['name']) ?></a>
+                    </h3>
+                    <div class="product-price">
+                        <?= currency($product['price']) ?>
+                        <?php if (!empty($product['compare_at_price']) && $product['compare_at_price'] > $product['price']): ?>
+                            <span class="old-price"><?= currency($product['compare_at_price']) ?></span>
+                        <?php endif; ?>
+                    </div>
+                    <div class="stock-status <?= $stock > 10 ? 'in-stock' : ($stock > 0 ? 'low-stock' : 'out-of-stock') ?>">
+                        <?php if ($stock > 10): ?>
+                            <i class="fas fa-check-circle"></i> <?= $fr ? 'En stock' : 'In Stock' ?>
+                        <?php elseif ($stock > 0): ?>
+                            <i class="fas fa-exclamation-triangle"></i> <?= $fr ? "Il n'en reste que $stock" : "Only $stock left" ?>
+                        <?php else: ?>
+                            <i class="fas fa-times-circle"></i> <?= $fr ? 'Épuisé' : 'Out of Stock' ?>
+                        <?php endif; ?>
+                    </div>
+                    <button class="add-to-cart" data-product-id="<?= $product['id'] ?>" <?= $stock <= 0 ? 'disabled' : '' ?> aria-label="<?= $fr ? 'Ajouter au panier' : 'Add to Cart' ?>">
+                        <i class="fas fa-shopping-cart"></i> <?= $fr ? 'Ajouter' : 'Add to Cart' ?>
+                    </button>
+                </div>
+            </article>
+        <?php endforeach; ?>
+      </div>
+      <?php else: ?>
+        <p class="mc-empty-note"><?= $fr ? 'Aucun produit à afficher pour le moment.' : 'No products to show right now.' ?></p>
+      <?php endif; ?>
+    </section>
+
+    <!-- Ecosystem cross-links -->
+    <section class="mc-section">
+      <div class="mc-eco-band">
+        <div>
+          <span class="mc-eyebrow" style="color:#A4EFA8"><?= $fr ? "Un marché relié au reste d'OCSAPP" : 'A marketplace connected to the rest of OCSAPP' ?></span>
+          <h2><?= $fr ? "Marché Central n'est pas une boutique isolée." : 'Marketplace Central is not an isolated storefront.' ?></h2>
+          <p><?= $fr
+            ? "Les vendeurs, fournisseurs, entreprises, acheteurs et livreurs utilisent des Centrales reliées à la même infrastructure. Marché Central est la couche de découverte et de magasinage de cet écosystème."
+            : 'Sellers, suppliers, businesses, buyers and drivers use Centrals connected to the same infrastructure. Marketplace Central is the discovery and shopping layer of that ecosystem.'
+          ?></p>
+        </div>
+        <div class="mc-eco-links">
+          <a class="mc-eco-link" href="<?= url('seller-central') ?>"><img src="<?= asset('images/centrals/icon-seller.jpg') ?>" alt=""><span><?= $fr ? 'Vendeur Central' : 'Seller Central' ?></span></a>
+          <a class="mc-eco-link" href="<?= url('supplier-central') ?>"><img src="<?= asset('images/centrals/icon-supplier.jpg') ?>" alt=""><span><?= $fr ? 'Fournisseur Central' : 'Supplier Central' ?></span></a>
+          <a class="mc-eco-link" href="<?= url('distribution') ?>"><img src="<?= asset('images/centrals/icon-business.jpg') ?>" alt=""><span><?= $fr ? 'Entreprise Centrale' : 'Business Central' ?></span></a>
+          <a class="mc-eco-link" href="<?= url('buyer-central') ?>"><img src="<?= asset('images/centrals/icon-buyer.jpg') ?>" alt=""><span><?= $fr ? 'Acheteur Central' : 'Buyer Central' ?></span></a>
+          <a class="mc-eco-link" href="<?= url('driver-central') ?>"><img src="<?= asset('images/centrals/icon-driver.jpg') ?>" alt=""><span><?= $fr ? 'Livreur Central · ODA' : 'Driver Central · ODA' ?></span></a>
         </div>
       </div>
     </section>
-    <!-- Newsletter signup now rendered by the shared component in footer.php -->
+
+    <!-- Delivery -->
+    <section class="mc-section mc-section-soft" id="mc-livraison">
+      <div class="mc-delivery">
+        <div class="mc-delivery-visual">
+          <div>
+            <div class="mc-delivery-icon"><i class="fa-solid fa-truck-fast"></i></div>
+            <h3><?= $fr ? "La livraison fait partie de l'expérience Marché." : 'Delivery is part of the Marketplace experience.' ?></h3>
+            <p><?= $fr ? "Une couche logistique reliée à l'écosystème OCSAPP." : 'A logistics layer connected to the OCSAPP ecosystem.' ?></p>
+          </div>
+        </div>
+        <div class="mc-delivery-panel">
+          <span class="mc-eyebrow"><?= $fr ? 'Livraison OCSAPP' : 'OCSAPP Delivery' ?></span>
+          <h2><?= $fr ? "Du commerce jusqu'à votre porte, dans le même système." : 'From shop to your door, in the same system.' ?></h2>
+          <p><?= $fr
+            ? "Marché Central est conçu pour relier le magasinage, la commande et la livraison dans une même expérience. La livraison OCSAPP évolue avec un objectif de progression vers un réseau zéro émission."
+            : 'Marketplace Central is built to connect shopping, ordering and delivery into one experience. OCSAPP delivery is evolving toward a zero-emission network.'
+          ?></p>
+          <div class="mc-objective"><i class="fa-solid fa-leaf"></i> <?= $fr ? 'Objectif zéro émission' : 'Zero-emission objective' ?></div>
+        </div>
+      </div>
+    </section>
   </main>
 
-  <!-- Footer -->
-  <?php include __DIR__ . '/../components/footer.php'; ?>
+  <!-- Footer (matches ocsapp.ca landing page footer) -->
+  <footer class="mc-footer">
+    <div class="mc-footer-wrap">
+      <div class="mc-footer-top">
+        <div class="mc-footer-brand-col">
+          <div class="mc-footer-brand">
+            <img alt="Logo OCSAPP" src="<?= asset('images/logo.png') ?>">
+            <span class="mc-footer-logo-text">OCSAPP</span>
+          </div>
+          <p class="mc-footer-tagline"><?= $fr ? "L'infrastructure numérique tout-en-un du commerce local." : 'The all-in-one digital infrastructure for local commerce.' ?></p>
+          <p><?= $fr
+            ? 'OCSAPP Inc. · Constituée sous le régime fédéral de la Loi canadienne sur les sociétés par actions (n<sup>o</sup> de société 1750354-7) · Numéro d\'entreprise du Québec (NEQ) 1181584997'
+            : 'OCSAPP Inc. · Federally incorporated under the Canada Business Corporations Act (Corporation No. 1750354-7) · Quebec enterprise number (NEQ) 1181584997'
+          ?></p>
+          <p><?= $fr ? 'Siège social : Laval, Québec (H7H)' : 'Registered office: Laval, Québec (H7H)' ?></p>
+        </div>
+
+        <div class="mc-footer-col">
+          <h5><?= $fr ? 'Apprenez à nous connaître' : 'Get to Know Us' ?></h5>
+          <a href="<?= url('about') ?>"><?= $fr ? "À propos d'OCSAPP" : 'About OCSAPP' ?></a>
+          <a href="<?= url('contact') ?>"><?= $fr ? 'Contactez-nous' : 'Contact Us' ?></a>
+        </div>
+
+        <div class="mc-footer-col">
+          <h5><?= $fr ? 'Écosystème OCSAPP' : 'OCSAPP Ecosystem' ?></h5>
+          <a href="<?= url('home') ?>"><?= $fr ? 'Marché Central' : 'Marketplace Central' ?></a>
+          <a href="<?= url('buyer-central') ?>"><?= $fr ? 'Acheteur Central' : 'Buyer Central' ?></a>
+          <a href="<?= url('seller-central') ?>"><?= $fr ? 'Vendeur Central' : 'Seller Central' ?></a>
+          <a href="<?= url('supplier-central') ?>"><?= $fr ? 'Fournisseur Central' : 'Supplier Central' ?></a>
+          <a href="<?= url('driver-central') ?>"><?= $fr ? 'Livreur Central · ODA' : 'Driver Central · ODA' ?></a>
+          <a href="<?= url('distribution') ?>"><?= $fr ? 'Entreprise Centrale' : 'Business Central' ?></a>
+        </div>
+
+        <div class="mc-footer-col">
+          <h5><?= $fr ? 'Connectez-vous avec nous' : 'Connect With Us' ?></h5>
+          <a href="https://www.facebook.com/ocsapp.ca" target="_blank" rel="noopener">Facebook</a>
+          <a href="https://www.instagram.com/ocsapp.ca" target="_blank" rel="noopener">Instagram</a>
+          <a href="https://www.linkedin.com/company/ocsapp" target="_blank" rel="noopener">LinkedIn</a>
+        </div>
+      </div>
+
+      <div class="mc-footer-bottom">
+        <p>OCSAPP &copy; <?= date('Y') ?>. <?= $fr ? 'Tous droits réservés.' : 'All rights reserved.' ?></p>
+        <div class="mc-footer-legal">
+          <a href="<?= url('privacy') ?>"><?= $fr ? 'Politique de confidentialité' : 'Privacy Policy' ?></a>
+          <a href="<?= url('terms') ?>"><?= $fr ? "Conditions d'utilisation" : 'Terms of Service' ?></a>
+          <a href="<?= url('cookies') ?>"><?= $fr ? 'Politique de cookies' : 'Cookie Policy' ?></a>
+          <a href="<?= url('returns') ?>"><?= $fr ? 'Retours' : 'Returns' ?></a>
+          <a href="<?= url('accessibility') ?>"><?= $fr ? 'Accessibilité' : 'Accessibility' ?></a>
+        </div>
+      </div>
+    </div>
+  </footer>
 
   <!-- JavaScript -->
   <script>

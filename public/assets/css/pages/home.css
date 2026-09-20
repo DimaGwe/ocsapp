@@ -1820,3 +1820,126 @@
     font-size: 15px;
   }
 }
+
+/* ===================================
+   MARCHÉ CENTRAL REDESIGN (staging, 2026-09-05)
+   Namespaced with mc- to avoid clashing with the
+   sections above (category-card, shop-card, etc.)
+   =================================== */
+
+/* Full-bleed breakout: these sections are meant to span the full viewport
+   width (their colored/gradient backgrounds), with only their inner
+   content centered at 1180px - but they render inside <main class="page">
+   (global.css), which imposes its own max-width:1400px + 5% padding on
+   everything inside it. Without this, every mc-hero/mc-section/mc-quick
+   background is inset instead of edge-to-edge. body{overflow-x:hidden}
+   (global.css) already covers the harmless 100vw-vs-scrollbar rounding
+   this technique can introduce. */
+.mc-hero,.mc-section,.mc-quick{
+  width:100vw;position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw;
+}
+
+/* Marché Central beta bar and header styles ($useMarcheHeader) now live in
+   components/header.css so every Marché Central page can share them. */
+
+.mc-eyebrow{display:inline-flex;align-items:center;gap:9px;color:var(--primary);font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:16px;font-family:'Poppins',sans-serif}
+.mc-eyebrow::before{content:"";width:26px;height:2px;background:var(--primary);border-radius:99px}
+.mc-btn{min-height:46px;padding:0 20px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;gap:9px;font-size:13px;font-weight:600;border:1px solid transparent;text-decoration:none;font-family:'Poppins',sans-serif}
+.mc-btn-primary{background:var(--primary);color:#fff;box-shadow:0 12px 28px rgba(0,178,7,.22)}
+.mc-btn-secondary{background:#fff;border-color:var(--border);color:var(--dark)}
+.mc-section{padding:56px 0}
+.mc-section-soft{background:#F7F8F7}
+.mc-section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:26px;flex-wrap:wrap;max-width:1180px;margin-left:auto;margin-right:auto;padding:0 24px}
+.mc-section-head h2{font-size:28px;letter-spacing:-.03em;font-family:'Poppins',sans-serif;margin-top:6px}
+.mc-section-head p{color:var(--gray-500);font-size:13px;max-width:540px;margin-top:6px}
+.mc-see-all{font:600 12px 'Poppins',sans-serif;color:var(--primary);text-decoration:none;white-space:nowrap}
+.mc-empty-note{color:var(--gray-500);font-size:14px;max-width:1180px;margin:0 auto;padding:0 24px}
+
+/* Hero */
+.mc-hero{background:linear-gradient(180deg,#F8FBF8 0%,#fff 100%);padding:48px 24px 40px;overflow:hidden}
+.mc-hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:44px;align-items:center;max-width:1180px;margin:0 auto}
+.mc-h1{font-family:'Poppins',sans-serif;font-size:clamp(32px,4.5vw,52px);line-height:1.08;letter-spacing:-.03em;color:var(--dark)}
+.mc-h1 span{color:var(--primary)}
+.mc-hero-sub{font-size:16px;color:var(--gray-500);max-width:600px;margin:18px 0 22px;line-height:1.6}
+.mc-hero-actions{display:flex;gap:12px;flex-wrap:wrap}
+.mc-hero-note{display:flex;align-items:center;gap:8px;margin-top:18px;font-size:12px;color:var(--gray-500)}
+.mc-hero-note i{color:var(--primary)}
+.mc-hero-visual{position:relative;border-radius:24px;min-height:360px;background:linear-gradient(145deg,#0D3F10,#0A3310);padding:26px;box-shadow:0 24px 60px rgba(7,70,13,.18);overflow:hidden}
+.mc-hero-visual::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:32px 32px;opacity:.55}
+.mc-market-icon{position:relative;z-index:2;width:150px;height:150px;margin:4px auto 8px;border-radius:22px;overflow:hidden;background:#080C09;box-shadow:0 14px 34px rgba(0,0,0,.28);padding:16px;box-sizing:border-box}
+.mc-market-icon img{width:100%;height:100%;object-fit:contain;display:block}
+.mc-hero-visual h3{position:relative;z-index:2;text-align:center;color:#fff;font-size:20px;font-family:'Poppins',sans-serif;margin-top:4px}
+.mc-hero-visual p{position:relative;z-index:2;text-align:center;color:#B8D7BB;margin:6px auto 0;font-size:12px;max-width:300px}
+.mc-market-tags{position:relative;z-index:2;display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin-top:18px}
+.mc-market-tags span{border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#DDEADF;padding:6px 10px;border-radius:999px;font-size:10px}
+
+/* Quick links */
+.mc-quick{padding:22px 0;border-bottom:1px solid var(--border)}
+.mc-quick-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;max-width:1180px;margin:0 auto;padding:0 24px}
+.mc-quick-card{padding:14px;border:1px solid var(--border);border-radius:14px;background:#fff;display:flex;align-items:center;gap:12px;transition:.2s;text-decoration:none;color:inherit}
+.mc-quick-card:hover{border-color:#C9D1CA;box-shadow:0 8px 28px rgba(16,24,18,.07);transform:translateY(-2px)}
+.mc-quick-ico{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:0 0 40px;background:linear-gradient(145deg,#F8FFF8,#D5F1D7 55%,#A9DDAE);color:#08750E;border:1px solid rgba(0,178,7,.18);box-shadow:0 6px 0 #8FCB94,0 10px 18px rgba(8,95,15,.12)}
+.mc-quick-card strong{font:600 12px 'Poppins',sans-serif;display:block}
+.mc-quick-card span{font-size:10px;color:var(--gray-500)}
+
+/* Category taxonomy */
+.mc-taxonomy-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;max-width:1180px;margin:0 auto;padding:0 24px}
+.mc-taxonomy-card{padding:14px;min-height:250px;border:1px solid var(--border);border-radius:18px;background:#fff;text-decoration:none;color:inherit;display:block}
+.mc-taxonomy-art{height:150px;border-radius:15px;background:#070B08;overflow:hidden;margin-bottom:16px;box-shadow:0 12px 28px rgba(7,25,10,.12);display:flex;align-items:center;justify-content:center}
+.mc-taxonomy-art img{width:62%;height:62%;object-fit:contain;display:block}
+.mc-taxonomy-card h3{font-size:14px;font-family:'Poppins',sans-serif;color:var(--dark)}
+.mc-taxonomy-card p{font-size:10.5px;color:var(--gray-500);margin-top:4px}
+
+/* Nearby shop cards (real data) */
+.mc-shop-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;max-width:1180px;margin:0 auto;padding:0 24px}
+.mc-shop-card{border:1px solid var(--border);border-radius:18px;background:#fff;overflow:hidden;box-shadow:0 6px 22px rgba(16,24,18,.04);text-decoration:none;color:inherit;display:block;transition:.2s}
+.mc-shop-card:hover{transform:translateY(-3px);box-shadow:0 14px 34px rgba(16,24,18,.10)}
+.mc-shop-cover{height:120px;background:linear-gradient(135deg,#EAF6EA,#CFE9D1);display:grid;place-items:center;color:#0B7011;font-size:30px;overflow:hidden}
+.mc-shop-cover img{width:100%;height:100%;object-fit:cover}
+.mc-shop-body{padding:16px}
+.mc-shop-body h3{font-size:15px;font-family:'Poppins',sans-serif;color:var(--dark)}
+.mc-shop-body p{font-size:11px;color:var(--gray-500);margin-top:3px}
+.mc-shop-meta{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 12px}
+.mc-chip{font-size:9.5px;color:#5F6862;background:#F4F6F4;border:1px solid #E8ECE8;border-radius:999px;padding:4px 8px}
+.mc-shop-link{font:600 11px 'Poppins',sans-serif;color:var(--primary)}
+
+/* Products grid (reuses .product-card styling defined earlier in this file) */
+.mc-product-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;max-width:1180px;margin:0 auto;padding:0 24px}
+@media(max-width:1000px){.mc-product-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:680px){.mc-product-grid{grid-template-columns:1fr 1fr}}
+
+/* Ecosystem cross-links */
+.mc-eco-band{background:linear-gradient(145deg,#0D3F10,#0A3310);color:#fff;border-radius:24px;padding:36px 30px;display:grid;grid-template-columns:1.2fr .8fr;gap:30px;align-items:center;max-width:1180px;margin:0 auto}
+.mc-eco-band h2{font-size:24px;line-height:1.2;font-family:'Poppins',sans-serif;margin-top:8px}
+.mc-eco-band p{color:#B9D1BB;font-size:13px;margin-top:10px;max-width:560px}
+.mc-eco-links{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mc-eco-link{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);font:600 11px 'Poppins',sans-serif;color:#E8F2E9;text-decoration:none}
+.mc-eco-link img{width:36px;height:36px;object-fit:cover;border-radius:9px;background:#070B08;flex:0 0 auto}
+
+/* Delivery */
+.mc-delivery{display:grid;grid-template-columns:.9fr 1.1fr;gap:26px;align-items:center;max-width:1180px;margin:0 auto;padding:0 24px}
+.mc-delivery-visual{min-height:300px;border-radius:22px;background:linear-gradient(145deg,#0D3F10,#0A3310);display:grid;place-items:center;color:#fff;text-align:center;padding:32px}
+.mc-delivery-icon{width:84px;height:84px;border-radius:22px;background:linear-gradient(145deg,#4AE254,#1AA526 60%,#08710F);display:grid;place-items:center;font-size:34px;color:#fff;box-shadow:0 9px 0 #064D0B,0 18px 34px rgba(0,0,0,.22);margin:0 auto 18px}
+.mc-delivery-visual h3{font-family:'Poppins',sans-serif;font-size:19px}
+.mc-delivery-visual p{font-size:13px;color:#B8D7BB;margin-top:8px}
+.mc-delivery-panel{border:1px solid var(--border);border-radius:22px;padding:28px;background:#fff;box-shadow:0 8px 28px rgba(16,24,18,.07)}
+.mc-delivery-panel h2{font-size:25px;font-family:'Poppins',sans-serif;margin-top:6px;color:var(--dark)}
+.mc-delivery-panel p{font-size:13px;color:var(--gray-500);margin-top:10px;line-height:1.6}
+.mc-objective{display:inline-flex;align-items:center;gap:8px;margin-top:16px;border-radius:999px;background:#F0FAF0;border:1px solid rgba(0,178,7,.18);color:#0B7111;padding:7px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+
+@media(max-width:1000px){
+  .mc-hero-grid,.mc-eco-band,.mc-delivery{grid-template-columns:1fr}
+  .mc-quick-grid{grid-template-columns:repeat(3,1fr)}
+  .mc-taxonomy-grid{grid-template-columns:repeat(2,1fr)}
+  .mc-shop-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:680px){
+  .mc-quick-grid{grid-template-columns:1fr 1fr}
+  .mc-taxonomy-grid,.mc-shop-grid{grid-template-columns:1fr}
+  .mc-eco-links{grid-template-columns:1fr}
+  .mc-section{padding:40px 0}
+  .mc-hero{padding:36px 16px 32px}
+}
+
+/* Marché Central footer styles now live in components/footer.css
+   so every Marché Central page can share them. */

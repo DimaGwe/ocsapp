@@ -4,7 +4,7 @@ $fr = ($currentLang === 'fr');
 
 $at = [
     'en' => [
-        'page_title'      => 'Become a Delivery Driver - OCSAPP',
+        'page_title'      => 'Apply - Driver Central - OCSAPP',
         'back'            => 'Back to Driver Central',
         'hero_badge'      => 'Driver Portal',
         'hero_h1'         => 'Become a <span>Driver</span>',
@@ -91,7 +91,7 @@ $at = [
                               '07'=>'July','08'=>'August','09'=>'September','10'=>'October','11'=>'November','12'=>'December'],
     ],
     'fr' => [
-        'page_title'      => 'Devenez livreur - OCSAPP',
+        'page_title'      => 'Demande - Livreur Central - OCSAPP',
         'back'            => 'Retour au portail livreur',
         'hero_badge'      => 'Portail livreur',
         'hero_h1'         => 'Devenez <span>livreur</span>',
@@ -190,31 +190,45 @@ $at = $at[$currentLang] ?? $at['en'];
     <link rel="icon" type="image/png" href="<?= asset('images/logo.png') ?>">
     <link rel="apple-touch-icon" href="<?= asset('images/logo.png') ?>">
     <meta name="theme-color" content="#00b207">
-    <link rel="stylesheet" href="<?= asset('css/global.css') ?>">
-    <link rel="stylesheet" href="<?= asset('css/components/header.css') ?>">
-    <link rel="stylesheet" href="<?= asset('css/components/footer.css') ?>">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="<?= asset('css/pages/portal-register.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/pages/delivery-apply.css') ?>">
 </head>
 <body>
+<header class="auth-topbar">
+  <a class="auth-logo" href="<?= url('/') ?>" aria-label="OCSAPP">OCSAPP</a>
+  <nav class="auth-toplinks" aria-label="<?= $fr ? "Navigation de candidature" : 'Application navigation' ?>">
+    <a href="<?= url('/') ?>"><?= $fr ? 'Écosystème' : 'Ecosystem' ?></a>
+    <a href="<?= url('home') ?>"><?= $fr ? 'Marché Central' : 'Market Central' ?></a>
+    <a class="central-link" href="<?= url('driver-central') ?>"><?= $fr ? 'Livreur Central · ODA' : 'Driver Central · ODA' ?></a>
+  </nav>
+</header>
 
-<?php include __DIR__ . '/../components/header.php'; ?>
-
-<!-- Dark hero banner -->
-<div class="apply-hero">
-    <a href="<?= url('driver-central') ?>" class="apply-hero-back">
-        <i class="fas fa-arrow-left"></i>
-        <?= $at['back'] ?>
-    </a>
-    <div class="apply-hero-badge">
-        <i class="fas fa-truck"></i> <?= $at['hero_badge'] ?>
+<main class="register-shell">
+  <section class="brand-panel" aria-label="<?= $fr ? 'Livreur Central · ODA' : 'Driver Central · ODA' ?>">
+    <div class="brand-content">
+      <div class="eyebrow"><?= $fr ? 'LIVREUR CENTRAL' : 'DRIVER CENTRAL' ?></div>
+      <div class="central-icon"><img src="<?= asset('images/about/central-driver.png') ?>" alt="<?= $fr ? 'Livreur Central · ODA' : 'Driver Central · ODA' ?>"></div>
+      <h1><?= $fr ? 'Livreur Central · ODA' : 'Driver Central · ODA' ?></h1>
+      <p><?= $fr
+        ? "Faites une demande pour joindre le réseau de livraison ODA et soutenir le commerce local alors qu'OCSAPP progresse vers son objectif de livraison zéro émission."
+        : 'Apply to join the ODA delivery network and support local commerce as OCSAPP progresses toward its zero-emission delivery objective.' ?></p>
+      <p class="ecosystem-note"><strong><?= $fr ? 'Un seul écosystème OCSAPP.' : 'One OCSAPP ecosystem.' ?></strong><br><?= $fr ? "Votre processus d'intégration est relié au Central correspondant à votre rôle." : 'Your onboarding is connected to the Central associated with your role.' ?></p>
     </div>
-    <h1><?= $at['hero_h1'] ?></h1>
-    <p><?= $at['hero_p'] ?></p>
-</div>
+  </section>
 
-<main class="page">
-<div class="apply-page">
+  <section class="form-panel">
+    <div class="register-card">
+      <div class="card-head">
+        <div class="card-kicker"><?= $fr ? 'INTÉGRATION LIVREUR' : 'DRIVER ONBOARDING' ?></div>
+        <h2><?= $fr ? 'Postulez comme livreur avec OCSAPP' : 'Apply to drive with OCSAPP' ?></h2>
+        <p><?= $fr
+          ? "Parlez-nous de vous, de vos disponibilités et de votre profil de livraison afin que l'équipe ODA puisse examiner votre demande."
+          : "Tell us about yourself, your availability and your delivery profile so the ODA team can review your application." ?></p>
+      </div>
 
     <?php if ($flash = getFlash('success')): ?>
         <div class="alert alert-success">
@@ -523,14 +537,20 @@ $at = $at[$currentLang] ?? $at['en'];
         </div>
     </form>
 
-    <div class="apply-links">
-        <?= $at['already_driver'] ?> <a href="<?= url('login') ?>"><?= $at['sign_in'] ?></a>
+      <div class="apply-links"><a href="<?= url('delivery/login') ?>"><?= $fr ? 'Déjà approuvé? Se connecter' : 'Already approved? Sign in' ?></a></div>
+      <div class="security-note"><?= $fr
+        ? "Pour votre sécurité, ne soumettez des documents d'identification sensibles que via les champs de téléversement désignés d'OCSAPP. N'envoyez jamais de mots de passe ou d'informations de carte de paiement dans les champs de texte libre."
+        : 'For your security, submit sensitive identification documents only through the designated OCSAPP upload fields. Never send passwords or payment-card information in free-text fields.' ?></div>
+      <div class="legal-links">
+        <a href="<?= url('privacy') ?>"><?= $fr ? 'Confidentialité' : 'Privacy' ?></a> ·
+        <a href="<?= url('terms') ?>"><?= $fr ? 'Conditions' : 'Terms' ?></a> ·
+        <a href="<?= url('cookies') ?>"><?= $fr ? 'Cookies' : 'Cookies' ?></a> ·
+        <a href="<?= url('returns') ?>"><?= $fr ? 'Retours' : 'Returns' ?></a> ·
+        <a href="<?= url('accessibility') ?>"><?= $fr ? 'Accessibilité' : 'Accessibility' ?></a>
+      </div>
     </div>
-
-</div>
+  </section>
 </main>
-
-<?php include __DIR__ . '/../components/footer.php'; ?>
 
 <script>
     const _AT = {

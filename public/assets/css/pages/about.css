@@ -1,8 +1,8 @@
 /* ============================================================
-   OCSAPP About page (2026-08 redesign, from approved Final package)
-   Page-specific styles - shared tokens live in global.css.
-   The source package's standalone header/footer styles were
-   dropped; this page uses the shared site header/footer.
+   OCSAPP About page - page-specific styles.
+   Shared tokens live in global.css; header/footer chrome
+   (eco-header, mc-footer) live in their own component CSS files,
+   matching the standard used by all five Central landing pages.
    ============================================================ */
 
 :root {
@@ -24,6 +24,9 @@
 }
 
 html { scroll-behavior: smooth; }
+.beta-strip { background: #fff8e6; border-bottom: 1px solid #f2e2ab; padding: 9px 0; text-align: center; }
+.beta-strip p { font-size: 12.5px; color: #7a5b00; font-weight: 500; }
+
 body.about-page {
   background: var(--white);
   color: var(--text-dark);
@@ -214,14 +217,6 @@ body.about-page {
 .trust-card { border: 1px solid var(--border); border-radius: 16px; padding: 24px; box-shadow: var(--shadow-sm); background: #fff; }
 .trust-card h4 { font-family: 'Poppins','Segoe UI',sans-serif; font-size: 16px; margin-bottom: 8px; }
 .trust-card p { font-size: 13.5px; color: var(--text-grey); margin: 0; }
-
-/* Legal identity strip (from the approved package's footer, kept as page content) */
-.legal-identity { border-top: 1px solid var(--border); padding: 28px 0 40px; text-align: center; }
-.legal-identity .foot-tagline { font-size: 13.5px; color: var(--green); font-style: italic; margin-bottom: 12px; }
-.legal-identity p { font-size: 13px; color: var(--text-grey-light); margin-bottom: 4px; }
-
-/* Shared footer sits flush against the page */
-footer.footer { margin-top: 0; }
 
 @media (max-width: 760px) {
   .wrap { padding-left: 20px; padding-right: 20px; }

@@ -9,9 +9,6 @@ VisitorTracker::track();
 // Get current language and location from session
 $currentLang = $_SESSION['language'] ?? 'fr';
 
-// Store's physical location (fixed, displayed in top banner)
-$storeLocation = 'Kirkland, QC';
-
 // Get translations first (needed for default location text)
 $t = getTranslations($currentLang);
 
@@ -37,13 +34,60 @@ $accountDashboardUrl = accountUrl(); // Uses new helper function
 <!-- Beta Notice (Modal + Banner) -->
 <?php include __DIR__ . '/beta-notice.php'; ?>
 
+<?php if (empty($useMarcheHeader)): ?>
 <!-- Top Banner -->
 <div class="top-banner">
-    <?= $t['store_location'] ?>: <?= htmlspecialchars($storeLocation) ?> |
     <?= $t['need_help'] ?>: <a href="tel:+15147463789">+1 (514) 746-3789</a>
 </div>
+<?php endif; ?>
 
 <!-- Header -->
+<?php if (!empty($useMarcheHeader)): ?>
+<!-- Marché Central header (opt-in via $useMarcheHeader, staging redesign 2026-09-05) -->
+<header class="mc-header">
+    <div class="mc-header-top">
+        <a href="<?= url('home') ?>" class="mc-brand">
+            <img src="<?= asset('images/logo.png') ?>" alt="OCSAPP Logo">
+            <span>OCSAPP</span>
+        </a>
+        <form class="mc-search" action="<?= url('search') ?>" method="GET" role="search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="search" name="q" placeholder="<?= $t['search_placeholder'] ?>" aria-label="<?= $t['search_placeholder'] ?>">
+            <button type="submit"><?= $t['search_btn'] ?></button>
+        </form>
+        <div class="mc-header-actions">
+            <button class="mc-location" id="locationBtn" type="button" aria-label="<?= $t['choose_location'] ?>">
+                <i class="fa-solid fa-location-dot"></i>
+                <span id="currentLocationText"><?= htmlspecialchars($userDeliveryLocation) ?></span>
+                <i class="fa-solid fa-chevron-down"></i>
+            </button>
+            <div class="mc-lang notranslate" translate="no">
+                <a href="?lang=fr" class="<?= $currentLang === 'fr' ? 'active' : '' ?>">FR</a>
+                <a href="?lang=en" class="<?= $currentLang === 'en' ? 'active' : '' ?>">EN</a>
+            </div>
+            <a href="<?= (function_exists('isLoggedIn') && isLoggedIn()) ? $accountDashboardUrl : url('login') ?>" class="mc-icon-btn" aria-label="<?= $t['account'] ?>">
+                <i class="fa-regular fa-user"></i>
+            </a>
+            <a href="<?= url('cart') ?>" class="mc-icon-btn" aria-label="<?= $t['cart'] ?>">
+                <i class="fa-solid fa-bag-shopping"></i>
+                <span class="cart-count" id="cartCount"><?= $cartCount ?></span>
+            </a>
+        </div>
+    </div>
+    <?php
+    $mcCurrentPath = rtrim((string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), '/');
+    $mcPath = fn($route) => rtrim((string) parse_url(url($route), PHP_URL_PATH), '/');
+    ?>
+    <div class="mc-header-nav">
+        <a class="mc-nav-link <?= $mcCurrentPath === $mcPath('home') ? 'active' : '' ?>" href="<?= url('home') ?>"><?= $currentLang === 'fr' ? 'Marché Central' : 'Marketplace Central' ?></a>
+        <a class="mc-nav-link <?= $mcCurrentPath === $mcPath('categories') ? 'active' : '' ?>" href="<?= url('categories') ?>"><?= $t['categories'] ?></a>
+        <a class="mc-nav-link <?= $mcCurrentPath === $mcPath('shops') ? 'active' : '' ?>" href="<?= url('shops') ?>"><?= $t['shops'] ?></a>
+        <a class="mc-nav-link <?= $mcCurrentPath === $mcPath('waitlist') ? 'active' : '' ?>" href="<?= url('waitlist') ?>"><?= $currentLang === 'fr' ? "Liste d'attente" : 'Waitlist' ?></a>
+        <div class="mc-nav-spacer"></div>
+        <a class="mc-central-pill" href="<?= url('') ?>"><i class="fa-solid fa-circle-nodes"></i> <?= $currentLang === 'fr' ? "Voir l'écosystème" : 'View the ecosystem' ?></a>
+    </div>
+</header>
+<?php else: ?>
 <header class="header">
     <div class="logo-section">
         <a href="<?= url('home') ?>" class="logo">
@@ -58,8 +102,8 @@ $accountDashboardUrl = accountUrl(); // Uses new helper function
     </div>
 
     <form class="search-bar" action="<?= url('search') ?>" method="GET" role="search">
-        <input type="search" 
-               name="q" 
+        <input type="search"
+               name="q"
                placeholder="<?= $t['search_placeholder'] ?>"
                aria-label="<?= $t['search_placeholder'] ?>">
         <button type="submit"><?= $t['search_btn'] ?></button>
@@ -120,6 +164,7 @@ $accountDashboardUrl = accountUrl(); // Uses new helper function
         <?php endif; ?>
     </div>
 </header>
+<?php endif; ?>
 
 <!-- Location Autocomplete Styles -->
 <style>

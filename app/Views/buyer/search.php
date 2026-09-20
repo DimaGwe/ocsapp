@@ -6,6 +6,7 @@
 
 // Get current language
 $currentLang = $_SESSION['language'] ?? 'fr';
+$fr = ($currentLang === 'fr');
 
 // Get translations
 $t = getTranslations($currentLang);
@@ -177,7 +178,13 @@ $pageTitle = $t['search_results'] ?? 'Search Results';
             <!-- Search Header -->
             <div class="search-header">
                 <h1><?= $t['search_results_for'] ?? 'Search results for' ?> "<?= htmlspecialchars($query) ?>"</h1>
-                <p><?= count($products) ?> <?= $t['products_found'] ?? 'products found' ?><?= count($shops) > 0 ? ', ' . count($shops) . ' ' . ($t['shops_found'] ?? 'shops found') : '' ?></p>
+                <?php // Not using $t['products_found']/$t['shops_found'] - those DB translations are
+                // single fixed strings and can't agree with a singular count. ?>
+                <p><?= count($products) ?> <?= $fr
+                    ? (count($products) > 1 ? 'produits trouvés' : 'produit trouvé')
+                    : (count($products) > 1 ? 'products found' : 'product found') ?><?= count($shops) > 0 ? ', ' . count($shops) . ' ' . ($fr
+                    ? (count($shops) > 1 ? 'commerces trouvés' : 'commerce trouvé')
+                    : (count($shops) > 1 ? 'shops found' : 'shop found')) : '' ?></p>
             </div>
 
             <!-- Tabs -->

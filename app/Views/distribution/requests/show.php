@@ -192,7 +192,7 @@ $drStages = $currentLang === 'fr' ? [
     ['label' => 'Approuvé',          'icon' => 'clipboard-check'],
     ['label' => 'Paiement',          'icon' => 'credit-card'],
     ['label' => 'Payé',              'icon' => 'check-circle'],
-    ['label' => 'Chauffeur assigné', 'icon' => 'user-check'],
+    ['label' => 'Livreur assigné', 'icon' => 'user-check'],
     ['label' => 'Cueillette',        'icon' => 'box-open'],
     ['label' => 'En Route',          'icon' => 'truck-moving'],
     ['label' => 'Livré',             'icon' => 'check-double'],
