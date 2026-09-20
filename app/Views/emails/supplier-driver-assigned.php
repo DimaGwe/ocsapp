@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chauffeur en route / Driver Coming for Pickup - OCSAPP</title>
+    <title>Livreur en route / Driver Coming for Pickup - OCSAPP</title>
 </head>
 <body style="margin:0;padding:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f5f5f5;">
 <table role="presentation" style="width:100%;border-collapse:collapse;background:#f5f5f5;">
@@ -25,16 +25,16 @@
         <h2 style="margin:0 0 18px;color:#1f2937;font-size:20px;">Bonjour {{supplier_name}},</h2>
 
         <p style="margin:0 0 20px;color:#4b5563;font-size:15px;line-height:1.7;">
-            Un chauffeur a été assigné pour récupérer le <strong>bon de commande #{{po_number}}</strong> à votre emplacement. Veuillez vous assurer que la commande est emballée et prête.
+            Un livreur a été assigné pour récupérer le <strong>bon de commande #{{po_number}}</strong> à votre emplacement. Veuillez vous assurer que la commande est emballée et prête.
         </p>
 
         <!-- Driver Info FR -->
         <table role="presentation" style="width:100%;border-collapse:collapse;background:#e8f5e9;border-radius:8px;margin:0 0 24px;">
         <tr><td style="padding:20px;">
-            <p style="margin:0 0 12px;color:#007a05;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">Informations du chauffeur</p>
+            <p style="margin:0 0 12px;color:#007a05;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">Informations du livreur</p>
             <table role="presentation" style="width:100%;border-collapse:collapse;">
                 <tr>
-                    <td style="padding:4px 0;color:#6b7280;font-size:14px;width:40%;">Nom du chauffeur</td>
+                    <td style="padding:4px 0;color:#6b7280;font-size:14px;width:40%;">Nom du livreur</td>
                     <td style="padding:4px 0;color:#111827;font-size:14px;font-weight:600;">{{driver_name}}</td>
                 </tr>
                 <tr>
@@ -58,7 +58,7 @@
         <!-- Checklist FR -->
         <table role="presentation" style="width:100%;border-collapse:collapse;border-left:4px solid #f59e0b;background:#fffbeb;border-radius:4px;margin:0 0 24px;">
         <tr><td style="padding:16px 20px;">
-            <p style="margin:0 0 8px;color:#92400e;font-size:14px;font-weight:600;">Avant l'arrivée du chauffeur :</p>
+            <p style="margin:0 0 8px;color:#92400e;font-size:14px;font-weight:600;">Avant l'arrivée du livreur :</p>
             <ul style="margin:0;padding-left:20px;color:#78350f;font-size:14px;line-height:1.8;">
                 <li>Vérifiez que tous les articles sont emballés et comptés</li>
                 <li>Ayez votre numéro de bon de commande prêt pour la vérification</li>

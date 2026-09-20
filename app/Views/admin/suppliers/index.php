@@ -297,6 +297,11 @@ $activeTab = get('tab', 'suppliers');
                   <option value="<?= $p ?>" <?= $spkg === $p ? 'selected' : '' ?>><?= $p ?></option>
                   <?php endforeach; ?>
                 </select>
+                <?php if (!empty($supplier['founding_partner'])): ?>
+                  <span title="Founding Partner #<?= (int)$supplier['founding_partner_number'] ?> of 15" style="display:inline-flex;align-items:center;gap:4px;background:#fef3c722;color:#b45309;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:700;border:1px solid #fbbf2455;">
+                    🌟 #<?= (int)$supplier['founding_partner_number'] ?>
+                  </span>
+                <?php endif; ?>
               </div>
             </td>
             <td>

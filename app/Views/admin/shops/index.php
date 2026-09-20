@@ -778,6 +778,7 @@ ob_start();
           <th><?= $t['shop'] ?></th>
           <th><?= $t['seller'] ?></th>
           <th><?= $t['products'] ?></th>
+          <th>Package</th>
           <th><?= $t['status'] ?></th>
           <th><?= $t['created'] ?></th>
           <th class="text-right"><?= $t['actions'] ?></th>
@@ -811,6 +812,28 @@ ob_start();
               <td>
                 <div class="products-cell">
                   <?= number_format($shop['products_count']) ?>
+                </div>
+              </td>
+              <td>
+                <?php
+                $spkg = $shop['subscription_package'] ?? 'Essential';
+                $spkgColors = ['Essential'=>'#00b207','Experience'=>'#3b82f6','Prestige'=>'#7c3aed','Enterprise'=>'#1f2937'];
+                $spkgColor  = $spkgColors[$spkg] ?? '#00b207';
+                ?>
+                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                  <span class="pkg-badge" id="shop-pkg-badge-<?= $shop['id'] ?>" style="display:inline-flex;align-items:center;gap:5px;background:<?= $spkgColor ?>18;color:<?= $spkgColor ?>;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;border:1px solid <?= $spkgColor ?>33;">
+                    <i class="fas fa-star" style="font-size:9px;"></i> <?= htmlspecialchars($spkg) ?>
+                  </span>
+                  <select onchange="updateShopPkg(<?= $shop['id'] ?>, this.value)" style="font-size:11px;padding:2px 4px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;" title="Change package">
+                    <?php foreach (['Essential','Experience','Prestige','Enterprise'] as $p): ?>
+                    <option value="<?= $p ?>" <?= $spkg === $p ? 'selected' : '' ?>><?= $p ?></option>
+                    <?php endforeach; ?>
+                  </select>
+                  <?php if (!empty($shop['founding_partner'])): ?>
+                    <span title="Founding Partner #<?= (int)$shop['founding_partner_number'] ?> of 20" style="display:inline-flex;align-items:center;gap:4px;background:#fef3c722;color:#b45309;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:700;border:1px solid #fbbf2455;">
+                      🌟 #<?= (int)$shop['founding_partner_number'] ?>
+                    </span>
+                  <?php endif; ?>
                 </div>
               </td>
               <td>
@@ -915,7 +938,7 @@ ob_start();
           <?php endforeach; ?>
         <?php else: ?>
           <tr>
-            <td colspan="6">
+            <td colspan="7">
               <div class="empty-state">
                 <div class="empty-state-icon">
                   <i class="fas fa-store"></i>
@@ -1119,6 +1142,35 @@ document.getElementById('shopDetailsModal').addEventListener('click', function(e
 document.getElementById('rejectModal').addEventListener('click', function(e) {
     if (e.target === this) closeRejectModal();
 });
+
+const shopPkgColors = { Essential:'#00b207', Experience:'#3b82f6', Prestige:'#7c3aed', Enterprise:'#1f2937' };
+
+function updateShopPkg(shopId, pkg) {
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+  const csrfName  = document.querySelector('meta[name="csrf-token"]')?.dataset.name || '_csrf_token';
+
+  fetch('<?= url('admin/shops/update-package') ?>', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ [csrfName]: csrfToken, shop_id: shopId, subscription_package: pkg })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      const badge = document.getElementById('shop-pkg-badge-' + shopId);
+      if (badge) {
+        const c = shopPkgColors[pkg] || '#00b207';
+        badge.style.background = c + '18';
+        badge.style.color = c;
+        badge.style.borderColor = c + '33';
+        badge.innerHTML = '<i class="fas fa-star" style="font-size:9px;"></i> ' + pkg;
+      }
+    } else {
+      alert(data.message || 'Error updating package');
+    }
+  })
+  .catch(() => alert('Error updating package'));
+}
 </script>
 
 <?php

@@ -295,7 +295,7 @@ Visit <a href="/seller-central">Seller Central</a> to register or contact seller
 
 ### French Version
 
-**Title:** A propos de la Centrale Vendeur OCSAPP
+**Title:** A propos du Vendeur Central OCSAPP
 
 **Meta Description:** Vendez sur le Marche OCSAPP. Rejoignez le marche en ligne a la croissance la plus rapide au Canada avec livraison zero emission.
 
@@ -303,7 +303,7 @@ Visit <a href="/seller-central">Seller Central</a> to register or contact seller
 
 ```html
 <h2>Vendez sur le Marche OCSAPP</h2>
-<p>La Centrale Vendeur OCSAPP est votre porte d'entree vers le marche en ligne a la croissance la plus rapide au Canada. Que vous geriez une epicerie, un restaurant, un magasin de detail ou une boutique specialisee, nous fournissons la plateforme et les outils dont vous avez besoin pour atteindre de nouveaux clients et developper votre entreprise.</p>
+<p>Le Vendeur Central OCSAPP est votre porte d'entree vers le marche en ligne a la croissance la plus rapide au Canada. Que vous geriez une epicerie, un restaurant, un magasin de detail ou une boutique specialisee, nous fournissons la plateforme et les outils dont vous avez besoin pour atteindre de nouveaux clients et developper votre entreprise.</p>
 
 <h2>Pourquoi Vendre sur OCSAPP?</h2>
 <ul>
@@ -348,7 +348,7 @@ Visit <a href="/seller-central">Seller Central</a> to register or contact seller
 </ol>
 
 <p><strong>Pret a Developper Votre Entreprise?</strong><br>
-Visitez <a href="/seller-central">Centrale Vendeur</a> pour vous inscrire ou contactez vendeurs@ocsapp.ca pour plus d'informations.</p>
+Visitez <a href="/seller-central">Vendeur Central</a> pour vous inscrire ou contactez vendeurs@ocsapp.ca pour plus d'informations.</p>
 ```
 
 ---
@@ -565,15 +565,15 @@ Contact our customer support at support@ocsapp.ca or call 514-746-3789</p>
 
 ### French Version
 
-**Title:** A propos de la Centrale Acheteur OCSAPP
+**Title:** A propos de l'Acheteur Central OCSAPP
 
-**Meta Description:** Magasinez plus intelligemment avec la Centrale Acheteur OCSAPP. Decouvrez epiceries locales, restaurants et magasins avec livraison zero emission.
+**Meta Description:** Magasinez plus intelligemment avec l'Acheteur Central OCSAPP. Decouvrez epiceries locales, restaurants et magasins avec livraison zero emission.
 
 **Content (HTML):**
 
 ```html
-<h2>Bienvenue a la Centrale Acheteur OCSAPP</h2>
-<p>La Centrale Acheteur OCSAPP est votre destination pour des achats plus intelligents et durables. Parcourez des milliers de produits d'epiceries locales, restaurants et boutiques specialisees - le tout livre a votre porte avec zero emission.</p>
+<h2>Bienvenue a l'Acheteur Central OCSAPP</h2>
+<p>L'Acheteur Central OCSAPP est votre destination pour des achats plus intelligents et durables. Parcourez des milliers de produits d'epiceries locales, restaurants et boutiques specialisees - le tout livre a votre porte avec zero emission.</p>
 
 <h2>Pourquoi Magasiner avec OCSAPP?</h2>
 <ul>

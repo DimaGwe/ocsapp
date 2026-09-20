@@ -97,7 +97,7 @@
                             </table>
 
                             <p style="margin: 0; color: #6b7280; font-size: 14px; line-height: 1.6;">
-                                Connectez-vous à votre <a href="https://ocsapp.ca/delivery/earnings" style="color: #00b207; font-weight: 600; text-decoration: none;">portail chauffeur</a> pour tous les détails.
+                                Connectez-vous à votre <a href="https://ocsapp.ca/delivery/earnings" style="color: #00b207; font-weight: 600; text-decoration: none;">portail livreur</a> pour tous les détails.
                             </p>
 
                             <p style="margin: 16px 0 0; color: #6b7280; font-size: 14px;">
