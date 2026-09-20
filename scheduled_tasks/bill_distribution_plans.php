@@ -31,9 +31,11 @@ require BASE_PATH . '/bootstrap/init.php';
 require BASE_PATH . '/config/database.php';
 require BASE_PATH . '/app/Helpers/StripeCustomerHelper.php';
 require BASE_PATH . '/app/Helpers/CreditHelper.php';
+require BASE_PATH . '/app/Helpers/FoundingBusinessHelper.php';
 
 use App\Helpers\StripeCustomerHelper;
 use App\Helpers\CreditHelper;
+use App\Helpers\FoundingBusinessHelper;
 
 $db = Database::getConnection();
 
@@ -43,6 +45,7 @@ echo "[{$now}] bill_distribution_plans starting\n";
 try {
     $stmt = $db->prepare("
         SELECT bp.id, bp.company_name, bp.next_billing_date, bp.stripe_payment_method_id,
+               bp.founding_partner, bp.founding_partner_expires_at,
                dp.name AS plan_name, dp.monthly_fee,
                u.email, u.first_name, u.last_name
         FROM business_profiles bp
@@ -68,6 +71,26 @@ try {
 
         try {
             $db->beginTransaction();
+
+            // Founding Business Partner Program (Business Account Agreement Sec 8.12,
+            // draft) - $0/mo waived for 6 months. Lazy expiry: if the lock already
+            // passed, this flips founding_partner off as a side effect and billing
+            // proceeds normally below.
+            FoundingBusinessHelper::applyLazyExpiryIfNeeded($businessId);
+            $stillFounding = (int)$account['founding_partner'] === 1
+                && $account['founding_partner_expires_at']
+                && strtotime($account['founding_partner_expires_at']) >= time();
+
+            if ($stillFounding) {
+                $nextDate = date('Y-m-d', strtotime($account['next_billing_date'] . ' +1 month'));
+                $db->prepare("UPDATE business_profiles SET next_billing_date = ?, plan_status = 'active' WHERE id = ?")
+                   ->execute([$nextDate, $businessId]);
+                CreditHelper::logEvent($businessId, 'plan_billed', 'system', null,
+                    "Founding Business Partner - \${$account['monthly_fee']}/mo waived, next billing {$nextDate}.");
+                $db->commit();
+                echo "[{$now}] Business #{$businessId} ({$account['company_name']}): Founding waiver applied, next {$nextDate}.\n";
+                continue;
+            }
 
             if (empty($account['stripe_payment_method_id'])) {
                 $db->prepare("UPDATE business_profiles SET plan_status = 'past_due' WHERE id = ?")->execute([$businessId]);

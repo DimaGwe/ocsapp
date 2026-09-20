@@ -326,6 +326,24 @@ class AdminBusinessController
 
             $this->db->commit();
 
+            // Founding Business Partner Program (Business Account Agreement
+            // Sec 4.3/7.9/8.12, draft) - 5-account cohort, Distribution rate
+            // locked to 5%/$0 for 6 months. Approvisionnement fee waiver
+            // deferred (fee-calc call site not yet wired).
+            try {
+                $foundingResult = \App\Helpers\FoundingBusinessHelper::claimSlotIfEligible($id);
+                if ($foundingResult['eligible']) {
+                    \App\Helpers\NotificationHelper::addBusinessNotification(
+                        $id,
+                        'founding_partner',
+                        'Welcome, Founding Business Partner!',
+                        "You're Founding Business Partner #{$foundingResult['founding_partner_number']} - your 5% Distribution rate is locked with no monthly fee for 6 months."
+                    );
+                }
+            } catch (\Exception $e) {
+                error_log('FoundingBusinessHelper claim on approval failed: ' . $e->getMessage());
+            }
+
             // Send approval email with PDF attachments (bilingual template)
             try {
                 $attachments = $this->generateApprovalPdfs();

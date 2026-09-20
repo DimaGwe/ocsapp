@@ -552,8 +552,8 @@ class PurchaseOrderController {
                 "Driver {$driverName} has been assigned to pick up your order. Please have it ready.",
                 'supplier/orders/view?id=' . $poId,
                 'truck',
-                "Chauffeur assigné — BC #{$po['po_number']}",
-                "Le chauffeur {$driverName} a été assigné pour collecter votre commande. Veuillez vous assurer qu'elle est prête."
+                "Livreur assigné — BC #{$po['po_number']}",
+                "Le livreur {$driverName} a été assigné pour collecter votre commande. Veuillez vous assurer qu'elle est prête."
             );
 
             $db->commit();
@@ -652,7 +652,7 @@ class PurchaseOrderController {
                 'supplier/orders/view?id=' . $poId,
                 'shipping-fast',
                 "BC #{$po['po_number']} collecté",
-                'Votre commande a été récupérée par le chauffeur et est en route.'
+                'Votre commande a été récupérée par le livreur et est en route.'
             );
 
             logger("Admin marked PO #{$po['po_number']} as picked_up", 'info');

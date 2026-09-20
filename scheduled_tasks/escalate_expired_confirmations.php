@@ -374,7 +374,7 @@ function _checkProgressReminders(PDO $db, string $now): void
                         "supplier/orders/view?id={$poId}",
                         'clock',
                         "⏰ Rappel — Commencez à préparer BC #{$poNumber}",
-                        "Vous avez accepté BC #{$poNumber} il y a plus de 30 minutes. Veuillez commencer à préparer les articles pour que le chauffeur puisse être dépêché à temps."
+                        "Vous avez accepté BC #{$poNumber} il y a plus de 30 minutes. Veuillez commencer à préparer les articles pour que le livreur puisse être dépêché à temps."
                     );
                     echo "[{$now}] Progress reminder sent for accepted PO #{$poNumber} ({$elapsedMins:.0f} min elapsed).\n";
                 }

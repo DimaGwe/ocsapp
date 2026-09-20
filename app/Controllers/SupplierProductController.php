@@ -1624,7 +1624,7 @@ class SupplierProductController {
                 "Your order is marked as ready. A driver will be assigned shortly.",
                 'supplier/orders/view?id=' . $orderId, 'truck',
                 "BC #{$order['po_number']} — Prêt pour la collecte",
-                'Votre commande est marquée comme prête. Un chauffeur vous sera assigné sous peu.'
+                'Votre commande est marquée comme prête. Un livreur vous sera assigné sous peu.'
             );
 
             // Business bell — one of their suppliers is packed and ready

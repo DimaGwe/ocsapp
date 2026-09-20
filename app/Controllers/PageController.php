@@ -2,6 +2,8 @@
 
 namespace App\Controllers;
 
+use App\Helpers\EmailHelper;
+
 /**
  * PageController - Static Pages (Terms, Privacy, About, Contact)
  * All pages support ES/EN/HT trilingual interface
@@ -118,12 +120,86 @@ class PageController
      */
     public function cookies(): void
     {
-        view('legal/cookies');
+        try {
+            $language = $_SESSION['language'] ?? 'fr';
+
+            $stmt = $this->db->prepare("
+                SELECT * FROM legal_content
+                WHERE page_type = 'cookies'
+                AND language = ?
+                AND is_published = 1
+                ORDER BY version DESC
+                LIMIT 1
+            ");
+            $stmt->execute([$language]);
+            $page = $stmt->fetch();
+
+            if (!$page && $language !== 'en') {
+                $stmt = $this->db->prepare("
+                    SELECT * FROM legal_content
+                    WHERE page_type = 'cookies'
+                    AND language = 'en'
+                    AND is_published = 1
+                    ORDER BY version DESC
+                    LIMIT 1
+                ");
+                $stmt->execute();
+                $page = $stmt->fetch();
+            }
+
+            if (!$page) {
+                view('legal/cookies');
+                return;
+            }
+
+            view('legal/dynamic', ['page' => $page]);
+
+        } catch (\PDOException $e) {
+            logger("Error loading cookie policy: " . $e->getMessage(), 'error');
+            view('legal/cookies'); // Fallback to static view
+        }
     }
 
     public function accessibility(): void
     {
-        view('legal/accessibility');
+        try {
+            $language = $_SESSION['language'] ?? 'fr';
+
+            $stmt = $this->db->prepare("
+                SELECT * FROM legal_content
+                WHERE page_type = 'accessibility'
+                AND language = ?
+                AND is_published = 1
+                ORDER BY version DESC
+                LIMIT 1
+            ");
+            $stmt->execute([$language]);
+            $page = $stmt->fetch();
+
+            if (!$page && $language !== 'en') {
+                $stmt = $this->db->prepare("
+                    SELECT * FROM legal_content
+                    WHERE page_type = 'accessibility'
+                    AND language = 'en'
+                    AND is_published = 1
+                    ORDER BY version DESC
+                    LIMIT 1
+                ");
+                $stmt->execute();
+                $page = $stmt->fetch();
+            }
+
+            if (!$page) {
+                view('legal/accessibility');
+                return;
+            }
+
+            view('legal/dynamic', ['page' => $page]);
+
+        } catch (\PDOException $e) {
+            logger("Error loading accessibility statement: " . $e->getMessage(), 'error');
+            view('legal/accessibility'); // Fallback to static view
+        }
     }
 
     /**
@@ -314,12 +390,19 @@ class PageController
 
         $name = sanitize(post('name', ''));
         $email = sanitize(post('email', ''));
+        $phone = sanitize(post('phone', ''));
+        $contactMethod = sanitize(post('contact_method', 'Email'));
+        $role = sanitize(post('role', ''));
+        $organization = sanitize(post('organization', ''));
         $subject = sanitize(post('subject', ''));
+        $priority = sanitize(post('priority', 'Normal'));
+        $reference = sanitize(post('reference', ''));
         $message = sanitize(post('message', ''));
+        $privacyConsent = post('privacy_consent', '') === 'accepted';
 
         // Validate inputs
-        if (empty($name) || empty($email) || empty($message)) {
-            jsonResponse(['success' => false, 'message' => $fr ? 'Tous les champs sont obligatoires.' : 'All fields are required.']);
+        if (empty($name) || empty($email) || empty($role) || empty($subject) || empty($message)) {
+            jsonResponse(['success' => false, 'message' => $fr ? 'Tous les champs obligatoires doivent être remplis.' : 'Please fill in all required fields.']);
             return;
         }
 
@@ -328,48 +411,63 @@ class PageController
             return;
         }
 
+        if (!$privacyConsent) {
+            jsonResponse(['success' => false, 'message' => $fr ? 'Veuillez accepter la Politique de confidentialité.' : 'Please accept the Privacy Policy.']);
+            return;
+        }
+
         try {
             // Save to database
             $stmt = $this->db->prepare("
                 INSERT INTO contact_messages
-                (name, email, subject, message, created_at)
-                VALUES (:name, :email, :subject, :message, NOW())
+                (name, email, phone, contact_method, role, organization, subject, priority, reference_number, message, privacy_consent, language, created_at)
+                VALUES (:name, :email, :phone, :contact_method, :role, :organization, :subject, :priority, :reference_number, :message, :privacy_consent, :language, NOW())
             ");
 
             $stmt->execute([
                 'name' => $name,
                 'email' => $email,
+                'phone' => $phone ?: null,
+                'contact_method' => $contactMethod ?: 'Email',
+                'role' => $role,
+                'organization' => $organization ?: null,
                 'subject' => $subject ?: 'General Inquiry',
-                'message' => $message
+                'priority' => $priority ?: 'Normal',
+                'reference_number' => $reference ?: null,
+                'message' => $message,
+                'privacy_consent' => 1,
+                'language' => $lang
             ]);
 
             logger("Contact form submitted by {$name} ({$email})", 'info');
 
             // Send notification email to admin
             try {
-                require_once __DIR__ . '/../Helpers/EmailHelper.php';
-
                 $adminEmail = env('MAIL_FROM_ADDRESS', 'support@ocsapp.ca');
-                $emailSubject = "New Contact Form: " . ($subject ?: 'General Inquiry');
+                $emailSubject = "New Contact Form [{$priority}]: " . ($subject ?: 'General Inquiry');
                 $emailBody = "
                     <h2>New Contact Form Submission</h2>
                     <p><strong>Name:</strong> {$name}</p>
                     <p><strong>Email:</strong> {$email}</p>
+                    <p><strong>Phone:</strong> " . ($phone ?: 'N/A') . "</p>
+                    <p><strong>Preferred contact method:</strong> {$contactMethod}</p>
+                    <p><strong>Role / Central:</strong> {$role}</p>
+                    <p><strong>Organization:</strong> " . ($organization ?: 'N/A') . "</p>
                     <p><strong>Subject:</strong> " . ($subject ?: 'General Inquiry') . "</p>
+                    <p><strong>Priority:</strong> {$priority}</p>
+                    <p><strong>Reference:</strong> " . ($reference ?: 'N/A') . "</p>
                     <p><strong>Message:</strong></p>
                     <p>" . nl2br(htmlspecialchars($message)) . "</p>
                 ";
 
-                // Simple email send (you can enhance this with EmailHelper)
-                mail($adminEmail, $emailSubject, $emailBody, "From: {$email}\r\nContent-Type: text/html; charset=UTF-8");
-
+                EmailHelper::sendRaw($adminEmail, $emailSubject, $emailBody);
             } catch (\Exception $e) {
                 logger("Failed to send contact notification email: " . $e->getMessage(), 'warning');
             }
 
             jsonResponse([
                 'success' => true,
-                'message' => $fr ? 'Message envoyé avec succès ! Nous vous répondrons bientôt.' : 'Message sent successfully! We will get back to you soon.'
+                'message' => $fr ? 'Merci! Votre demande a été envoyée. Notre équipe vous répondra dans les meilleurs délais.' : 'Thank you! Your request has been sent. Our team will get back to you as soon as possible.'
             ]);
 
         } catch (\PDOException $e) {

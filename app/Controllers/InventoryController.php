@@ -265,7 +265,7 @@ class InventoryController
         }
 
         // Fetch categories for the form
-        $stmt = $this->db->query("SELECT id, name FROM categories WHERE status = 'active' ORDER BY name");
+        $stmt = $this->db->query("SELECT id, name FROM categories WHERE is_active = 1 ORDER BY name");
         $categories = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         view('seller/inventory/create-product', ['shop' => $shop, 'categories' => $categories]);

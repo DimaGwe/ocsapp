@@ -121,6 +121,29 @@ class AdminShopController
             $stmt = $this->db->prepare("UPDATE shops SET is_approved = 1, is_active = 1, approved_by = ?, approved_at = NOW() WHERE id = ?");
             $stmt->execute([userId(), $shopId]);
 
+            // Founding Seller Partner Program (Seller Agreement Sec 3.1/3.2): approval is
+            // the confirmed "Date d'effet" the contract ties the cohort to.
+            require_once __DIR__ . '/../Helpers/FoundingSellerHelper.php';
+            $foundingClaim = \App\Helpers\FoundingSellerHelper::claimSlotIfEligible((int)$shopId);
+            if ($foundingClaim['eligible']) {
+                try {
+                    $shopRow = $this->db->prepare("SELECT s.name, u.email, u.first_name FROM shops s JOIN users u ON s.seller_id = u.id WHERE s.id = ?");
+                    $shopRow->execute([$shopId]);
+                    $shopInfo = $shopRow->fetch(\PDO::FETCH_ASSOC);
+                    if ($shopInfo && !empty($shopInfo['email'])) {
+                        require_once __DIR__ . '/../Helpers/EmailHelper.php';
+                        \App\Helpers\EmailHelper::sendSellerFoundingPartnerGranted([
+                            'email' => $shopInfo['email'],
+                            'first_name' => $shopInfo['first_name'],
+                            'shop_name' => $shopInfo['name'],
+                            'founding_partner_number' => $foundingClaim['founding_partner_number'],
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    error_log('Founding Seller notification error: ' . $e->getMessage());
+                }
+            }
+
             setFlash('success', 'Shop approved successfully');
             back();
 
@@ -228,6 +251,63 @@ class AdminShopController
             error_log('Shop Deactivate Error: ' . $e->getMessage());
             setFlash('error', 'Failed to deactivate shop');
             back();
+        }
+    }
+
+    /**
+     * Update a shop's subscription package (Sec B: seller tiered commissions).
+     * Mirrors SupplierController::updatePackage() - same package->rate map shape,
+     * scaled to sellers' delivery/pickup split instead of a single rate. A shop
+     * with founding_partner=1 keeps its locked Founding rate regardless of this
+     * change, same reasoning as suppliers not needing a founding-aware guard here
+     * either - admin overrides are a deliberate exception, not a normal-flow path.
+     */
+    public function updatePackage(): void
+    {
+        if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
+            jsonResponse(['success' => false, 'message' => 'Invalid request'], 400);
+            return;
+        }
+
+        $shopId = (int) post('shop_id');
+        if (!$shopId) {
+            jsonResponse(['success' => false, 'message' => 'Invalid shop ID'], 400);
+            return;
+        }
+
+        $validPackages = ['Essential', 'Experience', 'Prestige', 'Enterprise'];
+        $pkg = post('subscription_package', '');
+        if (!in_array($pkg, $validPackages)) {
+            jsonResponse(['success' => false, 'message' => 'Invalid package'], 422);
+            return;
+        }
+
+        // Essential/Experience/Prestige match Seller Central's published delivery/pickup
+        // commission figures (15/8, 12/6, 10/5); Enterprise is custom-quote on the public
+        // page, so it reuses Experience's rate here as an editable starting point, same
+        // "no single right default" situation SupplierController::updatePackage() already
+        // has for its own Enterprise row.
+        $commissionMap = [
+            'Essential'  => ['delivery' => 15.00, 'pickup' => 8.00],
+            'Experience' => ['delivery' => 12.00, 'pickup' => 6.00],
+            'Prestige'   => ['delivery' => 10.00, 'pickup' => 5.00],
+            'Enterprise' => ['delivery' => 12.00, 'pickup' => 6.00],
+        ];
+        $rates = $commissionMap[$pkg];
+
+        try {
+            $this->db->prepare("UPDATE shops SET subscription_package = ?, commission_rate = ?, pickup_commission_rate = ? WHERE id = ?")
+                ->execute([$pkg, $rates['delivery'], $rates['pickup'], $shopId]);
+
+            jsonResponse([
+                'success' => true,
+                'message' => "Package updated to {$pkg}",
+                'commission_rate' => $rates['delivery'],
+                'pickup_commission_rate' => $rates['pickup'],
+            ]);
+        } catch (\Exception $e) {
+            error_log('Shop Package Update Error: ' . $e->getMessage());
+            jsonResponse(['success' => false, 'message' => 'Error updating package'], 500);
         }
     }
 

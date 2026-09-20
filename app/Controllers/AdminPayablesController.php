@@ -180,6 +180,11 @@ class AdminPayablesController
                 return false;
             }
 
+            // Founding Supplier Partner Program (Supplier Agreement Sec 7.4.1): lazy-expire
+            // a lapsed 6-month lock before reading commission_rate below, same pattern as
+            // SellerPayoutHelper::createPayoutForOrder().
+            \App\Helpers\FoundingSupplierHelper::applyLazyExpiryIfNeeded((int)$po['supplier_id']);
+
             // Get supplier payment terms + commission rate to calculate due date and net payout
             $stmt = $db->prepare("SELECT payment_terms, commission_rate FROM suppliers WHERE id = ?");
             $stmt->execute([$po['supplier_id']]);

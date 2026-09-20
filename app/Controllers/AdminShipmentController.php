@@ -20,6 +20,33 @@ class AdminShipmentController
     }
 
     /**
+     * Founding Business Partner Program (Business Account Agreement
+     * Sec 4.3/7.9/8.12, draft) - resolve the effective commission rate for a
+     * shipment row that already carries the plan's dp.commission_rate plus
+     * the joined bp.founding_partner/founding_commission_rate_override/
+     * founding_partner_expires_at columns. Still-active override wins; an
+     * expired one is persisted back via FoundingBusinessHelper (lazy expiry
+     * as a side effect of this read, same pattern as FoundingSupplierHelper)
+     * and the plan rate is used instead.
+     */
+    private function resolveFoundingCommissionRate(array $shipment): float
+    {
+        $planRate = (float)($shipment['commission_rate'] ?? 0);
+
+        if ((int)($shipment['founding_partner'] ?? 0) !== 1 || $shipment['founding_commission_rate_override'] === null) {
+            return $planRate;
+        }
+
+        $expiresAt = $shipment['founding_partner_expires_at'] ?? null;
+        if ($expiresAt && strtotime($expiresAt) < time()) {
+            \App\Helpers\FoundingBusinessHelper::applyLazyExpiryIfNeeded((int)$shipment['business_profile_id']);
+            return $planRate;
+        }
+
+        return (float)$shipment['founding_commission_rate_override'];
+    }
+
+    /**
      * List all shipments
      */
     public function index(): void
@@ -132,7 +159,8 @@ class AdminShipmentController
             $stmt = $this->db->prepare("
                 SELECT s.*, bp.company_name,
                        u.first_name, u.last_name, u.email, u.phone,
-                       dp.code AS plan_code, dp.name AS plan_name, dp.commission_rate
+                       dp.code AS plan_code, dp.name AS plan_name, dp.commission_rate,
+                       bp.founding_partner, bp.founding_commission_rate_override, bp.founding_partner_expires_at
                 FROM distribution_shipments s
                 INNER JOIN business_profiles bp ON s.business_profile_id = bp.id
                 INNER JOIN users u ON bp.user_id = u.id
@@ -141,6 +169,9 @@ class AdminShipmentController
             ");
             $stmt->execute([$shipmentId]);
             $shipment = $stmt->fetch(\PDO::FETCH_ASSOC);
+            if ($shipment) {
+                $shipment['commission_rate'] = $this->resolveFoundingCommissionRate($shipment);
+            }
 
             if (!$shipment) {
                 setFlash('error', 'Shipment not found.');
@@ -223,7 +254,8 @@ class AdminShipmentController
             // Agreement Sec. 8: Débutant/Pro are automated per Jack's direction,
             // Enterprise stays a manual custom quote under Sec. 8.5).
             $stmt = $this->db->prepare("
-                SELECT s.*, dp.code AS plan_code, dp.commission_rate
+                SELECT s.*, dp.code AS plan_code, dp.commission_rate,
+                       bp.founding_partner, bp.founding_commission_rate_override, bp.founding_partner_expires_at
                 FROM distribution_shipments s
                 INNER JOIN business_profiles bp ON s.business_profile_id = bp.id
                 LEFT JOIN distribution_plans dp ON bp.distribution_plan_id = dp.id
@@ -231,6 +263,10 @@ class AdminShipmentController
             ");
             $stmt->execute([$shipmentId]);
             $shipment = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            if ($shipment) {
+                $shipment['commission_rate'] = $this->resolveFoundingCommissionRate($shipment);
+            }
 
             if (!$shipment) {
                 setFlash('error', 'Shipment not found or not in submitted status.');

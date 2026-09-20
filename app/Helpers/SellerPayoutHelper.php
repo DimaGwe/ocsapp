@@ -3,19 +3,19 @@
 namespace App\Helpers;
 
 /**
- * SellerPayoutHelper - minimal seller payout ledger (Ecosystem Backend
- * Requirements Sec. 4.3 prerequisite - "deduct from the seller's next
- * pending payout" needs a real payout to deduct from, and none existed
- * anywhere in this codebase before this).
+ * SellerPayoutHelper - seller payout ledger (Ecosystem Backend Requirements Sec.
+ * 4.3 prerequisite - "deduct from the seller's next pending payout" needs a real
+ * payout to deduct from, and none existed anywhere in this codebase before this).
  *
- * Deliberately scoped down: a single flat shops.commission_rate, not the
- * full tiered $0/$39/$89 + delivery-vs-pickup commission split from Seller
- * Central's marketing copy (that's a separate, comparably-sized system to
- * build later, mirroring what distribution_plans needed for Sec 5). This
- * ledger tracks what a shop is owed per order and lets a chargeback net
- * against it; it does not execute actual bank-transfer payouts - admin
- * marks rows paid manually, same precedent as supplier/distribution
- * payments.
+ * Tiered delivery/pickup commission split (Sec B of the Founding Partner Program
+ * work) now backs this - shops.commission_rate for delivery orders,
+ * shops.pickup_commission_rate for pickup orders (Sec A's self-pickup checkout).
+ * Also applies the Founding Seller Partner benefits (Sec C): a locked Experience-
+ * tier rate for 12 months and the first 5 delivery orders commission-free, per
+ * Seller Agreement Sec 6.1-6.2/Schedule A. This ledger tracks what a shop is owed
+ * per order and lets a chargeback net against it; it does not execute actual
+ * bank-transfer payouts - admin marks rows paid manually, same precedent as
+ * supplier/distribution payments.
  */
 class SellerPayoutHelper
 {
@@ -41,18 +41,50 @@ class SellerPayoutHelper
         }
 
         $stmt = $db->prepare("
-            SELECT o.id, o.shop_id, o.subtotal, s.commission_rate
+            SELECT o.id, o.shop_id, o.subtotal, o.fulfillment_type,
+                   s.commission_rate, s.pickup_commission_rate,
+                   s.founding_partner, s.founding_partner_expires_at, s.founding_free_deliveries_remaining
             FROM orders o
             INNER JOIN shops s ON s.id = o.shop_id
             WHERE o.id = ?
             LIMIT 1
+            FOR UPDATE
         ");
         $stmt->execute([$orderId]);
         $order = $stmt->fetch(\PDO::FETCH_ASSOC);
         if (!$order) return;
 
+        $shopId = (int)$order['shop_id'];
+        $isPickup = ($order['fulfillment_type'] ?? 'delivery') === 'pickup';
+        $isFounding = (int)($order['founding_partner'] ?? 0) === 1;
+        $expiresAt = $order['founding_partner_expires_at'] ?? null;
+
+        // Lazy expiry (no cron infrastructure exists in this codebase - see plan note):
+        // a Founding shop whose 12-month lock has passed drops to Essential-tier rates
+        // as a side effect of this payout, rather than a scheduled job catching it.
+        if ($isFounding && $expiresAt !== null && strtotime($expiresAt) < time()) {
+            $db->prepare("
+                UPDATE shops SET founding_partner = 0, subscription_package = 'Essential',
+                       commission_rate = 15.00, pickup_commission_rate = 8.00
+                WHERE id = ?
+            ")->execute([$shopId]);
+            $order['commission_rate'] = 15.00;
+            $order['pickup_commission_rate'] = 8.00;
+            $isFounding = false;
+        }
+
+        $rate = $isPickup ? (float)$order['pickup_commission_rate'] : (float)$order['commission_rate'];
         $subtotal = (float)$order['subtotal'];
-        $rate = (float)$order['commission_rate'];
+
+        // Founding Seller first-5-deliveries-free (Seller Agreement Sec 6.2.1): scoped to
+        // delivery orders only - "the Vendor's first five (5) completed delivery Orders."
+        $freeRemaining = (int)($order['founding_free_deliveries_remaining'] ?? 0);
+        $usedFreeDelivery = false;
+        if ($isFounding && !$isPickup && $freeRemaining > 0) {
+            $rate = 0.00;
+            $usedFreeDelivery = true;
+        }
+
         $commission = round($subtotal * $rate / 100, 2);
         // Payment Processing Fee (Ecosystem Backend Requirements Sec. 7 / Pricing Strategy Sec.
         // 9.1): industry-standard Stripe/PayPal rate, same base as commission (subtotal, not
@@ -65,7 +97,12 @@ class SellerPayoutHelper
             INSERT INTO seller_payouts
             (shop_id, order_id, subtotal, commission_rate, commission_amount, processing_fee_amount, net_payout_amount, status, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', NOW(), NOW())
-        ")->execute([$order['shop_id'], $orderId, $subtotal, $rate, $commission, $processingFee, $net]);
+        ")->execute([$shopId, $orderId, $subtotal, $rate, $commission, $processingFee, $net]);
+
+        if ($usedFreeDelivery) {
+            $db->prepare("UPDATE shops SET founding_free_deliveries_remaining = founding_free_deliveries_remaining - 1 WHERE id = ?")
+               ->execute([$shopId]);
+        }
     }
 
     /**

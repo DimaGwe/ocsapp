@@ -96,8 +96,8 @@ class AuthController {
             $status = $user['status'];
             $role   = $user['role_name'] ?? 'buyer';
 
-            if ($status === 'pending' && $role === 'delivery') {
-                // Driver applicant — allow through to pending portal
+            if ($status === 'pending' && ($role === 'delivery' || $role === 'seller')) {
+                // Driver applicant / pending seller — allow through with limited access
                 // (fall through; handled below)
             } elseif ($status === 'rejected' && $role === 'delivery') {
                 // Rejected driver — show message and redirect to apply page

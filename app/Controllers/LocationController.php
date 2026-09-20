@@ -58,19 +58,30 @@ class LocationController {
 
             $data = json_decode($response, true);
 
-            // Extract location name
-            $locationName = $data['address']['city'] ??
-                          $data['address']['town'] ??
-                          $data['address']['municipality'] ??
-                          $data['address']['village'] ??
-                          $data['address']['county'] ??
+            // Extract location name (city-level, used for the compact badge)
+            $addr = $data['address'] ?? [];
+            $locationName = $addr['city'] ??
+                          $addr['town'] ??
+                          $addr['municipality'] ??
+                          $addr['village'] ??
+                          $addr['county'] ??
                           'Your Location';
+
+            // Build a concise physical/street-level address when Nominatim
+            // resolved one (house number + road, city) - falls back to its
+            // full display_name, then just the city name if neither exists.
+            if (!empty($addr['road'])) {
+                $streetAddress = trim(($addr['house_number'] ?? '') . ' ' . $addr['road']) . ', ' . $locationName;
+            } else {
+                $streetAddress = $data['display_name'] ?? $locationName;
+            }
 
             // Return successful response
             header('Content-Type: application/json');
             echo json_encode([
                 'success' => true,
                 'location' => $locationName,
+                'street_address' => $streetAddress,
                 'full_address' => $data['display_name'] ?? '',
                 'data' => $data
             ]);

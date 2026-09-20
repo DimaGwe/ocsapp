@@ -1484,7 +1484,7 @@ class DriverApiController
                     "The driver has confirmed collection of PO #{$po['po_number']}. Items are on their way to the customer.",
                     'supplier/orders/view?id=' . $id, 'check-circle',
                     '✅ Articles collectés — BC #' . $po['po_number'],
-                    "Le chauffeur a confirmé la collecte de BC #{$po['po_number']}. Les articles sont en route vers le client."
+                    "Le livreur a confirmé la collecte de BC #{$po['po_number']}. Les articles sont en route vers le client."
                 );
             }
         } catch (\Exception $e) { /* non-fatal */ }

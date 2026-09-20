@@ -1074,6 +1074,30 @@ class AdminController
 
             supplierAuditLog($supplierId, 'status_changed', "Status changed from {$supplier['status']} to {$newStatus}");
 
+            // Founding Supplier Partner Program (Supplier Agreement Sec 4.2/7.4): this
+            // specific transition is the confirmed activation moment the contract ties
+            // the cohort to - not just any change that happens to land on 'active'.
+            if ($supplier['status'] === 'pending_verification' && $newStatus === 'active') {
+                require_once __DIR__ . '/../Helpers/FoundingSupplierHelper.php';
+                $foundingClaim = \App\Helpers\FoundingSupplierHelper::claimSlotIfEligible($supplierId);
+                if ($foundingClaim['eligible']) {
+                    try {
+                        \App\Helpers\NotificationHelper::addSupplierNotification(
+                            $supplierId,
+                            'founding_partner_granted',
+                            'Welcome, Founding Partner!',
+                            "You've been admitted to OCSAPP's Founding Supplier Partner cohort as Founding Partner #{$foundingClaim['founding_partner_number']} of 15 - Prestige-tier commission (5%) locked for 6 months, no monthly fee.",
+                            url('supplier/dashboard'),
+                            'star',
+                            'Bienvenue, Partenaire Fondateur !',
+                            "Vous avez été admis dans la cohorte de Partenaires Fondateurs Fournisseurs d'OCSAPP, à titre de Partenaire Fondateur #{$foundingClaim['founding_partner_number']} sur 15 - taux de commission Prestige (5 %) verrouillé pendant 6 mois, aucun frais mensuel."
+                        );
+                    } catch (\Exception $e) {
+                        error_log('Founding Supplier notification error: ' . $e->getMessage());
+                    }
+                }
+            }
+
             // Send email notification
             try {
                 $subject = ($newStatus === 'active')

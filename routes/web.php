@@ -92,6 +92,8 @@ return [
     'GET /login' => ['AuthController', 'showLogin'],
     'POST /login' => ['AuthController', 'login'],
     'GET /seller/login' => ['AuthController', 'showSellerLogin'],
+    'GET /seller/apply' => ['SellerAuthController', 'apply'],
+    'POST /seller/apply' => ['SellerAuthController', 'submitApplication'],
     'GET /buyer/login' => ['AuthController', 'showBuyerLogin'],
     'GET /delivery/login' => ['AuthController', 'showDriverLogin'],
     'GET /register' => ['AuthController', 'showRegister'],

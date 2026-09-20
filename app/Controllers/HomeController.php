@@ -118,19 +118,20 @@ class HomeController {
         $_SESSION['user_location'] = $location;
         $_SESSION['location'] = $location; // Both keys for compatibility
         
-        // Save additional location data if provided
-        if (isset($data['latitude']) && is_numeric($data['latitude'])) {
+        // Save coordinates if provided; otherwise clear any previous ones so a
+        // name-only reselect doesn't keep radius-filtering shops against the
+        // last-known lat/long instead of the newly chosen location.
+        if (isset($data['latitude']) && is_numeric($data['latitude']) &&
+            isset($data['longitude']) && is_numeric($data['longitude'])) {
             $_SESSION['user_latitude'] = floatval($data['latitude']);
-        }
-        
-        if (isset($data['longitude']) && is_numeric($data['longitude'])) {
             $_SESSION['user_longitude'] = floatval($data['longitude']);
+            $_SESSION['delivery_radius'] = (isset($data['radius']) && is_numeric($data['radius']))
+                ? intval($data['radius'])
+                : 20;
+        } else {
+            unset($_SESSION['user_latitude'], $_SESSION['user_longitude'], $_SESSION['delivery_radius']);
         }
-        
-        if (isset($data['radius']) && is_numeric($data['radius'])) {
-            $_SESSION['delivery_radius'] = intval($data['radius']);
-        }
-        
+
         if (isset($data['city'])) {
             $_SESSION['user_city'] = htmlspecialchars($data['city'], ENT_QUOTES, 'UTF-8');
         }
@@ -333,6 +334,7 @@ class HomeController {
                     s.name as company_name,
                     s.slug,
                     s.logo,
+                    s.shop_type,
                     COUNT(DISTINCT p.id) as product_count,
                     MIN(p.base_price) as min_price
                 FROM shops s
@@ -1177,6 +1179,35 @@ view('buyer.home', [
     }
 
     /**
+     * Build the radius-filter SQL fragment (+ params) for shop queries, based on
+     * the user's saved location in session. Returns an empty fragment - i.e. no
+     * filtering, show everything - when no location is set, matching the "20 km"
+     * badge text on /shops which should only imply real filtering once a location
+     * has actually been chosen. A shop missing lat/long is always kept rather than
+     * silently excluded, since most shops aren't geocoded yet.
+     */
+    private function getLocationFilterClause(): array {
+        if (empty($_SESSION['user_latitude']) || empty($_SESSION['user_longitude'])) {
+            return ['sql' => '', 'params' => []];
+        }
+
+        $lat = (float) $_SESSION['user_latitude'];
+        $lng = (float) $_SESSION['user_longitude'];
+        $radius = (int) ($_SESSION['delivery_radius'] ?? 20);
+
+        return [
+            'sql' => " AND (
+                s.latitude IS NULL OR s.longitude IS NULL OR s.latitude = 0 OR
+                (6371 * acos(
+                    cos(radians(?)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(?))
+                    + sin(radians(?)) * sin(radians(s.latitude))
+                )) <= ?
+            )",
+            'params' => [$lat, $lng, $lat, $radius],
+        ];
+    }
+
+    /**
      * Get counts for all shop types
      * This runs ALWAYS, regardless of filter
      */
@@ -1206,23 +1237,27 @@ view('buyer.home', [
             'local_gems' => 0,
         ];
         
+        $locFilter = $this->getLocationFilterClause();
+
         // Get total count
         $stmt = $db->prepare("
-            SELECT COUNT(*) as total 
-            FROM shops 
-            WHERE is_active = 1 AND is_approved = 1
+            SELECT COUNT(*) as total
+            FROM shops s
+            WHERE s.is_active = 1 AND s.is_approved = 1
+            {$locFilter['sql']}
         ");
-        $stmt->execute();
+        $stmt->execute($locFilter['params']);
         $counts['all'] = (int) $stmt->fetch()['total'];
-        
+
         // Get counts per type
         $stmt = $db->prepare("
-            SELECT shop_type, COUNT(*) as count 
-            FROM shops 
-            WHERE is_active = 1 AND is_approved = 1 
+            SELECT shop_type, COUNT(*) as count
+            FROM shops s
+            WHERE s.is_active = 1 AND s.is_approved = 1
+            {$locFilter['sql']}
             GROUP BY shop_type
         ");
-        $stmt->execute();
+        $stmt->execute($locFilter['params']);
         $results = $stmt->fetchAll();
         
         // Map database types to URL-friendly types
@@ -1242,17 +1277,19 @@ view('buyer.home', [
      */
     private function getAllActiveShops($db, int $page, int $perPage, string $search): array {
         $offset = ($page - 1) * $perPage;
-        
+        $locFilter = $this->getLocationFilterClause();
+
         $sql = "
             SELECT s.*,
                    COUNT(DISTINCT si.id) as product_count
             FROM shops s
             LEFT JOIN shop_inventory si ON s.id = si.shop_id AND si.status = 'active'
             WHERE s.is_active = 1 AND s.is_approved = 1
+            {$locFilter['sql']}
         ";
-        
-        $params = [];
-        
+
+        $params = $locFilter['params'];
+
         if (!empty($search)) {
             $sql .= " AND (s.name LIKE ? OR s.description LIKE ?)";
             $params[] = "%$search%";
@@ -1274,19 +1311,21 @@ view('buyer.home', [
      */
     private function getShopsByType($db, string $type, int $page, int $perPage, string $search): array {
         $offset = ($page - 1) * $perPage;
-        
+        $locFilter = $this->getLocationFilterClause();
+
         $sql = "
             SELECT s.*,
                    COUNT(DISTINCT si.id) as product_count
             FROM shops s
             LEFT JOIN shop_inventory si ON s.id = si.shop_id AND si.status = 'active'
-            WHERE s.is_active = 1 
-            AND s.is_approved = 1 
+            WHERE s.is_active = 1
+            AND s.is_approved = 1
             AND s.shop_type = ?
+            {$locFilter['sql']}
         ";
-        
-        $params = [$type];
-        
+
+        $params = array_merge([$type], $locFilter['params']);
+
         if (!empty($search)) {
             $sql .= " AND (s.name LIKE ? OR s.description LIKE ?)";
             $params[] = "%$search%";
@@ -1432,7 +1471,11 @@ view('buyer.home', [
                 }
             }
 
-            view('buyer.shop-single', [
+            // One-off pitch variant: Caro Resto's shop opens on a branded display
+            // view and switches in-place to the storefront view (see shop-single-caroresto.php)
+            $shopView = ($shop['slug'] === 'demo-caroresto') ? 'buyer.shop-single-caroresto' : 'buyer.shop-single';
+
+            view($shopView, [
                 'shop' => $shop,
                 'shopHours' => $shopHours,
                 'products' => $products,

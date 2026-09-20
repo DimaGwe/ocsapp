@@ -658,6 +658,22 @@ class AdminDeliveryController {
 
             $this->db->commit();
 
+            // Founding Driver Partner Program (Driver Agreement Sec 6.2/8.13/Schedule D, draft) -
+            // 50-driver cohort, permanent badge only (milestone/referral bonus + dispatch
+            // priority deferred, no crediting/tier mechanism exists yet).
+            try {
+                $foundingResult = \App\Helpers\FoundingDriverHelper::claimSlotIfEligible((int)$finalUserId);
+                if ($foundingResult['eligible']) {
+                    \App\Helpers\NotificationHelper::addDriverNotification(
+                        (int)$finalUserId,
+                        "Welcome as Founding Driver Partner #{$foundingResult['founding_driver_number']}! Your permanent badge is now active on your profile.",
+                        'founding_partner'
+                    );
+                }
+            } catch (\Exception $e) {
+                logger('FoundingDriverHelper claim on approval failed: ' . $e->getMessage(), 'warning');
+            }
+
             // Auto-unlock training module 1 for the approved driver
             try {
                 $firstModule = $this->db->query("SELECT id FROM training_modules WHERE is_active=1 ORDER BY order_num ASC LIMIT 1")->fetchColumn();
@@ -2929,7 +2945,7 @@ public function schedulePickup(): void {
                 'supplier/pickup',
                 'truck',
                 'Collecte confirmée',
-                'Votre demande de collecte du ' . date('j M Y', strtotime($req['requested_date'])) . ' a été confirmée. Notre chauffeur arrivera entre ' . date('G\hi', strtotime($req['requested_time_from'])) . ' et ' . date('G\hi', strtotime($req['requested_time_to'])) . '.'
+                'Votre demande de collecte du ' . date('j M Y', strtotime($req['requested_date'])) . ' a été confirmée. Notre livreur arrivera entre ' . date('G\hi', strtotime($req['requested_time_from'])) . ' et ' . date('G\hi', strtotime($req['requested_time_to'])) . '.'
             );
         } catch (\Exception $e) {
             error_log("Pickup schedule supplier notification error: " . $e->getMessage());

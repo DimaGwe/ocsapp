@@ -1027,6 +1027,15 @@ class AdminDistributionController
                 return;
             }
 
+            // Founding Supplier Partner Program (Supplier Agreement Sec 7.4.1): lazy-expire
+            // a lapsed 6-month lock, then re-read commission_rate fresh - the JOIN above may
+            // have captured a stale pre-expiry value. Same pattern as
+            // AdminPayablesController::createInvoiceForPO().
+            \App\Helpers\FoundingSupplierHelper::applyLazyExpiryIfNeeded((int)$po['supplier_id']);
+            $freshRateStmt = $this->db->prepare("SELECT commission_rate FROM suppliers WHERE id = ?");
+            $freshRateStmt->execute([$po['supplier_id']]);
+            $po['commission_rate'] = $freshRateStmt->fetchColumn();
+
             // Same wholesale-commission + processing-fee deduction as
             // AdminPayablesController::createInvoiceForPO() - both computed on goods
             // subtotal only, deducted from what OCS actually pays the supplier. The
@@ -1160,7 +1169,7 @@ class AdminDistributionController
                 'supplier/orders/view?id=' . $poId,
                 'credit-card',
                 '💳 Paiement reçu — BC #' . $po['po_number'],
-                'Votre paiement de ' . number_format((float)$po['total_amount'], 2) . ' $ CAD a été envoyé pour BC #' . $po['po_number'] . '. Veuillez préparer les marchandises pour la collecte par le chauffeur.'
+                'Votre paiement de ' . number_format((float)$po['total_amount'], 2) . ' $ CAD a été envoyé pour BC #' . $po['po_number'] . '. Veuillez préparer les marchandises pour la collecte par le livreur.'
             );
 
             // 6. Check if ALL POs for this DR are now admin-paid → advance to processing
@@ -1943,8 +1952,8 @@ class AdminDistributionController
                         "Driver {$driverName} has been assigned and is on the way to collect PO #{$supPo['po_number']}.",
                         'supplier/orders/view?id=' . $supPo['id'],
                         'truck',
-                        '🚗 Chauffeur en route — BC #' . $supPo['po_number'],
-                        "Le chauffeur {$driverName} a été assigné et est en route pour collecter BC #{$supPo['po_number']}."
+                        '🚗 Livreur en route — BC #' . $supPo['po_number'],
+                        "Le livreur {$driverName} a été assigné et est en route pour collecter BC #{$supPo['po_number']}."
                     );
                 }
             } catch (\Exception $e) { /* non-fatal */ }

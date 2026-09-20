@@ -2062,7 +2062,7 @@ class EmailHelper
         $html = str_replace('{{first_name}}',   htmlspecialchars($data['first_name'] ?? ''), $html);
         $html = str_replace('{{current_year}}', date('Y'), $html);
 
-        return self::send($data['email'], 'Compte chauffeur OCSAPP supprimé / Your OCSAPP Driver Account Has Been Removed', $html);
+        return self::send($data['email'], 'Compte livreur OCSAPP supprimé / Your OCSAPP Driver Account Has Been Removed', $html);
     }
 
     public static function sendBuyerAccountRemoved(array $data): bool

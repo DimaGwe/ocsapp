@@ -9,61 +9,25 @@ namespace App\Controllers;
 class PublicCategoryController {
 
     /**
-     * Display all categories page
+     * Display all categories page (Marché Central taxonomy, static, matches /home)
      */
     public function index(): void {
-        try {
-            $db = \Database::getConnection();
+        $currentLang = $_SESSION['language'] ?? 'fr';
+        $t = getTranslations($currentLang);
 
-            // Get current language
-            $currentLang = $_SESSION['language'] ?? 'fr';
-            $t = getTranslations($currentLang);
-
-            // Get cart count for header
-            $cartCount = 0;
-            if (isset($_SESSION['cart']) && is_array($_SESSION['cart'])) {
-                foreach ($_SESSION['cart'] as $item) {
-                    $cartCount += $item['quantity'] ?? 0;
-                }
+        // Get cart count for header
+        $cartCount = 0;
+        if (isset($_SESSION['cart']) && is_array($_SESSION['cart'])) {
+            foreach ($_SESSION['cart'] as $item) {
+                $cartCount += $item['quantity'] ?? 0;
             }
-
-            // Get all active categories with product count
-            $stmt = $db->query("
-                SELECT
-                    c.id,
-                    c.name,
-                    c.slug,
-                    c.description,
-                    c.image,
-                    c.icon,
-                    COUNT(DISTINCT pc.product_id) as product_count
-                FROM categories c
-                LEFT JOIN product_categories pc ON c.id = pc.category_id
-                LEFT JOIN products p ON pc.product_id = p.id AND p.status = 'active'
-                WHERE c.is_active = 1
-                GROUP BY c.id
-                ORDER BY c.name ASC
-            ");
-            $categories = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-
-            view('buyer.categories', [
-                'categories' => $categories,
-                'cartCount' => $cartCount,
-                't' => $t,
-                'currentLang' => $currentLang,
-            ]);
-
-        } catch (\PDOException $e) {
-            logger("Categories page error: " . $e->getMessage(), 'error');
-
-            // Fallback to empty state
-            view('buyer.categories', [
-                'categories' => [],
-                'cartCount' => 0,
-                't' => getTranslations('fr'),
-                'currentLang' => 'fr',
-            ]);
         }
+
+        view('buyer.categories', [
+            'cartCount' => $cartCount,
+            't' => $t,
+            'currentLang' => $currentLang,
+        ]);
     }
 
     /**
