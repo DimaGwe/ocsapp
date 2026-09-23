@@ -26,6 +26,35 @@ class WaitlistController
         view('waitlist/index', $data);
     }
 
+    /**
+     * One-click unsubscribe from waitlist emails (link in the confirmation email footer).
+     * Token is random per signup; unknown/missing tokens show the same neutral page.
+     */
+    public function unsubscribe(): void
+    {
+        $token = preg_replace('/[^a-f0-9]/', '', strtolower((string) get('t', '')));
+        $done  = false;
+
+        if (strlen($token) === 32) {
+            try {
+                $stmt = $this->db->prepare("
+                    UPDATE waitlist
+                    SET unsubscribed_at = COALESCE(unsubscribed_at, NOW()), marketing_consent = 0
+                    WHERE unsubscribe_token = ?
+                ");
+                $stmt->execute([$token]);
+                // rowCount() is 0 when already unsubscribed and nothing changed, so re-check
+                $chk = $this->db->prepare("SELECT 1 FROM waitlist WHERE unsubscribe_token = ? AND unsubscribed_at IS NOT NULL");
+                $chk->execute([$token]);
+                $done = (bool) $chk->fetchColumn();
+            } catch (\PDOException $e) {
+                logger('Waitlist unsubscribe error: ' . $e->getMessage(), 'error');
+            }
+        }
+
+        view('waitlist/unsubscribed', ['done' => $done]);
+    }
+
     public function store(): void
     {
         $token = post(env('CSRF_TOKEN_NAME', '_csrf_token'), '');
@@ -156,6 +185,7 @@ class WaitlistController
             }
 
             $refCode   = $this->generateCode();
+            $unsubToken = bin2hex(random_bytes(16));
             $ipAddress = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? null;
             if ($ipAddress) {
                 $ipAddress = substr(explode(',', $ipAddress)[0], 0, 45);
@@ -164,16 +194,16 @@ class WaitlistController
             $stmt = $this->db->prepare("
                 INSERT INTO waitlist (
                     email, phone, first_name, last_name, business_name, city_region, discovery_source, role, locale,
-                    referral_code, referred_by, ip_address, marketing_consent,
+                    referral_code, referred_by, unsubscribe_token, ip_address, marketing_consent,
                     seller_business_type, seller_online_store, supplier_products, supplier_service_area,
                     business_sector, business_need, driver_area, driver_vehicle, driver_availability,
                     buyer_interest, partner_interest, utm_source, utm_medium, utm_campaign, utm_content, referral_source
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             $stmt->execute([
                 $email, $phone, $firstName, $lastName, $businessName, $cityRegion, $discoverySource, $role, $preferredLang,
-                $refCode, $referredBy, $ipAddress, $marketingConsent,
+                $refCode, $referredBy, $unsubToken, $ipAddress, $marketingConsent,
                 $sellerBusinessType, $sellerOnlineStore, $supplierProducts, $supplierServiceArea,
                 $businessSector, $businessNeed, $driverArea, $driverVehicle, $driverAvailability,
                 $buyerInterest, $partnerInterest, $utmSource, $utmMedium, $utmCampaign, $utmContent, $referralSrc,
@@ -183,7 +213,7 @@ class WaitlistController
             $pos   = $this->getPosition($newId);
 
             $this->notifyAdmin($newId, $firstName, $lastName, $email, $role, $businessName);
-            $this->sendConfirmation($email, $firstName, $role, $refCode, $pos, $fr, $businessName);
+            $this->sendConfirmation($email, $firstName, $role, $refCode, $pos, $fr, $businessName, $unsubToken);
 
             $url = url('/waitlist') . '?joined=1&pos=' . $pos . '&myref=' . $refCode . '&role=' . $role;
             jsonResponse(['success' => true, 'redirect' => $url]);
@@ -234,7 +264,7 @@ class WaitlistController
         return $code;
     }
 
-    private function sendConfirmation(string $email, string $firstName, string $role, string $refCode, int $pos, bool $fr, ?string $businessName = null): void
+    private function sendConfirmation(string $email, string $firstName, string $role, string $refCode, int $pos, bool $fr, ?string $businessName = null, string $unsubToken = ''): void
     {
         // Both languages provided so the email is always bilingual (FR + EN),
         // regardless of which language the visitor used on the form.
@@ -256,11 +286,23 @@ class WaitlistController
         ];
 
         $refUrl      = url('/waitlist') . '?ref=' . $refCode;
+        $unsubUrl    = url('/waitlist/unsubscribe') . '?t=' . $unsubToken;
+
+        // Role-specific next step: link to that role's Central page
+        $centralByRole = [
+            'buyer'    => ['buyer-central',    'Acheteur Central',    'Buyer Central'],
+            'seller'   => ['seller-central',   'Vendeur Central',     'Seller Central'],
+            'supplier' => ['supplier-central', 'Fournisseur Central', 'Supplier Central'],
+            'driver'   => ['driver-central',   'Livreur Central',     'Driver Central'],
+            'business' => ['distribution',     'Entreprise Centrale', 'Business Central'],
+        ];
+        $central = $centralByRole[$role] ?? null;
+        $centralUrl = $central ? url($central[0]) : null;
         $roleLabelFr = $roleLabelsFr[$role] ?? $role;
         $roleLabelEn = $roleLabelsEn[$role] ?? $role;
 
         // Bilingual subject (FR first per QC law)
-        $subject = 'Vous êtes sur la liste ! / You\'re on the list! - OCSAPP';
+        $subject = 'Bienvenue sur la liste d\'attente OCSAPP / Welcome to the OCSAPP waitlist';
 
         ob_start();
         require __DIR__ . '/../Views/emails/waitlist-confirmation.php';

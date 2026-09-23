@@ -12,7 +12,7 @@
 
         <!-- Header -->
         <tr>
-          <td style="background:linear-gradient(135deg,#00b207 0%,#009206 100%);padding:40px 30px;text-align:center;border-radius:12px 12px 0 0;">
+          <td bgcolor="#00b207" style="background-color:#00b207;background:linear-gradient(135deg,#00b207 0%,#009206 100%);padding:40px 30px;text-align:center;border-radius:12px 12px 0 0;">
             <img src="https://ocsapp.ca/assets/images/logo.png" alt="OCSAPP" style="max-width:160px;height:auto;margin-bottom:16px;">
             <h1 style="margin:0;color:#fff;font-size:26px;font-weight:700;">
               <?= $fr ? 'C\'est l\'heure - OCSAPP est ouvert !' : 'It\'s time - OCSAPP is live!' ?>
@@ -53,9 +53,9 @@
         <!-- Footer -->
         <tr>
           <td style="background:#f9fafb;padding:24px 30px;border-radius:0 0 12px 12px;border-top:1px solid #e5e7eb;text-align:center;">
-            <p style="margin:0 0 8px;font-size:12px;color:#9ca3af;">OCSAPP | <?= $fr ? 'Grand Montréal, Québec' : 'Greater Montreal, Quebec' ?></p>
+            <p style="margin:0 0 8px;font-size:12px;color:#9ca3af;">OCSAPP Inc. | <?= $fr ? 'Siège social : Laval, Québec (H7H)' : 'Registered office: Laval, Quebec (H7H)' ?> | <a href="mailto:info@ocsapp.ca" style="color:#9ca3af;">info@ocsapp.ca</a></p>
             <p style="margin:0;font-size:12px;color:#9ca3af;">
-              <a href="<?= url('/unsubscribe') ?>?email=<?= urlencode($entry['email']) ?>" style="color:#9ca3af;">
+              <a href="<?= url('/waitlist/unsubscribe') ?>?t=<?= htmlspecialchars($entry['unsubscribe_token'] ?? '', ENT_QUOTES) ?>" style="color:#9ca3af;">
                 <?= $fr ? 'Se désabonner' : 'Unsubscribe' ?>
               </a>
             </p>

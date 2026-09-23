@@ -95,7 +95,7 @@ class AdminWaitlistController
         $ids = array_map('intval', $ids);
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
 
-        $stmt = $this->db->prepare("SELECT * FROM waitlist WHERE id IN ({$placeholders}) AND status = 'pending'");
+        $stmt = $this->db->prepare("SELECT * FROM waitlist WHERE id IN ({$placeholders}) AND status = 'pending' AND unsubscribed_at IS NULL");
         $stmt->execute($ids);
         $entries = $stmt->fetchAll();
 

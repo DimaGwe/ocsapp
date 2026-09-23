@@ -156,6 +156,7 @@ return [
     // WAITLIST
     // ===================================
     'GET /waitlist'  => ['WaitlistController', 'index'],
+    'GET /waitlist/unsubscribe' => ['WaitlistController', 'unsubscribe'],
     'POST /waitlist' => ['WaitlistController', 'store'],
 
     // ===================================
