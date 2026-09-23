@@ -118,11 +118,11 @@ $cartCount = $cartCount ?? 0;
         <a class="mc-quick-card" href="<?= url('shops') ?>"><div class="mc-quick-ico"><i class="fa-solid fa-store"></i></div><div><strong><?= $fr ? 'Commerces' : 'Shops' ?></strong><span><?= $fr ? 'Voir les boutiques' : 'View storefronts' ?></span></div></a>
         <a class="mc-quick-card" href="#mc-nearby"><div class="mc-quick-ico"><i class="fa-solid fa-location-crosshairs"></i></div><div><strong><?= $fr ? 'À proximité' : 'Nearby' ?></strong><span><?= $fr ? 'Découvrir autour de vous' : 'Discover around you' ?></span></div></a>
         <a class="mc-quick-card" href="#mc-produits"><div class="mc-quick-ico"><i class="fa-solid fa-bag-shopping"></i></div><div><strong><?= $fr ? 'Produits' : 'Products' ?></strong><span><?= $fr ? 'Magasiner maintenant' : 'Shop now' ?></span></div></a>
-        <a class="mc-quick-card" href="<?= url('deals') ?>"><div class="mc-quick-ico"><i class="fa-solid fa-truck-fast"></i></div><div><strong><?= $fr ? 'Livraison' : 'Delivery' ?></strong><span><?= $fr ? 'Rapide ou planifiée' : 'Fast or scheduled' ?></span></div></a>
+        <a class="mc-quick-card" href="<?= url('buyer-central') ?>"><div class="mc-quick-ico"><i class="fa-solid fa-truck-fast"></i></div><div><strong><?= $fr ? 'Livraison' : 'Delivery' ?></strong><span><?= $fr ? 'Rapide ou planifiée' : 'Fast or scheduled' ?></span></div></a>
       </div>
     </section>
 
-    <!-- Category taxonomy (informational) -->
+    <!-- Category taxonomy: each card filters /shops by type (same mapping as categories.php) -->
     <section class="mc-section mc-section-soft">
       <div class="mc-section-head">
         <div><span class="mc-eyebrow"><?= $fr ? 'Magasinez par besoin' : 'Shop by need' ?></span><h2><?= $fr ? 'Tout ce qu\'il vous faut, plus simplement.' : 'Everything you need, more simply.' ?></h2></div>
@@ -131,24 +131,24 @@ $cartCount = $cartCount ?? 0;
       <div class="mc-taxonomy-grid">
         <?php
         $taxonomy = [
-          ['icon-food-dining', $fr ? 'Restauration' : 'Food & Dining', $fr ? 'Restaurants, prêts-à-manger et saveurs locales.' : 'Restaurants, ready-to-eat and local flavors.'],
-          ['icon-grocery', $fr ? 'Épicerie' : 'Grocery', $fr ? 'Produits frais et essentiels du quotidien.' : 'Fresh produce and everyday essentials.'],
-          ['icon-health-pharmacy', $fr ? 'Santé & pharmacie' : 'Health & Pharmacy', $fr ? 'Produits de santé, soins et essentiels bien-être.' : 'Health products, care and wellness essentials.'],
-          ['icon-boutique', $fr ? 'Mode & boutiques' : 'Fashion & Boutiques', $fr ? 'Mode, accessoires et commerces spécialisés.' : 'Fashion, accessories and specialty shops.'],
-          ['icon-wellness-beauty', $fr ? 'Bien-être & beauté' : 'Wellness & Beauty', $fr ? 'Soins personnels, beauté et mieux-être.' : 'Personal care, beauty and wellbeing.'],
-          ['icon-events-catering', $fr ? 'Événements & traiteur' : 'Events & Catering', $fr ? 'Services et produits pour vos occasions.' : 'Services and products for your occasions.'],
-          ['icon-local-gems', $fr ? 'Artisans locaux' : 'Local Artisans', $fr ? 'Créateurs, produits faits ici et petites séries.' : 'Makers, locally-made goods and small batches.'],
-          ['icon-automotive', $fr ? 'Pièces auto & industrielles' : 'Auto & Industrial Parts', $fr ? 'Pièces, fournitures et besoins spécialisés.' : 'Parts, supplies and specialized needs.'],
-          ['icon-home-everyday', $fr ? 'Maison & quotidien' : 'Home & Everyday', $fr ? 'Essentiels pour la maison et la vie courante.' : 'Essentials for home and everyday life.'],
-          ['icon-electronics', $fr ? 'Électronique & technologie' : 'Electronics & Tech', $fr ? 'Technologie, accessoires et appareils utiles.' : 'Technology, accessories and useful devices.'],
-          ['icon-world-flavors', $fr ? 'Saveurs du monde' : 'World Flavors', $fr ? 'Produits et cuisines qui reflètent nos communautés.' : 'Products and cuisines that reflect our communities.'],
+          ['icon-food-dining', 'food_dining', $fr ? 'Restauration' : 'Food & Dining', $fr ? 'Restaurants, prêts-à-manger et saveurs locales.' : 'Restaurants, ready-to-eat and local flavors.'],
+          ['icon-grocery', 'grocery', $fr ? 'Épicerie' : 'Grocery', $fr ? 'Produits frais et essentiels du quotidien.' : 'Fresh produce and everyday essentials.'],
+          ['icon-health-pharmacy', 'health_pharmacy', $fr ? 'Santé & pharmacie' : 'Health & Pharmacy', $fr ? 'Produits de santé, soins et essentiels bien-être.' : 'Health products, care and wellness essentials.'],
+          ['icon-boutique', 'boutique', $fr ? 'Mode & boutiques' : 'Fashion & Boutiques', $fr ? 'Mode, accessoires et commerces spécialisés.' : 'Fashion, accessories and specialty shops.'],
+          ['icon-wellness-beauty', 'wellness_beauty', $fr ? 'Bien-être & beauté' : 'Wellness & Beauty', $fr ? 'Soins personnels, beauté et mieux-être.' : 'Personal care, beauty and wellbeing.'],
+          ['icon-events-catering', 'events_catering', $fr ? 'Événements & traiteur' : 'Events & Catering', $fr ? 'Services et produits pour vos occasions.' : 'Services and products for your occasions.'],
+          ['icon-local-gems', 'local_gems', $fr ? 'Artisans locaux' : 'Local Artisans', $fr ? 'Créateurs, produits faits ici et petites séries.' : 'Makers, locally-made goods and small batches.'],
+          ['icon-automotive', 'automotive', $fr ? 'Pièces auto & industrielles' : 'Auto & Industrial Parts', $fr ? 'Pièces, fournitures et besoins spécialisés.' : 'Parts, supplies and specialized needs.'],
+          ['icon-home-everyday', 'home_everyday', $fr ? 'Maison & quotidien' : 'Home & Everyday', $fr ? 'Essentiels pour la maison et la vie courante.' : 'Essentials for home and everyday life.'],
+          ['icon-electronics', 'electronics', $fr ? 'Électronique & technologie' : 'Electronics & Tech', $fr ? 'Technologie, accessoires et appareils utiles.' : 'Technology, accessories and useful devices.'],
+          ['icon-world-flavors', 'food_drink', $fr ? 'Saveurs du monde' : 'World Flavors', $fr ? 'Produits et cuisines qui reflètent nos communautés.' : 'Products and cuisines that reflect our communities.'],
         ];
         foreach ($taxonomy as $cat):
         ?>
-          <a class="mc-taxonomy-card" href="<?= url('categories') ?>">
+          <a class="mc-taxonomy-card" href="<?= url('shops?type=' . $cat[1]) ?>">
             <div class="mc-taxonomy-art"><img src="<?= asset('images/marketplace-categories/' . $cat[0] . '.jpg') ?>" alt=""></div>
-            <h3><?= $cat[1] ?></h3>
-            <p><?= $cat[2] ?></p>
+            <h3><?= $cat[2] ?></h3>
+            <p><?= $cat[3] ?></p>
           </a>
         <?php endforeach; ?>
       </div>
