@@ -43,7 +43,9 @@ class WaitlistController
         $email        = sanitize(post('email', ''));
         $phone        = sanitize(post('phone', ''));
         $role         = sanitize(post('role', ''));
-        $ref          = sanitize(post('ref', ''));
+        // Referral code: typed by hand or pre-filled from ?ref=. Codes are A-Z0-9,
+        // so strip spaces/dashes people add when copying it from a message.
+        $ref          = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', (string) post('ref', '')));
 
         $discoverySource = sanitize(post('discovery_source', ''));
         $marketingConsent = post('marketing_consent', '') === 'yes' ? 1 : 0;
@@ -139,12 +141,18 @@ class WaitlistController
 
             // Validate referrer code
             $referredBy = null;
-            if ($ref) {
+            if ($ref !== '') {
                 $stmt = $this->db->prepare("SELECT referral_code FROM waitlist WHERE referral_code = ?");
                 $stmt->execute([$ref]);
-                if ($stmt->fetch()) {
-                    $referredBy = $ref;
+                $referrer = $stmt->fetch();
+                if (!$referrer) {
+                    // Tell the user instead of silently dropping it, so a typo can be fixed.
+                    jsonResponse(['success' => false, 'message' => $fr
+                        ? 'Ce code de parrainage est introuvable. Vérifiez-le ou laissez le champ vide.'
+                        : 'That referral code was not found. Check it or leave the field empty.']);
+                    return;
                 }
+                $referredBy = $referrer['referral_code'];
             }
 
             $refCode   = $this->generateCode();

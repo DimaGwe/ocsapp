@@ -2,9 +2,10 @@
 /**
  * Waitlist confirmation email - BILINGUAL (FR + EN).
  * Always renders both languages regardless of the visitor's chosen language.
- * Variables in scope: $firstName, $roleLabelFr, $roleLabelEn, $pos, $refUrl, $email
+ * Variables in scope: $firstName, $roleLabelFr, $roleLabelEn, $pos, $refUrl, $refCode, $email
  */
-$refUrlSafe = htmlspecialchars($refUrl ?? '', ENT_QUOTES);
+$refUrlSafe  = htmlspecialchars($refUrl ?? '', ENT_QUOTES);
+$refCodeSafe = htmlspecialchars($refCode ?? '', ENT_QUOTES);
 $year       = date('Y');
 ?>
 <!DOCTYPE html>
@@ -53,11 +54,13 @@ $year       = date('Y');
             <table role="presentation" style="width:100%;background:#f9fafb;border:1.5px dashed #e5e7eb;border-radius:10px;margin-bottom:28px;">
               <tr>
                 <td style="padding:20px;">
+                  <p style="margin:0 0 8px;font-size:.75rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:1px;">Votre code de parrainage</p>
+                  <p style="margin:0 0 16px;font-size:22px;font-weight:800;color:#111;letter-spacing:3px;font-family:'Courier New',monospace;"><?= $refCodeSafe ?></p>
                   <p style="margin:0 0 8px;font-size:.75rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:1px;">Votre lien de parrainage</p>
                   <p style="margin:0 0 10px;font-size:14px;color:#111;word-break:break-all;">
                     <a href="<?= $refUrlSafe ?>" style="color:#00b207;font-weight:600;"><?= $refUrlSafe ?></a>
                   </p>
-                  <p style="margin:0;font-size:.8rem;color:#6b7280;">Partagez ce lien avec vos contacts. Chaque inscription via votre lien est comptée !</p>
+                  <p style="margin:0;font-size:.8rem;color:#6b7280;">Partagez ce lien ou votre code avec vos contacts. Chaque inscription avec votre code est comptée !</p>
                 </td>
               </tr>
             </table>
@@ -116,11 +119,13 @@ $year       = date('Y');
             <table role="presentation" style="width:100%;background:#f9fafb;border:1.5px dashed #e5e7eb;border-radius:10px;margin-bottom:28px;">
               <tr>
                 <td style="padding:20px;">
+                  <p style="margin:0 0 8px;font-size:.75rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:1px;">Your referral code</p>
+                  <p style="margin:0 0 16px;font-size:22px;font-weight:800;color:#111;letter-spacing:3px;font-family:'Courier New',monospace;"><?= $refCodeSafe ?></p>
                   <p style="margin:0 0 8px;font-size:.75rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:1px;">Your referral link</p>
                   <p style="margin:0 0 10px;font-size:14px;color:#111;word-break:break-all;">
                     <a href="<?= $refUrlSafe ?>" style="color:#00b207;font-weight:600;"><?= $refUrlSafe ?></a>
                   </p>
-                  <p style="margin:0;font-size:.8rem;color:#6b7280;">Share this link with your network. Every signup via your link is counted!</p>
+                  <p style="margin:0;font-size:.8rem;color:#6b7280;">Share this link or your code with your network. Every signup with your code is counted!</p>
                 </td>
               </tr>
             </table>

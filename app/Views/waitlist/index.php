@@ -217,6 +217,11 @@ $myRoleLabel = $roleLabels[$myRole] ?? '';
 
       <?php if ($refUrl): ?>
       <div class="wl-ref-box">
+        <label><?= $fr ? 'Votre code de parrainage' : 'Your referral code' ?></label>
+        <div class="wl-ref-copy-row" style="margin-bottom:14px">
+          <input type="text" id="ref-code-mine" value="<?= $myRef ?>" readonly style="font-family:'Poppins',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:.12em;text-align:center">
+          <button class="wl-btn-copy" onclick="copyRef('ref-code-mine')"><?= $fr ? 'Copier' : 'Copy' ?></button>
+        </div>
         <label><?= $fr ? 'Votre lien de parrainage' : 'Your referral link' ?></label>
         <div class="wl-ref-copy-row">
           <input type="text" id="ref-link" value="<?= htmlspecialchars($refUrl) ?>" readonly>
@@ -239,9 +244,6 @@ $myRoleLabel = $roleLabels[$myRole] ?? '';
 
       <form id="waitlist-form" novalidate>
         <input type="hidden" name="<?= htmlspecialchars(env('CSRF_TOKEN_NAME', '_csrf_token')) ?>" value="<?= htmlspecialchars(csrfToken()) ?>">
-        <?php if ($ref): ?>
-        <input type="hidden" name="ref" value="<?= htmlspecialchars($ref) ?>">
-        <?php endif; ?>
         <input type="hidden" name="utm_source" id="utm_source">
         <input type="hidden" name="utm_medium" id="utm_medium">
         <input type="hidden" name="utm_campaign" id="utm_campaign">
@@ -388,6 +390,12 @@ $myRoleLabel = $roleLabels[$myRole] ?? '';
             <option value="web"><?= $fr ? 'Recherche Web' : 'Web search' ?></option>
             <option value="other"><?= $fr ? 'Autre' : 'Other' ?></option>
           </select>
+        </div>
+
+        <div class="wl-form-group">
+          <label for="ref-code"><?= $fr ? 'Code de parrainage' : 'Referral code' ?> <span style="font-weight:400;color:#6b7280"><?= $fr ? '(facultatif)' : '(optional)' ?></span></label>
+          <input type="text" id="ref-code" name="ref" value="<?= $ref ?>" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="<?= $fr ? 'Ex. : A3F9C21B' : 'e.g. A3F9C21B' ?>" style="text-transform:uppercase;letter-spacing:.08em">
+          <span class="wl-field-help"><?= $fr ? "Quelqu'un vous a invité ? Entrez le code à 8 caractères qu'il vous a transmis." : 'Did someone invite you? Enter the 8-character code they shared with you.' ?></span>
         </div>
 
         <div class="wl-consent-row">
@@ -583,8 +591,8 @@ document.getElementById('waitlist-form')?.addEventListener('submit', async funct
   }
 });
 
-function copyRef() {
-  const inp = document.getElementById('ref-link');
+function copyRef(id = 'ref-link') {
+  const inp = document.getElementById(id);
   inp.select();
   navigator.clipboard?.writeText(inp.value).catch(() => document.execCommand('copy'));
   const btn = inp.nextElementSibling;
