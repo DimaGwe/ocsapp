@@ -968,6 +968,8 @@ return [
     'GET /api/planner/meetings/show' => ['Api\\PlannerMeetingsController', 'show'],
     'GET /api/planner/meetings/generate-email' => ['Api\\PlannerMeetingsController', 'generateEmail'],
     'POST /api/planner/meetings/send-email' => ['Api\\PlannerMeetingsController', 'sendEmail'],
+    'GET /api/planner/meetings/generate-invite' => ['Api\\PlannerMeetingsController', 'generateInvite'],
+    'POST /api/planner/meetings/send-invite' => ['Api\\PlannerMeetingsController', 'sendInvite'],
     'POST /api/planner/meetings/item' => ['Api\\PlannerMeetingsController', 'addItem'],
     'DELETE /api/planner/meetings/item' => ['Api\\PlannerMeetingsController', 'deleteItem'],
     'POST /api/planner/meetings/action' => ['Api\\PlannerMeetingsController', 'addAction'],

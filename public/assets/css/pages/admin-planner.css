@@ -2208,6 +2208,8 @@
     .meeting-status-badge.in_progress { background: #fef5e7; color: #f39c12; }
     .meeting-status-badge.completed { background: #e8f5e9; color: #00b207; }
     .meeting-status-badge.sent { background: #ebf5fb; color: #3498db; }
+    .meeting-status-badge.invited { background: #f3e8ff; color: #7c3aed; }
+    .meeting-card-meta .invite-sent { color: #7c3aed; }
 
     .meeting-editor-content {
         display: grid;

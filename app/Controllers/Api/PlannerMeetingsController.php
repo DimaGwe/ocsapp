@@ -547,24 +547,12 @@ class PlannerMeetingsController
                 return;
             }
 
-            // Get full meeting details
-            $_GET['id'] = $id;
-            ob_start();
-            $this->show();
-            $meetingJson = ob_get_clean();
-            $decoded = json_decode($meetingJson, true);
-
-            if (isset($decoded['error'])) {
+            $meeting = $this->loadMeetingData((int)$id);
+            if (!$meeting) {
                 http_response_code(404);
-                echo json_encode($decoded);
+                echo json_encode(['error' => 'Meeting not found']);
                 return;
             }
-
-            // show() returns { success, meeting: {...}, attendees: [...], actions: [...] }
-            // Flatten into a single array for buildEmailHtml
-            $meeting = $decoded['meeting'];
-            $meeting['attendees'] = $decoded['attendees'] ?? [];
-            $meeting['actions']   = $decoded['actions']   ?? [];
 
             // Generate email HTML
             $emailHtml = $this->buildEmailHtml($meeting);
@@ -678,6 +666,118 @@ class PlannerMeetingsController
         } catch (\Exception $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Failed to send email: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Preview the pre-meeting invitation (does not change meeting status)
+     */
+    public function generateInvite(): void
+    {
+        try {
+            $id = $_GET['id'] ?? null;
+
+            if (!$id) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Meeting ID is required']);
+                return;
+            }
+
+            $meeting = $this->loadMeetingData((int)$id);
+            if (!$meeting) {
+                http_response_code(404);
+                echo json_encode(['error' => 'Meeting not found']);
+                return;
+            }
+
+            echo json_encode([
+                'success' => true,
+                'subject' => $this->buildInviteSubject($meeting),
+                'email_html' => $this->buildInviteHtml($meeting)
+            ]);
+        } catch (\Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Failed to generate invite: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Send the pre-meeting invitation with an .ics calendar attachment
+     */
+    public function sendInvite(): void
+    {
+        $icsPath = null;
+
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+
+            if (empty($input['id'])) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Meeting ID is required']);
+                return;
+            }
+
+            $meeting = $this->loadMeetingData((int)$input['id']);
+            if (!$meeting) {
+                http_response_code(404);
+                echo json_encode(['error' => 'Meeting not found']);
+                return;
+            }
+
+            // Recipients from request, falling back to all attendees
+            $recipients = [];
+            $source = !empty($input['recipients']) ? $input['recipients'] : $meeting['attendees'];
+            foreach ($source as $r) {
+                if (!empty($r['email'])) {
+                    $recipients[] = $r['email'];
+                }
+            }
+            $recipients = array_values(array_unique($recipients));
+
+            if (empty($recipients)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'No recipients found. Please add attendees.']);
+                return;
+            }
+
+            // Body is always rebuilt server-side from the saved meeting
+            $subject = trim($input['subject'] ?? '') ?: $this->buildInviteSubject($meeting);
+            $html = $this->buildInviteHtml($meeting);
+
+            $icsPath = tempnam(sys_get_temp_dir(), 'ocs_invite_');
+            file_put_contents($icsPath, $this->buildIcs($meeting));
+
+            $sent = \App\Helpers\EmailHelper::send(
+                $recipients,
+                $subject,
+                $html,
+                [
+                    'from_address' => 'info@ocsapp.ca',
+                    'from_name' => 'OCSAPP Team',
+                    'attachments' => [['path' => $icsPath, 'name' => 'meeting-invite.ics']]
+                ]
+            );
+
+            if ($sent) {
+                $this->db->prepare("UPDATE planner_meetings SET invite_sent_at = NOW() WHERE id = ?")
+                    ->execute([$meeting['id']]);
+
+                if (!empty($_SESSION['user']['id'])) {
+                    $this->logActivity((int)$_SESSION['user']['id'], 'meeting', 'sent meeting invite: ' . $meeting['title']);
+                }
+
+                echo json_encode(['success' => true, 'recipients' => count($recipients)]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['error' => 'Failed to send invite. Please check mail configuration.']);
+            }
+        } catch (\Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Failed to send invite: ' . $e->getMessage()]);
+        } finally {
+            if ($icsPath && file_exists($icsPath)) {
+                unlink($icsPath);
+            }
         }
     }
 
@@ -820,6 +920,164 @@ class PlannerMeetingsController
     }
 
     /**
+     * Load a meeting with attendees, items, actions and previous actions,
+     * flattened into one array for the email builders. Null if not found.
+     */
+    private function loadMeetingData(int $id): ?array
+    {
+        $_GET['id'] = $id;
+        ob_start();
+        $this->show();
+        $decoded = json_decode(ob_get_clean(), true);
+
+        if (empty($decoded['success'])) {
+            return null;
+        }
+
+        $meeting = $decoded['meeting'];
+        $meeting['attendees'] = $decoded['attendees'] ?? [];
+        $meeting['actions'] = $decoded['actions'] ?? [];
+        $meeting['previous_actions'] = $decoded['previous_actions'] ?? [];
+
+        return $meeting;
+    }
+
+    private function buildInviteSubject(array $meeting): string
+    {
+        return "Meeting Invitation - {$meeting['title']} - " . date('M j, Y', strtotime($meeting['meeting_date']));
+    }
+
+    /**
+     * Build the pre-meeting invitation HTML
+     */
+    private function buildInviteHtml(array $meeting): string
+    {
+        $esc = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
+
+        $date = date('l, F j, Y', strtotime($meeting['meeting_date']));
+        $time = $meeting['meeting_time'] ? date('g:i A', strtotime($meeting['meeting_time'])) : '';
+
+        $attendeeNames = array_map(fn($a) => $esc($a['name'] ?? ''), $meeting['attendees'] ?? []);
+        $attendeesStr = implode(', ', $attendeeNames) ?: 'To be confirmed';
+
+        $agendaHtml = '';
+        if (!empty($meeting['agenda'])) {
+            $agendaHtml = '<h3 class="section-title">Agenda</h3><ol>';
+            foreach ($meeting['agenda'] as $item) {
+                $agendaHtml .= '<li>' . $esc($item['content']) . '</li>';
+            }
+            $agendaHtml .= '</ol>';
+        } else {
+            $agendaHtml = '<h3 class="section-title">Agenda</h3><p>The agenda will be shared before the meeting.</p>';
+        }
+
+        // Open action items carried over from the previous meeting
+        $carryHtml = '';
+        $openActions = array_filter($meeting['previous_actions'] ?? [], fn($a) => ($a['status'] ?? '') !== 'completed');
+        if (!empty($openActions)) {
+            $carryHtml = '<div class="action-items"><h4>Open Action Items to Review'
+                . (!empty($meeting['previous_meeting_title']) ? ' (from ' . $esc($meeting['previous_meeting_title']) . ')' : '')
+                . '</h4><ul>';
+            foreach ($openActions as $action) {
+                $assignee = $esc($action['assigned_to_name'] ?? $action['assigned_name'] ?? 'Unassigned');
+                $dueDate = $action['due_date'] ? date('M j', strtotime($action['due_date'])) : 'No due date';
+                $carryHtml .= '<li>' . $esc($action['description']) . " - <strong>{$assignee}</strong> - Due: {$dueDate}</li>";
+            }
+            $carryHtml .= '</ul></div>';
+        }
+
+        $content = "
+        <p>Hi Team,</p>
+        <p>You are invited to <strong>" . $esc($meeting['title']) . "</strong>. Details and agenda are below.</p>
+
+        <div class='meeting-info'>
+            <p><strong>Meeting:</strong> " . $esc($meeting['title']) . "</p>
+            <p><strong>Date:</strong> {$date}" . ($time ? " at {$time}" : "") . "</p>
+            " . ($meeting['location'] ? "<p><strong>Location:</strong> " . $esc($meeting['location']) . "</p>" : "") . "
+            <p><strong>Invited:</strong> {$attendeesStr}</p>
+        </div>
+
+        {$agendaHtml}
+        {$carryHtml}
+
+        <p style='margin-top: 25px;'>A calendar file (.ics) is attached so you can add this meeting to your calendar. Please come prepared on the agenda items, and reply to this email if you cannot attend.</p>
+
+        <p>See you there,<br><strong>OCSAPP Team</strong></p>";
+
+        return $this->emailShell('Meeting Invitation', $content);
+    }
+
+    /**
+     * Build an iCalendar (.ics) event for the meeting.
+     * Timed meetings default to 1 hour in Montreal time; untimed ones are all-day.
+     */
+    private function buildIcs(array $meeting): string
+    {
+        $escText = fn($v) => str_replace(["\\", ";", ",", "\r\n", "\n"], ["\\\\", "\\;", "\\,", "\\n", "\\n"], (string)$v);
+
+        $lines = [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'PRODID:-//OCSAPP//Team Planner//EN',
+            'CALSCALE:GREGORIAN',
+            'METHOD:PUBLISH',
+            'BEGIN:VEVENT',
+            'UID:planner-meeting-' . $meeting['id'] . '@ocsapp.ca',
+            'SEQUENCE:' . time(),
+            'DTSTAMP:' . gmdate('Ymd\THis\Z'),
+        ];
+
+        if (!empty($meeting['meeting_time'])) {
+            $start = new \DateTime($meeting['meeting_date'] . ' ' . $meeting['meeting_time'], new \DateTimeZone('America/Toronto'));
+            $end = (clone $start)->modify('+1 hour');
+            $start->setTimezone(new \DateTimeZone('UTC'));
+            $end->setTimezone(new \DateTimeZone('UTC'));
+            $lines[] = 'DTSTART:' . $start->format('Ymd\THis\Z');
+            $lines[] = 'DTEND:' . $end->format('Ymd\THis\Z');
+        } else {
+            $day = new \DateTime($meeting['meeting_date']);
+            $lines[] = 'DTSTART;VALUE=DATE:' . $day->format('Ymd');
+            $lines[] = 'DTEND;VALUE=DATE:' . (clone $day)->modify('+1 day')->format('Ymd');
+        }
+
+        $lines[] = 'SUMMARY:' . $escText($meeting['title']);
+        if (!empty($meeting['location'])) {
+            $lines[] = 'LOCATION:' . $escText($meeting['location']);
+        }
+
+        $description = '';
+        if (!empty($meeting['agenda'])) {
+            $description = "Agenda:\n";
+            $n = 1;
+            foreach ($meeting['agenda'] as $item) {
+                $description .= ($n++) . '. ' . $item['content'] . "\n";
+            }
+        }
+        if ($description !== '') {
+            $lines[] = 'DESCRIPTION:' . $escText(rtrim($description));
+        }
+
+        $lines[] = 'END:VEVENT';
+        $lines[] = 'END:VCALENDAR';
+
+        // Fold lines longer than 75 octets (RFC 5545 3.1), without splitting UTF-8 characters
+        $folded = [];
+        foreach ($lines as $line) {
+            while (strlen($line) > 75) {
+                $cut = 75;
+                while ($cut > 0 && (ord($line[$cut]) & 0xC0) === 0x80) {
+                    $cut--;
+                }
+                $folded[] = substr($line, 0, $cut);
+                $line = ' ' . substr($line, $cut);
+            }
+            $folded[] = $line;
+        }
+
+        return implode("\r\n", $folded) . "\r\n";
+    }
+
+    /**
      * Build email HTML from meeting data
      */
     private function buildEmailHtml(array $meeting): string
@@ -885,7 +1143,35 @@ class PlannerMeetingsController
             ";
         }
 
-        // Full email template
+        $content = "
+        <p>Hi Team,</p>
+        <p>Here are the minutes from our meeting on <strong>{$date}</strong>.</p>
+
+        <div class='meeting-info'>
+            <p><strong>Meeting:</strong> " . htmlspecialchars($meeting['title'], ENT_QUOTES, 'UTF-8') . "</p>
+            <p><strong>Date:</strong> {$date} " . ($time ? "at {$time}" : "") . "</p>
+            " . ($meeting['location'] ? "<p><strong>Location:</strong> " . htmlspecialchars($meeting['location'], ENT_QUOTES, 'UTF-8') . "</p>" : "") . "
+            <p><strong>Attendees:</strong> {$attendeesStr}</p>
+        </div>
+
+        {$agendaHtml}
+        {$discussionsHtml}
+        {$decisionsHtml}
+        {$actionsHtml}
+        {$nextMeetingHtml}
+
+        <p style='margin-top: 25px;'>If you have any questions or need clarification on any items, please reach out.</p>
+
+        <p>Best regards,<br><strong>OCSAPP Team</strong></p>";
+
+        return $this->emailShell('Meeting Minutes', $content);
+    }
+
+    /**
+     * Shared HTML shell (styles, header, footer) for meeting emails
+     */
+    private function emailShell(string $headerLabel, string $content): string
+    {
         return "
 <!DOCTYPE html>
 <html>
@@ -916,32 +1202,14 @@ class PlannerMeetingsController
 <body>
     <div class='header'>
         <div class='logo'>OCSAPP</div>
-        <div class='meeting-title'>Meeting Minutes</div>
+        <div class='meeting-title'>" . htmlspecialchars($headerLabel, ENT_QUOTES, 'UTF-8') . "</div>
     </div>
     <div class='content'>
-        <p>Hi Team,</p>
-        <p>Here are the minutes from our meeting on <strong>{$date}</strong>.</p>
-
-        <div class='meeting-info'>
-            <p><strong>Meeting:</strong> " . htmlspecialchars($meeting['title'], ENT_QUOTES, 'UTF-8') . "</p>
-            <p><strong>Date:</strong> {$date} " . ($time ? "at {$time}" : "") . "</p>
-            " . ($meeting['location'] ? "<p><strong>Location:</strong> " . htmlspecialchars($meeting['location'], ENT_QUOTES, 'UTF-8') . "</p>" : "") . "
-            <p><strong>Attendees:</strong> {$attendeesStr}</p>
-        </div>
-
-        {$agendaHtml}
-        {$discussionsHtml}
-        {$decisionsHtml}
-        {$actionsHtml}
-        {$nextMeetingHtml}
-
-        <p style='margin-top: 25px;'>If you have any questions or need clarification on any items, please reach out.</p>
-
-        <p>Best regards,<br><strong>OCSAPP Team</strong></p>
+        {$content}
     </div>
     <div class='footer'>
         <p class='brand'>OCSAPP Marketplace</p>
-        <p>Building the future of B2B commerce in Canada</p>
+        <p>The all-in-one digital infrastructure for local commerce.</p>
     </div>
 </body>
 </html>

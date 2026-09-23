@@ -288,12 +288,16 @@ ob_start();
                             <i class="fa-solid fa-arrow-left"></i> Back
                         </button>
                         <div class="meeting-status-badge" id="meetingStatusBadge">Draft</div>
+                        <div class="meeting-status-badge invited" id="meetingInviteBadge" style="display: none;"></div>
                         <div class="meeting-actions">
                             <button class="btn-planner secondary" onclick="saveMeeting()">
                                 <i class="fa-solid fa-save"></i> Save
                             </button>
-                            <button class="btn-planner secondary" onclick="generateMeetingEmail()">
-                                <i class="fa-solid fa-envelope"></i> Generate Email
+                            <button class="btn-planner secondary" onclick="openInviteModal()" title="Email the agenda and a calendar invite to attendees before the meeting">
+                                <i class="fa-solid fa-calendar-plus"></i> Send Invite
+                            </button>
+                            <button class="btn-planner secondary" onclick="generateMeetingEmail()" title="Build the minutes email after the meeting (marks the meeting completed)">
+                                <i class="fa-solid fa-envelope"></i> Generate Minutes
                             </button>
                             <button class="btn-planner primary" onclick="openSendEmailModal()" id="sendEmailBtn" style="display: none;">
                                 <i class="fa-solid fa-paper-plane"></i> Send Email
@@ -434,7 +438,7 @@ ob_start();
 <!-- Meeting Email Modal -->
 <div id="meetingEmailModal" class="html-editor-modal">
     <div class="html-modal-content" style="max-width: 800px;">
-        <div class="html-modal-header">Meeting Minutes Email</div>
+        <div class="html-modal-header" id="meetingEmailModalTitle">Meeting Minutes Email</div>
         <div class="html-form-group">
             <label>Email Subject</label>
             <input type="text" id="emailSubject" placeholder="Meeting Minutes - [Title]">
@@ -449,7 +453,7 @@ ob_start();
         </div>
         <div class="html-modal-actions">
             <button class="btn-planner secondary" onclick="closeMeetingEmailModal()">Cancel</button>
-            <button class="btn-planner primary" onclick="sendMeetingEmail()">
+            <button class="btn-planner primary" onclick="sendMeetingEmail()" id="meetingEmailSendBtn">
                 <i class="fa-solid fa-paper-plane"></i> Send Email
             </button>
         </div>
@@ -4318,6 +4322,7 @@ ${content}
                         ${meeting.meeting_time ? `<span><i class="fa-solid fa-clock"></i> ${escapeHtml(meeting.meeting_time)}</span>` : ''}
                         ${meeting.location ? `<span><i class="fa-solid fa-location-dot"></i> ${escapeHtml(meeting.location)}</span>` : ''}
                         <span><i class="fa-solid fa-users"></i> ${meeting.attendee_count || 0} attendees</span>
+                        ${meeting.invite_sent_at ? `<span class="invite-sent"><i class="fa-solid fa-calendar-check"></i> Invite sent</span>` : ''}
                     </div>
                 </div>
                 <div class="meeting-card-status ${meeting.status}">${meeting.status.replace('_', ' ')}</div>
@@ -4347,6 +4352,7 @@ ${content}
         document.getElementById('meetingStatusBadge').textContent = 'Draft';
         document.getElementById('meetingStatusBadge').className = 'meeting-status-badge draft';
         document.getElementById('sendEmailBtn').style.display = 'none';
+        updateInviteBadge();
 
         // Load team members and previous meetings
         await Promise.all([loadTeamMembers(), loadPreviousMeetings()]);
@@ -4395,6 +4401,7 @@ ${content}
 
                 // Show send button if email was generated
                 document.getElementById('sendEmailBtn').style.display = currentMeeting.email_draft ? 'inline-flex' : 'none';
+                updateInviteBadge();
 
                 // Load dropdowns
                 await Promise.all([loadTeamMembers(), loadPreviousMeetings()]);
@@ -4834,8 +4841,57 @@ ${content}
             return;
         }
 
-        // Set subject
-        document.getElementById('emailSubject').value = currentMeeting.email_subject || `Meeting Minutes - ${currentMeeting.title}`;
+        showMeetingEmailModal('minutes',
+            currentMeeting.email_subject || `Meeting Minutes - ${currentMeeting.title}`,
+            currentMeeting.email_draft);
+    }
+
+    // Pre-meeting invitation: agenda + .ics calendar file, does not change meeting status
+    async function openInviteModal() {
+        await saveMeeting();
+
+        if (!currentMeeting?.id) {
+            alert('Please save the meeting first');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/meetings/generate-invite?id=${currentMeeting.id}`);
+            const data = await response.json();
+
+            if (data.success) {
+                showMeetingEmailModal('invite', data.subject, data.email_html);
+            } else {
+                alert('Failed to generate invite: ' + (data.error || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Error generating invite:', error);
+            alert('Failed to generate invite');
+        }
+    }
+
+    function updateInviteBadge() {
+        const badge = document.getElementById('meetingInviteBadge');
+        if (currentMeeting?.invite_sent_at) {
+            const sent = new Date(currentMeeting.invite_sent_at.replace(' ', 'T'));
+            badge.textContent = 'Invite sent ' + sent.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            badge.style.display = '';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    let meetingEmailMode = 'minutes';
+
+    function showMeetingEmailModal(mode, subject, html) {
+        meetingEmailMode = mode;
+        const isInvite = mode === 'invite';
+
+        document.getElementById('meetingEmailModalTitle').textContent = isInvite ? 'Meeting Invitation Email' : 'Meeting Minutes Email';
+        document.getElementById('meetingEmailSendBtn').innerHTML = isInvite
+            ? '<i class="fa-solid fa-paper-plane"></i> Send Invite'
+            : '<i class="fa-solid fa-paper-plane"></i> Send Email';
+        document.getElementById('emailSubject').value = subject;
 
         // Show recipients
         const recipientsList = document.getElementById('emailRecipientsList');
@@ -4850,7 +4906,7 @@ ${content}
         const iframe = document.getElementById('emailPreviewFrame');
         const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
         iframeDoc.open();
-        iframeDoc.write(currentMeeting.email_draft);
+        iframeDoc.write(html);
         iframeDoc.close();
 
         // Show modal
@@ -4880,8 +4936,10 @@ ${content}
             return;
         }
 
+        const isInvite = meetingEmailMode === 'invite';
+
         try {
-            const response = await fetch(`${API_URL}/meetings/send-email`, {
+            const response = await fetch(`${API_URL}/meetings/${isInvite ? 'send-invite' : 'send-email'}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -4893,7 +4951,12 @@ ${content}
 
             const data = await response.json();
 
-            if (data.success) {
+            if (data.success && isInvite) {
+                closeMeetingEmailModal();
+                currentMeeting.invite_sent_at = new Date().toISOString();
+                updateInviteBadge();
+                alert('Invite sent successfully to ' + recipients.length + ' recipient(s)!');
+            } else if (data.success) {
                 closeMeetingEmailModal();
                 currentMeeting.status = 'sent';
                 document.getElementById('meetingStatusBadge').textContent = 'sent';
