@@ -28,3 +28,9 @@ form{margin:0}.form-section{background:#fff!important;border:1px solid var(--ocs
 .checkout-notice{background:#F0FDF4!important;border-left:4px solid var(--ocs-green)!important;padding:14px 18px!important;border-radius:10px!important;margin-bottom:24px!important}.checkout-notice-title{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:#166534;margin-bottom:4px}.checkout-notice-desc{font-size:13px;color:#4b5563}
 @media(max-width:980px){.register-shell{grid-template-columns:1fr}.brand-panel{position:relative;top:0;height:auto;padding:42px 28px}.central-icon{width:82px;height:82px;margin-bottom:22px}.brand-content h1{font-size:34px}.form-panel{padding:34px 18px 48px}.auth-topbar{padding:0 18px}.auth-toplinks a:not(.central-link){display:none}}
 @media(max-width:620px){.form-grid,.form-row{grid-template-columns:1fr!important}.form-section{padding:22px!important}.card-head h2{font-size:25px}.auth-topbar{height:60px}.register-shell{min-height:calc(100vh - 60px)}}
+
+/* Password rules checklist (buyer /register) */
+.pw-rules{margin-top:8px}.pw-rule{font-size:12px;display:flex;align-items:center;gap:6px;padding:2px 0;color:#9ca3af;transition:color .2s}.pw-rule i{font-size:11px}.pw-rule.pw-rule-ok{color:#00b207}
+
+/* Show/hide password button (buyer /register) */
+.toggle-pass{position:absolute;right:11px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:#99A39C;cursor:pointer;padding:4px;display:flex;align-items:center;z-index:2}.toggle-pass:hover{color:var(--ocs-green)}.form-group input.with-toggle:not([type="checkbox"]):not([type="radio"]):not([type="file"]){padding-right:44px!important}

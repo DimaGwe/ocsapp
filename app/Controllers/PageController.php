@@ -366,6 +366,47 @@ class PageController
     }
 
     /**
+     * Founding programs overview, with live spots remaining per cohort.
+     */
+    public function founding(): void
+    {
+        $helpers = [
+            'buyer'    => \App\Helpers\FoundingBuyerHelper::class,
+            'seller'   => \App\Helpers\FoundingSellerHelper::class,
+            'supplier' => \App\Helpers\FoundingSupplierHelper::class,
+            'driver'   => \App\Helpers\FoundingDriverHelper::class,
+            'business' => \App\Helpers\FoundingBusinessHelper::class,
+        ];
+        $programs = [];
+        foreach ($helpers as $role => $helper) {
+            $total = (int) $helper::TOTAL_SLOTS;
+            try {
+                $remaining = (int) $helper::remainingSlots();
+            } catch (\Throwable $e) {
+                logger("Founding counter read failed for {$role}: " . $e->getMessage(), 'warning');
+                $remaining = $total; // show the cohort as open rather than breaking the page
+            }
+            $programs[$role] = ['total' => $total, 'remaining' => max(0, min($remaining, $total))];
+        }
+        view('pages/founding', ['programs' => $programs]);
+    }
+
+    /**
+     * Onboarding guide per role (linked from the invite email, /founding and the Centrals):
+     * redirects to the official onboarding package in the visitor's language.
+     */
+    public function onboarding($role = null): void
+    {
+        $role = strtolower((string) $role);
+        if (!\App\Helpers\OnboardingPackageHelper::exists($role)) {
+            http_response_code(404);
+            echo 'Guide not found.';
+            return;
+        }
+        redirect(\App\Helpers\OnboardingPackageHelper::url($role));
+    }
+
+    /**
      * Driver Central - Public landing page for delivery drivers
      */
     public function driverCentral(): void

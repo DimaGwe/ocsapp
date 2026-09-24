@@ -369,6 +369,7 @@ $fr = ($currentLang === 'fr');
           ? "Séparément, et offert à tous les acheteurs peu importe ce bonus : parrainez un ami qui complète sa première commande, et vous recevez tous les deux un crédit de 5 $ vers un futur frais de livraison - sans limite sur le nombre d'amis que vous pouvez parrainer."
           : "Separately, and available to every buyer regardless of this bonus: refer a friend who completes their first order, and you both receive a $5 credit toward a future delivery fee - with no limit on how many friends you can refer." ?></li>
       </ul>
+      <p style="margin:14px 0 0;font-weight:600;"><a href="<?= url('founding') ?>#buyer" style="color:#00b207;"><?= $fr ? 'Voir tous les programmes fondateurs et les places restantes' : 'See all founding programs and spots remaining' ?> &rarr;</a></p>
     </div>
   </div>
 </section>

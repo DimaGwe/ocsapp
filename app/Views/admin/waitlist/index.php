@@ -49,6 +49,10 @@ ob_start();
     cursor: pointer; transition: all var(--transition-base);
   }
   .btn-notify:hover { background: var(--primary); color: white; }
+  .invite-meta { margin-top: 5px; font-size: 11px; color: #1e40af; white-space: nowrap; }
+  .invite-meta-ok { color: #166534; }
+  .invite-meta-off { color: var(--gray-500); }
+  .action-btn.invite { color: var(--primary); }
 
   /* Stats */
   .stats-grid {
@@ -222,7 +226,7 @@ ob_start();
     <div class="filters-grid">
       <div class="form-group">
         <label class="form-label">Search</label>
-        <input type="text" name="search" class="form-input" placeholder="Email or name..." value="<?= htmlspecialchars($search) ?>">
+        <input type="text" name="search" class="form-input" placeholder="Email, name or referral code..." value="<?= htmlspecialchars($search) ?>">
       </div>
       <div class="form-group">
         <label class="form-label">Role</label>
@@ -253,7 +257,7 @@ ob_start();
 <!-- Bulk action bar -->
 <div class="bulk-bar" id="bulk-bar">
   <span id="selected-count">0 selected</span>
-  <button class="btn-notify" onclick="bulkNotify()"><i class="fas fa-bell"></i> Send Launch Notification</button>
+  <button class="btn-notify" onclick="bulkNotify()"><i class="fas fa-paper-plane"></i> Send Account Invite</button>
 </div>
 
 <!-- Table -->
@@ -265,6 +269,12 @@ ob_start();
           <th style="width:36px;"><input type="checkbox" id="select-all" style="cursor:pointer;"></th>
           <th>Name / Email</th>
           <th>Role</th>
+          <th title="Position within the role, fixed at signup">
+            <?php $sortQ = http_build_query(array_filter(['search' => $search, 'role' => $role, 'status' => $status, 'sort' => ($sort ?? '') === 'position' ? '' : 'position'])); ?>
+            <a href="<?= url('/admin/waitlist') ?><?= $sortQ ? '?' . $sortQ : '' ?>" style="color:inherit;text-decoration:none;">
+              # <i class="fas fa-sort<?= ($sort ?? '') === 'position' ? '-up' : '' ?>" style="font-size:11px;opacity:.6;"></i>
+            </a>
+          </th>
           <th>Referrals</th>
           <th>Referred By</th>
           <th>Status</th>
@@ -274,7 +284,7 @@ ob_start();
       </thead>
       <tbody>
       <?php if (empty($entries)): ?>
-        <tr><td colspan="8">
+        <tr><td colspan="9">
           <div class="empty-state">
             <i class="fas fa-list-ul"></i>
             <p>No waitlist entries found.</p>
@@ -289,6 +299,7 @@ ob_start();
             <div style="font-size:12px;color:var(--gray-500);margin-top:2px;"><?= htmlspecialchars($e['email']) ?></div>
           </td>
           <td><span class="badge badge-role-<?= $e['role'] ?>"><?= $roleLabels[$e['role']] ?? $e['role'] ?></span></td>
+          <td style="font-weight:700;color:var(--dark);white-space:nowrap;"><?= $e['signup_position'] ? '#' . (int) $e['signup_position'] : '<span style="color:var(--gray-400);">-</span>' ?></td>
           <td style="text-align:center;">
             <?php if ($e['referral_count'] > 0): ?>
               <span style="font-weight:700;color:var(--primary);"><?= $e['referral_count'] ?></span>
@@ -309,6 +320,13 @@ ob_start();
               <option value="notified"  <?= $e['status']==='notified'  ? 'selected':'' ?>>Notified</option>
               <option value="converted" <?= $e['status']==='converted' ? 'selected':'' ?>>Converted</option>
             </select>
+            <?php if (!empty($e['has_account'])): ?>
+              <div class="invite-meta invite-meta-ok"><i class="fas fa-user-check"></i> Account created</div>
+            <?php elseif (!empty($e['unsubscribed_at'])): ?>
+              <div class="invite-meta invite-meta-off"><i class="fas fa-ban"></i> Unsubscribed</div>
+            <?php elseif (!empty($e['invite_sent_at'])): ?>
+              <div class="invite-meta"><i class="fas fa-paper-plane"></i> Invited <?= date('M j', strtotime($e['invite_sent_at'])) ?></div>
+            <?php endif; ?>
           </td>
           <td style="font-size:12px;color:var(--gray-500);"><?= date('M j, Y', strtotime($e['created_at'])) ?></td>
           <td>
@@ -316,6 +334,11 @@ ob_start();
               <button class="action-btn view" data-entry="<?= htmlspecialchars(base64_encode(json_encode($e)), ENT_QUOTES) ?>" onclick="viewEntry(this)" title="View details">
                 <i class="fas fa-eye"></i>
               </button>
+              <?php if ($e['role'] !== 'partner' && empty($e['has_account']) && empty($e['unsubscribed_at']) && $e['status'] !== 'converted'): ?>
+              <button class="action-btn invite" onclick="sendInvites([<?= (int) $e['id'] ?>])" title="<?= !empty($e['invite_sent_at']) ? 'Re-send account invite' : 'Send account invite' ?>">
+                <i class="fas fa-paper-plane"></i>
+              </button>
+              <?php endif; ?>
               <button class="action-btn delete" onclick="deleteEntry(<?= $e['id'] ?>, '<?= htmlspecialchars(addslashes($e['email'])) ?>')" title="Delete">
                 <i class="fas fa-trash"></i>
               </button>
@@ -336,7 +359,7 @@ ob_start();
     <div class="pagination-buttons">
       <?php
       $totalPages = (int) ceil($total / $perPage);
-      $q = http_build_query(array_filter(['search' => $search, 'role' => $role, 'status' => $status]));
+      $q = http_build_query(array_filter(['search' => $search, 'role' => $role, 'status' => $status, 'sort' => ($sort ?? '') === 'position' ? 'position' : '']));
       $qPrefix = $q ? '&' : '';
       for ($p = max(1, $page-2); $p <= min($totalPages, $page+2); $p++):
       ?>
@@ -375,6 +398,8 @@ function viewEntry(btn) {
   document.getElementById('details-modal-title').textContent = `${e.first_name} ${e.last_name} - ${roleLabel}`;
 
   let html = '<div class="modal-section-title">Contact</div><div class="detail-grid">';
+  html += detailItem('Position', e.signup_position ? ((roleLabels[e.role] || e.role) + ' #' + e.signup_position) : '');
+  html += detailItem('Referral Code', e.referral_code);
   html += detailItem('Email', e.email);
   html += detailItem('Phone', e.phone);
   html += detailItem('City / Region', e.city_region);
@@ -415,7 +440,6 @@ function viewEntry(btn) {
   html += '</div>';
 
   html += '<div class="modal-section-title">System</div><div class="detail-grid">';
-  html += detailItem('Referral Code', e.referral_code);
   html += detailItem('IP Address', e.ip_address);
   html += detailItem('Status', e.status);
   html += detailItem('Joined', e.created_at);
@@ -472,7 +496,13 @@ async function deleteEntry(id, email) {
 async function bulkNotify() {
   const ids = [...document.querySelectorAll('.row-check:checked')].map(cb => cb.value);
   if (!ids.length) return;
-  if (!confirm('Send launch notification to ' + ids.length + ' pending entry(s)?')) return;
+  sendInvites(ids);
+}
+
+// Beta invites: emails each entry its account-creation link + onboarding guide.
+// Partners, unsubscribed and already-registered entries are skipped server-side.
+async function sendInvites(ids) {
+  if (!confirm('Send the account invite email to ' + ids.length + ' entry(s)? Re-sending reuses the same link.')) return;
 
   const fd = new FormData();
   fd.append('<?= env('CSRF_TOKEN_NAME', '_csrf_token') ?>', csrf);

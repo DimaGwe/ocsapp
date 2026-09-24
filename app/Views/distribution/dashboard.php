@@ -464,6 +464,12 @@ $_bizUrgent   = $_bizDaysLeft !== null && $_bizDaysLeft <= 7;
     }
 
     /* Stats Grid */
+    .founding-card { display: flex; gap: 14px; align-items: flex-start; background: linear-gradient(135deg, #f0fdf4, #ecfdf5); border: 1px solid #bbf7d0; border-radius: 14px; padding: 16px 18px; margin-bottom: 20px; }
+    .founding-card-icon { flex: 0 0 auto; width: 40px; height: 40px; border-radius: 10px; background: #00b207; color: #fff; display: flex; align-items: center; justify-content: center; }
+    .founding-card-title { font-weight: 700; font-size: 15px; color: #166534; }
+    .founding-card-title span { font-weight: 400; opacity: .8; }
+    .founding-card-text { font-size: 13px; color: #374151; margin-top: 3px; line-height: 1.5; }
+    .founding-card-text a { color: #00920a; font-weight: 600; margin-left: 4px; }
     .stats-grid {
         display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 20px; margin-bottom: 32px;
@@ -681,6 +687,28 @@ if (!empty($awaitingPayment)):
         <?= $tierLabels[$business['account_tier']] ?? $t['tier_standard'] ?>
     </div>
 </div>
+
+<?php if ((int) ($business['founding_partner'] ?? 0) === 1): $bfFr = $currentLang === 'fr'; ?>
+<!-- Founding Business Partner status -->
+<div class="founding-card">
+    <div class="founding-card-icon"><i class="fas fa-star"></i></div>
+    <div>
+        <div class="founding-card-title">
+            <?= $bfFr ? 'Partenaire fondateur' : 'Founding Partner' ?> #<?= (int) $business['founding_partner_number'] ?>
+            <span><?= $bfFr ? 'sur' : 'of' ?> <?= \App\Helpers\FoundingBusinessHelper::TOTAL_SLOTS ?></span>
+            <?php if (!empty($business['founding_partner_expires_at'])): ?>
+                <span>&middot; <?= $bfFr ? 'jusqu\'au' : 'until' ?> <?= date('Y-m-d', strtotime($business['founding_partner_expires_at'])) ?></span>
+            <?php endif; ?>
+        </div>
+        <div class="founding-card-text">
+            <?= $bfFr
+                ? 'Taux Distribution Débutant de 5 % et frais mensuels de 0 $ verrouillés pendant 6 mois, avec un gestionnaire de compte dédié. Bientôt : exemption des frais d\'Approvisionnement sur vos premiers 10 000 $.'
+                : 'Distribution Starter rate of 5% and a $0 monthly fee locked for 6 months, with a dedicated account manager. Coming soon: a Procurement fee waiver on your first $10,000.' ?>
+            <a href="<?= url('founding') ?>"><?= $bfFr ? 'Voir le programme' : 'See the program' ?></a>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 
 <!-- Stats -->
 <div class="stats-grid">

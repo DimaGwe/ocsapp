@@ -440,6 +440,7 @@ $fr = ($currentLang === 'fr');
           ? "Bientôt : une prime d'étape, une prime de parrainage et un accès prioritaire à la répartition sont prévus pour les livreurs fondateurs, en plus du partage standard 70/30 - ces avantages seront annoncés une fois lancés."
           : "Coming soon: a milestone bonus, a referral bonus, and priority dispatch access are planned for Founding Drivers, on top of the standard 70/30 split - these will be announced once they launch." ?></li>
       </ul>
+      <p style="margin:14px 0 0;font-weight:600;"><a href="<?= url('founding') ?>#driver" style="color:#00b207;"><?= $fr ? 'Voir tous les programmes fondateurs et les places restantes' : 'See all founding programs and spots remaining' ?> &rarr;</a></p>
     </div>
   </div>
 </section>

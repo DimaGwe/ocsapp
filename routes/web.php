@@ -168,6 +168,8 @@ return [
     // BUYER PUBLIC PAGES
     // ===================================
     'GET /buyer-central' => ['PageController', 'buyerCentral'],
+    'GET /onboarding/{role}' => ['PageController', 'onboarding'],
+    'GET /founding' => ['PageController', 'founding'],
 
     // ===================================
     // DRIVER PUBLIC PAGES

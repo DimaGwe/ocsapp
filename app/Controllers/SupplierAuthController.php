@@ -15,6 +15,8 @@ class SupplierAuthController {
      * Show the supplier application form
      */
     public function apply(): void {
+        \App\Helpers\BetaAccessHelper::guardPage('supplier');
+
         // Check if there's a flash message
         $flash = null;
         if (isset($_SESSION['flash'])) {
@@ -45,6 +47,7 @@ class SupplierAuthController {
             back();
             return;
         }
+        \App\Helpers\BetaAccessHelper::guardSubmit('supplier', (string) post('email', ''));
 
         // Collect and sanitize form data
         $validPackages = ['Essential', 'Experience', 'Prestige', 'Enterprise'];
@@ -101,12 +104,12 @@ class SupplierAuthController {
         $passwordConfirmation = post('password_confirmation', '');
         $pwErrors = validatePasswordStrength($password);
         if (!empty($pwErrors)) {
-            setFlash('error', 'Password must contain: ' . implode(', ', $pwErrors) . '.');
+            setFlash('error', passwordStrengthMessage($pwErrors));
             back();
             return;
         }
         if ($password !== $passwordConfirmation) {
-            setFlash('error', 'Passwords do not match.');
+            setFlash('error', passwordMismatchMessage());
             back();
             return;
         }
@@ -570,6 +573,7 @@ class SupplierAuthController {
                     'business_name' => $pending['business_name'],
                     'neq_number'    => $pending['neq_number'],
                 ]);
+                \App\Helpers\WaitlistHelper::markConverted($pending['email'], 'supplier');
             } catch (\Exception $e) {
                 logger("Supplier app notification error: " . $e->getMessage(), 'error');
             }
@@ -771,6 +775,7 @@ class SupplierAuthController {
                     ]);
                     $this->sendAdminApplicationEmail($appData, $appData['id'], $leadId);
                     $this->sendApplicantConfirmationEmail($appData, $appData['id']);
+                    \App\Helpers\WaitlistHelper::markConverted($supplier['email'], 'supplier');
                 }
             } catch (\Exception $e) {
                 logger("Supplier auto-verify post-notification error: " . $e->getMessage(), 'error');
@@ -1092,12 +1097,12 @@ class SupplierAuthController {
         $password = post('password', '');
         $pwErrors = validatePasswordStrength($password);
         if (!empty($pwErrors)) {
-            setFlash('error', 'Password must contain: ' . implode(', ', $pwErrors) . '.');
+            setFlash('error', passwordStrengthMessage($pwErrors));
             back();
             return;
         }
         if ($password !== post('password_confirmation', '')) {
-            setFlash('error', 'Passwords do not match.');
+            setFlash('error', passwordMismatchMessage());
             back();
             return;
         }
@@ -1480,13 +1485,13 @@ class SupplierAuthController {
         // Validate password — same strength requirements as main portal
         $pwErrors = validatePasswordStrength($password);
         if (!empty($pwErrors)) {
-            setFlash('error', 'Password must contain: ' . implode(', ', $pwErrors) . '.');
+            setFlash('error', passwordStrengthMessage($pwErrors));
             back();
             return;
         }
 
         if ($password !== $passwordConfirm) {
-            setFlash('error', 'Passwords do not match.');
+            setFlash('error', passwordMismatchMessage());
             back();
             return;
         }

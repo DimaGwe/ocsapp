@@ -43,6 +43,20 @@ class WaitlistController
                     WHERE unsubscribe_token = ?
                 ");
                 $stmt->execute([$token]);
+                if ($stmt->rowCount() > 0) {
+                    // Only on the click that actually unsubscribed them, not on repeat clicks
+                    $who = $this->db->prepare("SELECT first_name, last_name, email, role FROM waitlist WHERE unsubscribe_token = ?");
+                    $who->execute([$token]);
+                    if ($w = $who->fetch()) {
+                        $wName = trim($w['first_name'] . ' ' . $w['last_name']);
+                        \App\Helpers\NotificationHelper::add(
+                            'waitlist',
+                            "Waitlist unsubscribe: {$wName}",
+                            "{$wName} ({$w['email']}, " . (\App\Helpers\WaitlistHelper::ROLE_LABELS[$w['role']] ?? $w['role']) . ") unsubscribed from waitlist emails.",
+                            ['link' => '/admin/waitlist?search=' . urlencode($w['email']), 'icon' => 'user-minus', 'priority' => 'low']
+                        );
+                    }
+                }
                 // rowCount() is 0 when already unsubscribed and nothing changed, so re-check
                 $chk = $this->db->prepare("SELECT 1 FROM waitlist WHERE unsubscribe_token = ? AND unsubscribed_at IS NOT NULL");
                 $chk->execute([$token]);
@@ -157,13 +171,14 @@ class WaitlistController
 
         try {
             // Check duplicate
-            $stmt = $this->db->prepare("SELECT id, referral_code FROM waitlist WHERE email = ?");
+            $stmt = $this->db->prepare("SELECT id, role, signup_position, referral_code FROM waitlist WHERE email = ?");
             $stmt->execute([$email]);
             $existing = $stmt->fetch();
 
             if ($existing) {
-                $pos = $this->getPosition($existing['id']);
-                $url = url('/waitlist') . '?joined=1&pos=' . $pos . '&myref=' . $existing['referral_code'] . '&role=' . $role;
+                // Already on the list: show the number and role they were given, not the ones just submitted
+                $pos = (int) ($existing['signup_position'] ?: $this->assignPosition((int) $existing['id'], $existing['role']));
+                $url = url('/waitlist') . '?joined=1&pos=' . $pos . '&myref=' . $existing['referral_code'] . '&role=' . $existing['role'];
                 jsonResponse(['success' => true, 'redirect' => $url]);
                 return;
             }
@@ -210,9 +225,9 @@ class WaitlistController
             ]);
 
             $newId = (int) $this->db->lastInsertId();
-            $pos   = $this->getPosition($newId);
+            $pos   = $this->assignPosition($newId, $role);
 
-            $this->notifyAdmin($newId, $firstName, $lastName, $email, $role, $businessName);
+            $this->notifyAdmin($newId, $firstName, $lastName, $email, $role, $businessName, $referredBy, $pos);
             $this->sendConfirmation($email, $firstName, $role, $refCode, $pos, $fr, $businessName, $unsubToken);
 
             $url = url('/waitlist') . '?joined=1&pos=' . $pos . '&myref=' . $refCode . '&role=' . $role;
@@ -224,33 +239,68 @@ class WaitlistController
         }
     }
 
-    private function notifyAdmin(int $id, string $firstName, string $lastName, string $email, string $role, ?string $businessName): void
+    /**
+     * New waitlist signup: admin bell + email to the admin inbox (config/mail.php admin_email).
+     */
+    private function notifyAdmin(int $id, string $firstName, string $lastName, string $email, string $role, ?string $businessName, ?string $referredBy = null, int $pos = 0): void
     {
-        $roleLabels = [
-            'buyer'    => 'Buyer',
-            'seller'   => 'Seller',
-            'supplier' => 'Supplier',
-            'driver'   => 'Driver',
-            'business' => 'Business',
-            'partner'  => 'Partner',
-        ];
-        $roleLabel = $roleLabels[$role] ?? $role;
+        $roleLabel = \App\Helpers\WaitlistHelper::ROLE_LABELS[$role] ?? $role;
         $name      = trim("{$firstName} {$lastName}");
         $suffix    = $businessName ? " ({$businessName})" : '';
 
+        $referral = '';
+        if ($referredBy) {
+            $stmt = $this->db->prepare("SELECT first_name, last_name FROM waitlist WHERE referral_code = ? LIMIT 1");
+            $stmt->execute([$referredBy]);
+            $ref = $stmt->fetch();
+            $refName  = $ref ? trim($ref['first_name'] . ' ' . $ref['last_name']) : '';
+            $referral = $refName !== '' ? "{$refName} ({$referredBy})" : $referredBy;
+        }
+
+        $link = '/admin/waitlist?search=' . urlencode($email);
+
         \App\Helpers\NotificationHelper::add(
             'waitlist',
-            "New Waitlist Signup: {$name}",
-            "{$name}{$suffix} joined the waitlist as a {$roleLabel} - {$email}",
-            ['link' => '/admin/waitlist', 'icon' => 'user-plus', 'priority' => 'normal']
+            "New Waitlist Signup: {$name}" . ($pos ? " ({$roleLabel} #{$pos})" : ''),
+            "{$name}{$suffix} joined the waitlist as {$roleLabel} #{$pos} - {$email}" . ($referral ? " - referred by {$referral}" : ''),
+            ['link' => $link, 'icon' => 'user-plus', 'priority' => 'normal']
         );
+
+        try {
+            $rows = ['Name' => $name, 'Email' => $email, 'Role' => $roleLabel, 'Position' => "{$roleLabel} #{$pos}"];
+            if ($businessName) { $rows['Business'] = $businessName; }
+            if ($referral)     { $rows['Referred by'] = $referral; }
+            $rowsHtml = '';
+            foreach ($rows as $k => $v) {
+                $rowsHtml .= '<tr><td style="padding:6px 14px 6px 0;color:#6b7280;">' . $k . '</td>'
+                           . '<td style="padding:6px 0;color:#111;font-weight:600;">' . htmlspecialchars($v) . '</td></tr>';
+            }
+            $adminUrl = htmlspecialchars(url(ltrim($link, '/')));
+            $body = '<div style="font-family:Segoe UI,Arial,sans-serif;font-size:14px;color:#374151;">'
+                  . '<h2 style="color:#00b207;font-size:18px;margin:0 0 12px;">New waitlist signup: ' . htmlspecialchars("{$roleLabel} #{$pos}") . '</h2>'
+                  . '<table style="border-collapse:collapse;">' . $rowsHtml . '</table>'
+                  . '<p style="margin:18px 0 0;"><a href="' . $adminUrl . '" style="background:#00b207;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:600;">Open in Admin &gt; Waitlist</a></p>'
+                  . '<p style="margin:14px 0 0;color:#9ca3af;font-size:12px;">During beta, send this person their account invite from Admin &gt; Waitlist.</p>'
+                  . '</div>';
+            EmailHelper::setNextMeta('waitlist_admin_alert', 'waitlist', $id);
+            EmailHelper::send(\App\Helpers\WaitlistHelper::adminEmail(), "New waitlist signup: {$name} ({$roleLabel} #{$pos})", $body);
+        } catch (\Throwable $e) {
+            logger('Waitlist admin email failed: ' . $e->getMessage(), 'error');
+        }
     }
 
-    private function getPosition(int $id): int
+    /**
+     * Fix the entry's position within its role ("Seller #3") and store it, so later
+     * deletions never change a number the person was already told. Counting same-role
+     * ids <= this one stays unique even for simultaneous signups (ids only increase).
+     */
+    private function assignPosition(int $id, string $role): int
     {
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM waitlist WHERE id <= ?");
-        $stmt->execute([$id]);
-        return (int) $stmt->fetchColumn();
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM waitlist WHERE role = ? AND id <= ?");
+        $stmt->execute([$role, $id]);
+        $pos = (int) $stmt->fetchColumn();
+        $this->db->prepare("UPDATE waitlist SET signup_position = ? WHERE id = ?")->execute([$pos, $id]);
+        return $pos;
     }
 
     private function generateCode(): string

@@ -24,6 +24,15 @@ $roleLabels = [
     'partner'  => $fr ? 'Partenaire'          : 'Partner',
 ];
 $myRoleLabel = $roleLabels[$myRole] ?? '';
+// Positions are numbered per role ("#1 among sellers")
+$rolePlural = [
+    'buyer'    => ['les acheteurs', 'buyers'],
+    'seller'   => ['les vendeurs', 'sellers'],
+    'supplier' => ['les fournisseurs', 'suppliers'],
+    'driver'   => ['les livreurs', 'drivers'],
+    'business' => ['les entreprises', 'businesses'],
+    'partner'  => ['les partenaires', 'partners'],
+][$myRole] ?? null;
 ?>
 <!DOCTYPE html>
 <html lang="<?= htmlspecialchars($currentLang) ?>">
@@ -208,7 +217,7 @@ $myRoleLabel = $roleLabels[$myRole] ?? '';
       <?php if ($pos > 0): ?>
       <div class="wl-position-badge">
         #<?= $pos ?>
-        <small><?= $fr ? 'votre position' : 'your position' ?></small>
+        <small><?= $rolePlural ? ($fr ? 'votre position parmi ' . $rolePlural[0] : 'your position among ' . $rolePlural[1]) : ($fr ? 'votre position' : 'your position') ?></small>
       </div>
       <?php endif; ?>
       <p style="font-size:13px;line-height:1.6;"><?= $fr

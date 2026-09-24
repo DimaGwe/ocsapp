@@ -31,7 +31,6 @@ $translations = [
         'create_btn'          => 'Create Account',
         'have_account'        => "Don't have access yet?",
         'sign_in'             => 'Sign in',
-        'min_8_chars'         => 'Minimum 8 characters',
         'email_placeholder'   => 'you@example.com',
         'phone_placeholder'   => '+1-514-555-0000',
         'password_placeholder'=> 'Create a password',
@@ -63,7 +62,6 @@ $translations = [
         'create_btn'          => 'Créer un compte',
         'have_account'        => "Vous n'avez pas encore accès?",
         'sign_in'             => 'Se connecter',
-        'min_8_chars'         => 'Minimum 8 caractères',
         'email_placeholder'   => 'vous@exemple.com',
         'phone_placeholder'   => '+1-514-555-0000',
         'password_placeholder'=> 'Entrez votre mot de passe',
@@ -231,42 +229,43 @@ $hero = $heroConfig[$urlRole] ?? $heroConfig['default'];
             </div>
           </div>
 
-          <!-- Role + Password -->
-          <div class="form-grid">
-            <div class="form-group">
-              <label for="role" class="form-label"><?= $t['register_as'] ?> <span class="required">*</span></label>
-              <select id="role" name="role" class="form-select" required>
-                <option value="buyer"    <?= old('role') === 'buyer'    ? 'selected' : '' ?>><?= $t['buyer'] ?></option>
-                <option value="seller"   <?= old('role') === 'seller'   ? 'selected' : '' ?>><?= $t['seller'] ?></option>
-                <option value="delivery" <?= old('role') === 'delivery' ? 'selected' : '' ?>><?= $t['delivery'] ?></option>
-                <option value="affiliate"<?= old('role') === 'affiliate'? 'selected' : '' ?>><?= $t['affiliate'] ?></option>
-              </select>
-              <div class="driver-notice" id="driverNotice" style="display:none;">
-                <div class="driver-notice-title">
-                  <i class="fa-solid fa-truck"></i>
-                  <?= $fr ? "Rejoindre notre équipe de livraison" : 'Join Our Delivery Team' ?>
-                </div>
-                <div class="driver-notice-desc">
-                  <?= $fr
-                    ? "Les livreurs ne s'inscrivent pas ici. Vous devez d'abord soumettre une demande via notre portail Livreur Central, où notre équipe examinera votre candidature."
-                    : "Delivery drivers don't sign up here. You need to submit an application through our Driver Central first, where our team will review your candidacy." ?>
-                </div>
-                <a href="<?= url('delivery/apply') ?>" class="btn-apply-driver">
-                  <i class="fa-solid fa-paper-plane"></i>
-                  <?= $fr ? 'Soumettre ma candidature' : 'Submit My Application' ?>
-                </a>
+          <!-- Role -->
+          <div class="form-group">
+            <label for="role" class="form-label"><?= $t['register_as'] ?> <span class="required">*</span></label>
+            <select id="role" name="role" class="form-select" required>
+              <option value="buyer"    <?= old('role') === 'buyer'    ? 'selected' : '' ?>><?= $t['buyer'] ?></option>
+              <option value="seller"   <?= old('role') === 'seller'   ? 'selected' : '' ?>><?= $t['seller'] ?></option>
+              <option value="delivery" <?= old('role') === 'delivery' ? 'selected' : '' ?>><?= $t['delivery'] ?></option>
+              <option value="affiliate"<?= old('role') === 'affiliate'? 'selected' : '' ?>><?= $t['affiliate'] ?></option>
+            </select>
+            <div class="driver-notice" id="driverNotice" style="display:none;">
+              <div class="driver-notice-title">
+                <i class="fa-solid fa-truck"></i>
+                <?= $fr ? "Rejoindre notre équipe de livraison" : 'Join Our Delivery Team' ?>
               </div>
+              <div class="driver-notice-desc">
+                <?= $fr
+                  ? "Les livreurs ne s'inscrivent pas ici. Vous devez d'abord soumettre une demande via notre portail Livreur Central, où notre équipe examinera votre candidature."
+                  : "Delivery drivers don't sign up here. You need to submit an application through our Driver Central first, where our team will review your candidacy." ?>
+              </div>
+              <a href="<?= url('delivery/apply') ?>" class="btn-apply-driver">
+                <i class="fa-solid fa-paper-plane"></i>
+                <?= $fr ? 'Soumettre ma candidature' : 'Submit My Application' ?>
+              </a>
             </div>
+          </div>
 
-            <div class="form-group">
-              <label for="password" class="form-label"><?= $t['password'] ?> <span class="required">*</span></label>
-              <div class="input-wrapper">
-                <i class="fa-solid fa-lock input-icon"></i>
-                <input type="password" id="password" name="password"
-                  class="form-input with-icon"
-                  placeholder="<?= $t['password_placeholder'] ?>" minlength="8" required>
-              </div>
-              <p class="form-hint"><?= $t['min_8_chars'] ?></p>
+          <!-- Password -->
+          <div class="form-group">
+            <label for="password" class="form-label"><?= $t['password'] ?> <span class="required">*</span></label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-lock input-icon"></i>
+              <input type="password" id="password" name="password"
+                class="form-input with-icon with-toggle"
+                placeholder="<?= $t['password_placeholder'] ?>" minlength="10" maxlength="72" autocomplete="new-password" required>
+              <button type="button" class="toggle-pass" data-target="password" aria-label="<?= $fr ? 'Afficher le mot de passe' : 'Show password' ?>">
+                <i class="fa-regular fa-eye"></i>
+              </button>
             </div>
           </div>
 
@@ -276,8 +275,18 @@ $hero = $heroConfig[$urlRole] ?? $heroConfig['default'];
             <div class="input-wrapper">
               <i class="fa-solid fa-lock input-icon"></i>
               <input type="password" id="password_confirmation" name="password_confirmation"
-                class="form-input with-icon"
-                placeholder="<?= $t['password_placeholder'] ?>" required>
+                class="form-input with-icon with-toggle"
+                placeholder="<?= $t['password_placeholder'] ?>" autocomplete="new-password" required>
+              <button type="button" class="toggle-pass" data-target="password_confirmation" aria-label="<?= $fr ? 'Afficher le mot de passe' : 'Show password' ?>">
+                <i class="fa-regular fa-eye"></i>
+              </button>
+            </div>
+            <div class="pw-rules" id="pwRules" aria-live="polite">
+              <div class="pw-rule" data-rule="length"><i class="fa-solid fa-circle-xmark"></i> <?= $fr ? '10 caractères minimum' : 'At least 10 characters' ?></div>
+              <div class="pw-rule" data-rule="upper"><i class="fa-solid fa-circle-xmark"></i> <?= $fr ? 'Une lettre majuscule (A-Z)' : 'One uppercase letter (A-Z)' ?></div>
+              <div class="pw-rule" data-rule="lower"><i class="fa-solid fa-circle-xmark"></i> <?= $fr ? 'Une lettre minuscule (a-z)' : 'One lowercase letter (a-z)' ?></div>
+              <div class="pw-rule" data-rule="number"><i class="fa-solid fa-circle-xmark"></i> <?= $fr ? 'Un chiffre (0-9)' : 'One number (0-9)' ?></div>
+              <div class="pw-rule" data-rule="special"><i class="fa-solid fa-circle-xmark"></i> <?= $fr ? 'Un caractère spécial (!@#$%^&*)' : 'One special character (!@#$%^&*)' ?></div>
             </div>
           </div>
 
@@ -323,9 +332,41 @@ $hero = $heroConfig[$urlRole] ?? $heroConfig['default'];
 </main>
 
 <script>
-  // Password match validation
+  // Show/hide password (same behaviour as the login page)
+  document.querySelectorAll('.toggle-pass').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const input = document.getElementById(this.dataset.target);
+      const show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      this.innerHTML = show ? '<i class="fa-regular fa-eye-slash"></i>' : '<i class="fa-regular fa-eye"></i>';
+      this.setAttribute('aria-label', show
+        ? <?= json_encode($fr ? 'Masquer le mot de passe' : 'Hide password') ?>
+        : <?= json_encode($fr ? 'Afficher le mot de passe' : 'Show password') ?>);
+    });
+  });
+
+  // Password rules: same checks as validatePasswordStrength() on the server
   const passwordInput = document.getElementById('password');
   const confirmInput  = document.getElementById('password_confirmation');
+  const pwTests = {
+    length:  pw => pw.length >= 10,
+    upper:   pw => /[A-Z]/.test(pw),
+    lower:   pw => /[a-z]/.test(pw),
+    number:  pw => /[0-9]/.test(pw),
+    special: pw => /[^A-Za-z0-9]/.test(pw),
+  };
+  passwordInput.addEventListener('input', function() {
+    let allOk = true;
+    document.querySelectorAll('#pwRules .pw-rule').forEach(el => {
+      const ok = pwTests[el.dataset.rule](this.value);
+      allOk = allOk && ok;
+      el.classList.toggle('pw-rule-ok', ok);
+      el.querySelector('i').className = ok ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-xmark';
+    });
+    this.setCustomValidity(allOk ? '' : <?= json_encode($fr ? 'Le mot de passe ne respecte pas toutes les règles ci-dessous.' : 'Password does not meet all the rules below.') ?>);
+  });
+
+  // Password match validation
   confirmInput.addEventListener('input', function() {
     this.setCustomValidity(
       (passwordInput.value !== this.value && this.value.length > 0)

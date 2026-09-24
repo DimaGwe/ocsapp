@@ -2238,43 +2238,13 @@ class SupplierProductController {
     }
 
     /**
-     * Stream Supplier Onboarding Package as PDF (from planner_templates)
+     * Documents > Onboarding package: now the official HTML package (the old
+     * planner-template PDF read a slug that no longer exists).
      */
     public function onboardingPdf(): void
     {
         $this->checkAuth();
-
-        try {
-            $db = \Database::getConnection();
-            $stmt = $db->prepare("
-                SELECT name, content FROM planner_templates
-                WHERE slug = 'supplier-onboarding-package' AND is_active = 1
-                LIMIT 1
-            ");
-            $stmt->execute();
-            $template = $stmt->fetch(\PDO::FETCH_ASSOC);
-
-            if (!$template) {
-                header('HTTP/1.0 404 Not Found');
-                echo 'Onboarding package not found';
-                return;
-            }
-
-            $html  = $this->pdfWrapper();
-            $html .= '<div class="lang-section">' . $template['content'] . '</div>';
-            $html .= '</body></html>';
-
-            $dompdf = $this->makeDompdf();
-            $dompdf->loadHtml($html);
-            $dompdf->setPaper('A4', 'portrait');
-            $dompdf->render();
-            $dompdf->stream('OCSAPP-Supplier-Onboarding-Package.pdf', ['Attachment' => false]);
-
-        } catch (\Exception $e) {
-            error_log('Supplier onboarding PDF error: ' . $e->getMessage());
-            header('HTTP/1.0 500 Internal Server Error');
-            echo 'Error generating document';
-        }
+        redirect(\App\Helpers\OnboardingPackageHelper::url('supplier'));
     }
 
     /**

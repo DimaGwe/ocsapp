@@ -414,6 +414,7 @@ $fr = ($currentLang === 'fr');
           ? "Aucune démarche à faire : votre statut est confirmé automatiquement à l'activation de votre compte, tant que la cohorte n'est pas fermée."
           : "Nothing to request: your status is confirmed automatically when your account is activated, as long as the cohort isn't already closed." ?></li>
       </ul>
+      <p style="margin:14px 0 0;font-weight:600;"><a href="<?= url('founding') ?>#supplier" style="color:#00b207;"><?= $fr ? 'Voir tous les programmes fondateurs et les places restantes' : 'See all founding programs and spots remaining' ?> &rarr;</a></p>
     </div>
   </div>
 </section>

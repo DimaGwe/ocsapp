@@ -175,7 +175,9 @@ class SettingsController {
 
                 // Handle boolean values
                 if ($setting['type'] === 'boolean') {
-                    $value = isset($settings[$key]) ? 'true' : 'false';
+                    // The view posts a hidden "0" before each checkbox, so an unticked box
+                    // arrives as "0" (previously it was never posted and could not be turned off).
+                    $value = in_array((string) $value, ['1', 'true', 'on'], true) ? 'true' : 'false';
                 }
 
                 // Handle image uploads

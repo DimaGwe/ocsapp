@@ -1,0 +1,44 @@
+/* Founding programs page (/founding). Builds on buyer-central.css (loaded first). */
+
+.fd-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+.fd-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  scroll-margin-top: 90px;
+}
+.fd-card.fd-full { opacity: .72; }
+.fd-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.fd-card-head h2 { font-size: 1.15rem; margin: 0; }
+.fd-spots {
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 700;
+  color: #166534;
+  background: rgba(var(--green-rgb), .1);
+  border-radius: 20px;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+.fd-spots.fd-spots-full { color: #6b7280; background: #f3f4f6; }
+.fd-bar { height: 6px; background: #eef2ef; border-radius: 6px; margin: 14px 0 12px; overflow: hidden; }
+.fd-bar span { display: block; height: 100%; background: var(--green); border-radius: 6px; }
+.fd-who { font-size: .9rem; color: var(--text-grey); margin: 0 0 12px; }
+.fd-perks { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
+.fd-perks li { display: flex; gap: 10px; font-size: .92rem; line-height: 1.5; }
+.fd-perks i { color: var(--green); margin-top: 4px; font-size: 12px; }
+.fd-soon { font-size: .85rem; color: #92400e; background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 10px 12px; margin: 0 0 12px; line-height: 1.5; }
+.fd-note { font-size: .85rem; color: var(--text-grey); margin: 0 0 12px; line-height: 1.5; }
+.fd-how { font-size: .85rem; color: #166534; margin: auto 0 14px; padding-top: 4px; }
+.fd-links { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: .88rem; font-weight: 600; }
+.fd-links a { color: var(--green); }
+.fd-soft { background: var(--bg-light); }
+.fd-steps-lead { max-width: 720px; color: var(--text-grey); line-height: 1.7; }

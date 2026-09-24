@@ -211,6 +211,8 @@ class AuthController {
 
     public function showRegister(): void {
         AuthMiddleware::guest();
+        // Beta mode: /register?role=seller is a second seller signup path, gate it as seller
+        \App\Helpers\BetaAccessHelper::guardPage(sanitize($_GET['role'] ?? '') === 'seller' ? 'seller' : 'buyer');
         view('auth.register');
     }
 
@@ -232,6 +234,10 @@ class AuthController {
             'password' => post('password', ''),
             'password_confirmation' => post('password_confirmation', ''),
         ];
+
+        // Beta mode: invite-only signup (seller when this legacy form is used with role=seller)
+        $betaRole = sanitize($_GET['role'] ?? post('role', 'buyer')) === 'seller' ? 'seller' : 'buyer';
+        \App\Helpers\BetaAccessHelper::guardSubmit($betaRole, $data['email']);
 
         // Validate required fields
         $errors = validateRequired(
@@ -270,14 +276,14 @@ class AuthController {
         // Validate password strength
         $pwErrors = validatePasswordStrength($data['password']);
         if (!empty($pwErrors)) {
-            setFlash('error', 'Password must have: ' . implode(', ', $pwErrors));
+            setFlash('error', passwordStrengthMessage($pwErrors));
             setOldInput($data);
             back();
         }
 
         // Validate password match
         if ($data['password'] !== $data['password_confirmation']) {
-            setFlash('error', 'Passwords do not match');
+            setFlash('error', passwordMismatchMessage());
             setOldInput($data);
             back();
         }
@@ -546,8 +552,10 @@ class AuthController {
                     logger("Seller application emails sent for {$user['email']}", 'info');
                 } else {
                     \App\Helpers\EmailHelper::sendBuyerWelcome($user);
+                    \App\Helpers\NotificationHelper::newUserRegistration($user);
                     logger("Buyer welcome email sent to {$user['email']}", 'info');
                 }
+                \App\Helpers\WaitlistHelper::markConverted($user['email'], $role);
             } catch (\Exception $e) {
                 logger("Failed to send post-verification email: " . $e->getMessage(), 'warning');
             }
@@ -754,7 +762,9 @@ class AuthController {
                     \App\Helpers\NotificationHelper::sellerApplication($userArr);
                 } else {
                     \App\Helpers\EmailHelper::sendBuyerWelcome($userArr);
+                    \App\Helpers\NotificationHelper::newUserRegistration($userArr);
                 }
+                \App\Helpers\WaitlistHelper::markConverted($userArr['email'], $role);
             } catch (\Exception $e) {
                 logger("Failed to send post-verification email: " . $e->getMessage(), 'warning');
             }
@@ -974,11 +984,11 @@ class AuthController {
         }
         $pwErrors = validatePasswordStrength($password);
         if (!empty($pwErrors)) {
-            setFlash('error', implode(' ', $pwErrors));
+            setFlash('error', passwordStrengthMessage($pwErrors));
             back(); return;
         }
         if ($password !== $confirm) {
-            setFlash('error', 'Passwords do not match.');
+            setFlash('error', passwordMismatchMessage());
             back(); return;
         }
 

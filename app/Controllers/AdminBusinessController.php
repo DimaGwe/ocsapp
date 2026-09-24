@@ -358,8 +358,9 @@ class AdminBusinessController
                     $attachments
                 );
 
+                // Only delete generated temp files, never the permanent onboarding package files
                 foreach ($attachments as $att) {
-                    if (file_exists($att['path'])) {
+                    if (!empty($att['temp']) && file_exists($att['path'])) {
                         @unlink($att['path']);
                     }
                 }
@@ -1327,38 +1328,20 @@ class AdminBusinessController
 
                 $tmpFile = tempnam(sys_get_temp_dir(), 'ocsapp_agreement_') . '.pdf';
                 file_put_contents($tmpFile, $dompdf->output());
-                $attachments[] = ['path' => $tmpFile, 'name' => 'Distribution-Service-Agreement.pdf'];
+                $attachments[] = ['path' => $tmpFile, 'name' => 'Distribution-Service-Agreement.pdf', 'temp' => true];
             }
         } catch (\Exception $e) {
             error_log('Agreement PDF generation error: ' . $e->getMessage());
         }
 
-        // --- Onboarding Package PDF ---
-        try {
-            $stmt = $this->db->prepare("
-                SELECT content FROM planner_templates
-                WHERE slug = 'business-onboarding-package' AND is_active = 1
-                LIMIT 1
-            ");
-            $stmt->execute();
-            $content = $stmt->fetchColumn();
-
-            if ($content) {
-                $html  = $pdfWrapper;
-                $html .= '<div class="lang-section">' . $content . '</div>';
-                $html .= '</body></html>';
-
-                $dompdf = new \Dompdf\Dompdf($options);
-                $dompdf->loadHtml($html);
-                $dompdf->setPaper('A4', 'portrait');
-                $dompdf->render();
-
-                $tmpFile = tempnam(sys_get_temp_dir(), 'ocsapp_onboarding_') . '.pdf';
-                file_put_contents($tmpFile, $dompdf->output());
-                $attachments[] = ['path' => $tmpFile, 'name' => 'OCSAPP-Business-Onboarding-Package.pdf'];
+        // --- Onboarding package: the official HTML files (FR + EN) ---
+        foreach ([true => 'FR', false => 'EN'] as $isFr => $lang) {
+            $pkg = \App\Helpers\OnboardingPackageHelper::path('business', (bool) $isFr);
+            if (is_file($pkg)) {
+                $attachments[] = ['path' => $pkg, 'name' => "OCSAPP-Business-Onboarding-Package-{$lang}.html"];
+            } else {
+                error_log('Onboarding package missing: ' . $pkg);
             }
-        } catch (\Exception $e) {
-            error_log('Onboarding PDF generation error: ' . $e->getMessage());
         }
 
         return $attachments;

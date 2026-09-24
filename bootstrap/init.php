@@ -551,6 +551,34 @@ if (!function_exists('validatePasswordStrength')) {
     }
 }
 
+// Bilingual user-facing messages for validatePasswordStrength() results
+if (!function_exists('passwordStrengthMessage')) {
+    function passwordStrengthMessage(array $errors, ?bool $fr = null): string {
+        $fr = $fr ?? (($_SESSION['language'] ?? 'fr') === 'fr');
+        if (!$fr) {
+            return 'Password must contain: ' . implode(', ', $errors) . '.';
+        }
+        $map = [
+            'at least 10 characters'     => 'au moins 10 caractères',
+            'no more than 72 characters' => 'au plus 72 caractères',
+            'one uppercase letter'       => 'une lettre majuscule',
+            'one lowercase letter'       => 'une lettre minuscule',
+            'one number'                 => 'un chiffre',
+            'one special character'      => 'un caractère spécial',
+            'not be a common password'   => 'ne pas être un mot de passe trop courant',
+        ];
+        $fr_errors = array_map(fn($e) => $map[$e] ?? $e, $errors);
+        return 'Le mot de passe doit contenir : ' . implode(', ', $fr_errors) . '.';
+    }
+}
+
+if (!function_exists('passwordMismatchMessage')) {
+    function passwordMismatchMessage(?bool $fr = null): string {
+        $fr = $fr ?? (($_SESSION['language'] ?? 'fr') === 'fr');
+        return $fr ? 'Les mots de passe ne correspondent pas.' : 'Passwords do not match.';
+    }
+}
+
 // Audit logging for sensitive operations
 if (!function_exists('auditLog')) {
     function auditLog(string $action, string $details = '', ?int $targetUserId = null): void {

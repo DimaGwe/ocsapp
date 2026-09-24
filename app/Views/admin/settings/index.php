@@ -447,6 +447,8 @@ ob_start();
               
             <?php elseif ($setting['type'] === 'boolean'): ?>
               <label class="checkbox-wrapper">
+                <!-- Unchecked checkboxes aren't posted at all; this hidden value makes "off" save -->
+                <input type="hidden" name="settings[<?= $setting['key'] ?>]" value="0">
                 <input 
                   type="checkbox"
                   id="setting_<?= $setting['key'] ?>"

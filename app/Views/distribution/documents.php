@@ -27,6 +27,7 @@ $t = [
         'provided_by'           => 'Provided by OCSAPP',
         'view_agreement'        => 'View Agreement (FR/EN)',
         'download_pdf'          => 'Download PDF',
+        'download_package'      => 'Download',
         'you_signed'            => 'You signed this agreement on',
         'confirm_sign'          => 'Confirm & Sign',
         // Onboarding card
@@ -71,6 +72,7 @@ $t = [
         'provided_by'           => 'Fourni par OCSAPP',
         'view_agreement'        => 'Voir l\'accord (FR/EN)',
         'download_pdf'          => 'Télécharger le PDF',
+        'download_package'      => 'Télécharger',
         'you_signed'            => 'Vous avez signé cet accord le',
         'confirm_sign'          => 'Confirmer et signer',
         // Onboarding card
@@ -477,11 +479,11 @@ $agreedVersion = $profile['agreement_version'] ?? null;
     <span class="doc-provided-badge"><i class="fas fa-building"></i> <?= $t['provided_by'] ?></span>
   </div>
   <div class="doc-actions-row">
-    <a href="<?= url('distribution/documents/onboarding.pdf') ?>" target="_blank" class="btn-view">
+    <a href="<?= \App\Helpers\OnboardingPackageHelper::url('business') ?>" target="_blank" class="btn-view">
       <i class="fas fa-eye"></i> <?= $t['view_onboarding'] ?>
     </a>
-    <a href="<?= url('distribution/documents/onboarding.pdf') ?>" download class="btn-replace">
-      <i class="fas fa-download"></i> <?= $t['download_pdf'] ?>
+    <a href="<?= \App\Helpers\OnboardingPackageHelper::url('business') ?>" download class="btn-replace">
+      <i class="fas fa-download"></i> <?= $t['download_package'] ?>
     </a>
   </div>
   <p style="font-size:13px;color:var(--gray-500);margin:0;"><?= $t['onboarding_desc'] ?></p>

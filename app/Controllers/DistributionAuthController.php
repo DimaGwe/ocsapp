@@ -176,6 +176,8 @@ class DistributionAuthController
             return;
         }
 
+        \App\Helpers\BetaAccessHelper::guardPage('business');
+
         view('distribution.register', [
             'errors' => $_SESSION['register_errors'] ?? [],
             'old' => $_SESSION['register_old'] ?? []
@@ -189,6 +191,7 @@ class DistributionAuthController
      */
     public function register(): void
     {
+        $fr = ($_SESSION['language'] ?? 'fr') === 'fr';
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             redirect('distribution/register');
             return;
@@ -196,10 +199,11 @@ class DistributionAuthController
 
         // Verify CSRF
         if (!verifyCsrfToken($_POST['_csrf_token'] ?? '')) {
-            $_SESSION['register_errors'] = ['general' => 'Invalid request. Please try again.'];
+            $_SESSION['register_errors'] = ['general' => ($fr ? "Requête invalide. Veuillez réessayer." : 'Invalid request. Please try again.')];
             redirect('distribution/register');
             return;
         }
+        \App\Helpers\BetaAccessHelper::guardSubmit('business', (string) ($_POST['email'] ?? ''));
 
         // Collect and sanitize input
         $data = [
@@ -234,13 +238,13 @@ class DistributionAuthController
             $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
             if ($file['error'] !== UPLOAD_ERR_OK) {
-                $uploadError = 'Document upload failed. Please try again.';
+                $uploadError = ($fr ? "Le téléversement du document a échoué. Veuillez réessayer." : 'Document upload failed. Please try again.');
             } elseif ($file['size'] > 5 * 1024 * 1024) {
-                $uploadError = 'Document must be less than 5MB.';
+                $uploadError = ($fr ? "Le document doit faire moins de 5 Mo." : 'Document must be less than 5MB.');
             } elseif (!in_array($ext, $allowedExts)) {
-                $uploadError = 'Only PDF, JPG, and PNG files are allowed.';
+                $uploadError = ($fr ? "Seuls les fichiers PDF, JPG et PNG sont acceptés." : 'Only PDF, JPG, and PNG files are allowed.');
             } elseif (!in_array(mime_content_type($file['tmp_name']), $allowedMimes)) {
-                $uploadError = 'Invalid file type.';
+                $uploadError = ($fr ? "Type de fichier invalide." : 'Invalid file type.');
             } else {
                 $uploadDir     = 'uploads/distribution-applications';
                 $fullUploadDir = BASE_PATH . '/public/' . $uploadDir;
@@ -253,7 +257,7 @@ class DistributionAuthController
                     chmod($destPath, 0644);
                     $docPath = $uploadDir . '/' . $safeFilename;
                 } else {
-                    $uploadError = 'Failed to save document. Please try again.';
+                    $uploadError = ($fr ? "Impossible d'enregistrer le document. Veuillez réessayer." : 'Failed to save document. Please try again.');
                 }
             }
         }
@@ -414,9 +418,9 @@ class DistributionAuthController
             error_log('Distribution registration error: ' . $e->getMessage());
 
             if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
-                $_SESSION['register_errors'] = ['email' => 'This email is already registered.'];
+                $_SESSION['register_errors'] = ['email' => ($fr ? "Cette adresse courriel est déjà inscrite." : 'This email is already registered.')];
             } else {
-                $_SESSION['register_errors'] = ['general' => 'An error occurred. Please try again.'];
+                $_SESSION['register_errors'] = ['general' => ($fr ? "Une erreur est survenue. Veuillez réessayer." : 'An error occurred. Please try again.')];
             }
 
             $_SESSION['register_old'] = $data;
@@ -442,13 +446,14 @@ class DistributionAuthController
      */
     public function verifyEmail(): void
     {
+        $fr = ($_SESSION['language'] ?? 'fr') === 'fr';
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             redirect('distribution/verify-email');
             return;
         }
 
         if (!verifyCsrfToken($_POST['_csrf_token'] ?? '')) {
-            $_SESSION['verify_errors'] = ['general' => 'Invalid request. Please try again.'];
+            $_SESSION['verify_errors'] = ['general' => ($fr ? "Requête invalide. Veuillez réessayer." : 'Invalid request. Please try again.')];
             redirect('distribution/verify-email');
             return;
         }
@@ -463,7 +468,7 @@ class DistributionAuthController
         $attempts    = &$_SESSION['verification_attempts'];
 
         if ($attempts >= $maxAttempts) {
-            $_SESSION['verify_errors'] = ['general' => 'Too many attempts. Please request a new code.'];
+            $_SESSION['verify_errors'] = ['general' => ($fr ? "Trop de tentatives. Veuillez demander un nouveau code." : 'Too many attempts. Please request a new code.')];
             redirect('distribution/verify-email');
             return;
         }
@@ -472,7 +477,7 @@ class DistributionAuthController
 
         if (strlen($submitted) !== 6) {
             $attempts++;
-            $_SESSION['verify_errors'] = ['general' => 'Please enter the complete 6-digit code.'];
+            $_SESSION['verify_errors'] = ['general' => ($fr ? "Veuillez entrer le code complet à 6 chiffres." : 'Please enter the complete 6-digit code.')];
             redirect('distribution/verify-email');
             return;
         }
@@ -487,14 +492,14 @@ class DistributionAuthController
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         if (!$row) {
-            $_SESSION['verify_errors'] = ['general' => 'Account not found. Please register again.'];
+            $_SESSION['verify_errors'] = ['general' => ($fr ? "Compte introuvable. Veuillez vous inscrire à nouveau." : 'Account not found. Please register again.')];
             redirect('distribution/register');
             return;
         }
 
         // Check expiry
         if (new \DateTime() > new \DateTime($row['email_verification_expires_at'])) {
-            $_SESSION['verify_errors'] = ['general' => 'Your code has expired. Please request a new one.'];
+            $_SESSION['verify_errors'] = ['general' => ($fr ? "Votre code est expiré. Veuillez en demander un nouveau." : 'Your code has expired. Please request a new one.')];
             redirect('distribution/verify-email');
             return;
         }
@@ -504,8 +509,8 @@ class DistributionAuthController
             $attempts++;
             $remaining = $maxAttempts - $attempts;
             $msg = $remaining > 0
-                ? "Incorrect code. {$remaining} attempt(s) remaining."
-                : 'Too many failed attempts. Please request a new code.';
+                ? ($fr ? "Code incorrect. Il vous reste {$remaining} tentative(s)." : "Incorrect code. {$remaining} attempt(s) remaining.")
+                : ($fr ? "Trop de tentatives échouées. Veuillez demander un nouveau code." : 'Too many failed attempts. Please request a new code.');
             $_SESSION['verify_errors'] = ['general' => $msg];
             redirect('distribution/verify-email');
             return;
@@ -582,6 +587,7 @@ class DistributionAuthController
         } catch (\Exception $e) {
             error_log('Failed to add distribution bell notification: ' . $e->getMessage());
         }
+        \App\Helpers\WaitlistHelper::markConverted($pending['email'], 'business');
 
         // 4. Admin email
         try {
@@ -635,6 +641,7 @@ class DistributionAuthController
      */
     public function resendVerification(): void
     {
+        $fr = ($_SESSION['language'] ?? 'fr') === 'fr';
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             redirect('distribution/verify-email');
             return;
@@ -676,7 +683,7 @@ class DistributionAuthController
             $_SESSION['verify_success'] = 'A new code has been sent to your email.';
         } catch (\Exception $e) {
             error_log('Failed to resend distribution verification code: ' . $e->getMessage());
-            $_SESSION['verify_errors'] = ['general' => 'Failed to resend code. Please try again.'];
+            $_SESSION['verify_errors'] = ['general' => ($fr ? "Impossible de renvoyer le code. Veuillez réessayer." : 'Failed to resend code. Please try again.')];
         }
 
         redirect('distribution/verify-email');
@@ -827,6 +834,7 @@ class DistributionAuthController
         } catch (\Exception $e) {
             error_log('Failed to add distribution bell notification: ' . $e->getMessage());
         }
+        \App\Helpers\WaitlistHelper::markConverted($pending['email'], 'business');
 
         // Admin email
         try {
@@ -894,6 +902,13 @@ class DistributionAuthController
         }
 
         $businessId = $_SESSION['business']['id'] ?? null;
+
+        // Expire a finished 6-month Founding lock before reading it, so the card never shows a stale lock
+        try {
+            if ($businessId) { \App\Helpers\FoundingBusinessHelper::applyLazyExpiryIfNeeded((int) $businessId); }
+        } catch (\Throwable $e) {
+            logger('Founding business expiry check failed: ' . $e->getMessage(), 'warning');
+        }
 
         // Get business profile
         $stmt = $this->db->prepare("
@@ -1691,42 +1706,43 @@ class DistributionAuthController
      */
     private function validateRegistration(array $data): array
     {
+        $fr = ($_SESSION['language'] ?? 'fr') === 'fr';
         $errors = [];
 
         // Company name
         if (empty($data['company_name'])) {
-            $errors['company_name'] = 'Company name is required.';
+            $errors['company_name'] = ($fr ? "Le nom de l'entreprise est requis." : 'Company name is required.');
         } elseif (strlen($data['company_name']) > 255) {
-            $errors['company_name'] = 'Company name is too long.';
+            $errors['company_name'] = ($fr ? "Le nom de l'entreprise est trop long." : 'Company name is too long.');
         }
 
         // NEQ
         if (empty($data['neq_number'])) {
-            $errors['neq_number'] = 'NEQ (Enterprise Number) is required.';
+            $errors['neq_number'] = ($fr ? "Le NEQ (numéro d'entreprise du Québec) est requis." : 'NEQ (Enterprise Number) is required.');
         } elseif (!preg_match('/^\d{10}$/', $data['neq_number'])) {
-            $errors['neq_number'] = 'NEQ must be exactly 10 digits.';
+            $errors['neq_number'] = ($fr ? "Le NEQ doit comporter exactement 10 chiffres." : 'NEQ must be exactly 10 digits.');
         }
 
         // Legal name
         if (empty($data['legal_name'])) {
-            $errors['legal_name'] = 'Legal name is required.';
+            $errors['legal_name'] = ($fr ? "La dénomination légale est requise." : 'Legal name is required.');
         } elseif (strlen($data['legal_name']) > 255) {
-            $errors['legal_name'] = 'Legal name is too long.';
+            $errors['legal_name'] = ($fr ? "La dénomination légale est trop longue." : 'Legal name is too long.');
         }
 
         // Registered office address
         if (empty($data['registered_address_street'])) {
-            $errors['registered_address_street'] = 'Registered office street address is required.';
+            $errors['registered_address_street'] = ($fr ? "L'adresse du siège social est requise." : 'Registered office street address is required.');
         }
 
         if (empty($data['registered_address_city'])) {
-            $errors['registered_address_city'] = 'Registered office city is required.';
+            $errors['registered_address_city'] = ($fr ? "La ville du siège social est requise." : 'Registered office city is required.');
         }
 
         if (empty($data['registered_address_postal'])) {
-            $errors['registered_address_postal'] = 'Registered office postal code is required.';
+            $errors['registered_address_postal'] = ($fr ? "Le code postal du siège social est requis." : 'Registered office postal code is required.');
         } elseif (!preg_match('/^[A-Z]\d[A-Z]\s?\d[A-Z]\d$/i', $data['registered_address_postal'])) {
-            $errors['registered_address_postal'] = 'Please enter a valid Canadian postal code.';
+            $errors['registered_address_postal'] = ($fr ? "Veuillez entrer un code postal canadien valide." : 'Please enter a valid Canadian postal code.');
         }
 
         // Document upload
@@ -1736,19 +1752,19 @@ class DistributionAuthController
 
         // First name
         if (empty($data['first_name'])) {
-            $errors['first_name'] = 'First name is required.';
+            $errors['first_name'] = ($fr ? "Le prénom est requis." : 'First name is required.');
         }
 
         // Last name
         if (empty($data['last_name'])) {
-            $errors['last_name'] = 'Last name is required.';
+            $errors['last_name'] = ($fr ? "Le nom est requis." : 'Last name is required.');
         }
 
         // Email
         if (empty($data['email'])) {
-            $errors['email'] = 'Email is required.';
+            $errors['email'] = ($fr ? "L'adresse courriel est requise." : 'Email is required.');
         } elseif (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-            $errors['email'] = 'Please enter a valid email address.';
+            $errors['email'] = ($fr ? "Veuillez entrer une adresse courriel valide." : 'Please enter a valid email address.');
         } else {
             // Block only if a distribution (business) account already exists for this email
             $stmt = $this->db->prepare("
@@ -1758,7 +1774,9 @@ class DistributionAuthController
             ");
             $stmt->execute([$data['email']]);
             if ($stmt->fetch()) {
-                $errors['email'] = 'This email already has a distribution account. <a href="' . url('distribution/login') . '" style="color:#991b1b;font-weight:700;text-decoration:underline;">Sign in instead</a>.';
+                $errors['email'] = $fr
+                    ? "Cette adresse courriel a déjà un compte d'entreprise. Veuillez plutôt vous connecter."
+                    : 'This email already has a business account. Please sign in instead.';
             }
 
             // Check if email is banned from re-registering
@@ -1766,59 +1784,53 @@ class DistributionAuthController
                 $banStmt = $this->db->prepare("SELECT id FROM deleted_users WHERE email = ? AND can_rejoin = 0 LIMIT 1");
                 $banStmt->execute([$data['email']]);
                 if ($banStmt->fetch()) {
-                    $errors['email'] = 'This account has been disabled. Please contact us at <a href="mailto:info@ocsapp.ca">info@ocsapp.ca</a> for assistance.';
+                    $errors['email'] = $fr
+                        ? "Ce compte a été désactivé. Veuillez nous écrire à info@ocsapp.ca pour obtenir de l'aide."
+                        : 'This account has been disabled. Please contact us at info@ocsapp.ca for assistance.';
                 }
             }
         }
 
         // Phone
         if (empty($data['phone'])) {
-            $errors['phone'] = 'Phone number is required.';
+            $errors['phone'] = ($fr ? "Le numéro de téléphone est requis." : 'Phone number is required.');
         }
 
         // Delivery address
         if (empty($data['delivery_street'])) {
-            $errors['delivery_street'] = 'Street address is required.';
+            $errors['delivery_street'] = ($fr ? "L'adresse est requise." : 'Street address is required.');
         }
 
         if (empty($data['delivery_city'])) {
-            $errors['delivery_city'] = 'City is required.';
+            $errors['delivery_city'] = ($fr ? "La ville est requise." : 'City is required.');
         }
 
         if (empty($data['delivery_province'])) {
-            $errors['delivery_province'] = 'Province is required.';
+            $errors['delivery_province'] = ($fr ? "La province est requise." : 'Province is required.');
         }
 
         if (empty($data['delivery_postal_code'])) {
-            $errors['delivery_postal_code'] = 'Postal code is required.';
+            $errors['delivery_postal_code'] = ($fr ? "Le code postal est requis." : 'Postal code is required.');
         } elseif (!preg_match('/^[A-Z]\d[A-Z]\s?\d[A-Z]\d$/i', $data['delivery_postal_code'])) {
-            $errors['delivery_postal_code'] = 'Please enter a valid Canadian postal code.';
+            $errors['delivery_postal_code'] = ($fr ? "Veuillez entrer un code postal canadien valide." : 'Please enter a valid Canadian postal code.');
         }
 
-        // Password (enforce 10 chars + complexity)
+        // Password (same rules and bilingual messages as the other signup forms)
         $pw = $data['password'] ?? '';
         if (empty($pw)) {
-            $errors['password'] = 'Password is required.';
-        } elseif (strlen($pw) < 10) {
-            $errors['password'] = 'Password must be at least 10 characters.';
-        } elseif (!preg_match('/[A-Z]/', $pw)) {
-            $errors['password'] = 'Password must contain at least one uppercase letter.';
-        } elseif (!preg_match('/[a-z]/', $pw)) {
-            $errors['password'] = 'Password must contain at least one lowercase letter.';
-        } elseif (!preg_match('/[0-9]/', $pw)) {
-            $errors['password'] = 'Password must contain at least one number.';
-        } elseif (!preg_match('/[^A-Za-z0-9]/', $pw)) {
-            $errors['password'] = 'Password must contain at least one special character.';
+            $errors['password'] = $fr ? 'Le mot de passe est requis.' : 'Password is required.';
+        } elseif ($pwErrors = validatePasswordStrength($pw)) {
+            $errors['password'] = passwordStrengthMessage($pwErrors);
         }
 
         // Password confirmation
         if ($data['password'] !== $data['password_confirmation']) {
-            $errors['password_confirmation'] = 'Passwords do not match.';
+            $errors['password_confirmation'] = passwordMismatchMessage();
         }
 
         // Terms
         if (!$data['terms']) {
-            $errors['terms'] = 'You must accept the terms and conditions.';
+            $errors['terms'] = ($fr ? "Vous devez accepter les conditions d'utilisation." : 'You must accept the terms and conditions.');
         }
 
         return $errors;
@@ -1883,7 +1895,8 @@ class DistributionAuthController
     }
 
     /**
-     * Stream Business Onboarding Package as PDF
+     * Documents > Onboarding package: now the official HTML package (the old
+     * planner-template PDF read a slug that no longer exists).
      */
     public function onboardingPdf(): void
     {
@@ -1892,41 +1905,7 @@ class DistributionAuthController
             echo 'Access denied';
             return;
         }
-
-        try {
-            $stmt = $this->db->prepare("
-                SELECT name, content FROM planner_templates
-                WHERE slug = 'business-onboarding-package' AND is_active = 1
-                LIMIT 1
-            ");
-            $stmt->execute();
-            $template = $stmt->fetch(\PDO::FETCH_ASSOC);
-
-            if (!$template) {
-                header('HTTP/1.0 404 Not Found');
-                echo 'Onboarding package not found';
-                return;
-            }
-
-            $html  = $this->agreementPdfWrapper();
-            $html .= '<div class="lang-section">' . $template['content'] . '</div>';
-            $html .= '</body></html>';
-
-            $options = new \Dompdf\Options();
-            $options->set('isHtml5ParserEnabled', true);
-            $options->set('defaultFont', 'Helvetica');
-
-            $dompdf = new \Dompdf\Dompdf($options);
-            $dompdf->loadHtml($html);
-            $dompdf->setPaper('A4', 'portrait');
-            $dompdf->render();
-            $dompdf->stream('OCSAPP-Business-Onboarding-Package.pdf', ['Attachment' => false]);
-
-        } catch (\Exception $e) {
-            error_log('Onboarding PDF error: ' . $e->getMessage());
-            header('HTTP/1.0 500 Internal Server Error');
-            echo 'Error generating document';
-        }
+        redirect(\App\Helpers\OnboardingPackageHelper::url('business'));
     }
 
     /**

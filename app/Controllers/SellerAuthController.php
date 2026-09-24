@@ -16,6 +16,7 @@ class SellerAuthController
     public function apply(): void
     {
         \App\Middlewares\AuthMiddleware::guest();
+        \App\Helpers\BetaAccessHelper::guardPage('seller');
 
         $flash = null;
         if (isset($_SESSION['flash'])) {
@@ -42,6 +43,7 @@ class SellerAuthController
             back();
             return;
         }
+        \App\Helpers\BetaAccessHelper::guardSubmit('seller', (string) post('email', ''));
 
         // Package selection -> commission rates (existing AdminShopController::updatePackage() map)
         $validPackages = ['Essential', 'Experience', 'Prestige', 'Enterprise'];
@@ -115,12 +117,12 @@ class SellerAuthController
         $passwordConfirmation = post('password_confirmation', '');
         $pwErrors = validatePasswordStrength($password);
         if (!empty($pwErrors)) {
-            setFlash('error', 'Password must contain: ' . implode(', ', $pwErrors) . '.');
+            setFlash('error', passwordStrengthMessage($pwErrors));
             back();
             return;
         }
         if ($password !== $passwordConfirmation) {
-            setFlash('error', 'Passwords do not match.');
+            setFlash('error', passwordMismatchMessage());
             back();
             return;
         }

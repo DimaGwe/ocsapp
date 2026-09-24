@@ -22,16 +22,19 @@ class AdminWaitlistController
         $search  = sanitize(get('search', ''));
         $role    = sanitize(get('role', ''));
         $status  = sanitize(get('status', ''));
+        // sort=position: by role, then position within the role; default newest first
+        $sort    = get('sort', '') === 'position' ? 'position' : 'newest';
 
         $where  = ['1=1'];
         $params = [];
 
         if ($search) {
-            $where[]  = "(email LIKE ? OR first_name LIKE ? OR last_name LIKE ?)";
+            $where[]  = "(email LIKE ? OR first_name LIKE ? OR last_name LIKE ? OR referral_code = ?)";
             $term     = "%{$search}%";
             $params[] = $term;
             $params[] = $term;
             $params[] = $term;
+            $params[] = strtoupper(trim($search));
         }
         if ($role) {
             $where[]  = "role = ?";
@@ -50,10 +53,11 @@ class AdminWaitlistController
 
         $stmt = $this->db->prepare("
             SELECT w.*,
-                   (SELECT COUNT(*) FROM waitlist w2 WHERE w2.referred_by = w.referral_code) AS referral_count
+                   (SELECT COUNT(*) FROM waitlist w2 WHERE w2.referred_by = w.referral_code) AS referral_count,
+                   EXISTS(SELECT 1 FROM users u WHERE u.email = w.email) AS has_account
             FROM waitlist w
             WHERE {$clause}
-            ORDER BY w.created_at DESC
+            ORDER BY " . ($sort === 'position' ? "w.role, w.signup_position, w.id" : "w.created_at DESC") . "
             LIMIT {$perPage} OFFSET {$offset}
         ");
         $stmt->execute($params);
@@ -75,7 +79,7 @@ class AdminWaitlistController
             FROM waitlist
         ")->fetch();
 
-        view('admin.waitlist.index', compact('entries', 'total', 'page', 'perPage', 'search', 'role', 'status', 'stats'));
+        view('admin.waitlist.index', compact('entries', 'total', 'page', 'perPage', 'search', 'role', 'status', 'stats', 'sort'));
     }
 
     public function notify(): void
@@ -95,20 +99,45 @@ class AdminWaitlistController
         $ids = array_map('intval', $ids);
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
 
-        $stmt = $this->db->prepare("SELECT * FROM waitlist WHERE id IN ({$placeholders}) AND status = 'pending' AND unsubscribed_at IS NULL");
+        // Beta invites: any not-yet-converted entry can be (re)invited; re-sends reuse the same link.
+        $stmt = $this->db->prepare("
+            SELECT w.*, EXISTS(SELECT 1 FROM users u WHERE u.email = w.email) AS has_account
+            FROM waitlist w
+            WHERE w.id IN ({$placeholders}) AND w.status IN ('pending', 'notified')
+        ");
         $stmt->execute($ids);
         $entries = $stmt->fetchAll();
 
         $sent = 0;
+        $skipped = [];
         foreach ($entries as $entry) {
-            if ($this->sendLaunchNotification($entry)) {
-                $upd = $this->db->prepare("UPDATE waitlist SET status = 'notified' WHERE id = ?");
-                $upd->execute([$entry['id']]);
+            if (!empty($entry['unsubscribed_at'])) { $skipped[] = $entry['email'] . ' (unsubscribed)'; continue; }
+            if (!empty($entry['has_account']))     { $skipped[] = $entry['email'] . ' (already has an account)'; continue; }
+            if (!isset(\App\Helpers\BetaAccessHelper::SIGNUP_PATHS[$entry['role']])) {
+                $skipped[] = $entry['email'] . ' (' . $entry['role'] . ': no account type)';
+                continue;
+            }
+
+            $inviteToken = $entry['invite_token'] ?: bin2hex(random_bytes(16));
+            if (empty($entry['invite_token'])) {
+                $this->db->prepare("UPDATE waitlist SET invite_token = ? WHERE id = ?")->execute([$inviteToken, $entry['id']]);
+                $entry['invite_token'] = $inviteToken;
+            }
+
+            if ($this->sendInvite($entry)) {
+                $this->db->prepare("UPDATE waitlist SET status = 'notified', invite_sent_at = NOW() WHERE id = ?")
+                         ->execute([$entry['id']]);
                 $sent++;
+            } else {
+                $skipped[] = $entry['email'] . ' (email failed)';
             }
         }
 
-        jsonResponse(['success' => true, 'message' => "{$sent} notification(s) sent."]);
+        $notFound = count($ids) - count($entries);
+        $msg = "{$sent} invite(s) sent.";
+        if ($skipped)      { $msg .= "\nSkipped: " . implode(', ', $skipped); }
+        if ($notFound > 0) { $msg .= "\n{$notFound} already converted, skipped."; }
+        jsonResponse(['success' => true, 'message' => $msg]);
     }
 
     public function updateStatus(): void
@@ -199,30 +228,35 @@ class AdminWaitlistController
         exit;
     }
 
-    private function sendLaunchNotification(array $entry): bool
+    /**
+     * Beta invite email (bilingual, FR first): account-creation link for the entry's
+     * role plus the role's onboarding guide page.
+     */
+    private function sendInvite(array $entry): bool
     {
-        $fr        = ($entry['locale'] === 'fr');
-        $roleLabels = [
-            'buyer'    => $fr ? 'Acheteur'             : 'Buyer',
-            'seller'   => $fr ? 'Vendeur'              : 'Seller',
-            'supplier' => $fr ? 'Fournisseur'          : 'Supplier',
-            'driver'   => $fr ? 'Livreur'              : 'Driver',
-            'business' => $fr ? 'Client Distribution'  : 'Business Client',
-        ];
-
-        $firstName = $entry['first_name'];
         $role      = $entry['role'];
-        $roleLabel = $roleLabels[$role] ?? $role;
+        $firstName = $entry['first_name'];
+        $email     = $entry['email'];
+        $inviteUrl = \App\Helpers\BetaAccessHelper::inviteUrl($role, $entry['invite_token']);
+        $guideUrl  = url('onboarding/' . $role);
+        $unsubUrl  = url('/waitlist/unsubscribe') . '?t=' . ($entry['unsubscribe_token'] ?? '');
 
-        $subject = $fr
-            ? 'OCSAPP est maintenant ouvert - Votre accès est prêt !'
-            : 'OCSAPP is now live - Your access is ready!';
+        $roleLabels = [
+            'buyer'    => ['Acheteur', 'Buyer'],
+            'seller'   => ['Vendeur', 'Seller'],
+            'supplier' => ['Fournisseur', 'Supplier'],
+            'driver'   => ['Livreur', 'Driver'],
+            'business' => ['Client Distribution', 'Business Client'],
+        ];
+        [$roleLabelFr, $roleLabelEn] = $roleLabels[$role] ?? [$role, $role];
+
+        $subject = 'Votre accès OCSAPP est prêt / Your OCSAPP access is ready';
 
         ob_start();
-        require __DIR__ . '/../Views/emails/waitlist-launch-notification.php';
+        require __DIR__ . '/../Views/emails/waitlist-invite.php';
         $body = ob_get_clean();
 
-        \App\Helpers\EmailHelper::setNextMeta('waitlist_launch', 'waitlist', (int) $entry['id']);
-        return \App\Helpers\EmailHelper::send($entry['email'], $subject, $body);
+        \App\Helpers\EmailHelper::setNextMeta('waitlist_invite', 'waitlist', (int) $entry['id']);
+        return \App\Helpers\EmailHelper::send($email, $subject, $body);
     }
 }

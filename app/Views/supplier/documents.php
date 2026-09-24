@@ -399,11 +399,11 @@ $_docLabelsFr = [
     <span class="doc-provided-badge"><i class="fas fa-building"></i> <?= $fr ? 'Fourni par OCSAPP' : 'Provided by OCSAPP' ?></span>
   </div>
   <div class="doc-actions-row">
-    <a href="<?= url('supplier/documents/onboarding.pdf') ?>" target="_blank" class="btn-view">
+    <a href="<?= \App\Helpers\OnboardingPackageHelper::url('supplier') ?>" target="_blank" class="btn-view">
       <i class="fas fa-eye"></i> <?= $fr ? "Voir la trousse d'intégration" : 'View Onboarding Package' ?>
     </a>
-    <a href="<?= url('supplier/documents/onboarding.pdf') ?>" download class="btn-replace">
-      <i class="fas fa-download"></i> <?= $fr ? 'Télécharger le PDF' : 'Download PDF' ?>
+    <a href="<?= \App\Helpers\OnboardingPackageHelper::url('supplier') ?>" download class="btn-replace">
+      <i class="fas fa-download"></i> <?= $fr ? 'Télécharger' : 'Download' ?>
     </a>
   </div>
   <p style="font-size:13px;color:var(--gray-500);margin:0;">

@@ -42,6 +42,12 @@
         transition: transform 0.2s, box-shadow 0.2s;
     }
 
+    .founding-card { display: flex; gap: 14px; align-items: flex-start; background: linear-gradient(135deg, #f0fdf4, #ecfdf5); border: 1px solid #bbf7d0; border-radius: 14px; padding: 16px 18px; margin-bottom: 20px; }
+    .founding-card-icon { flex: 0 0 auto; width: 40px; height: 40px; border-radius: 10px; background: #00b207; color: #fff; display: flex; align-items: center; justify-content: center; }
+    .founding-card-title { font-weight: 700; font-size: 15px; color: #166534; }
+    .founding-card-title span { font-weight: 400; opacity: .8; }
+    .founding-card-text { font-size: 13px; color: #374151; margin-top: 3px; line-height: 1.5; }
+    .founding-card-text a { color: #00920a; font-weight: 600; margin-left: 4px; }
     .stat-card:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -608,6 +614,25 @@ $_statusLabel = $_appStatusLabels[$applicationStatus ?? 'pending'] ?? $_appStatu
         <h1><?= $fr ? 'Tableau de bord' : 'Delivery Dashboard' ?></h1>
         <p><?= $fr ? 'Gérez vos livraisons et suivez vos revenus' : 'Manage your deliveries and track your earnings' ?></p>
     </div>
+
+    <?php if (!empty($founding)): ?>
+    <!-- Founding Driver status -->
+    <div class="founding-card">
+        <div class="founding-card-icon"><i class="fas fa-star"></i></div>
+        <div>
+            <div class="founding-card-title">
+                <?= $fr ? 'Livreur fondateur' : 'Founding Driver' ?> #<?= (int) $founding['number'] ?>
+                <span><?= $fr ? 'sur' : 'of' ?> <?= (int) $founding['total'] ?></span>
+            </div>
+            <div class="founding-card-text">
+                <?= $fr
+                    ? 'Votre insigne de livreur fondateur est permanent. Bientôt : une prime d\'étape, une prime de parrainage et un accès prioritaire à la répartition.'
+                    : 'Your Founding Driver badge is permanent. Coming soon: a milestone bonus, a referral bonus and priority dispatch access.' ?>
+                <a href="<?= url('founding') ?>"><?= $fr ? 'Voir le programme' : 'See the program' ?></a>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 
     <!-- Stats Grid -->
     <div class="stats-grid">

@@ -3,7 +3,7 @@
  * Waitlist confirmation email - BILINGUAL (FR + EN).
  * Always renders both languages regardless of the visitor's chosen language.
  * Variables in scope (from WaitlistController::sendConfirmation): $firstName, $roleLabelFr, $roleLabelEn,
- * $pos, $refUrl, $refCode, $email, $unsubUrl, $central [path, FR name, EN name] or null, $centralUrl
+ * $pos (per role), $role, $refUrl, $refCode, $email, $unsubUrl, $central [path, FR name, EN name] or null, $centralUrl
  *
  * Headers carry bgcolor + background-color fallbacks: Outlook desktop ignores linear-gradient,
  * which would otherwise leave the white heading on a white background.
@@ -13,6 +13,18 @@ $refCodeSafe  = htmlspecialchars($refCode ?? '', ENT_QUOTES);
 $unsubUrlSafe = htmlspecialchars($unsubUrl ?? '', ENT_QUOTES);
 $centralSafe  = !empty($centralUrl) ? htmlspecialchars($centralUrl, ENT_QUOTES) : '';
 $year         = date('Y');
+
+// Positions are numbered per role ("#1 among sellers")
+$rolePlural = [
+    'buyer'    => ['les acheteurs', 'buyers'],
+    'seller'   => ['les vendeurs', 'sellers'],
+    'supplier' => ['les fournisseurs', 'suppliers'],
+    'driver'   => ['les livreurs', 'drivers'],
+    'business' => ['les entreprises', 'businesses'],
+    'partner'  => ['les partenaires', 'partners'],
+][$role ?? ''] ?? null;
+$posLabelFr = $rolePlural ? 'votre position parmi ' . $rolePlural[0] : 'votre position';
+$posLabelEn = $rolePlural ? 'your position among ' . $rolePlural[1] : 'your position';
 
 $headerStyle = 'background-color:#00b207;background:linear-gradient(135deg,#00b207 0%,#009206 100%);padding:40px 30px;text-align:center;';
 $badgeStyle  = 'display:inline-block;background-color:#00b207;background:linear-gradient(135deg,#00b207,#00d609);color:#fff;font-size:32px;font-weight:900;padding:14px 36px;border-radius:12px;text-align:center;';
@@ -53,7 +65,7 @@ $btnStyle    = 'display:inline-block;background-color:#00b207;color:#fff;font-si
                 <td align="center">
                   <div style="<?= $badgeStyle ?>">
                     #<?= (int) $pos ?>
-                    <div style="font-size:14px;font-weight:400;opacity:.85;">votre position</div>
+                    <div style="font-size:14px;font-weight:400;opacity:.85;"><?= $posLabelFr ?></div>
                   </div>
                 </td>
               </tr>
@@ -119,7 +131,7 @@ $btnStyle    = 'display:inline-block;background-color:#00b207;color:#fff;font-si
                 <td align="center">
                   <div style="<?= $badgeStyle ?>">
                     #<?= (int) $pos ?>
-                    <div style="font-size:14px;font-weight:400;opacity:.85;">your position</div>
+                    <div style="font-size:14px;font-weight:400;opacity:.85;"><?= $posLabelEn ?></div>
                   </div>
                 </td>
               </tr>

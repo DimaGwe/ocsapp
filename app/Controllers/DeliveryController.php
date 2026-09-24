@@ -107,7 +107,25 @@ class DeliveryController {
             // ignore
         }
 
+        // Founding Driver status (claimed on approval by FoundingDriverHelper)
+        $founding = null;
+        try {
+            $fStmt = $this->db->prepare("SELECT founding_driver, founding_driver_number, founding_driver_granted_at FROM users WHERE id = ?");
+            $fStmt->execute([$driverId]);
+            $fRow = $fStmt->fetch(\PDO::FETCH_ASSOC);
+            if ($fRow && (int) $fRow['founding_driver'] === 1) {
+                $founding = [
+                    'number'     => (int) $fRow['founding_driver_number'],
+                    'total'      => \App\Helpers\FoundingDriverHelper::TOTAL_SLOTS,
+                    'granted_at' => $fRow['founding_driver_granted_at'],
+                ];
+            }
+        } catch (\Exception $e) {
+            // Columns missing on an old schema: just don't show the card
+        }
+
         return view('delivery/dashboard', [
+            'founding' => $founding,
             'stats' => $stats,
             'activeDeliveries' => $activeDeliveries,
             'recentDeliveries' => $recentDeliveries,
@@ -2114,8 +2132,10 @@ class DeliveryController {
      */
     public function apply() {
         if (isPost()) {
+            \App\Helpers\BetaAccessHelper::guardSubmit('driver', (string) post('email', ''));
             return $this->processApplication();
         }
+        \App\Helpers\BetaAccessHelper::guardPage('driver');
 
         return view('delivery/apply', [
             'pageTitle' => $this->isFr() ? 'Postuler comme livreur' : 'Apply to Deliver'
@@ -2589,6 +2609,7 @@ class DeliveryController {
                 "New driver application #{$applicationId} from {$pending['first_name']} {$pending['last_name']} ({$pending['email']}).",
                 ['link' => $notifLink, 'icon' => 'car']
             );
+            \App\Helpers\WaitlistHelper::markConverted($pending['email'], 'driver');
 
             $mailConfig = require dirname(__DIR__, 2) . '/config/mail.php';
             $adminEmail = $mailConfig['admin_email'] ?? 'info@ocsapp.ca';
