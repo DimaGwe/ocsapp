@@ -1073,7 +1073,7 @@ $t = $translations[$currentLang] ?? $translations['en'];
     $___pageCss = 'css/pages/admin-' . ($currentPage ?? '') . '.css';
     if (!empty($currentPage) && file_exists(BASE_PATH . '/public/assets/' . $___pageCss)):
   ?>
-  <link rel="stylesheet" href="<?= asset($___pageCss) ?>">
+  <link rel="stylesheet" href="<?= asset($___pageCss) ?>?v=<?= filemtime(BASE_PATH . '/public/assets/' . $___pageCss) ?>">
   <?php endif; ?>
 </head>
 <body>

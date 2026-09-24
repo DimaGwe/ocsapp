@@ -2240,6 +2240,18 @@
         grid-template-columns: repeat(3, 1fr);
     }
 
+    .form-row.two-col {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Meeting comments */
+    .meeting-comment-count { color: #64748b; font-weight: 500; }
+    .meeting-comments-hint { margin: -5px 0 12px; font-size: 13px; color: #64748b; }
+    .meeting-comments-empty { margin: 0 0 10px; font-size: 13px; color: #94a3b8; }
+    .meeting-comments-list .comment-header { display: flex; align-items: center; gap: 6px; }
+    .meeting-comments-list .delete-item { margin-left: auto; color: #94a3b8; cursor: pointer; font-size: 12px; }
+    .meeting-comments-list .delete-item:hover { color: #dc2626; }
+
     .form-group {
         display: flex;
         flex-direction: column;
@@ -2491,7 +2503,8 @@
     }
 
     @media (max-width: 768px) {
-        .form-row.three-col {
+        .form-row.three-col,
+        .form-row.two-col {
             grid-template-columns: 1fr;
         }
 

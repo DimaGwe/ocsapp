@@ -4,6 +4,9 @@ namespace App\Controllers\Api;
 
 require_once __DIR__ . '/../../Helpers/AdminPermissionHelper.php';
 require_once __DIR__ . '/../../Helpers/EmailHelper.php';
+require_once __DIR__ . '/../../Helpers/NotificationHelper.php';
+
+use App\Helpers\NotificationHelper;
 
 /**
  * Planner Meetings API Controller
@@ -54,11 +57,24 @@ class PlannerMeetingsController
                 LEFT JOIN users u ON m.created_by = u.id
             ";
 
+            $where = [];
             $params = [];
 
             if ($status && $status !== 'all') {
-                $sql .= " WHERE m.status = ?";
+                $where[] = "m.status = ?";
                 $params[] = $status;
+            }
+
+            // Month filter from the list view (YYYY-MM)
+            $month = $_GET['month'] ?? '';
+            if (preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $month)) {
+                $where[] = "m.meeting_date >= ? AND m.meeting_date < ?";
+                $params[] = $month . '-01';
+                $params[] = date('Y-m-d', strtotime($month . '-01 +1 month'));
+            }
+
+            if ($where) {
+                $sql .= " WHERE " . implode(' AND ', $where);
             }
 
             $sql .= " ORDER BY m.meeting_date DESC, m.meeting_time DESC LIMIT ?";
@@ -94,9 +110,13 @@ class PlannerMeetingsController
                 SELECT
                     m.*,
                     CONCAT(u.first_name, ' ', u.last_name) as created_by_name,
+                    CONCAT(nt.first_name, ' ', nt.last_name) as note_taker_name,
+                    CONCAT(ub.first_name, ' ', ub.last_name) as updated_by_name,
                     pm.title as previous_meeting_title
                 FROM planner_meetings m
                 LEFT JOIN users u ON m.created_by = u.id
+                LEFT JOIN users nt ON m.note_taker_id = nt.id
+                LEFT JOIN users ub ON m.updated_by = ub.id
                 LEFT JOIN planner_meetings pm ON m.previous_meeting_id = pm.id
                 WHERE m.id = ?
             ");
@@ -182,7 +202,7 @@ class PlannerMeetingsController
     {
         try {
             $input = json_decode(file_get_contents('php://input'), true);
-            $userId = $input['user_id'] ?? $_SESSION['user']['id'] ?? null;
+            $userId = $_SESSION['user']['id'] ?? null;
 
             if (empty($input['title']) || empty($input['meeting_date'])) {
                 http_response_code(400);
@@ -200,18 +220,20 @@ class PlannerMeetingsController
 
             // Insert meeting
             $stmt = $this->db->prepare("
-                INSERT INTO planner_meetings (title, meeting_date, meeting_time, location, previous_meeting_id, next_meeting_date, next_meeting_topics, notes, created_by)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO planner_meetings (title, meeting_date, meeting_time, location, note_taker_id, previous_meeting_id, next_meeting_date, next_meeting_topics, notes, created_by, updated_by)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             $stmt->execute([
                 $input['title'],
                 $input['meeting_date'],
                 $input['meeting_time'] ?? null,
                 $input['location'] ?? null,
+                ($input['note_taker_id'] ?? '') ?: null,
                 $input['previous_meeting_id'] ?? null,
                 $input['next_meeting_date'] ?? null,
                 $input['next_meeting_topics'] ?? null,
                 $input['notes'] ?? null,
+                $userId,
                 $userId
             ]);
 
@@ -271,27 +293,67 @@ class PlannerMeetingsController
 
             $this->db->beginTransaction();
 
-            // Build update query
-            $updates = [];
-            $params = [];
+            // Edit guard: reject the save if someone changed the meeting after this client loaded it
+            $stmt = $this->db->prepare("
+                SELECT m.revision, m.updated_at, CONCAT(u.first_name, ' ', u.last_name) as updated_by_name
+                FROM planner_meetings m
+                LEFT JOIN users u ON m.updated_by = u.id
+                WHERE m.id = ?
+                FOR UPDATE
+            ");
+            $stmt->execute([$input['id']]);
+            $current = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-            $allowedFields = ['title', 'meeting_date', 'meeting_time', 'location', 'status',
+            if (!$current) {
+                $this->db->rollBack();
+                http_response_code(404);
+                echo json_encode(['error' => 'Meeting not found']);
+                return;
+            }
+
+            if (isset($input['revision']) && (int)$input['revision'] !== (int)$current['revision']) {
+                $this->db->rollBack();
+                http_response_code(409);
+                echo json_encode([
+                    'success' => false,
+                    'conflict' => true,
+                    'updated_by_name' => $current['updated_by_name'],
+                    'updated_at' => $current['updated_at'],
+                    'error' => 'This meeting was changed by someone else after you opened it.'
+                ]);
+                return;
+            }
+
+            // Build update query
+            $updates = ['revision = revision + 1', 'updated_by = ?'];
+            $params = [$_SESSION['user']['id'] ?? null];
+
+            $allowedFields = ['title', 'meeting_date', 'meeting_time', 'location', 'note_taker_id', 'status',
                              'previous_meeting_id', 'next_meeting_date', 'next_meeting_topics',
                              'notes', 'email_subject', 'email_draft'];
 
+            // Required fields are only updated when non-empty; the rest can be cleared (sent as null/'')
+            $requiredFields = ['title', 'meeting_date', 'status'];
+
             foreach ($allowedFields as $field) {
-                if (isset($input[$field])) {
-                    $updates[] = "$field = ?";
-                    $params[] = $input[$field];
+                if (!array_key_exists($field, $input)) {
+                    continue;
                 }
+                $value = $input[$field];
+                if ($value === '') {
+                    $value = null;
+                }
+                if ($value === null && in_array($field, $requiredFields, true)) {
+                    continue;
+                }
+                $updates[] = "$field = ?";
+                $params[] = $value;
             }
 
-            if (!empty($updates)) {
-                $params[] = $input['id'];
-                $sql = "UPDATE planner_meetings SET " . implode(', ', $updates) . " WHERE id = ?";
-                $stmt = $this->db->prepare($sql);
-                $stmt->execute($params);
-            }
+            $params[] = $input['id'];
+            $sql = "UPDATE planner_meetings SET " . implode(', ', $updates) . " WHERE id = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($params);
 
             // Update attendees if provided
             if (isset($input['attendees'])) {
@@ -312,7 +374,7 @@ class PlannerMeetingsController
 
             $this->db->commit();
 
-            echo json_encode(['success' => true]);
+            echo json_encode(['success' => true, 'revision' => (int)$current['revision'] + 1]);
         } catch (\Exception $e) {
             if ($this->db->inTransaction()) {
                 $this->db->rollBack();
@@ -351,9 +413,8 @@ class PlannerMeetingsController
             $stmt = $this->db->prepare("DELETE FROM planner_meetings WHERE id = ?");
             $stmt->execute([$input['id']]);
 
-            // Log activity
-            if (!empty($input['user_id'])) {
-                $this->logActivity($input['user_id'], 'meeting', 'deleted meeting: ' . $meeting['title']);
+            if (!empty($_SESSION['user']['id'])) {
+                $this->logActivity((int)$_SESSION['user']['id'], 'meeting', 'deleted meeting: ' . $meeting['title']);
             }
 
             echo json_encode(['success' => true]);
@@ -377,6 +438,11 @@ class PlannerMeetingsController
                 return;
             }
 
+            // Append to the end of the list so new items keep their position after a reload
+            $stmt = $this->db->prepare("SELECT COALESCE(MAX(sort_order), -1) + 1 FROM planner_meeting_items WHERE meeting_id = ?");
+            $stmt->execute([$input['meeting_id']]);
+            $sortOrder = (int)$stmt->fetchColumn();
+
             $stmt = $this->db->prepare("
                 INSERT INTO planner_meeting_items (meeting_id, item_type, content, owner_id, sort_order)
                 VALUES (?, ?, ?, ?, ?)
@@ -386,10 +452,11 @@ class PlannerMeetingsController
                 $input['item_type'],
                 $input['content'],
                 $input['owner_id'] ?? null,
-                $input['sort_order'] ?? 0
+                $sortOrder
             ]);
+            $itemId = $this->db->lastInsertId();
 
-            echo json_encode(['success' => true, 'id' => $this->db->lastInsertId()]);
+            echo json_encode(['success' => true, 'id' => $itemId, 'revision' => $this->bumpRevision((int)$input['meeting_id'])]);
         } catch (\Exception $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Failed to add item: ' . $e->getMessage()]);
@@ -410,10 +477,12 @@ class PlannerMeetingsController
                 return;
             }
 
+            $meetingId = $this->parentMeetingId('planner_meeting_items', (int)$input['id']);
+
             $stmt = $this->db->prepare("DELETE FROM planner_meeting_items WHERE id = ?");
             $stmt->execute([$input['id']]);
 
-            echo json_encode(['success' => true]);
+            echo json_encode(['success' => true, 'revision' => $meetingId ? $this->bumpRevision($meetingId) : null]);
         } catch (\Exception $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Failed to delete item']);
@@ -446,8 +515,9 @@ class PlannerMeetingsController
                 $input['due_date'] ?? null,
                 $input['status'] ?? 'pending'
             ]);
+            $actionId = $this->db->lastInsertId();
 
-            echo json_encode(['success' => true, 'id' => $this->db->lastInsertId()]);
+            echo json_encode(['success' => true, 'id' => $actionId, 'revision' => $this->bumpRevision((int)$input['meeting_id'])]);
         } catch (\Exception $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Failed to add action: ' . $e->getMessage()]);
@@ -502,7 +572,8 @@ class PlannerMeetingsController
                 $stmt->execute($params);
             }
 
-            echo json_encode(['success' => true]);
+            $meetingId = $this->parentMeetingId('planner_meeting_actions', (int)$input['id']);
+            echo json_encode(['success' => true, 'revision' => $meetingId ? $this->bumpRevision($meetingId) : null]);
         } catch (\Exception $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Failed to update action']);
@@ -523,10 +594,12 @@ class PlannerMeetingsController
                 return;
             }
 
+            $meetingId = $this->parentMeetingId('planner_meeting_actions', (int)$input['id']);
+
             $stmt = $this->db->prepare("DELETE FROM planner_meeting_actions WHERE id = ?");
             $stmt->execute([$input['id']]);
 
-            echo json_encode(['success' => true]);
+            echo json_encode(['success' => true, 'revision' => $meetingId ? $this->bumpRevision($meetingId) : null]);
         } catch (\Exception $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Failed to delete action']);
@@ -560,7 +633,9 @@ class PlannerMeetingsController
 
             // Save draft to meeting
             $stmt = $this->db->prepare("
-                UPDATE planner_meetings SET email_subject = ?, email_draft = ?, status = 'completed' WHERE id = ?
+                UPDATE planner_meetings
+                SET email_subject = ?, email_draft = ?, status = IF(status = 'sent', 'sent', 'completed')
+                WHERE id = ?
             ");
             $stmt->execute([$emailSubject, $emailHtml, $id]);
 
@@ -653,9 +728,8 @@ class PlannerMeetingsController
                 ");
                 $stmt->execute([$subject, $html, $input['id']]);
 
-                // Log activity
-                if (!empty($input['user_id'])) {
-                    $this->logActivity($input['user_id'], 'meeting', 'sent meeting minutes: ' . $meeting['title']);
+                if (!empty($_SESSION['user']['id'])) {
+                    $this->logActivity((int)$_SESSION['user']['id'], 'meeting', 'sent meeting minutes: ' . $meeting['title']);
                 }
 
                 echo json_encode(['success' => true, 'recipients' => count($recipients)]);
@@ -787,11 +861,15 @@ class PlannerMeetingsController
     public function getTeamMembers(): void
     {
         try {
+            // Role comes from user_roles/roles, not users.role
             $stmt = $this->db->query("
-                SELECT id, email, first_name, last_name, role
-                FROM users
-                WHERE role IN ('super_admin', 'senior_admin', 'admin', 'junior_admin')
-                ORDER BY first_name, last_name
+                SELECT DISTINCT u.id, u.email, u.first_name, u.last_name
+                FROM users u
+                JOIN user_roles ur ON ur.user_id = u.id
+                JOIN roles r ON r.id = ur.role_id
+                WHERE r.name IN ('super_admin', 'admin', 'admin_staff')
+                  AND u.status = 'active'
+                ORDER BY u.first_name, u.last_name
             ");
             $users = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
@@ -837,6 +915,142 @@ class PlannerMeetingsController
     }
 
     /**
+     * Comments on a meeting (agenda suggestions, review of the minutes)
+     */
+    public function getComments(): void
+    {
+        try {
+            $meetingId = (int)($_GET['meeting_id'] ?? 0);
+
+            if (!$meetingId) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Meeting ID is required']);
+                return;
+            }
+
+            $stmt = $this->db->prepare("
+                SELECT c.id, c.user_id, c.comment, c.created_at,
+                       CONCAT(u.first_name, ' ', u.last_name) as user_name
+                FROM planner_meeting_comments c
+                LEFT JOIN users u ON c.user_id = u.id
+                WHERE c.meeting_id = ?
+                ORDER BY c.created_at ASC, c.id ASC
+            ");
+            $stmt->execute([$meetingId]);
+
+            echo json_encode(['success' => true, 'comments' => $stmt->fetchAll(\PDO::FETCH_ASSOC)]);
+        } catch (\Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => 'Failed to fetch comments']);
+        }
+    }
+
+    public function storeComment(): void
+    {
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            $userId = (int)($_SESSION['user']['id'] ?? 0);
+            $meetingId = (int)($input['meeting_id'] ?? 0);
+            $comment = trim($input['comment'] ?? '');
+
+            if (!$meetingId || $comment === '') {
+                http_response_code(400);
+                echo json_encode(['error' => 'meeting_id and comment are required']);
+                return;
+            }
+
+            $stmt = $this->db->prepare("SELECT id, title, created_by, note_taker_id FROM planner_meetings WHERE id = ?");
+            $stmt->execute([$meetingId]);
+            $meeting = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            if (!$meeting) {
+                http_response_code(404);
+                echo json_encode(['error' => 'Meeting not found']);
+                return;
+            }
+
+            $this->db->prepare("INSERT INTO planner_meeting_comments (meeting_id, user_id, comment) VALUES (?, ?, ?)")
+                ->execute([$meetingId, $userId, $comment]);
+            $commentId = $this->db->lastInsertId();
+
+            $this->logActivity($userId, 'comment', 'commented on meeting: ' . $meeting['title']);
+
+            // Notify whoever owns the minutes (note-taker, else the creator), then any @mentions
+            $commenterName = trim(($_SESSION['user']['first_name'] ?? '') . ' ' . ($_SESSION['user']['last_name'] ?? ''));
+            $preview = mb_substr(preg_replace('/@\[([^\]]+)\]\(\d+\)/', '@$1', $comment), 0, 80);
+            $link = '/admin/planner?meeting=' . $meetingId;
+            $notified = [$userId];
+
+            $owner = (int)($meeting['note_taker_id'] ?: $meeting['created_by']);
+            if ($owner && !in_array($owner, $notified, true)) {
+                NotificationHelper::addForUser(
+                    $owner,
+                    NotificationHelper::TYPE_NOTE_COMMENT,
+                    'New Comment on Meeting',
+                    "{$commenterName} commented on \"{$meeting['title']}\": \"{$preview}\"",
+                    ['link' => $link]
+                );
+                $notified[] = $owner;
+            }
+
+            foreach (NotificationHelper::parseMentions($comment) as $mention) {
+                $mentionId = (int)$mention['user_id'];
+                if (!in_array($mentionId, $notified, true)) {
+                    NotificationHelper::addForUser(
+                        $mentionId,
+                        NotificationHelper::TYPE_MENTION,
+                        'You Were Mentioned',
+                        "{$commenterName} mentioned you on meeting \"{$meeting['title']}\": \"{$preview}\"",
+                        ['link' => $link]
+                    );
+                    $notified[] = $mentionId;
+                }
+            }
+
+            http_response_code(201);
+            echo json_encode(['success' => true, 'id' => $commentId]);
+        } catch (\Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => 'Failed to add comment']);
+        }
+    }
+
+    /**
+     * Delete a comment: its author, or a super admin
+     */
+    public function deleteComment(): void
+    {
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            $id = (int)($input['id'] ?? 0);
+
+            $stmt = $this->db->prepare("SELECT user_id FROM planner_meeting_comments WHERE id = ?");
+            $stmt->execute([$id]);
+            $authorId = $stmt->fetchColumn();
+
+            if ($authorId === false) {
+                http_response_code(404);
+                echo json_encode(['error' => 'Comment not found']);
+                return;
+            }
+
+            $isAuthor = (int)$authorId === (int)($_SESSION['user']['id'] ?? 0);
+            if (!$isAuthor && ($_SESSION['user']['role'] ?? '') !== 'super_admin') {
+                http_response_code(403);
+                echo json_encode(['error' => 'You can only delete your own comments']);
+                return;
+            }
+
+            $this->db->prepare("DELETE FROM planner_meeting_comments WHERE id = ?")->execute([$id]);
+
+            echo json_encode(['success' => true]);
+        } catch (\Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => 'Failed to delete comment']);
+        }
+    }
+
+    /**
      * Save attendees helper
      */
     private function saveAttendees(int $meetingId, array $attendees): void
@@ -867,6 +1081,7 @@ class PlannerMeetingsController
             VALUES (?, ?, ?, ?, ?)
         ");
 
+        // The on-screen order is the saved order
         $sortOrder = 0;
         foreach ($items as $item) {
             $stmt->execute([
@@ -874,7 +1089,7 @@ class PlannerMeetingsController
                 $item['item_type'],
                 $item['content'],
                 $item['owner_id'] ?? null,
-                $item['sort_order'] ?? $sortOrder++
+                $sortOrder++
             ]);
         }
     }
@@ -995,6 +1210,7 @@ class PlannerMeetingsController
             <p><strong>Date:</strong> {$date}" . ($time ? " at {$time}" : "") . "</p>
             " . ($meeting['location'] ? "<p><strong>Location:</strong> " . $esc($meeting['location']) . "</p>" : "") . "
             <p><strong>Invited:</strong> {$attendeesStr}</p>
+            " . (!empty($meeting['note_taker_name']) ? "<p><strong>Note-taker:</strong> " . $esc($meeting['note_taker_name']) . "</p>" : "") . "
         </div>
 
         {$agendaHtml}
@@ -1152,6 +1368,7 @@ class PlannerMeetingsController
             <p><strong>Date:</strong> {$date} " . ($time ? "at {$time}" : "") . "</p>
             " . ($meeting['location'] ? "<p><strong>Location:</strong> " . htmlspecialchars($meeting['location'], ENT_QUOTES, 'UTF-8') . "</p>" : "") . "
             <p><strong>Attendees:</strong> {$attendeesStr}</p>
+            " . (!empty($meeting['note_taker_name']) ? "<p><strong>Minutes by:</strong> " . htmlspecialchars($meeting['note_taker_name'], ENT_QUOTES, 'UTF-8') . "</p>" : "") . "
         </div>
 
         {$agendaHtml}
@@ -1214,6 +1431,30 @@ class PlannerMeetingsController
 </body>
 </html>
         ";
+    }
+
+    /**
+     * Record a content change on a meeting (edit guard) and return the new revision
+     */
+    private function bumpRevision(int $meetingId): int
+    {
+        $this->db->prepare("UPDATE planner_meetings SET revision = revision + 1, updated_by = ? WHERE id = ?")
+            ->execute([$_SESSION['user']['id'] ?? null, $meetingId]);
+
+        $stmt = $this->db->prepare("SELECT revision FROM planner_meetings WHERE id = ?");
+        $stmt->execute([$meetingId]);
+        return (int)$stmt->fetchColumn();
+    }
+
+    /**
+     * Meeting that owns an item/action row (table name is internal, never user input)
+     */
+    private function parentMeetingId(string $table, int $id): ?int
+    {
+        $stmt = $this->db->prepare("SELECT meeting_id FROM {$table} WHERE id = ?");
+        $stmt->execute([$id]);
+        $meetingId = $stmt->fetchColumn();
+        return $meetingId ? (int)$meetingId : null;
     }
 
     /**

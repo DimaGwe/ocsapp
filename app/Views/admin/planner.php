@@ -299,8 +299,11 @@ ob_start();
                             <button class="btn-planner secondary" onclick="generateMeetingEmail()" title="Build the minutes email after the meeting (marks the meeting completed)">
                                 <i class="fa-solid fa-envelope"></i> Generate Minutes
                             </button>
-                            <button class="btn-planner primary" onclick="openSendEmailModal()" id="sendEmailBtn" style="display: none;">
+                            <button class="btn-planner primary" onclick="generateMeetingEmail()" id="sendEmailBtn" style="display: none;" title="Rebuilds the minutes from the latest saved meeting, then opens the send dialog">
                                 <i class="fa-solid fa-paper-plane"></i> Send Email
+                            </button>
+                            <button class="btn-planner secondary" onclick="deleteMeeting()" id="deleteMeetingBtn" style="display: none; color: #dc2626;" title="Delete this meeting and all its items">
+                                <i class="fa-solid fa-trash"></i> Delete
                             </button>
                         </div>
                     </div>
@@ -332,7 +335,13 @@ ob_start();
                                 </div>
                             </div>
 
-                            <div class="form-row">
+                            <div class="form-row two-col">
+                                <div class="form-group">
+                                    <label>Note-taker</label>
+                                    <select id="noteTakerId" title="The one person who takes the minutes and sends them">
+                                        <option value="">-- Not assigned --</option>
+                                    </select>
+                                </div>
                                 <div class="form-group">
                                     <label>Link to Previous Meeting</label>
                                     <select id="previousMeetingId">
@@ -426,6 +435,16 @@ ob_start();
                             <div class="form-group">
                                 <label>Topics for Next Meeting</label>
                                 <textarea id="nextMeetingTopics" placeholder="Topics to discuss in the next meeting..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="meeting-form-section" id="meetingCommentsSection" style="display: none;">
+                            <h3>Comments <span id="meetingCommentCount" class="meeting-comment-count"></span></h3>
+                            <p class="meeting-comments-hint">Suggest agenda items before the meeting or flag corrections to the minutes. The note-taker is notified; use @ to mention someone.</p>
+                            <div id="meetingCommentsList" class="meeting-comments-list"></div>
+                            <div class="add-comment" style="position: relative;">
+                                <div class="comment-editable" id="meetingCommentInput" contenteditable="true" data-placeholder="Add a comment..."></div>
+                                <button class="btn-planner primary small" onclick="addMeetingComment()">Comment</button>
                             </div>
                         </div>
                     </div>
@@ -882,7 +901,7 @@ ob_start();
     // Check if an element is a mention-enabled contenteditable
     function isMentionEditable(el) {
         if (!el) return false;
-        return (el.id === 'noteInput' || (el.id && el.id.startsWith('comment-input-')) || (el.id && el.id.startsWith('todo-comment-input-'))) && el.isContentEditable;
+        return (el.id === 'noteInput' || el.id === 'meetingCommentInput' || (el.id && el.id.startsWith('comment-input-')) || (el.id && el.id.startsWith('todo-comment-input-'))) && el.isContentEditable;
     }
 
     // Get text before cursor in a contenteditable element
@@ -4319,7 +4338,7 @@ ${content}
                     <h4>${escapeHtml(meeting.title)}</h4>
                     <div class="meeting-card-meta">
                         <span><i class="fa-solid fa-calendar"></i> ${formatDate(meeting.meeting_date)}</span>
-                        ${meeting.meeting_time ? `<span><i class="fa-solid fa-clock"></i> ${escapeHtml(meeting.meeting_time)}</span>` : ''}
+                        ${meeting.meeting_time ? `<span><i class="fa-solid fa-clock"></i> ${escapeHtml(formatTime(meeting.meeting_time))}</span>` : ''}
                         ${meeting.location ? `<span><i class="fa-solid fa-location-dot"></i> ${escapeHtml(meeting.location)}</span>` : ''}
                         <span><i class="fa-solid fa-users"></i> ${meeting.attendee_count || 0} attendees</span>
                         ${meeting.invite_sent_at ? `<span class="invite-sent"><i class="fa-solid fa-calendar-check"></i> Invite sent</span>` : ''}
@@ -4352,10 +4371,13 @@ ${content}
         document.getElementById('meetingStatusBadge').textContent = 'Draft';
         document.getElementById('meetingStatusBadge').className = 'meeting-status-badge draft';
         document.getElementById('sendEmailBtn').style.display = 'none';
+        document.getElementById('deleteMeetingBtn').style.display = 'none';
+        document.getElementById('meetingCommentsSection').style.display = 'none';
         updateInviteBadge();
 
         // Load team members and previous meetings
         await Promise.all([loadTeamMembers(), loadPreviousMeetings()]);
+        document.getElementById('noteTakerId').value = String(currentUser.id);
 
         // Render empty lists
         renderAttendeesList();
@@ -4401,11 +4423,17 @@ ${content}
 
                 // Show send button if email was generated
                 document.getElementById('sendEmailBtn').style.display = currentMeeting.email_draft ? 'inline-flex' : 'none';
+                document.getElementById('deleteMeetingBtn').style.display = 'inline-flex';
                 updateInviteBadge();
 
                 // Load dropdowns
                 await Promise.all([loadTeamMembers(), loadPreviousMeetings()]);
                 document.getElementById('previousMeetingId').value = currentMeeting.previous_meeting_id || '';
+                ensureNoteTakerOption();
+                document.getElementById('noteTakerId').value = currentMeeting.note_taker_id || '';
+
+                document.getElementById('meetingCommentsSection').style.display = '';
+                loadMeetingComments();
 
                 // Render lists
                 renderAttendeesList();
@@ -4441,9 +4469,21 @@ ${content}
                 const select = document.getElementById('teamMemberSelect');
                 select.innerHTML = '<option value="">-- Select Team Member --</option>' +
                     teamMembers.map(m => `<option value="${m.id}" data-email="${escapeHtml(m.email)}" data-name="${escapeHtml(m.name)}">${escapeHtml(m.name)} (${escapeHtml(m.email)})</option>`).join('');
+
+                document.getElementById('noteTakerId').innerHTML = '<option value="">-- Not assigned --</option>' +
+                    teamMembers.map(m => `<option value="${m.id}">${escapeHtml(m.name)}</option>`).join('');
             }
         } catch (error) {
             console.error('Error loading team members:', error);
+        }
+    }
+
+    // Keep a note-taker who is no longer an active admin selectable, so saving does not clear them
+    function ensureNoteTakerOption() {
+        const select = document.getElementById('noteTakerId');
+        const id = currentMeeting?.note_taker_id;
+        if (id && ![...select.options].some(o => o.value === String(id))) {
+            select.insertAdjacentHTML('beforeend', `<option value="${id}">${escapeHtml(currentMeeting.note_taker_name || ('User #' + id))}</option>`);
         }
     }
 
@@ -4455,10 +4495,18 @@ ${content}
             if (data.success) {
                 const select = document.getElementById('previousMeetingId');
                 const currentId = currentMeeting?.id;
+                const options = data.meetings.filter(m => m.id !== currentId);
+
+                // Keep the existing link selectable even if it is not in the recent list,
+                // otherwise saving would silently clear it
+                const linkedId = currentMeeting?.previous_meeting_id;
+                if (linkedId && !options.some(m => String(m.id) === String(linkedId))) {
+                    options.push({ id: linkedId, title: currentMeeting.previous_meeting_title || ('Meeting #' + linkedId), meeting_date: null });
+                }
+
                 select.innerHTML = '<option value="">-- None --</option>' +
-                    data.meetings
-                        .filter(m => m.id !== currentId)
-                        .map(m => `<option value="${m.id}">${m.title} (${formatDate(m.meeting_date)})</option>`)
+                    options
+                        .map(m => `<option value="${m.id}">${escapeHtml(m.title)}${m.meeting_date ? ` (${formatDate(m.meeting_date)})` : ''}</option>`)
                         .join('');
             }
         } catch (error) {
@@ -4575,6 +4623,7 @@ ${content}
                 const data = await response.json();
                 if (data.success) {
                     meetingItems[type].push({ id: data.id, item_type: type, content: content });
+                    trackRevision(data);
                 }
             } catch (error) {
                 console.error('Error adding item:', error);
@@ -4598,11 +4647,12 @@ ${content}
 
         if (item.id && currentMeeting?.id) {
             try {
-                await fetch(`${API_URL}/meetings/item`, {
+                const response = await fetch(`${API_URL}/meetings/item`, {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id: item.id })
                 });
+                trackRevision(await response.json());
             } catch (error) {
                 console.error('Error deleting item:', error);
             }
@@ -4658,6 +4708,7 @@ ${content}
                 const data = await response.json();
                 if (data.success) {
                     meetingActions.push({ ...actionData, id: data.id });
+                    trackRevision(data);
                 }
             } catch (error) {
                 console.error('Error adding action:', error);
@@ -4687,6 +4738,7 @@ ${content}
                 const data = await response.json();
                 if (data.success) {
                     meetingActions[index].status = newStatus;
+                    trackRevision(data);
                 }
             } catch (error) {
                 console.error('Error updating action:', error);
@@ -4703,11 +4755,12 @@ ${content}
 
         if (action.id && currentMeeting?.id) {
             try {
-                await fetch(`${API_URL}/meetings/action`, {
+                const response = await fetch(`${API_URL}/meetings/action`, {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id: action.id })
                 });
+                trackRevision(await response.json());
             } catch (error) {
                 console.error('Error deleting action:', error);
             }
@@ -4745,7 +4798,7 @@ ${content}
 
         if (!title || !meetingDate) {
             alert('Please enter a meeting title and date');
-            return;
+            return false;
         }
 
         const meetingData = {
@@ -4753,6 +4806,7 @@ ${content}
             meeting_date: meetingDate,
             meeting_time: document.getElementById('meetingTime').value || null,
             location: document.getElementById('meetingLocation').value || null,
+            note_taker_id: document.getElementById('noteTakerId').value || null,
             previous_meeting_id: document.getElementById('previousMeetingId').value || null,
             next_meeting_date: document.getElementById('nextMeetingDate').value || null,
             next_meeting_topics: document.getElementById('nextMeetingTopics').value || null,
@@ -4770,18 +4824,27 @@ ${content}
             const response = await fetch(url, {
                 method: method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(isUpdate ? { ...meetingData, id: currentMeeting.id } : meetingData)
+                body: JSON.stringify(isUpdate ? { ...meetingData, id: currentMeeting.id, revision: currentMeeting.revision } : meetingData)
             });
 
             const data = await response.json();
 
+            if (data.conflict) {
+                handleMeetingConflict(data);
+                return false;
+            }
+
             if (data.success) {
+                trackRevision(data);
                 if (!currentMeeting?.id) {
                     currentMeeting = data.meeting;
                     document.getElementById('meetingId').value = currentMeeting.id;
 
                     // Reload the full meeting data to get all IDs
                     await openMeeting(currentMeeting.id);
+                } else {
+                    // Items are re-inserted on update, so pick up their new IDs
+                    await refreshMeetingLists();
                 }
 
                 // Show success feedback
@@ -4791,6 +4854,7 @@ ${content}
                     badge.textContent = currentMeeting.status.replace('_', ' ');
                     badge.className = `meeting-status-badge ${currentMeeting.status}`;
                 }, 1500);
+                return true;
             } else {
                 alert('Failed to save meeting: ' + (data.error || 'Unknown error'));
             }
@@ -4798,11 +4862,142 @@ ${content}
             console.error('Error saving meeting:', error);
             alert('Failed to save meeting');
         }
+        return false;
+    }
+
+    // Edit guard: every change bumps the meeting revision; keep ours current
+    function trackRevision(data) {
+        if (currentMeeting && data && data.revision !== undefined && data.revision !== null) {
+            currentMeeting.revision = data.revision;
+        }
+    }
+
+    function handleMeetingConflict(data) {
+        const who = data.updated_by_name ? data.updated_by_name.trim() : 'Someone else';
+        const when = data.updated_at ? ' at ' + new Date(data.updated_at.replace(' ', 'T')).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '';
+        if (confirm(`${who} changed this meeting${when}, after you opened it. Your save was NOT applied, so their changes are safe.\n\nClick OK to reload the latest version (copy anything you typed first), or Cancel to stay on this screen.`)) {
+            openMeeting(currentMeeting.id);
+        }
+    }
+
+    async function refreshMeetingLists() {
+        try {
+            const response = await fetch(`${API_URL}/meetings/show?id=${currentMeeting.id}`);
+            const data = await response.json();
+            if (!data.success) return;
+
+            meetingItems = {
+                agenda: data.items.filter(i => i.item_type === 'agenda'),
+                discussion: data.items.filter(i => i.item_type === 'discussion'),
+                decision: data.items.filter(i => i.item_type === 'decision')
+            };
+            meetingActions = data.actions || [];
+            currentMeeting.revision = data.meeting.revision;
+            renderMeetingItemsList('agenda');
+            renderMeetingItemsList('discussion');
+            renderMeetingItemsList('decision');
+            renderActionItemsList();
+        } catch (error) {
+            console.error('Error refreshing meeting:', error);
+        }
+    }
+
+    async function loadMeetingComments() {
+        if (!currentMeeting?.id) return;
+        const list = document.getElementById('meetingCommentsList');
+        try {
+            const response = await fetch(`${API_URL}/meetings/comments?meeting_id=${currentMeeting.id}`);
+            const data = await response.json();
+            const comments = data.comments || [];
+
+            document.getElementById('meetingCommentCount').textContent = comments.length ? `(${comments.length})` : '';
+            list.innerHTML = comments.length ? comments.map(c => `
+                <div class="comment">
+                    <div class="comment-header">
+                        ${escapeHtml(c.user_name)} &bull; ${timeAgo(c.created_at.replace(' ', 'T'))}
+                        ${String(c.user_id) === String(currentUser.id) ? `<span class="delete-item" title="Delete comment" onclick="deleteMeetingComment(${c.id})"><i class="fa-solid fa-trash"></i></span>` : ''}
+                    </div>
+                    <div>${renderMentions(c.comment)}</div>
+                </div>
+            `).join('') : '<p class="meeting-comments-empty">No comments yet.</p>';
+        } catch (error) {
+            console.error('Error loading meeting comments:', error);
+        }
+    }
+
+    async function addMeetingComment() {
+        const input = document.getElementById('meetingCommentInput');
+        const comment = extractContentFromEditable(input).trim();
+        if (!comment || !currentMeeting?.id) return;
+
+        try {
+            const response = await fetch(`${API_URL}/meetings/comments`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ meeting_id: currentMeeting.id, comment: comment })
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                input.innerHTML = '';
+                loadMeetingComments();
+            } else {
+                alert('Failed to add comment: ' + (data.error || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Error adding meeting comment:', error);
+            alert('Failed to add comment');
+        }
+    }
+
+    async function deleteMeetingComment(id) {
+        if (!confirm('Delete this comment?')) return;
+        try {
+            const response = await fetch(`${API_URL}/meetings/comments`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: id })
+            });
+            const data = await response.json();
+            if (data.success) {
+                loadMeetingComments();
+            } else {
+                alert('Failed to delete comment: ' + (data.error || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Error deleting meeting comment:', error);
+        }
+    }
+
+    async function deleteMeeting() {
+        if (!currentMeeting?.id) return;
+        if (!confirm(`Delete "${currentMeeting.title}" and all its agenda items, attendees and actions? This cannot be undone.`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/meetings`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: currentMeeting.id })
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                currentMeeting = null;
+                backToMeetingsList();
+            } else {
+                alert('Failed to delete meeting: ' + (data.error || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Error deleting meeting:', error);
+            alert('Failed to delete meeting');
+        }
     }
 
     async function generateMeetingEmail() {
         // Save first
-        await saveMeeting();
+        if (!(await saveMeeting())) return;
 
         if (!currentMeeting?.id) {
             alert('Please save the meeting first');
@@ -4848,7 +5043,7 @@ ${content}
 
     // Pre-meeting invitation: agenda + .ics calendar file, does not change meeting status
     async function openInviteModal() {
-        await saveMeeting();
+        if (!(await saveMeeting())) return;
 
         if (!currentMeeting?.id) {
             alert('Please save the meeting first');
@@ -4977,6 +5172,14 @@ ${content}
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
 
+    // "14:00:00" -> "2:00 PM"
+    function formatTime(timeStr) {
+        const m = /^(\d{1,2}):(\d{2})/.exec(timeStr || '');
+        if (!m) return timeStr || '';
+        const h = parseInt(m[1], 10);
+        return `${h % 12 || 12}:${m[2]} ${h < 12 ? 'AM' : 'PM'}`;
+    }
+
     function escapeHtml(text) {
         if (!text) return '';
         const div = document.createElement('div');
@@ -4992,6 +5195,23 @@ ${content}
             loadMeetings();
         }
     };
+
+    document.getElementById('meetingCommentInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey && (!mentionDropdown || !mentionDropdown.classList.contains('active'))) {
+            e.preventDefault();
+            addMeetingComment();
+        }
+    });
+
+    // Deep link from notifications: /admin/planner?meeting=ID
+    window.addEventListener('DOMContentLoaded', () => {
+        const meetingParam = parseInt(new URLSearchParams(window.location.search).get('meeting'), 10);
+        if (meetingParam) {
+            const tabBtn = document.querySelector(`.tab-button[onclick="switchTab('meetings')"]`);
+            if (tabBtn) tabBtn.click();
+            openMeeting(meetingParam);
+        }
+    });
 </script>
 
 <!-- Document Preview Modal -->
