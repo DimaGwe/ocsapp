@@ -680,13 +680,22 @@ function getBackupSupplierProduct(int $supplierProductId, array $excludeIds = []
  *
  * @return array{fee: float, zone_code: ?string, stop_fee_rate: float, oversize_base_rate: float, oversize_increment_rate: float}
  */
-function resolveDeliveryZoneFee(?string $city): array {
-    $appConfig = require BASE_PATH . '/config/app.php';
-    $fallback  = (float)($appConfig['delivery_fee'] ?? 5.00);
-    $zeroRates = ['fee' => $fallback, 'zone_code' => null, 'stop_fee_rate' => 0.00, 'oversize_base_rate' => 0.00, 'oversize_increment_rate' => 0.00, 'long_distance_base_rate' => 0.00, 'long_distance_increment_rate' => 0.00];
-
+/**
+ * Normalizes a free-text city string to a Marché zone code ('WI'/'LAV'/'MTL'), or null
+ * if unrecognized. Extracted from resolveDeliveryZoneFee() so the same normalization
+ * can be applied on both sides of a zone comparison - e.g. DriverApiController's
+ * available-orders job board, which previously compared a driver's raw
+ * driver_applications.city string directly against orders.delivery_zone. That never
+ * worked (the column was never written at all), and even once written, a raw string
+ * comparison is fragile: a real driver_applications.city value found in this data was
+ * "Dollard Des Armeaux" (a typo) against an addresses.city value of "Dollard Des
+ * Ormeaux" - never an exact match. Routing both through this same normalizer means
+ * they only need to agree on being recognizably West Island/Laval/Montreal, not
+ * byte-identical strings.
+ */
+function resolveZoneCode(?string $city): ?string {
     if (!$city) {
-        return $zeroRates;
+        return null;
     }
 
     $city = trim($city);
@@ -697,18 +706,30 @@ function resolveDeliveryZoneFee(?string $city): array {
         'beaconsfield', "baie-d'urfe", "baie-d'urfé", 'baie d\'urfe',
         'sainte-anne-de-bellevue', 'ste-anne-de-bellevue', 'senneville',
         'dorval', "l'ile-bizard", "l'île-bizard",
+        'pierrefonds-roxboro', 'pierrefonds roxboro', 'pierrefonds', 'roxboro',
     ];
 
-    $zoneCode = null;
     $cityLower = mb_strtolower($city);
 
     if (in_array($cityLower, $westIslandTowns, true)) {
-        $zoneCode = 'WI';
-    } elseif (str_contains($cityLower, 'laval')) {
-        $zoneCode = 'LAV';
-    } elseif (str_contains($cityLower, 'montreal') || str_contains($cityLower, 'montréal')) {
-        $zoneCode = 'MTL';
+        return 'WI';
     }
+    if (str_contains($cityLower, 'laval')) {
+        return 'LAV';
+    }
+    if (str_contains($cityLower, 'montreal') || str_contains($cityLower, 'montréal')) {
+        return 'MTL';
+    }
+
+    return null;
+}
+
+function resolveDeliveryZoneFee(?string $city): array {
+    $appConfig = require BASE_PATH . '/config/app.php';
+    $fallback  = (float)($appConfig['delivery_fee'] ?? 5.00);
+    $zeroRates = ['fee' => $fallback, 'zone_code' => null, 'stop_fee_rate' => 0.00, 'oversize_base_rate' => 0.00, 'oversize_increment_rate' => 0.00, 'long_distance_base_rate' => 0.00, 'long_distance_increment_rate' => 0.00];
+
+    $zoneCode = resolveZoneCode($city);
 
     if (!$zoneCode) {
         return $zeroRates;
@@ -992,6 +1013,7 @@ function resolveB2BZoneCode(?string $city): ?string {
         'beaconsfield', "baie-d'urfe", "baie-d'urfé", 'baie d\'urfe',
         'sainte-anne-de-bellevue', 'ste-anne-de-bellevue', 'senneville',
         'dorval', "l'ile-bizard", "l'île-bizard",
+        'pierrefonds-roxboro', 'pierrefonds roxboro', 'pierrefonds', 'roxboro',
     ];
 
     $cityLower = mb_strtolower(trim($city));

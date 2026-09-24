@@ -35,15 +35,15 @@ HTML;
 
 $driverFrClause = <<<'HTML'
 
-<h3>{{N}}. Programme Partenaire Livreur Fondateur (Ébauche)</h3>
+<h3>{{N}}. Programme Partenaire Chauffeur Fondateur (Ébauche)</h3>
 <div style="background:#fef3c7;border-left:4px solid #f59e0b;padding:16px;margin:16px 0;border-radius:4px;">
   <strong>Disposition en ébauche :</strong> Cette section est une ébauche de travail en attente de révision juridique finale. Elle ne constitue pas encore une modalité finalisée et révisée par un conseiller juridique de la présente entente.
 </div>
 <ul>
-  <li>OCSAPP exploite une cohorte de Partenaires Livreurs Fondateurs limitée aux cinquante (50) premiers livreurs approuvés et activés en vertu de la présente entente.</li>
-  <li>Les livreurs admissibles reçoivent un badge permanent « Livreur Fondateur » sur leur profil, reconnaissant leur statut de partenaire précoce de la plateforme.</li>
-  <li>Les avantages supplémentaires décrits dans les documents du Programme Livreur Fondateur d'OCSAPP (une prime d'étape, une prime de parrainage et une priorité de répartition) sont prévus mais pas encore actifs en vertu de la présente entente - ils seront ajoutés par une mise à jour future une fois le mécanisme opérationnel correspondant construit.</li>
-  <li>Le statut de Livreur Fondateur ne modifie pas la répartition standard des gains 70/30 décrite à la section 8, ni aucune autre modalité de la présente entente.</li>
+  <li>OCSAPP exploite une cohorte de Partenaires Chauffeurs Fondateurs limitée aux cinquante (50) premiers chauffeurs approuvés et activés en vertu de la présente entente.</li>
+  <li>Les chauffeurs admissibles reçoivent un badge permanent « Chauffeur Fondateur » sur leur profil, reconnaissant leur statut de partenaire précoce de la plateforme.</li>
+  <li>Les avantages supplémentaires décrits dans les documents du Programme Chauffeur Fondateur d'OCSAPP (une prime d'étape, une prime de parrainage et une priorité de répartition) sont prévus mais pas encore actifs en vertu de la présente entente - ils seront ajoutés par une mise à jour future une fois le mécanisme opérationnel correspondant construit.</li>
+  <li>Le statut de Chauffeur Fondateur ne modifie pas la répartition standard des gains 70/30 décrite à la section 8, ni aucune autre modalité de la présente entente.</li>
 </ul>
 HTML;
 

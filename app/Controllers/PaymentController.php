@@ -621,11 +621,17 @@ class PaymentController
     private function autoAssignDelivery(int $orderId): void
     {
         // Get order shop info
-        $stmt = $this->db->prepare("SELECT shop_id, total, delivery_fee FROM orders WHERE id = ?");
+        $stmt = $this->db->prepare("SELECT shop_id, total, delivery_fee, fulfillment_type FROM orders WHERE id = ?");
         $stmt->execute([$orderId]);
         $order = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         if (!$order || !$order['shop_id']) return;
+
+        // Pickup orders have no ODA driver involved - the buyer collects from the shop
+        // themselves. Without this guard, a $0.00 delivery_fee (correct for pickup) would
+        // be mistaken by the fallback below for "fee missing" and a driver would be
+        // assigned and paid ~$5 for a delivery that never happens.
+        if (($order['fulfillment_type'] ?? 'delivery') === 'pickup') return;
 
         // Check if already assigned
         $stmt = $this->db->prepare("SELECT id FROM delivery_assignments WHERE order_id = ?");

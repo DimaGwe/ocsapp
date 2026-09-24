@@ -593,7 +593,10 @@ class OrderController
         $newStatus = sanitize(post('status', ''));
         $notes = sanitize(post('notes', ''));
 
-        $allowedStatuses = ['confirmed', 'processing', 'ready', 'cancelled'];
+        // 'delivered' is included so a seller can mark a pickup order collected directly
+        // (no ODA driver involved) - isValidStatusTransition() below still enforces that
+        // this is only reachable from 'ready' on a pickup order, not a general grant.
+        $allowedStatuses = ['confirmed', 'processing', 'ready', 'delivered', 'cancelled'];
 
         if (!in_array($newStatus, $allowedStatuses)) {
             jsonResponse(['success' => false, 'message' => 'Invalid status']);
@@ -621,9 +624,10 @@ class OrderController
             }
 
             $oldStatus = $order['status'];
+            $fulfillmentType = $order['fulfillment_type'] ?? 'delivery';
 
             // Validate status transition
-            if (!$this->isValidStatusTransition($oldStatus, $newStatus)) {
+            if (!$this->isValidStatusTransition($oldStatus, $newStatus, $fulfillmentType)) {
                 $this->db->rollBack();
                 jsonResponse([
                     'success' => false,
@@ -640,6 +644,8 @@ class OrderController
                 $statusField = ', processing_at = NOW()';
             } elseif ($newStatus === 'ready') {
                 $statusField = ', ready_at = NOW()';
+            } elseif ($newStatus === 'delivered') {
+                $statusField = ', delivered_at = NOW()';
             } elseif ($newStatus === 'cancelled') {
                 $statusField = ', cancelled_at = NOW(), cancelled_by = :user_id';
             }
@@ -689,7 +695,34 @@ class OrderController
                     logger("Failed to send status update email: " . $e->getMessage(), 'warning');
                 }
             }
-            
+
+            // Pickup-ready notice: the generic sendOrderStatusUpdate() above has no
+            // pickup-specific copy (its status labels predate 'ready'/'out_for_delivery'),
+            // so a pickup order additionally gets a purpose-built email with the shop's
+            // pickup address, same pattern as the delivery-side sendBuyerOutForDelivery().
+            if ($newStatus === 'ready' && $fulfillmentType === 'pickup') {
+                try {
+                    require_once __DIR__ . '/../Helpers/EmailHelper.php';
+                    $stmt = $this->db->prepare("
+                        SELECT o.id, o.order_number, o.total, o.subtotal,
+                               u.email AS customer_email, u.first_name AS customer_first_name,
+                               s.name AS shop_name, s.address AS shop_address, s.phone AS shop_phone
+                        FROM orders o
+                        JOIN users u ON o.user_id = u.id
+                        JOIN shops s ON o.shop_id = s.id
+                        WHERE o.id = :id
+                    ");
+                    $stmt->execute(['id' => $orderId]);
+                    $pickupOrder = $stmt->fetch(\PDO::FETCH_ASSOC);
+                    if ($pickupOrder) {
+                        \App\Helpers\EmailHelper::sendBuyerReadyForPickup($pickupOrder);
+                        logger("Ready-for-pickup email sent for order #{$pickupOrder['order_number']}", 'info');
+                    }
+                } catch (\Exception $e) {
+                    logger("Failed to send ready-for-pickup email: " . $e->getMessage(), 'warning');
+                }
+            }
+
             logger("Order #{$order['order_number']} status updated to {$newStatus} by seller", 'info');
             
             jsonResponse([
@@ -867,7 +900,7 @@ class OrderController
      * @param string $newStatus New status to transition to
      * @return bool True if transition is valid, false otherwise
      */
-    private function isValidStatusTransition(string $currentStatus, string $newStatus): bool
+    private function isValidStatusTransition(string $currentStatus, string $newStatus, string $fulfillmentType = 'delivery'): bool
     {
         // Define allowed transitions for each status
         $allowedTransitions = [
@@ -881,6 +914,13 @@ class OrderController
             'failed' => ['pending'],  // Can retry failed delivery
             'refunded' => []  // Terminal state - no transitions allowed
         ];
+
+        // Pickup orders have no ODA driver, so no 'out_for_delivery' leg - the seller/admin
+        // marks the order collected directly. This is scoped to pickup orders only; delivery
+        // orders still require the driver-owned out_for_delivery step.
+        if ($fulfillmentType === 'pickup' && $currentStatus === 'ready') {
+            $allowedTransitions['ready'][] = 'delivered';
+        }
 
         // Check if current status exists in transition map
         if (!isset($allowedTransitions[$currentStatus])) {

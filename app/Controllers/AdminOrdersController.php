@@ -561,6 +561,14 @@ class AdminOrdersController {
                 return false;
             }
 
+            // Pickup orders have no ODA driver involved - the buyer collects from the shop
+            // themselves. Guard here too, same reasoning as PaymentController's copy of
+            // this method.
+            if (($order['fulfillment_type'] ?? 'delivery') === 'pickup') {
+                logger("Auto-assign delivery skipped: Order {$orderId} is a pickup order", 'info');
+                return true;
+            }
+
             // Check if delivery assignment already exists
             $stmt = $this->db->prepare("
                 SELECT id FROM delivery_assignments WHERE order_id = ?

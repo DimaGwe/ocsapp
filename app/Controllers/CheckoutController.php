@@ -82,6 +82,8 @@ class CheckoutController
                     si.id as shop_inventory_id,
                     si.status as inventory_status,
                     s.name as shop_name,
+                    s.allow_self_pickup as shop_allow_self_pickup,
+                    s.address as shop_address,
                     (SELECT image_path FROM product_images WHERE product_id = p.id AND is_primary = 1 LIMIT 1) as image_path
                 FROM products p
                 INNER JOIN shop_inventory si ON p.id = si.product_id
@@ -139,6 +141,8 @@ class CheckoutController
                 $ordersByShop[$shopId] = [
                     'shop_id' => $shopId,
                     'shop_name' => $item['shop_name'],
+                    'allow_self_pickup' => (int)($item['product']['shop_allow_self_pickup'] ?? 0),
+                    'shop_address' => $item['product']['shop_address'] ?? null,
                     'items' => [],
                     'subtotal' => 0,
                     'weight_kg' => 0
@@ -306,10 +310,37 @@ class CheckoutController
             $itemsByShop[$shopId][] = $item;
         }
 
+        // Self-pickup (Sec A): buyer chooses delivery or pickup per shop-group. Only shops
+        // with allow_self_pickup=1 may be pickup - an invalid/missing/spoofed request for a
+        // shop that doesn't allow pickup silently falls back to delivery rather than erroring,
+        // consistent with how other optional POST fields already degrade in this method.
+        $shopIds = array_keys($itemsByShop);
+        $shopPickupInfo = [];
+        if (!empty($shopIds)) {
+            $shopPlaceholders = implode(',', array_fill(0, count($shopIds), '?'));
+            $shopStmt = $this->db->prepare("SELECT id, allow_self_pickup, address FROM shops WHERE id IN ($shopPlaceholders)");
+            $shopStmt->execute($shopIds);
+            foreach ($shopStmt->fetchAll(\PDO::FETCH_ASSOC) as $shopRow) {
+                $shopPickupInfo[$shopRow['id']] = $shopRow;
+            }
+        }
+        $fulfillmentTypePost = post('fulfillment_type', []);
+        if (!is_array($fulfillmentTypePost)) {
+            $fulfillmentTypePost = [];
+        }
+        $fulfillmentByShop = [];
+        foreach ($shopIds as $sid) {
+            $requested = $fulfillmentTypePost[$sid] ?? 'delivery';
+            $shopAllowsPickup = !empty($shopPickupInfo[$sid]['allow_self_pickup']);
+            $fulfillmentByShop[$sid] = ($requested === 'pickup' && $shopAllowsPickup) ? 'pickup' : 'delivery';
+        }
+
         // Oversize Surcharge (Sec 2.1/2.1a) hard cap: an order whose total weight exceeds
         // 40kg cannot go through standard checkout at all - reject before creating any
         // orders and route the buyer to contact us for custom freight, rather than silently
-        // charging an ever-larger surcharge with no ceiling.
+        // charging an ever-larger surcharge with no ceiling. Pickup shop-groups skip this
+        // entirely - the cap exists because of ODA driver/vehicle capacity, which a pickup
+        // order never touches.
         $shopWeights = [];
         $hardCapExceededShops = [];
         foreach ($itemsByShop as $shopId => $items) {
@@ -318,7 +349,7 @@ class CheckoutController
                 $weight += (float)($item['weight'] ?? 0) * (int)$item['quantity'];
             }
             $shopWeights[$shopId] = $weight;
-            if (calculateOversizeSurcharge($selectedAddress['city'] ?? null, $weight)['hard_cap_exceeded']) {
+            if ($fulfillmentByShop[$shopId] === 'delivery' && calculateOversizeSurcharge($selectedAddress['city'] ?? null, $weight)['hard_cap_exceeded']) {
                 $hardCapExceededShops[] = $shopId;
             }
         }
@@ -335,10 +366,15 @@ class CheckoutController
         // Long-Distance Surcharge (Sec 2.1b) hard cap: same "block, don't silently charge
         // ever-larger surcharges" rule as the Oversize Surcharge, at 20km routed distance.
         // Distance is resolved once per shop here and reused below for the actual surcharge.
+        // Pickup shop-groups skip this too - the buyer travels to the shop themselves, so
+        // buyer-to-shop routed distance has no bearing on a pickup order.
         $shopDistances = [];
         $distanceHardCapExceededShops = [];
         if ($selectedAddress) {
             foreach ($itemsByShop as $shopId => $items) {
+                if ($fulfillmentByShop[$shopId] !== 'delivery') {
+                    continue;
+                }
                 $distanceKm = resolveRoutedDistanceKm((int)$shopId, $selectedAddress);
                 $shopDistances[$shopId] = $distanceKm;
                 if (calculateLongDistanceSurcharge($selectedAddress['city'] ?? null, $distanceKm)['hard_cap_exceeded']) {
@@ -359,24 +395,26 @@ class CheckoutController
         // Additional-Stop Fee (Sec 2.2): each shop-order created below still gets its own
         // full delivery_fee (no consolidated-order model on the B2C side) - this surcharge
         // is a separate line item layered on top, split evenly across the sibling orders
-        // created in this same checkout. checkout_session_id correlates them.
-        $shopCount = count($itemsByShop);
+        // created in this same checkout. checkout_session_id correlates them. Only
+        // delivery shop-groups count toward the stop count or receive a share - a pickup
+        // shop-group adds no stop to the ODA driver's route.
+        $deliveryShopIds = array_values(array_filter($shopIds, fn($sid) => $fulfillmentByShop[$sid] === 'delivery'));
+        $shopCount = count($deliveryShopIds);
         $stopFeeCalc = calculateAdditionalStopFee($selectedAddress['city'] ?? null, $shopCount);
         $checkoutSessionId = bin2hex(random_bytes(16));
 
-        // Distribute the total stop fee across sibling orders without losing cents to rounding.
+        // Distribute the total stop fee across sibling delivery orders without losing cents to rounding.
         $stopFeeShares = [];
         if ($stopFeeCalc['total_fee'] > 0 && $shopCount > 0) {
             $baseShare = floor(($stopFeeCalc['total_fee'] / $shopCount) * 100) / 100;
             $allocated = round($baseShare * $shopCount, 2);
             $remainder = round($stopFeeCalc['total_fee'] - $allocated, 2);
-            $shopIds = array_keys($itemsByShop);
-            foreach ($shopIds as $i => $sid) {
+            foreach ($deliveryShopIds as $sid) {
                 $stopFeeShares[$sid] = $baseShare;
             }
             // Give any leftover pennies to the last order so the session total matches exactly.
-            if ($remainder > 0 && !empty($shopIds)) {
-                $stopFeeShares[end($shopIds)] = round($stopFeeShares[end($shopIds)] + $remainder, 2);
+            if ($remainder > 0 && !empty($deliveryShopIds)) {
+                $stopFeeShares[end($deliveryShopIds)] = round($stopFeeShares[end($deliveryShopIds)] + $remainder, 2);
             }
         }
 
@@ -392,6 +430,7 @@ class CheckoutController
 
         foreach ($itemsByShop as $shopId => $items) {
             $orderNumber = $this->generateOrderNumber();
+            $isPickup = $fulfillmentByShop[$shopId] === 'pickup';
 
             // Calculate totals
             $subtotal = 0;
@@ -399,17 +438,37 @@ class CheckoutController
                 $subtotal += $item['price'] * $item['quantity'];
             }
 
-            $deliveryFee = resolveDeliveryZoneFee($selectedAddress['city'] ?? null)['fee'];
+            // Pickup shop-groups: no ODA driver involved, so no Delivery Fee, no
+            // Additional-Stop/Oversize/Long-Distance surcharge (all delivery-network
+            // costs), and no Founding Buyer delivery-waiver slot consumed - Sec 12.1/12.2
+            // ties that bonus to "your first delivery Order" specifically.
             $foundingBuyerWaived = 0.00;
-            if ($foundingClaim['eligible'] && $deliveryFee > 0) {
-                // Sec 12.3: waives the base Delivery Fee only - Oversize/
-                // Additional-Stop/Long-Distance surcharges still apply.
-                $foundingBuyerWaived = $deliveryFee;
+            $orderZoneCode = null;
+            if ($isPickup) {
                 $deliveryFee = 0.00;
+                $additionalStopFee = 0.00;
+                $oversizeCalc = calculateOversizeSurcharge($selectedAddress['city'] ?? null, 0.0);
+                $longDistanceCalc = calculateLongDistanceSurcharge($selectedAddress['city'] ?? null, null);
+            } else {
+                $zoneFeeResult = resolveDeliveryZoneFee($selectedAddress['city'] ?? null);
+                $deliveryFee = $zoneFeeResult['fee'];
+                // Bug fix: this was computed and immediately discarded before - orders.delivery_zone
+                // was never written anywhere, even though DriverApiController::availableOrders()
+                // filters a zone-scoped driver's job board on it. Store the same normalized zone
+                // code ('WI'/'LAV'/'MTL') already resolved here, not the buyer's raw city string,
+                // so it can be matched against a normalized driver zone rather than free-text city
+                // comparison (which a real sample showed can mismatch on typos/formatting alone).
+                $orderZoneCode = $zoneFeeResult['zone_code'];
+                if ($foundingClaim['eligible'] && $deliveryFee > 0) {
+                    // Sec 12.3: waives the base Delivery Fee only - Oversize/
+                    // Additional-Stop/Long-Distance surcharges still apply.
+                    $foundingBuyerWaived = $deliveryFee;
+                    $deliveryFee = 0.00;
+                }
+                $additionalStopFee = $stopFeeShares[$shopId] ?? 0.00;
+                $oversizeCalc = calculateOversizeSurcharge($selectedAddress['city'] ?? null, $shopWeights[$shopId] ?? 0.0);
+                $longDistanceCalc = calculateLongDistanceSurcharge($selectedAddress['city'] ?? null, $shopDistances[$shopId] ?? null);
             }
-            $additionalStopFee = $stopFeeShares[$shopId] ?? 0.00;
-            $oversizeCalc = calculateOversizeSurcharge($selectedAddress['city'] ?? null, $shopWeights[$shopId] ?? 0.0);
-            $longDistanceCalc = calculateLongDistanceSurcharge($selectedAddress['city'] ?? null, $shopDistances[$shopId] ?? null);
             // Canadian tax: GST 5% + QST 9.975% = 14.975% (Quebec)
             $gstRate  = 0.05;
             $qstRate  = 0.09975;
@@ -419,30 +478,42 @@ class CheckoutController
             $discount = 0.00;
             $total    = $subtotal + $deliveryFee + $additionalStopFee + $oversizeCalc['total_surcharge'] + $longDistanceCalc['total_surcharge'] + $tax - $discount;
 
+            // Pickup orders store the shop's own address (where the buyer collects the
+            // order), not the buyer's delivery address - distinct concepts, same column.
+            if ($isPickup) {
+                $pickupAddressPayload = [
+                    'type' => 'pickup',
+                    'shop_address' => $shopPickupInfo[$shopId]['address'] ?? null,
+                ];
+                $orderDeliveryAddress = json_encode($pickupAddressPayload);
+            } else {
+                $orderDeliveryAddress = $selectedAddress ? json_encode($selectedAddress) : null;
+            }
+
             // Create Order — always starts as pending
             $orderSQL = "
                 INSERT INTO orders (
                     user_id, shop_id, order_number, checkout_session_id,
-                    subtotal, tax, delivery_fee, stop_count, additional_stop_fee,
+                    subtotal, tax, delivery_fee, fulfillment_type, stop_count, additional_stop_fee,
                     total_weight_kg, oversize_base_surcharge, oversize_increment_count, oversize_increment_surcharge,
                     routed_distance_km, long_distance_base_surcharge, long_distance_increment_count, long_distance_increment_surcharge,
                     founding_buyer_delivery_waived,
                     discount, total,
                     payment_method, payment_status,
                     delivery_date, delivery_time,
-                    delivery_address,
+                    delivery_address, delivery_zone,
                     notes, status,
                     created_at, updated_at
                 ) VALUES (
                     :user_id, :shop_id, :order_number, :checkout_session_id,
-                    :subtotal, :tax, :delivery_fee, :stop_count, :additional_stop_fee,
+                    :subtotal, :tax, :delivery_fee, :fulfillment_type, :stop_count, :additional_stop_fee,
                     :total_weight_kg, :oversize_base_surcharge, :oversize_increment_count, :oversize_increment_surcharge,
                     :routed_distance_km, :long_distance_base_surcharge, :long_distance_increment_count, :long_distance_increment_surcharge,
                     :founding_buyer_delivery_waived,
                     :discount, :total,
                     :payment_method, :payment_status,
                     :delivery_date, :delivery_time,
-                    :delivery_address,
+                    :delivery_address, :delivery_zone,
                     :notes, 'pending',
                     NOW(), NOW()
                 )
@@ -456,7 +527,8 @@ class CheckoutController
                 'subtotal' => $subtotal,
                 'tax' => $tax,
                 'delivery_fee' => $deliveryFee,
-                'stop_count' => $shopCount,
+                'fulfillment_type' => $isPickup ? 'pickup' : 'delivery',
+                'stop_count' => $isPickup ? 0 : $shopCount,
                 'additional_stop_fee' => $additionalStopFee,
                 'total_weight_kg' => $oversizeCalc['total_weight_kg'],
                 'oversize_base_surcharge' => $oversizeCalc['base_surcharge'],
@@ -473,7 +545,8 @@ class CheckoutController
                 'payment_status' => 'pending',
                 'delivery_date' => $deliveryDate,
                 'delivery_time' => $deliveryTime,
-                'delivery_address' => $selectedAddress ? json_encode($selectedAddress) : null,
+                'delivery_address' => $orderDeliveryAddress,
+                'delivery_zone' => $orderZoneCode,
                 'notes' => $notes
             ];
 

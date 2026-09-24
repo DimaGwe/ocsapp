@@ -359,6 +359,23 @@ $total = $subtotal + $deliveryFee + $additionalStopFee + $oversizeSurcharge + $l
                                     <div class="checkout-item-price">$<?= number_format($item['subtotal'], 2) ?></div>
                                 </div>
                             <?php endforeach; ?>
+                            <?php if (!empty($shop['allow_self_pickup'])): ?>
+                                <div class="fulfillment-toggle" style="margin-top:12px;padding-top:12px;border-top:1px solid #eee;display:flex;gap:16px;font-size:14px;">
+                                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                                        <input type="radio" name="fulfillment_type[<?= (int)$shop['shop_id'] ?>]" value="delivery" checked>
+                                        <?= $t['checkout_fulfillment_delivery'] ?? 'Delivery' ?>
+                                    </label>
+                                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                                        <input type="radio" name="fulfillment_type[<?= (int)$shop['shop_id'] ?>]" value="pickup">
+                                        <?= $t['checkout_fulfillment_pickup'] ?? 'Pick up at shop (no delivery fee)' ?>
+                                    </label>
+                                </div>
+                                <?php if (!empty($shop['shop_address'])): ?>
+                                    <p class="pickup-address-note" style="display:none;margin:8px 0 0;font-size:13px;color:#666;">
+                                        <i class="fas fa-map-marker-alt"></i> <?= htmlspecialchars($shop['shop_address']) ?>
+                                    </p>
+                                <?php endif; ?>
+                            <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -598,6 +615,20 @@ document.querySelectorAll('.address-option').forEach(option => {
     option.addEventListener('click', function() {
         document.querySelectorAll('.address-option').forEach(o => o.classList.remove('selected'));
         this.classList.add('selected');
+    });
+});
+
+// Pickup/delivery toggle per shop-group - shows that shop's pickup address note
+// when "Pick up at shop" is selected. Purely cosmetic; the authoritative fee is
+// always computed server-side in CheckoutController::process(), same as every
+// other value on this page (no live client-side fee recalculation exists here).
+document.querySelectorAll('.fulfillment-toggle').forEach(toggle => {
+    const note = toggle.parentElement.querySelector('.pickup-address-note');
+    if (!note) return;
+    toggle.querySelectorAll('input[type="radio"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            note.style.display = this.value === 'pickup' ? 'block' : 'none';
+        });
     });
 });
 
