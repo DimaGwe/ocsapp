@@ -364,6 +364,7 @@ ob_start();
                             <div class="manual-attendee-row">
                                 <input type="text" id="manualAttendeeName" placeholder="Name">
                                 <input type="email" id="manualAttendeeEmail" placeholder="Email">
+                                <input type="tel" id="manualAttendeePhone" placeholder="Mobile (optional, for SMS)">
                                 <button class="btn-planner secondary" onclick="addManualAttendee()">
                                     <i class="fa-solid fa-plus"></i> Add Manual
                                 </button>
@@ -465,6 +466,7 @@ ob_start();
         <div class="html-form-group">
             <label>Recipients (from attendees)</label>
             <div id="emailRecipientsList" class="email-recipients-list"></div>
+            <p id="meetingSmsNote" class="meeting-sms-note"></p>
         </div>
         <div class="html-form-group">
             <label>Email Preview</label>
@@ -4294,6 +4296,7 @@ ${content}
     let meetingItems = { agenda: [], discussion: [], decision: [] };
     let meetingActions = [];
     let teamMembers = [];
+    let smsAvailable = false;
 
     // Load meetings when tab is opened
     async function loadMeetings() {
@@ -4466,9 +4469,10 @@ ${content}
 
             if (data.success) {
                 teamMembers = data.members;
+                smsAvailable = !!data.sms_available;
                 const select = document.getElementById('teamMemberSelect');
                 select.innerHTML = '<option value="">-- Select Team Member --</option>' +
-                    teamMembers.map(m => `<option value="${m.id}" data-email="${escapeHtml(m.email)}" data-name="${escapeHtml(m.name)}">${escapeHtml(m.name)} (${escapeHtml(m.email)})</option>`).join('');
+                    teamMembers.map(m => `<option value="${m.id}" data-email="${escapeHtml(m.email)}" data-name="${escapeHtml(m.name)}" data-phone="${escapeHtml(m.phone || '')}">${escapeHtml(m.name)} (${escapeHtml(m.email)})</option>`).join('');
 
                 document.getElementById('noteTakerId').innerHTML = '<option value="">-- Not assigned --</option>' +
                     teamMembers.map(m => `<option value="${m.id}">${escapeHtml(m.name)}</option>`).join('');
@@ -4534,6 +4538,7 @@ ${content}
             user_id: userId,
             email: email,
             name: name,
+            phone: option.dataset.phone || '',
             attended: true
         });
 
@@ -4546,6 +4551,7 @@ ${content}
         const nameInput = document.getElementById('manualAttendeeName');
         const emailInput = document.getElementById('manualAttendeeEmail');
 
+        const phoneInput = document.getElementById('manualAttendeePhone');
         const name = nameInput.value.trim();
         const email = emailInput.value.trim();
 
@@ -4564,11 +4570,13 @@ ${content}
             user_id: null,
             email: email,
             name: name,
+            phone: phoneInput.value.trim(),
             attended: true
         });
 
         nameInput.value = '';
         emailInput.value = '';
+        phoneInput.value = '';
         renderAttendeesList();
         populateAssigneeDropdown();
     }
@@ -4589,12 +4597,18 @@ ${content}
         container.innerHTML = meetingAttendees.map((a, index) => `
             <div class="attendee-chip">
                 <span>${escapeHtml(a.name)}</span>
+                <input type="tel" class="attendee-phone" placeholder="Mobile" title="Mobile number for meeting SMS"
+                       value="${escapeHtml(a.phone || '')}" onchange="setAttendeePhone(${index}, this.value)">
                 <span class="attended-toggle ${a.attended ? 'present' : 'absent'}" onclick="toggleAttendance(${index})">
                     ${a.attended ? 'Present' : 'Absent'}
                 </span>
                 <span class="remove-attendee" onclick="removeAttendee(${index})"><i class="fa-solid fa-times"></i></span>
             </div>
         `).join('');
+    }
+
+    function setAttendeePhone(index, value) {
+        meetingAttendees[index].phone = value.trim();
     }
 
     function populateAssigneeDropdown() {
@@ -5091,11 +5105,23 @@ ${content}
         // Show recipients
         const recipientsList = document.getElementById('emailRecipientsList');
         recipientsList.innerHTML = meetingAttendees.map((a, index) => `
-            <label class="email-recipient-chip">
-                <input type="checkbox" checked data-email="${escapeHtml(a.email)}" data-name="${escapeHtml(a.name)}">
-                <span>${escapeHtml(a.name)} &lt;${escapeHtml(a.email)}&gt;</span>
-            </label>
+            <div class="email-recipient-chip" data-index="${index}">
+                <label>
+                    <input type="checkbox" class="email-check" checked>
+                    <span>${escapeHtml(a.name)} &lt;${escapeHtml(a.email)}&gt;</span>
+                </label>
+                ${a.phone ? `<label class="sms-toggle" title="Also text ${escapeHtml(a.phone)}">
+                    <input type="checkbox" class="sms-check" ${smsAvailable ? 'checked' : 'disabled'}> SMS
+                </label>` : ''}
+            </div>
         `).join('');
+
+        const withPhone = meetingAttendees.filter(a => a.phone).length;
+        document.getElementById('meetingSmsNote').textContent = !smsAvailable
+            ? 'SMS is not set up on this server, so only emails will be sent.'
+            : (withPhone < meetingAttendees.length
+                ? 'Add a mobile number on an attendee to also text them a short heads-up.'
+                : 'Ticked people also get a short SMS pointing them to the email.');
 
         // Show email preview in sandboxed iframe to prevent CSS leaking
         const iframe = document.getElementById('emailPreviewFrame');
@@ -5106,6 +5132,15 @@ ${content}
 
         // Show modal
         document.getElementById('meetingEmailModal').style.display = 'flex';
+    }
+
+    function smsResultText(sms) {
+        if (!sms) return '';
+        let text = '';
+        if (sms.sent) text += `\nSMS sent to ${sms.sent} person(s).`;
+        if (sms.skipped) text += `\n${sms.skipped}.`;
+        (sms.failed || []).forEach(f => { text += `\nSMS to ${f.name} failed: ${f.error}`; });
+        return text;
     }
 
     function closeMeetingEmailModal() {
@@ -5120,11 +5155,19 @@ ${content}
         }
 
         // Get selected recipients
-        const checkboxes = document.querySelectorAll('#emailRecipientsList input[type="checkbox"]:checked');
-        const recipients = Array.from(checkboxes).map(cb => ({
-            email: cb.dataset.email,
-            name: cb.dataset.name
-        }));
+        const recipients = Array.from(document.querySelectorAll('#emailRecipientsList .email-recipient-chip'))
+            .filter(chip => chip.querySelector('.email-check').checked)
+            .map(chip => {
+                const a = meetingAttendees[chip.dataset.index];
+                const smsCheck = chip.querySelector('.sms-check');
+                return {
+                    email: a.email,
+                    name: a.name,
+                    user_id: a.user_id || null,
+                    phone: a.phone || '',
+                    sms: !!(smsCheck && smsCheck.checked && !smsCheck.disabled)
+                };
+            });
 
         if (recipients.length === 0) {
             alert('Please select at least one recipient');
@@ -5150,13 +5193,13 @@ ${content}
                 closeMeetingEmailModal();
                 currentMeeting.invite_sent_at = new Date().toISOString();
                 updateInviteBadge();
-                alert('Invite sent successfully to ' + recipients.length + ' recipient(s)!');
+                alert('Invite sent successfully to ' + recipients.length + ' recipient(s)!' + smsResultText(data.sms));
             } else if (data.success) {
                 closeMeetingEmailModal();
                 currentMeeting.status = 'sent';
                 document.getElementById('meetingStatusBadge').textContent = 'sent';
                 document.getElementById('meetingStatusBadge').className = 'meeting-status-badge sent';
-                alert('Email sent successfully to ' + recipients.length + ' recipient(s)!');
+                alert('Email sent successfully to ' + recipients.length + ' recipient(s)!' + smsResultText(data.sms));
             } else {
                 alert('Failed to send email: ' + (data.error || 'Unknown error'));
             }

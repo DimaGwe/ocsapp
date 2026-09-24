@@ -5,8 +5,10 @@ namespace App\Controllers\Api;
 require_once __DIR__ . '/../../Helpers/AdminPermissionHelper.php';
 require_once __DIR__ . '/../../Helpers/EmailHelper.php';
 require_once __DIR__ . '/../../Helpers/NotificationHelper.php';
+require_once __DIR__ . '/../../Helpers/TwilioHelper.php';
 
 use App\Helpers\NotificationHelper;
+use App\Helpers\TwilioHelper;
 
 /**
  * Planner Meetings API Controller
@@ -728,11 +730,19 @@ class PlannerMeetingsController
                 ");
                 $stmt->execute([$subject, $html, $input['id']]);
 
-                if (!empty($_SESSION['user']['id'])) {
-                    $this->logActivity((int)$_SESSION['user']['id'], 'meeting', 'sent meeting minutes: ' . $meeting['title']);
+                $sms = [];
+                if (!empty($input['recipients'])) {
+                    $full = $this->loadMeetingData((int)$input['id']);
+                    if ($full) {
+                        $sms = $this->sendMeetingSms($input['recipients'], fn($r) => $this->buildMinutesSms($full, $r));
+                    }
                 }
 
-                echo json_encode(['success' => true, 'recipients' => count($recipients)]);
+                if (!empty($_SESSION['user']['id'])) {
+                    $this->logActivity((int)$_SESSION['user']['id'], 'meeting', 'sent meeting minutes: ' . $meeting['title'] . $this->smsSummary($sms));
+                }
+
+                echo json_encode(['success' => true, 'recipients' => count($recipients), 'sms' => $sms]);
             } else {
                 http_response_code(500);
                 echo json_encode(['error' => 'Failed to send email. Please check mail configuration.']);
@@ -836,11 +846,14 @@ class PlannerMeetingsController
                 $this->db->prepare("UPDATE planner_meetings SET invite_sent_at = NOW() WHERE id = ?")
                     ->execute([$meeting['id']]);
 
+                // Short SMS after the email; failures are reported, never block the email
+                $sms = $this->sendMeetingSms($input['recipients'] ?? [], fn($r) => $this->buildInviteSms($meeting));
+
                 if (!empty($_SESSION['user']['id'])) {
-                    $this->logActivity((int)$_SESSION['user']['id'], 'meeting', 'sent meeting invite: ' . $meeting['title']);
+                    $this->logActivity((int)$_SESSION['user']['id'], 'meeting', 'sent meeting invite: ' . $meeting['title'] . $this->smsSummary($sms));
                 }
 
-                echo json_encode(['success' => true, 'recipients' => count($recipients)]);
+                echo json_encode(['success' => true, 'recipients' => count($recipients), 'sms' => $sms]);
             } else {
                 http_response_code(500);
                 echo json_encode(['error' => 'Failed to send invite. Please check mail configuration.']);
@@ -862,8 +875,15 @@ class PlannerMeetingsController
     {
         try {
             // Role comes from user_roles/roles, not users.role
+            // Phone: the number last used for them on a meeting, else their profile number
             $stmt = $this->db->query("
-                SELECT DISTINCT u.id, u.email, u.first_name, u.last_name
+                SELECT DISTINCT u.id, u.email, u.first_name, u.last_name,
+                    COALESCE(
+                        (SELECT a.phone FROM planner_meeting_attendees a
+                         WHERE a.user_id = u.id AND a.phone IS NOT NULL AND a.phone <> ''
+                         ORDER BY a.id DESC LIMIT 1),
+                        u.phone
+                    ) as phone
                 FROM users u
                 JOIN user_roles ur ON ur.user_id = u.id
                 JOIN roles r ON r.id = ur.role_id
@@ -873,16 +893,18 @@ class PlannerMeetingsController
             ");
             $users = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-            // Format for frontend
+            // Format for frontend; only offer numbers Twilio can actually dial
             $members = array_map(function($u) {
+                $phone = trim((string)$u['phone']);
                 return [
                     'id' => $u['id'],
                     'email' => $u['email'],
-                    'name' => trim($u['first_name'] . ' ' . $u['last_name'])
+                    'name' => trim($u['first_name'] . ' ' . $u['last_name']),
+                    'phone' => ($phone !== '' && TwilioHelper::formatPhoneNumber($phone)) ? $phone : ''
                 ];
             }, $users);
 
-            echo json_encode(['success' => true, 'members' => $members]);
+            echo json_encode(['success' => true, 'members' => $members, 'sms_available' => TwilioHelper::isConfigured()]);
         } catch (\Exception $e) {
             http_response_code(500);
             echo json_encode(['success' => false, 'error' => 'Failed to fetch team members']);
@@ -1056,15 +1078,17 @@ class PlannerMeetingsController
     private function saveAttendees(int $meetingId, array $attendees): void
     {
         $stmt = $this->db->prepare("
-            INSERT INTO planner_meeting_attendees (meeting_id, user_id, email, name, attended)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO planner_meeting_attendees (meeting_id, user_id, email, phone, name, attended)
+            VALUES (?, ?, ?, ?, ?, ?)
         ");
 
         foreach ($attendees as $attendee) {
+            $phone = trim((string)($attendee['phone'] ?? ''));
             $stmt->execute([
                 $meetingId,
                 $attendee['user_id'] ?? null,
                 $attendee['email'],
+                $phone !== '' ? mb_substr($phone, 0, 20) : null,
                 $attendee['name'],
                 $attendee['attended'] ?? true
             ]);
@@ -1155,6 +1179,98 @@ class PlannerMeetingsController
         $meeting['previous_actions'] = $decoded['previous_actions'] ?? [];
 
         return $meeting;
+    }
+
+    /**
+     * Text the recipients who were ticked for SMS. Returns ['sent' => n, 'failed' => [[name, error]], 'skipped' => reason|null]
+     */
+    private function sendMeetingSms(array $recipients, callable $textFor): array
+    {
+        $wanted = array_filter($recipients, fn($r) => !empty($r['sms']) && trim((string)($r['phone'] ?? '')) !== '');
+        $result = ['sent' => 0, 'failed' => [], 'skipped' => null];
+
+        if (empty($wanted)) {
+            return $result;
+        }
+        if (!TwilioHelper::isConfigured()) {
+            $result['skipped'] = 'SMS is not configured (Twilio settings missing)';
+            return $result;
+        }
+
+        $seen = [];
+        foreach ($wanted as $r) {
+            $to = TwilioHelper::formatPhoneNumber((string)$r['phone']);
+            $name = (string)($r['name'] ?? $r['email'] ?? '');
+            if (!$to) {
+                $result['failed'][] = ['name' => $name, 'error' => 'Invalid phone number'];
+                continue;
+            }
+            if (isset($seen[$to])) {
+                continue;
+            }
+            $seen[$to] = true;
+
+            $res = TwilioHelper::sendSMS($to, $textFor($r));
+            if (!empty($res['success'])) {
+                $result['sent']++;
+            } else {
+                $result['failed'][] = ['name' => $name, 'error' => $res['error'] ?? 'Failed to send'];
+            }
+        }
+
+        return $result;
+    }
+
+    private function smsSummary(array $sms): string
+    {
+        if (empty($sms['sent']) && empty($sms['failed'])) {
+            return '';
+        }
+        return ' (SMS: ' . (int)$sms['sent'] . ' sent' . (!empty($sms['failed']) ? ', ' . count($sms['failed']) . ' failed' : '') . ')';
+    }
+
+    private function smsTitle(array $meeting): string
+    {
+        $title = trim($meeting['title']);
+        return mb_strlen($title) > 60 ? mb_substr($title, 0, 57) . '...' : $title;
+    }
+
+    private function buildInviteSms(array $meeting): string
+    {
+        $when = date('D M j', strtotime($meeting['meeting_date']));
+        if (!empty($meeting['meeting_time'])) {
+            $when .= ' at ' . date('g:i A', strtotime($meeting['meeting_time']));
+        }
+        $where = !empty($meeting['location']) ? ', ' . $meeting['location'] : '';
+
+        return "OCSAPP meeting invite: {$this->smsTitle($meeting)}, {$when}{$where}. Agenda and calendar file sent to your email.";
+    }
+
+    /**
+     * Minutes SMS, personalised with the recipient's own open action items
+     */
+    private function buildMinutesSms(array $meeting, array $recipient): string
+    {
+        $userId = (string)($recipient['user_id'] ?? '');
+        $name = mb_strtolower(trim((string)($recipient['name'] ?? '')));
+
+        $open = 0;
+        foreach ($meeting['actions'] ?? [] as $action) {
+            if (($action['status'] ?? '') === 'completed') {
+                continue;
+            }
+            $mine = ($userId !== '' && (string)($action['assigned_to'] ?? '') === $userId)
+                || ($name !== '' && mb_strtolower(trim((string)($action['assigned_name'] ?? ''))) === $name);
+            if ($mine) {
+                $open++;
+            }
+        }
+
+        $date = date('M j', strtotime($meeting['meeting_date']));
+        $actions = $open === 0 ? 'No open action items for you.'
+            : "You have {$open} open action item" . ($open > 1 ? 's' : '') . '.';
+
+        return "OCSAPP: minutes for {$this->smsTitle($meeting)} ({$date}) were sent to your email. {$actions}";
     }
 
     private function buildInviteSubject(array $meeting): string

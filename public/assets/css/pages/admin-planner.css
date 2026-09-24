@@ -2493,6 +2493,12 @@
         height: 14px;
     }
 
+    /* Meeting SMS */
+    .email-recipient-chip label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+    .email-recipient-chip .sms-toggle { padding-left: 8px; border-left: 1px solid #e5e7eb; color: #475569; font-size: 12px; }
+    .meeting-sms-note { margin: 6px 0 0; font-size: 12px; color: #64748b; }
+    .attendee-chip .attendee-phone { width: 120px; padding: 3px 8px; border: 1px solid #e5e7eb; border-radius: 12px; font-size: 12px; }
+
     .email-preview-frame {
         border: 1px solid #ddd;
         border-radius: 6px;
