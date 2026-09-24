@@ -3,6 +3,10 @@
 namespace App\Controllers;
 
 require_once __DIR__ . '/../Helpers/AdminPermissionHelper.php';
+require_once __DIR__ . '/../Helpers/ContactCenterHelper.php';
+
+use App\Helpers\ContactCenterHelper;
+use App\Helpers\TwilioHelper;
 
 /**
  * Admin Agent Dashboard Controller
@@ -115,18 +119,35 @@ class AdminAgentDashboardController
                    (SELECT COUNT(*) FROM support_tickets WHERE assigned_to = u.id AND status NOT IN ('resolved','closed')) AS open_count
             FROM users u
             LEFT JOIN support_agent_status sas ON sas.user_id = u.id
-            WHERE u.role IN ('super_admin','admin','admin_staff')
-              AND u.status = 'active'
+            WHERE u.status = 'active'
+              AND EXISTS (SELECT 1 FROM user_roles ur JOIN roles r ON r.id = ur.role_id
+                          WHERE ur.user_id = u.id AND r.name IN ('super_admin','admin','admin_staff'))
             ORDER BY
                 CASE COALESCE(sas.status,'offline') WHEN 'available' THEN 1 WHEN 'busy' THEN 2 WHEN 'break' THEN 3 ELSE 4 END,
                 u.first_name
         ");
         $team = $teamStmt->fetchAll();
 
+        // Phone Twilio rings for this agent (click-to-call and inbound calls)
+        $stmt = $this->db->prepare("SELECT phone FROM support_agent_status WHERE user_id = ?");
+        $stmt->execute([$uid]);
+        $agentPhone  = (string)($stmt->fetchColumn() ?: '');
+        $twilioReady = TwilioHelper::isConfigured();
+
+        // Twilio calls waiting for my disposition
+        $stmt = $this->db->prepare("
+            SELECT id, direction, contact_name, contact_phone, contact_type, contact_id, contact_email, call_status, duration_seconds, created_at
+            FROM call_logs WHERE agent_id = ? AND needs_outcome = 1
+            ORDER BY created_at DESC LIMIT 10
+        ");
+        $stmt->execute([$uid]);
+        $pendingOutcomes = $stmt->fetchAll();
+
         $pageTitle   = 'Agent Dashboard';
         $currentPage = 'agent-dashboard';
         $content     = $this->renderView('agent-dashboard', compact(
-            'agentStatus', 'myQueue', 'followUps', 'stats', 'recentActivity', 'team', 'pageTitle'
+            'agentStatus', 'myQueue', 'followUps', 'stats', 'recentActivity', 'team', 'pageTitle',
+            'agentPhone', 'twilioReady', 'pendingOutcomes'
         ));
         require __DIR__ . '/../Views/admin/layout.php';
     }
@@ -155,6 +176,30 @@ class AdminAgentDashboardController
 
         header('Content-Type: application/json');
         echo json_encode(['success' => true, 'status' => $status]);
+        exit;
+    }
+
+    // -------------------------------------------------------------------------
+    // Save the phone Twilio rings for me (AJAX POST)
+    // -------------------------------------------------------------------------
+    public function updatePhone(): void
+    {
+        verifyCsrf();
+        header('Content-Type: application/json');
+
+        $raw = trim((string)($_POST['phone'] ?? ''));
+        $phone = null;
+        if ($raw !== '') {
+            $phone = ContactCenterHelper::e164($raw);
+            if (!$phone) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'That phone number is not valid.']);
+                exit;
+            }
+        }
+
+        ContactCenterHelper::setAgentPhone((int)$this->user['id'], $phone);
+        echo json_encode(['success' => true, 'phone' => $phone, 'display' => $phone ? TwilioHelper::formatPhoneForDisplay($phone) : '']);
         exit;
     }
 

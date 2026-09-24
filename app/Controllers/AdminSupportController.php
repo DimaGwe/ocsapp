@@ -127,18 +127,18 @@ class AdminSupportController
         verifyCsrf();
 
         $ticketNumber = $this->generateTicketNumber();
-        $subject      = sanitize($_POST['subject'] ?? '');
+        $subject      = trim((string)($_POST['subject'] ?? ''));
         $channel      = sanitize($_POST['channel'] ?? 'phone');
         $category     = sanitize($_POST['category'] ?? 'general');
         $priority     = sanitize($_POST['priority'] ?? 'medium');
         $contactType  = sanitize($_POST['contact_type'] ?? 'unknown');
         $contactId    = (int)($_POST['contact_id'] ?? 0) ?: null;
-        $contactName  = sanitize($_POST['contact_name'] ?? '');
-        $contactEmail = sanitize($_POST['contact_email'] ?? '');
-        $contactPhone = sanitize($_POST['contact_phone'] ?? '');
+        $contactName  = trim((string)($_POST['contact_name'] ?? ''));
+        $contactEmail = trim((string)($_POST['contact_email'] ?? ''));
+        $contactPhone = trim((string)($_POST['contact_phone'] ?? ''));
         $orderId      = (int)($_POST['order_id'] ?? 0) ?: null;
         $assignedTo   = (int)($_POST['assigned_to'] ?? 0) ?: null;
-        $description  = sanitize($_POST['description'] ?? '');
+        $description  = trim((string)($_POST['description'] ?? ''));
 
         if (!$subject) {
             setFlash('error', 'Subject is required.');
@@ -188,11 +188,13 @@ class AdminSupportController
         $messages->execute([$id]);
         $messages = $messages->fetchAll();
 
-        $agents = $this->db->query("SELECT id, first_name, last_name FROM users WHERE role IN ('super_admin','admin','admin_staff') AND status = 'active' ORDER BY first_name")->fetchAll();
+        require_once __DIR__ . '/../Helpers/ContactCenterHelper.php';
+        $agents   = \App\Helpers\ContactCenterHelper::agents();
+        $smsReady = \App\Helpers\TwilioHelper::isConfigured();
 
         $pageTitle   = $ticket['ticket_number'] . ' — ' . $ticket['subject'];
         $currentPage = 'support';
-        $content     = $this->renderView('support/view', compact('ticket','messages','agents','pageTitle'));
+        $content     = $this->renderView('support/view', compact('ticket','messages','agents','pageTitle','smsReady'));
         require __DIR__ . '/../Views/admin/layout.php';
     }
 
@@ -206,18 +208,33 @@ class AdminSupportController
         $message    = sanitize($_POST['message'] ?? '');
         $isInternal = (int)($_POST['is_internal'] ?? 0);
         $ticket     = $this->getTicket($id);
+        $sendVia    = ($_POST['send_via'] ?? '') === 'sms' && !$isInternal ? 'sms' : null;
 
         if (!$ticket || !$message) {
             header("Location: /admin/support/view?id=$id");
             exit;
         }
 
+        // sanitize() HTML-encodes, and the views escape again on output (apostrophes showed as &#039;).
+        // Store the plain text; it is escaped when displayed.
+        $message = trim(html_entity_decode($message, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+
+        // Text the contact first; only a delivered-to-Twilio SMS is recorded as sent
+        if ($sendVia === 'sms') {
+            require_once __DIR__ . '/../Helpers/ContactCenterHelper.php';
+            $res = \App\Helpers\ContactCenterHelper::sendSms((string)$ticket['contact_phone'], $message);
+            if (empty($res['success'])) {
+                header("Location: /admin/support/view?id=$id&sms=failed&err=" . urlencode($res['error'] ?? 'unknown error'));
+                exit;
+            }
+        }
+
         $stmt = $this->db->prepare("
-            INSERT INTO support_ticket_messages (ticket_id, message, sender_type, sender_id, sender_name, is_internal)
-            VALUES (?, ?, 'agent', ?, ?, ?)
+            INSERT INTO support_ticket_messages (ticket_id, message, sender_type, sender_id, sender_name, is_internal, channel)
+            VALUES (?, ?, 'agent', ?, ?, ?, ?)
         ");
         $agentName = trim(($this->user['first_name'] ?? '') . ' ' . ($this->user['last_name'] ?? ''));
-        $stmt->execute([$id, $message, $this->user['id'], $agentName, $isInternal]);
+        $stmt->execute([$id, $message, $this->user['id'], $agentName, $isInternal, $sendVia]);
 
         // Mark first response time
         if (!$ticket['first_response_at'] && !$isInternal) {
@@ -229,7 +246,7 @@ class AdminSupportController
             $this->db->prepare("UPDATE support_tickets SET status = 'in_progress' WHERE id = ?")->execute([$id]);
         }
 
-        header("Location: /admin/support/view?id=$id#thread-end");
+        header("Location: /admin/support/view?id=$id" . ($sendVia === 'sms' ? '&sms=sent' : '') . "#thread-end");
         exit;
     }
 
@@ -365,9 +382,8 @@ class AdminSupportController
 
     private function generateTicketNumber(): string
     {
-        $year  = date('Y');
-        $count = (int)$this->db->query("SELECT COUNT(*) FROM support_tickets WHERE YEAR(created_at) = $year")->fetchColumn();
-        return 'TKT-' . $year . '-' . str_pad($count + 1, 5, '0', STR_PAD_LEFT);
+        require_once __DIR__ . '/../Helpers/ContactCenterHelper.php';
+        return \App\Helpers\ContactCenterHelper::nextTicketNumber();
     }
 
     private function renderView(string $view, array $data = []): string

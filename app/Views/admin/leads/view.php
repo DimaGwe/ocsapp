@@ -2173,7 +2173,9 @@ ob_start();
             <h3 class="card-title"><i class="fas fa-headset"></i> <?= $t['comm_center'] ?></h3>
 
             <?php
-            $twilioConfigured = !empty($_ENV['TWILIO_ACCOUNT_SID']) && !empty($_ENV['TWILIO_AUTH_TOKEN']);
+            require_once BASE_PATH . '/app/Helpers/TwilioHelper.php';
+            // Credentials live in the Integrations settings (DB first, .env fallback)
+            $twilioConfigured = \App\Helpers\TwilioHelper::isConfigured();
             $hasPhone = !empty($lead['phone']);
             $smsOptOut = !empty($lead['sms_opt_out']);
             ?>
@@ -2518,8 +2520,11 @@ async function setDocStatus(docField, status, appId) {
 <script>
 // Twilio Communication Functions
 const API_URL = '<?= url('api/twilio') ?>';
-const LEAD_ID = <?= $lead['id'] ?>;
-const LEAD_NAME = '<?= htmlspecialchars($lead['first_name']) ?>';
+const LEAD_ID = <?= (int)$lead['id'] ?>;
+const LEAD_NAME = <?= json_encode((string)$lead['first_name']) ?>;
+const LEAD_FULL_NAME = <?= json_encode(trim($lead['first_name'] . ' ' . $lead['last_name'])) ?>;
+const LEAD_PHONE = <?= json_encode((string)$lead['phone']) ?>;
+const LEAD_EMAIL = <?= json_encode((string)($lead['email'] ?? '')) ?>;
 let smsTemplates = [];
 
 // Initialize on page load
@@ -2575,7 +2580,7 @@ function useTemplate(index) {
     // Replace placeholders
     body = body.replace('{name}', LEAD_NAME);
     body = body.replace('{first_name}', LEAD_NAME);
-    body = body.replace('{sender}', '<?= htmlspecialchars($_SESSION['user_name'] ?? 'OCSAPP') ?>');
+    body = body.replace('{sender}', <?= json_encode(trim(($_SESSION['user']['first_name'] ?? '') . ' ' . ($_SESSION['user']['last_name'] ?? '')) ?: 'OCSAPP') ?>);
 
     document.getElementById('sms-message').value = body;
     updateCharCount();
@@ -2668,63 +2673,9 @@ async function sendSMS(leadId) {
     }
 }
 
-// Initiate Call
-async function initiateCall(leadId) {
-    const btn = document.getElementById('btn-call');
-    const statusDiv = document.getElementById('call-status');
-    const statusText = document.getElementById('call-status-text');
-
-    btn.disabled = true;
-    statusDiv.classList.add('active');
-    statusText.textContent = 'Initiating call...';
-
-    try {
-        const formData = new FormData();
-        formData.append('lead_id', leadId);
-
-        const response = await fetch(`${API_URL}/make-call`, {
-            method: 'POST',
-            body: formData
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            statusText.textContent = 'Call in progress...';
-
-            // Poll for status updates
-            if (data.communication_id) {
-                pollCallStatus(data.communication_id);
-            }
-
-            // Update stats
-            const callStatEl = document.querySelectorAll('.comm-stat-value')[0];
-            if (callStatEl) callStatEl.textContent = parseInt(callStatEl.textContent) + 1;
-
-        } else {
-            statusText.textContent = data.error || 'Call failed';
-            setTimeout(() => {
-                statusDiv.classList.remove('active');
-            }, 3000);
-        }
-    } catch (error) {
-        console.error('Call error:', error);
-        statusText.textContent = 'Call failed - network error';
-        setTimeout(() => {
-            statusDiv.classList.remove('active');
-        }, 3000);
-    } finally {
-        btn.disabled = false;
-    }
-}
-
-// Poll call status
-function pollCallStatus(commId) {
-    // Simple timeout to hide status after 30 seconds
-    setTimeout(() => {
-        document.getElementById('call-status').classList.remove('active');
-        loadCommunicationHistory();
-    }, 30000);
+// Call the lead through the admin dialer: Twilio rings your phone, you press 1, then the lead is dialed
+function initiateCall(leadId) {
+    ocsCall({ phone: LEAD_PHONE, name: LEAD_FULL_NAME, type: 'lead', id: leadId, email: LEAD_EMAIL });
 }
 
 // Load communication history

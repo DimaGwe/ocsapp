@@ -4,7 +4,7 @@ $priorityColor = ['urgent'=>'#ef4444','high'=>'#f59e0b','medium'=>'#3b82f6','low
 $priorityBg    = ['urgent'=>'#fee2e2','high'=>'#fef3c7','medium'=>'#dbeafe','low'=>'#f3f4f6'];
 $statusColor   = ['open'=>'#3b82f6','in_progress'=>'#8b5cf6','pending_contact'=>'#f59e0b','resolved'=>'#10b981','closed'=>'#9ca3af'];
 $statusBg      = ['open'=>'#dbeafe','in_progress'=>'#ede9fe','pending_contact'=>'#fef3c7','resolved'=>'#d1fae5','closed'=>'#f3f4f6'];
-$channelIcon   = ['phone'=>'fa-phone','email'=>'fa-envelope','web_form'=>'fa-globe','walk_in'=>'fa-person-walking','chat'=>'fa-comments'];
+$channelIcon   = ['phone'=>'fa-phone','email'=>'fa-envelope','web_form'=>'fa-globe','walk_in'=>'fa-person-walking','chat'=>'fa-comments','sms'=>'fa-comment-sms'];
 
 function ticketAge(string $date): string {
     $diff = time() - strtotime($date);

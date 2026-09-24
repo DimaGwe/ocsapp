@@ -16,6 +16,9 @@ $initials = $ticket['contact_name']
 
 $csrfName = env('CSRF_TOKEN_NAME', '_csrf_token');
 $csrfVal  = generateCsrfToken();
+
+require_once BASE_PATH . '/app/Helpers/ContactCenterHelper.php';
+$canSms = !empty($smsReady) && !empty($ticket['contact_phone']);
 ?>
 <style>
 .sv-layout  { display:grid; grid-template-columns:1fr 320px; gap:20px; align-items:start; }
@@ -50,6 +53,10 @@ $csrfVal  = generateCsrfToken();
 .reply-footer     { display:flex; align-items:center; justify-content:space-between; padding:10px 16px; border-top:1px solid #f3f4f6; }
 .send-btn         { padding:8px 20px; background:#00b207; color:white; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; }
 .send-btn.internal-mode { background:#f59e0b; }
+.reply-toggle-btn.sms.active   { color:#0891b2; border-bottom-color:#0891b2; }
+.reply-textarea.sms-mode       { background:#ecfeff; }
+.send-btn.sms-mode             { background:#0891b2; }
+.sv-flash { padding:10px 14px; border-radius:8px; font-size:13px; font-weight:600; margin-bottom:14px; }
 
 /* Controls */
 .sv-control-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
@@ -65,6 +72,12 @@ $csrfVal  = generateCsrfToken();
   <span>/</span>
   <span style="color:#374151;font-weight:600;"><?= htmlspecialchars($ticket['ticket_number']) ?></span>
 </div>
+
+<?php if (($_GET['sms'] ?? '') === 'sent'): ?>
+  <div class="sv-flash" style="background:#ecfeff;color:#155e75;border:1px solid #a5f3fc;"><i class="fa-solid fa-comment-sms"></i> SMS sent to <?= htmlspecialchars($ticket['contact_phone']) ?>.</div>
+<?php elseif (($_GET['sms'] ?? '') === 'failed'): ?>
+  <div class="sv-flash" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;"><i class="fa-solid fa-triangle-exclamation"></i> SMS not sent: <?= htmlspecialchars($_GET['err'] ?? 'unknown error') ?></div>
+<?php endif; ?>
 
 <!-- Subject + badges -->
 <div style="margin-bottom:18px;">
@@ -134,7 +147,7 @@ $csrfVal  = generateCsrfToken();
       <div class="sv-thread" id="threadBody">
         <?php if ($ticket['description']): ?>
           <div class="msg-bubble contact">
-            <div class="msg-inner"><?= nl2br(htmlspecialchars($ticket['description'])) ?></div>
+            <div class="msg-inner"><?= \App\Helpers\ContactCenterHelper::messageHtml($ticket['description']) ?></div>
             <div class="msg-meta"><?= htmlspecialchars($ticket['contact_name'] ?: 'Contact') ?> · <?= date('M j g:ia', strtotime($ticket['created_at'])) ?></div>
           </div>
         <?php endif; ?>
@@ -148,7 +161,8 @@ $csrfVal  = generateCsrfToken();
         ?>
           <div class="msg-bubble <?= $bubbleClass ?>">
             <div class="msg-inner">
-              <?= nl2br(htmlspecialchars($msg['message'])) ?>
+              <?= \App\Helpers\ContactCenterHelper::messageHtml($msg['message']) ?>
+              <?= \App\Helpers\ContactCenterHelper::channelBadge($msg['channel'] ?? null) ?>
               <?php if ($isInternal && !$isSystem): ?>
                 <span class="internal-badge">NOTE</span>
               <?php endif; ?>
@@ -167,14 +181,18 @@ $csrfVal  = generateCsrfToken();
         <div class="reply-toggle">
           <button class="reply-toggle-btn active" data-mode="reply" onclick="svSetMode('reply')">Reply</button>
           <button class="reply-toggle-btn internal" data-mode="internal" onclick="svSetMode('internal')">Internal Note</button>
+          <?php if ($canSms): ?>
+            <button class="reply-toggle-btn sms" data-mode="sms" onclick="svSetMode('sms')"><i class="fa-solid fa-comment-sms"></i> SMS</button>
+          <?php endif; ?>
         </div>
         <form method="POST" action="/admin/support/reply">
           <input type="hidden" name="<?= $csrfName ?>" value="<?= $csrfVal ?>">
           <input type="hidden" name="ticket_id" value="<?= $ticket['id'] ?>">
           <input type="hidden" name="is_internal" id="svIsInternal" value="0">
-          <textarea class="reply-textarea" id="svReplyTextarea" name="message" placeholder="Reply to contact…" required></textarea>
+          <input type="hidden" name="send_via" id="svSendVia" value="">
+          <textarea class="reply-textarea" id="svReplyTextarea" name="message" placeholder="Reply to contact…" required oninput="svSmsCount()"></textarea>
           <div class="reply-footer">
-            <span style="font-size:11px;color:#9ca3af;"><i class="fa-solid fa-lock" style="margin-right:3px;"></i>Internal notes are not visible to the contact</span>
+            <span style="font-size:11px;color:#9ca3af;" id="svReplyHint"><i class="fa-solid fa-lock" style="margin-right:3px;"></i>Internal notes are not visible to the contact</span>
             <button type="submit" class="send-btn" id="svSendBtn">Send Reply</button>
           </div>
         </form>
@@ -223,7 +241,7 @@ $csrfVal  = generateCsrfToken();
         <?php endif; ?>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">
           <?php if ($ticket['contact_phone']): ?>
-            <a href="tel:<?= htmlspecialchars($ticket['contact_phone']) ?>" style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:#f0fdf4;color:#00b207;border-radius:7px;font-size:11px;font-weight:600;text-decoration:none;border:1px solid #bbf7d0;"><i class="fa-solid fa-phone"></i> Call</a>
+            <a href="tel:<?= htmlspecialchars($ticket['contact_phone']) ?>" data-ocs-call="<?= htmlspecialchars($ticket['contact_phone']) ?>" data-name="<?= htmlspecialchars($ticket['contact_name'] ?? '') ?>" data-type="<?= htmlspecialchars($ticket['contact_type']) ?>" data-id="<?= (int)$ticket['contact_id'] ?>" data-email="<?= htmlspecialchars($ticket['contact_email'] ?? '') ?>" data-ticket="<?= (int)$ticket['id'] ?>" style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:#f0fdf4;color:#00b207;border-radius:7px;font-size:11px;font-weight:600;text-decoration:none;border:1px solid #bbf7d0;"><i class="fa-solid fa-phone"></i> Call</a>
           <?php endif; ?>
           <?php if ($ticket['contact_email']): ?>
             <a href="mailto:<?= htmlspecialchars($ticket['contact_email']) ?>" style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:#eff6ff;color:#3b82f6;border-radius:7px;font-size:11px;font-weight:600;text-decoration:none;border:1px solid #bfdbfe;"><i class="fa-solid fa-envelope"></i> Email</a>
@@ -300,19 +318,36 @@ function svQuickAssign(id, agentId) {
   }).then(() => location.reload());
 }
 
+const SV_DEFAULT_HINT = document.getElementById('svReplyHint') ? document.getElementById('svReplyHint').innerHTML : '';
+
 function svSetMode(mode) {
   const isInternal = mode === 'internal';
+  const isSms = mode === 'sms';
   document.getElementById('svIsInternal').value = isInternal ? '1' : '0';
+  document.getElementById('svSendVia').value = isSms ? 'sms' : '';
   const ta  = document.getElementById('svReplyTextarea');
   const btn = document.getElementById('svSendBtn');
-  ta.placeholder  = isInternal ? 'Internal note (not visible to contact)…' : 'Reply to contact…';
-  ta.className    = 'reply-textarea' + (isInternal ? ' internal-mode' : '');
-  btn.className   = 'send-btn' + (isInternal ? ' internal-mode' : '');
-  btn.textContent = isInternal ? 'Add Note' : 'Send Reply';
+  ta.placeholder  = isInternal ? 'Internal note (not visible to contact)…' : (isSms ? 'Text message to <?= htmlspecialchars($ticket['contact_phone'] ?? '', ENT_QUOTES) ?>…' : 'Reply to contact…');
+  ta.className    = 'reply-textarea' + (isInternal ? ' internal-mode' : (isSms ? ' sms-mode' : ''));
+  btn.className   = 'send-btn' + (isInternal ? ' internal-mode' : (isSms ? ' sms-mode' : ''));
+  btn.textContent = isInternal ? 'Add Note' : (isSms ? 'Send SMS' : 'Send Reply');
+  svSmsCount();
 
   document.querySelectorAll('.reply-toggle-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.mode === mode);
   });
+}
+
+// SMS length hint (160 characters per segment, 70 with accents or emoji)
+function svSmsCount() {
+  const hint = document.getElementById('svReplyHint');
+  if (!hint) return;
+  if (document.getElementById('svSendVia').value !== 'sms') { hint.innerHTML = SV_DEFAULT_HINT; return; }
+  const text = document.getElementById('svReplyTextarea').value;
+  const unicode = /[^\x00-\x7F]/.test(text);
+  const per = unicode ? 70 : 160;
+  const parts = Math.max(1, Math.ceil(text.length / per));
+  hint.innerHTML = '<i class="fa-solid fa-comment-sms" style="margin-right:3px;"></i>' + text.length + ' characters, ' + parts + ' SMS' + (parts > 1 ? ' messages' : '') + '. Replies by text come back into this ticket.';
 }
 
 // Scroll thread to bottom

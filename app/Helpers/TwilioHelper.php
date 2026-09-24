@@ -147,12 +147,14 @@ class TwilioHelper
         $data = [
             'To' => $to,
             'From' => self::$phoneNumber,
-            'Url' => $twimlUrl
+            'Url' => $twimlUrl,
+            'Method' => 'POST'
         ];
 
         // Add optional parameters
         if (!empty($options['statusCallback'])) {
             $data['StatusCallback'] = $options['statusCallback'];
+            $data['StatusCallbackMethod'] = 'POST';
             $data['StatusCallbackEvent'] = ['initiated', 'ringing', 'answered', 'completed'];
         }
 
@@ -193,6 +195,32 @@ class TwilioHelper
         $url = self::$apiBase . '/Accounts/' . self::$accountSid . '/Calls/' . $callSid . '.json';
 
         return self::makeRequest('GET', $url);
+    }
+
+    /**
+     * Download a call recording as MP3 bytes (null on failure). Recordings are fetched with
+     * account auth so they can be served to admins without exposing Twilio URLs.
+     */
+    public static function fetchRecordingMp3(string $recordingSid): ?string
+    {
+        self::init();
+
+        if (!self::isConfigured() || !preg_match('/^RE[0-9a-f]{32}$/', $recordingSid)) {
+            return null;
+        }
+
+        $ch = curl_init(self::$apiBase . '/Accounts/' . self::$accountSid . '/Recordings/' . $recordingSid . '.mp3');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_USERPWD => self::$accountSid . ':' . self::$authToken,
+            CURLOPT_TIMEOUT => 30
+        ]);
+        $body = curl_exec($ch);
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        return ($body !== false && $code === 200) ? $body : null;
     }
 
     /**
@@ -260,6 +288,10 @@ class TwilioHelper
     {
         self::init();
 
+        if ($signature === '' || empty(self::$authToken)) {
+            return false;
+        }
+
         // Sort params and build string
         ksort($params);
         $data = $url;
@@ -271,6 +303,29 @@ class TwilioHelper
         $expected = base64_encode(hash_hmac('sha1', $data, self::$authToken, true));
 
         return hash_equals($expected, $signature);
+    }
+
+    /**
+     * Public base URL Twilio calls back to (e.g. https://ocsapp.ca), no trailing slash
+     */
+    public static function appUrl(): string
+    {
+        $url = function_exists('env') ? (string)env('APP_URL', '') : (string)($_ENV['APP_URL'] ?? '');
+        return rtrim($url, '/');
+    }
+
+    /**
+     * True when the current request carries a valid X-Twilio-Signature.
+     * The signed URL is rebuilt from APP_URL (TLS ends at the load balancer, so the
+     * request itself arrives as plain http).
+     */
+    public static function isValidWebhookRequest(): bool
+    {
+        $signature = $_SERVER['HTTP_X_TWILIO_SIGNATURE'] ?? '';
+        $url = self::appUrl() . ($_SERVER['REQUEST_URI'] ?? '');
+        $params = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' ? $_POST : [];
+
+        return self::validateWebhookSignature($signature, $url, $params);
     }
 
     /**
@@ -343,7 +398,8 @@ class TwilioHelper
 
         if ($method === 'POST') {
             $options[CURLOPT_POST] = true;
-            $options[CURLOPT_POSTFIELDS] = http_build_query($data);
+            // Twilio wants list params as repeated keys (StatusCallbackEvent=a&StatusCallbackEvent=b), not key[0]=a
+            $options[CURLOPT_POSTFIELDS] = preg_replace('/%5B\d+%5D=/', '=', http_build_query($data));
         }
 
         curl_setopt_array($ch, $options);

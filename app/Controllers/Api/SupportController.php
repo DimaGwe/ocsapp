@@ -62,12 +62,8 @@ class SupportController
         $msgStmt->execute([$id]);
         $messages = $msgStmt->fetchAll();
 
-        $agents = $this->db->query("
-            SELECT id, first_name, last_name
-            FROM users
-            WHERE role IN ('super_admin','admin','admin_staff') AND status = 'active'
-            ORDER BY first_name
-        ")->fetchAll();
+        require_once __DIR__ . '/../../Helpers/ContactCenterHelper.php';
+        $agents = \App\Helpers\ContactCenterHelper::agents();
 
         // Render HTML
         ob_start();

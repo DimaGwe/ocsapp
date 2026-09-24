@@ -2421,7 +2421,7 @@ $t = $translations[$currentLang] ?? $translations['en'];
 
         <!-- Quick Actions -->
         <div style="padding:14px 20px;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid #f3f4f6;">
-          ${c.phone ? `<a href="tel:${c.phone}" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:#f0fdf4;color:#00b207;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;border:1px solid #bbf7d0;"><i class="fa-solid fa-phone"></i> Call</a>` : ''}
+          ${c.phone ? `<a href="tel:${c.phone}" data-ocs-call="${c.phone}" data-name="${(c.name || '').replace(/"/g, '&quot;')}" data-type="${c.type || 'unknown'}" data-id="${c.id || 0}" data-email="${c.email || ''}" onclick="closeContactCard()" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:#f0fdf4;color:#00b207;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;border:1px solid #bbf7d0;"><i class="fa-solid fa-phone"></i> Call</a>` : ''}
           ${c.email ? `<a href="mailto:${c.email}" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:#eff6ff;color:#3b82f6;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;border:1px solid #bfdbfe;"><i class="fa-solid fa-envelope"></i> Email</a>` : ''}
           <button onclick="closeContactCard();openDispositionModal(${JSON.stringify(c.name)},${JSON.stringify(c.phone||'')},${JSON.stringify(c.type)},${c.id||0},${JSON.stringify(c.email||'')})" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:#fff7ed;color:#ea580c;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #fed7aa;"><i class="fa-solid fa-phone-volume"></i> Log Call</button>
           <a href="${url}" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:#f9fafb;color:#374151;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;border:1px solid #e5e7eb;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Full Profile</a>
@@ -2449,10 +2449,27 @@ $t = $translations[$currentLang] ?? $translations['en'];
       other:              { label:'Other',              icon:'fa-circle-dot',              color:'#6b7280' },
     };
 
-    window.openDispositionModal = function(name='', phone='', type='unknown', contactId=0, email='') {
+    window.openDispositionModal = function(name='', phone='', type='unknown', contactId=0, email='', opts={}) {
       const f = document.getElementById('dispositionForm');
       if (!f) return;
       f.reset();
+      opts = opts || {};
+      document.getElementById('dm_call_log_id').value = opts.callLogId || 0;
+      const dir = f.querySelector('input[name="direction"][value="' + (opts.direction || 'outbound') + '"]');
+      if (dir) { dir.checked = true; dir.dispatchEvent(new Event('change')); }
+      document.querySelectorAll('.dm-outcome-btn').forEach(b => { b.style.borderColor = '#e5e7eb'; b.style.background = 'white'; b.style.color = '#6b7280'; });
+      if (opts.outcome) {
+        const oc = f.querySelector('input[name="outcome"][value="' + opts.outcome + '"]');
+        if (oc) { oc.checked = true; oc.dispatchEvent(new Event('change')); }
+      }
+      const callInfo = document.getElementById('dmCallInfo');
+      if (opts.callLogId) {
+        const secs = parseInt(opts.duration || 0, 10);
+        callInfo.textContent = 'Linked to this call' + (secs ? ' (' + Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0') + ')' : '') + '. Duration was recorded automatically.';
+        callInfo.style.display = 'block';
+      } else {
+        callInfo.style.display = 'none';
+      }
       document.getElementById('dm_contact_name').value  = name;
       document.getElementById('dm_contact_phone').value = phone;
       document.getElementById('dm_contact_email').value = email;
@@ -2518,6 +2535,10 @@ $t = $translations[$currentLang] ?? $translations['en'];
           banner.style.display = 'flex';
           btn.textContent = '✓ Logged';
           setTimeout(() => closeDispositionModal(), 1800);
+          // Linked Twilio call on a page that lists pending outcomes: refresh the list
+          if (d.call_log_id && /^\/admin\/(call-log|agent-dashboard)/.test(location.pathname)) {
+            setTimeout(() => location.reload(), 1900);
+          }
         } else {
           btn.disabled = false;
           btn.textContent = 'Log Call';
@@ -2554,6 +2575,8 @@ $t = $translations[$currentLang] ?? $translations['en'];
     <form id="dispositionForm" onsubmit="dmSubmit(event)" style="padding:20px;display:flex;flex-direction:column;gap:14px;">
       <?= csrfField() ?>
       <input type="hidden" name="contact_id" id="dm_contact_id" value="0">
+      <input type="hidden" name="call_log_id" id="dm_call_log_id" value="0">
+      <div id="dmCallInfo" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 12px;font-size:12px;color:#166534;"></div>
 
       <!-- Direction + Contact type row -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
@@ -2679,6 +2702,8 @@ $t = $translations[$currentLang] ?? $translations['en'];
     </form>
   </div>
 </div>
+
+<?php require __DIR__ . '/_dialer.php'; ?>
 
 <!-- Floating Log Call button (bottom-right) -->
 <button id="quickLogCallBtn" onclick="openDispositionModal()" title="Log a Call"

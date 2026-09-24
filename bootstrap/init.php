@@ -182,6 +182,31 @@ if (!function_exists('verifyCsrfToken')) {
     }
 }
 
+if (!function_exists('verifyCsrf')) {
+    /**
+     * CSRF check for admin form posts and AJAX (the contact center controllers call this).
+     * Accepts the form field or the X-CSRF-TOKEN header the admin fetch wrapper adds.
+     */
+    function verifyCsrf(): void {
+        $token = $_POST[env('CSRF_TOKEN_NAME', '_csrf_token')] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
+
+        if (is_string($token) && $token !== '' && verifyCsrfToken($token)) {
+            return;
+        }
+
+        http_response_code(419);
+        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) || !empty($_SERVER['HTTP_X_CSRF_TOKEN'])
+            || stripos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false;
+        if ($isAjax) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => 'Your session expired. Please reload the page and try again.']);
+        } else {
+            echo 'Your session expired. Please go back, reload the page and try again.';
+        }
+        exit;
+    }
+}
+
 if (!function_exists('csrfMeta')) {
     function csrfMeta(): string {
         $token = generateCsrfToken();

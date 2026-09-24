@@ -98,6 +98,15 @@ $outcomeConfig = [
   <?php endif; ?>
 </form>
 
+<?php $myId = (int)($_SESSION['user']['id'] ?? 0); ?>
+<?php if (!empty($todayStats['needs_outcome']) && empty($pending)): ?>
+  <a href="/admin/call-log?pending=1" style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:10px 14px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;color:#92400e;font-size:13px;font-weight:600;text-decoration:none;">
+    <i class="fa-solid fa-clipboard-check"></i> <?= (int)$todayStats['needs_outcome'] ?> of your calls need an outcome. Show them &rarr;
+  </a>
+<?php elseif (!empty($pending)): ?>
+  <div style="margin-bottom:14px;font-size:13px;color:#92400e;">Showing your calls that still need an outcome. <a href="/admin/call-log">Show all</a></div>
+<?php endif; ?>
+
 <!-- Table -->
 <div style="background:white;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);overflow:hidden;">
   <div style="padding:14px 20px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;">
@@ -133,26 +142,46 @@ $outcomeConfig = [
             <?= date('M j, g:ia', strtotime($log['created_at'])) ?>
           </td>
           <td style="white-space:nowrap;">
-            <?= htmlspecialchars(trim($log['agent_first'] . ' ' . $log['agent_last'])) ?>
+            <?= $log['agent_id'] ? htmlspecialchars(trim($log['agent_first'] . ' ' . $log['agent_last'])) : '<span style="color:#9ca3af;">No agent</span>' ?>
           </td>
           <td>
             <span class="<?= $log['direction'] === 'inbound' ? 'cl-dir-in' : 'cl-dir-out' ?>">
               <i class="fa-solid fa-<?= $log['direction'] === 'inbound' ? 'phone-arrow-down-left' : 'phone-arrow-up-right' ?>"></i>
               <?= ucfirst($log['direction']) ?>
             </span>
+            <?php if ($log['duration_seconds']): ?>
+              <div style="font-size:11px;color:#9ca3af;margin-top:3px;"><i class="fa-regular fa-clock"></i> <?= sprintf('%d:%02d', intdiv((int)$log['duration_seconds'], 60), (int)$log['duration_seconds'] % 60) ?></div>
+            <?php endif; ?>
           </td>
           <td>
             <div style="font-weight:600;"><?= htmlspecialchars($log['contact_name'] ?: '—') ?></div>
             <?php if ($log['contact_phone']): ?>
-              <div style="font-size:11px;color:#9ca3af;"><?= htmlspecialchars($log['contact_phone']) ?></div>
+              <div style="font-size:11px;color:#9ca3af;">
+                <?= htmlspecialchars($log['contact_phone']) ?>
+                <a href="tel:<?= htmlspecialchars($log['contact_phone']) ?>" data-ocs-call="<?= htmlspecialchars($log['contact_phone']) ?>" data-name="<?= htmlspecialchars($log['contact_name']) ?>" data-type="<?= htmlspecialchars($log['contact_type']) ?>" data-id="<?= (int)$log['contact_id'] ?>" data-email="<?= htmlspecialchars($log['contact_email']) ?>" data-ticket="<?= (int)$log['ticket_id'] ?>" title="Call back" style="margin-left:4px;color:#00b207;"><i class="fa-solid fa-phone"></i></a>
+              </div>
             <?php endif; ?>
             <span class="cl-contact-type"><?= $log['contact_type'] ?></span>
           </td>
           <td>
+            <?php if (!empty($log['needs_outcome']) && (int)$log['agent_id'] === $myId): ?>
+              <button type="button" class="cl-badge" style="background:#fffbeb;color:#92400e;border:1px solid #fde68a;cursor:pointer;"
+                onclick="openDispositionModal(<?= htmlspecialchars(implode(', ', [json_encode($log['contact_name']), json_encode($log['contact_phone']), json_encode($log['contact_type']), (int)$log['contact_id'], json_encode($log['contact_email']), json_encode(['callLogId' => (int)$log['id'], 'direction' => $log['direction'], 'duration' => (int)$log['duration_seconds']])])) ?>)">
+                <i class="fa-solid fa-pen"></i> Add outcome
+              </button>
+            <?php elseif ($log['call_status'] === 'missed'): ?>
+              <span class="cl-badge" style="background:#fee2e2;color:#991b1b;"><i class="fa-solid fa-phone-slash"></i> Missed</span>
+            <?php elseif (!empty($log['needs_outcome'])): ?>
+              <span class="cl-badge" style="background:#f3f4f6;color:#6b7280;"><i class="fa-solid fa-hourglass-half"></i> Outcome pending</span>
+            <?php else: ?>
             <span class="cl-badge" style="background:<?= $oc['bg'] ?>;color:<?= $oc['color'] ?>;">
               <i class="fa-solid <?= $oc['icon'] ?>"></i>
               <?= $oc['label'] ?>
             </span>
+            <?php endif; ?>
+            <?php if (!empty($log['recording_sid'])): ?>
+              <audio controls preload="none" src="/api/twilio/recording?call=<?= (int)$log['id'] ?>" style="display:block;margin-top:6px;width:210px;height:32px;"></audio>
+            <?php endif; ?>
           </td>
           <td style="max-width:200px;">
             <?php if ($log['notes']): ?>

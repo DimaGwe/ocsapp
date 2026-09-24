@@ -479,6 +479,7 @@ return [
     // Agent Dashboard
     'GET /admin/agent-dashboard'           => ['AdminAgentDashboardController', 'index'],
     'POST /admin/agent-dashboard/status'   => ['AdminAgentDashboardController', 'updateStatus'],
+    'POST /admin/agent-dashboard/phone'    => ['AdminAgentDashboardController', 'updatePhone'],
 
     // Call Log
     'GET /admin/call-log'                  => ['AdminCallLogController', 'index'],
@@ -1044,11 +1045,24 @@ return [
     'GET /api/twilio/sms-templates' => ['Api\\TwilioController', 'getSMSTemplates'],
     'GET /api/twilio/communications' => ['Api\\TwilioController', 'getCommunications'],
     'POST /api/twilio/send-sms' => ['Api\\TwilioController', 'sendSMS'],
-    'POST /api/twilio/make-call' => ['Api\\TwilioController', 'makeCall'],
     'POST /api/twilio/update-communication' => ['Api\\TwilioController', 'updateCommunicationOutcome'],
+    'POST /api/twilio/call' => ['Api\\TwilioController', 'startCall'],
+    'GET /api/twilio/call-state' => ['Api\\TwilioController', 'callState'],
+    'GET /api/twilio/recording' => ['Api\\TwilioController', 'recording'],
 
-    // Twilio Webhooks (public, called by Twilio servers)
-    'GET /api/twilio/voice-connect' => ['Api\\TwilioController', 'voiceConnect'],
+    // Twilio Webhooks (public, called by Twilio servers; each checks the X-Twilio-Signature)
+    'POST /api/twilio/bridge-connect' => ['Api\\TwilioController', 'bridgeConnect'],
+    'POST /api/twilio/bridge-dial' => ['Api\\TwilioController', 'bridgeDial'],
+    'POST /api/twilio/bridge-contact-status' => ['Api\\TwilioController', 'bridgeContactStatus'],
+    'POST /api/twilio/bridge-complete' => ['Api\\TwilioController', 'bridgeComplete'],
+    'POST /api/twilio/agent-leg-status' => ['Api\\TwilioController', 'agentLegStatus'],
+    'POST /api/twilio/voice-inbound' => ['Api\\TwilioController', 'voiceInbound'],
+    'POST /api/twilio/inbound-screen' => ['Api\\TwilioController', 'inboundScreen'],
+    'POST /api/twilio/inbound-accept' => ['Api\\TwilioController', 'inboundAccept'],
+    'POST /api/twilio/inbound-complete' => ['Api\\TwilioController', 'inboundComplete'],
+    'POST /api/twilio/inbound-status' => ['Api\\TwilioController', 'inboundStatus'],
+    'POST /api/twilio/voicemail-done' => ['Api\\TwilioController', 'voicemailDone'],
+    'POST /api/twilio/recording-status' => ['Api\\TwilioController', 'recordingStatus'],
     'POST /api/twilio/call-status' => ['Api\\TwilioController', 'callStatus'],
     'POST /api/twilio/sms-status' => ['Api\\TwilioController', 'smsStatus'],
     'POST /api/twilio/sms-webhook' => ['Api\\TwilioController', 'smsWebhook'],

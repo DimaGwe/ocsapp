@@ -1,4 +1,5 @@
 <?php
+require_once BASE_PATH . '/app/Helpers/ContactCenterHelper.php';
 $priorityColor = ['urgent'=>'#ef4444','high'=>'#f59e0b','medium'=>'#3b82f6','low'=>'#9ca3af'];
 $priorityBg    = ['urgent'=>'#fee2e2','high'=>'#fef3c7','medium'=>'#dbeafe','low'=>'#f3f4f6'];
 $statusColor   = ['open'=>'#3b82f6','in_progress'=>'#8b5cf6','pending_contact'=>'#f59e0b','resolved'=>'#10b981','closed'=>'#9ca3af'];
@@ -21,7 +22,7 @@ $csrfVal  = generateCsrfToken();
     <div class="detail-ticket-num">
       <?= htmlspecialchars($ticket['ticket_number']) ?>
       &nbsp;·&nbsp; <?= ucfirst($ticket['category']) ?>
-      &nbsp;·&nbsp; <i class="fa-solid fa-<?= ['phone'=>'phone','email'=>'envelope','web_form'=>'globe','walk_in'=>'person-walking','chat'=>'comments'][$ticket['channel']] ?? 'circle' ?>"></i> <?= ucfirst(str_replace('_',' ',$ticket['channel'])) ?>
+      &nbsp;·&nbsp; <i class="fa-solid fa-<?= ['phone'=>'phone','email'=>'envelope','web_form'=>'globe','walk_in'=>'person-walking','chat'=>'comments','sms'=>'comment-sms'][$ticket['channel']] ?? 'circle' ?>"></i> <?= ucfirst(str_replace('_',' ',$ticket['channel'])) ?>
     </div>
     <div class="detail-subject"><?= htmlspecialchars($ticket['subject']) ?></div>
     <div class="detail-badges">
@@ -57,7 +58,7 @@ $csrfVal  = generateCsrfToken();
   </div>
   <div class="contact-actions">
     <?php if ($ticket['contact_phone']): ?>
-      <a href="tel:<?= htmlspecialchars($ticket['contact_phone']) ?>" class="contact-action-btn" style="color:#00b207;border-color:#bbf7d0;background:#f0fdf4;"><i class="fa-solid fa-phone"></i> Call</a>
+      <a href="tel:<?= htmlspecialchars($ticket['contact_phone']) ?>" data-ocs-call="<?= htmlspecialchars($ticket['contact_phone']) ?>" data-name="<?= htmlspecialchars($ticket['contact_name'] ?? '') ?>" data-type="<?= htmlspecialchars($ticket['contact_type']) ?>" data-id="<?= (int)$ticket['contact_id'] ?>" data-email="<?= htmlspecialchars($ticket['contact_email'] ?? '') ?>" data-ticket="<?= (int)$tid ?>" class="contact-action-btn" style="color:#00b207;border-color:#bbf7d0;background:#f0fdf4;"><i class="fa-solid fa-phone"></i> Call</a>
     <?php endif; ?>
     <?php if ($ticket['contact_email']): ?>
       <a href="mailto:<?= htmlspecialchars($ticket['contact_email']) ?>" class="contact-action-btn" style="color:#3b82f6;border-color:#bfdbfe;background:#eff6ff;"><i class="fa-solid fa-envelope"></i> Email</a>
@@ -112,7 +113,7 @@ $csrfVal  = generateCsrfToken();
 <div class="thread-body" id="threadBody">
   <?php if ($ticket['description']): ?>
     <div class="msg-bubble contact">
-      <div class="msg-inner"><?= nl2br(htmlspecialchars($ticket['description'])) ?></div>
+      <div class="msg-inner"><?= \App\Helpers\ContactCenterHelper::messageHtml($ticket['description']) ?></div>
       <div class="msg-meta"><?= htmlspecialchars($ticket['contact_name'] ?: 'Contact') ?> &middot; <?= date('M j g:ia', strtotime($ticket['created_at'])) ?></div>
     </div>
   <?php endif; ?>
@@ -127,7 +128,8 @@ $csrfVal  = generateCsrfToken();
     ?>
     <div class="msg-bubble <?= $bubbleClass ?>">
       <div class="msg-inner">
-        <?= nl2br(htmlspecialchars($msg['message'])) ?>
+        <?= \App\Helpers\ContactCenterHelper::messageHtml($msg['message']) ?>
+        <?= \App\Helpers\ContactCenterHelper::channelBadge($msg['channel'] ?? null) ?>
         <?php if ($isInternal && !$isSystem): ?>
           <span class="internal-badge">NOTE</span>
         <?php endif; ?>

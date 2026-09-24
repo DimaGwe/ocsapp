@@ -109,6 +109,15 @@ function ageLabel(string $dt): string {
     .agd-cols  { grid-template-columns:1fr; }
     .agd-bottom{ grid-template-columns:1fr; }
 }
+.agd-phone-wrap { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.agd-phone-input { width:170px; padding:8px 10px; border:1px solid #e5e7eb; border-radius:8px; font-size:13px; }
+.agd-phone-save  { padding:8px 12px; background:#f3f4f6; color:#374151; border:1px solid #e5e7eb; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; }
+.agd-phone-msg   { font-size:11px; color:#9ca3af; }
+.agd-pending     { background:white; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.06); margin-top:20px; overflow:hidden; }
+.agd-pending-hdr { padding:13px 18px; border-bottom:1px solid #f3f4f6; font-size:12px; font-weight:700; color:#374151; display:flex; gap:7px; align-items:center; }
+.agd-pending-row { display:flex; align-items:center; gap:10px; padding:10px 18px; border-bottom:1px solid #f9fafb; font-size:13px; flex-wrap:wrap; }
+.agd-pending-name{ font-weight:600; color:#111827; }
+.agd-pending-meta{ color:#9ca3af; font-size:12px; margin-right:auto; }
 </style>
 
 <div class="agd-page">
@@ -130,6 +139,13 @@ function ageLabel(string $dt): string {
           <?php endforeach; ?>
         </select>
       </div>
+    </div>
+
+    <div class="agd-phone-wrap" title="Twilio rings this phone when you click Call anywhere in the admin, and for incoming calls while you are Available">
+      <i class="fa-solid fa-mobile-screen" style="color:#6b7280;"></i>
+      <input type="tel" id="agentPhoneInput" class="agd-phone-input" placeholder="Your phone for calls" value="<?= htmlspecialchars($agentPhone) ?>">
+      <button type="button" class="agd-phone-save" onclick="saveAgentPhone()">Save</button>
+      <span id="agentPhoneMsg" class="agd-phone-msg"><?= !$twilioReady ? 'Calling is not set up on this server yet' : ($agentPhone === '' ? 'Needed to make and take calls' : '') ?></span>
     </div>
 
     <div style="display:flex; gap:10px; flex-shrink:0;">
@@ -342,6 +358,23 @@ function ageLabel(string $dt): string {
 
   </div><!-- /agd-bottom -->
 
+  <?php if (!empty($pendingOutcomes)): ?>
+  <div class="agd-pending">
+    <div class="agd-pending-hdr"><i class="fa-solid fa-clipboard-check"></i> Calls waiting for your outcome</div>
+    <?php foreach ($pendingOutcomes as $pc):
+      $pcName = $pc['contact_name'] !== '' ? $pc['contact_name'] : $pc['contact_phone'];
+      $pcDur  = $pc['duration_seconds'] !== null ? sprintf('%d:%02d', intdiv((int)$pc['duration_seconds'], 60), (int)$pc['duration_seconds'] % 60) : '';
+    ?>
+      <div class="agd-pending-row">
+        <i class="fa-solid <?= $pc['direction'] === 'inbound' ? 'fa-phone-arrow-down-left' : 'fa-phone-arrow-up-right' ?>" style="color:#6b7280;"></i>
+        <span class="agd-pending-name"><?= htmlspecialchars($pcName) ?></span>
+        <span class="agd-pending-meta"><?= htmlspecialchars(str_replace('_', ' ', (string)$pc['call_status'])) ?><?= $pcDur ? ' · ' . $pcDur : '' ?> · <?= date('M j g:ia', strtotime($pc['created_at'])) ?></span>
+        <button type="button" class="agd-phone-save" onclick="openDispositionModal(<?= htmlspecialchars(implode(', ', [json_encode($pc['contact_name']), json_encode($pc['contact_phone']), json_encode($pc['contact_type']), (int)$pc['contact_id'], json_encode($pc['contact_email']), json_encode(['callLogId' => (int)$pc['id'], 'direction' => $pc['direction']])])) ?>)" >Add outcome</button>
+      </div>
+    <?php endforeach; ?>
+  </div>
+  <?php endif; ?>
+
 </div><!-- /agd-page -->
 
 <script>
@@ -351,6 +384,31 @@ const agentStatusColors = {
   break:     { color:'#f59e0b', dot:'#f59e0b', label:'On Break' },
   offline:   { color:'#9ca3af', dot:'#9ca3af', label:'Offline' },
 };
+
+function saveAgentPhone() {
+  const input = document.getElementById('agentPhoneInput');
+  const msg   = document.getElementById('agentPhoneMsg');
+  fetch('/admin/agent-dashboard/phone', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      phone: input.value.trim(),
+      '<?= htmlspecialchars($csrfName) ?>': '<?= htmlspecialchars($csrfVal) ?>',
+    }),
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.success) {
+      input.value = d.display || '';
+      msg.textContent = d.phone ? 'Saved. Calls will ring this phone.' : 'Removed. You will not be able to make or take calls.';
+      msg.style.color = '#10b981';
+    } else {
+      msg.textContent = d.error || 'Could not save';
+      msg.style.color = '#ef4444';
+    }
+  })
+  .catch(() => { msg.textContent = 'Network error'; msg.style.color = '#ef4444'; });
+}
 
 function updateAgentStatus(newStatus) {
   const dot   = document.getElementById('statusDot');

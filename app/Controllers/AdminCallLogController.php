@@ -3,6 +3,9 @@
 namespace App\Controllers;
 
 require_once __DIR__ . '/../Helpers/AdminPermissionHelper.php';
+require_once __DIR__ . '/../Helpers/ContactCenterHelper.php';
+
+use App\Helpers\ContactCenterHelper;
 
 /**
  * Admin Call Log Controller — stores and displays quick disposition records
@@ -36,14 +39,23 @@ class AdminCallLogController
         $direction    = in_array($_POST['direction'] ?? '', ['inbound','outbound']) ? $_POST['direction'] : 'outbound';
         $contactType  = sanitize($_POST['contact_type']  ?? 'unknown');
         $contactId    = (int)($_POST['contact_id']   ?? 0) ?: null;
-        $contactName  = sanitize($_POST['contact_name']  ?? '');
-        $contactPhone = sanitize($_POST['contact_phone'] ?? '');
-        $contactEmail = sanitize($_POST['contact_email'] ?? '');
+        $contactName  = trim((string)($_POST['contact_name']  ?? ''));
+        $contactPhone = trim((string)($_POST['contact_phone'] ?? ''));
+        $contactEmail = trim((string)($_POST['contact_email'] ?? ''));
         $outcome      = sanitize($_POST['outcome']       ?? 'other');
-        $notes        = sanitize($_POST['notes']         ?? '');
+        $notes        = trim((string)($_POST['notes']         ?? ''));
         $callbackAt   = sanitize($_POST['callback_at']   ?? '');
         $createTicket = !empty($_POST['create_ticket']);
-        $ticketSubject= sanitize($_POST['ticket_subject'] ?? '');
+        $ticketSubject= trim((string)($_POST['ticket_subject'] ?? ''));
+        $callLogId    = (int)($_POST['call_log_id'] ?? 0);
+
+        // A Twilio call already has its row (duration, status); the disposition fills it in
+        $existing = null;
+        if ($callLogId) {
+            $stmt = $this->db->prepare("SELECT * FROM call_logs WHERE id = ?");
+            $stmt->execute([$callLogId]);
+            $existing = $stmt->fetch() ?: null;
+        }
 
         $validOutcomes = ['resolved','follow_up','no_answer','voicemail','wrong_number','transferred','callback_scheduled','other'];
         if (!in_array($outcome, $validOutcomes)) $outcome = 'other';
@@ -53,31 +65,43 @@ class AdminCallLogController
 
         $callbackAtVal = null;
         if ($callbackAt) {
-            $dt = DateTime::createFromFormat('Y-m-d\TH:i', $callbackAt);
+            $dt = \DateTime::createFromFormat('Y-m-d\TH:i', $callbackAt);
             if ($dt) $callbackAtVal = $dt->format('Y-m-d H:i:s');
         }
 
         // Optionally create support ticket
         $ticketId = null;
         if ($createTicket && $ticketSubject) {
-            $year     = date('Y');
-            $count    = (int)$this->db->query("SELECT COUNT(*) FROM support_tickets WHERE YEAR(created_at) = $year")->fetchColumn();
-            $ticketNo = 'TKT-' . $year . '-' . str_pad($count + 1, 5, '0', STR_PAD_LEFT);
-
-            $stmt = $this->db->prepare("
-                INSERT INTO support_tickets
-                    (ticket_number, subject, channel, category, priority, status,
-                     contact_type, contact_id, contact_name, contact_email, contact_phone,
-                     assigned_to, created_by, description)
-                VALUES (?,?,'phone','general','medium','open',?,?,?,?,?,?,?,?)
-            ");
-            $stmt->execute([
-                $ticketNo, $ticketSubject,
-                $contactType, $contactId, $contactName, $contactEmail, $contactPhone,
-                $this->user['id'], $this->user['id'],
-                $notes ? "Created from call log.\n\n$notes" : 'Created from call log.',
+            $ticketId = ContactCenterHelper::createTicket([
+                'subject'       => $ticketSubject,
+                'channel'       => 'phone',
+                'contact'       => ['type' => $contactType, 'id' => $contactId, 'name' => $contactName, 'email' => $contactEmail],
+                'contact_phone' => $contactPhone,
+                'assigned_to'   => $this->user['id'],
+                'created_by'    => $this->user['id'],
+                'description'   => $notes ? "Created from call log.\n\n$notes" : 'Created from call log.',
             ]);
-            $ticketId = (int)$this->db->lastInsertId();
+        }
+
+        if ($existing) {
+            $this->db->prepare("
+                UPDATE call_logs
+                SET agent_id = COALESCE(agent_id, ?), contact_type = ?, contact_id = ?, contact_name = ?, contact_phone = ?,
+                    contact_email = ?, outcome = ?, notes = TRIM(CONCAT(IFNULL(notes, ''), IF(? = '', '', CONCAT(' ', ?)))),
+                    ticket_id = COALESCE(?, ticket_id), ticket_subject = COALESCE(?, ticket_subject),
+                    callback_at = ?, needs_outcome = 0
+                WHERE id = ?
+            ")->execute([
+                $this->user['id'], $contactType, $contactId, $contactName, $contactPhone ?: $existing['contact_phone'],
+                $contactEmail, $outcome, $notes, $notes,
+                $ticketId, ($createTicket && $ticketSubject) ? $ticketSubject : null,
+                $callbackAtVal, $callLogId,
+            ]);
+
+            $response = ['success' => true, 'outcome' => $outcome, 'call_log_id' => $callLogId];
+            if ($ticketId) $response['ticket_id'] = $ticketId;
+            echo json_encode($response);
+            exit;
         }
 
         $stmt = $this->db->prepare("
@@ -112,6 +136,7 @@ class AdminCallLogController
         $search  = trim($_GET['q'] ?? '');
         $outcome = $_GET['outcome'] ?? '';
         $agentId = (int)($_GET['agent'] ?? 0);
+        $pending = !empty($_GET['pending']);
 
         $where  = ['1=1'];
         $params = [];
@@ -123,6 +148,7 @@ class AdminCallLogController
         }
         if ($outcome) { $where[] = 'cl.outcome = ?'; $params[] = $outcome; }
         if ($agentId) { $where[] = 'cl.agent_id = ?'; $params[] = $agentId; }
+        if ($pending) { $where[] = 'cl.needs_outcome = 1 AND cl.agent_id = ?'; $params[] = $this->user['id']; }
 
         $whereSQL = implode(' AND ', $where);
 
@@ -150,12 +176,17 @@ class AdminCallLogController
             'tickets'  => (int)$this->db->query("SELECT COUNT(*) FROM call_logs WHERE ticket_id IS NOT NULL AND DATE(created_at) = CURDATE()")->fetchColumn(),
         ];
 
-        $agents = $this->db->query("SELECT id, first_name, last_name FROM users WHERE role IN ('super_admin','admin','admin_staff') AND status = 'active' ORDER BY first_name")->fetchAll();
+        $agents = ContactCenterHelper::agents();
+
+        // Twilio calls still waiting for this agent's disposition
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM call_logs WHERE needs_outcome = 1 AND agent_id = ?");
+        $stmt->execute([$this->user['id']]);
+        $todayStats['needs_outcome'] = (int)$stmt->fetchColumn();
 
         $pageTitle   = 'Call Log';
         $currentPage = 'call-log';
         $content     = $this->renderView('call-logs/index', compact(
-            'logs','total','page','perPage','search','outcome','agentId','agents','todayStats','pageTitle'
+            'logs','total','page','perPage','search','outcome','agentId','agents','todayStats','pageTitle','pending'
         ));
         require __DIR__ . '/../Views/admin/layout.php';
     }
