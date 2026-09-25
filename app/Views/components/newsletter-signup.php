@@ -14,6 +14,8 @@ $nlFr = (($_SESSION['language'] ?? 'fr') === 'fr');
 
 // Detect which portal this page belongs to, to pre-check the right list
 $nlUri = $_SERVER['REQUEST_URI'] ?? '';
+// French addresses (localized_paths()) count as their English page, e.g. /vendeur-central = /seller-central
+$nlUri = '/' . localized_path(ltrim(parse_url($nlUri, PHP_URL_PATH) ?? '', '/'), 'en');
 $nlPortal = 'buyer';
 if (strpos($nlUri, '/seller') !== false)                                        { $nlPortal = 'seller'; }
 elseif (strpos($nlUri, '/supplier') !== false)                                  { $nlPortal = 'supplier'; }

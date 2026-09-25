@@ -80,14 +80,14 @@ $fr = ($currentLang === 'fr');
     <div class="mc-shell" id="main-content" tabindex="-1">
         <div class="mc-wrap">
             <nav class="mc-breadcrumb" aria-label="<?= $fr ? "Fil d'Ariane" : 'Breadcrumb' ?>">
-                <a href="<?= url('home') ?>"><i class="fas fa-store"></i><span><?= $fr ? 'Marché Central' : 'Marketplace Central' ?></span></a>
+                <a href="<?= url('marketplace-central') ?>"><i class="fas fa-store"></i><span><?= $fr ? 'Marché Central' : 'Marketplace Central' ?></span></a>
                 <span class="mc-sep">/</span>
                 <span aria-current="page"><i class="fas fa-cart-shopping"></i> <?= $fr ? 'Panier' : 'Cart' ?></span>
             </nav>
 
             <div class="cart-header">
                 <h1><?= $fr ? 'Votre panier' : 'Shopping Cart' ?></h1>
-                <a href="<?php echo url('home'); ?>" class="back-link">
+                <a href="<?php echo url('marketplace-central'); ?>" class="back-link">
                     <i class="fas fa-arrow-left"></i> <?= $fr ? 'Continuer mes achats' : 'Continue Shopping' ?>
                 </a>
             </div>
@@ -98,7 +98,7 @@ $fr = ($currentLang === 'fr');
                         <div class="empty-cart-icon"><i class="fas fa-shopping-cart"></i></div>
                         <h2><?= $fr ? 'Votre panier est vide' : 'Your cart is empty' ?></h2>
                         <p><?= $fr ? 'Ajoutez des produits pour commencer !' : 'Add some products to get started!' ?></p>
-                        <a href="<?php echo url('home'); ?>" class="shop-now-btn">
+                        <a href="<?php echo url('marketplace-central'); ?>" class="shop-now-btn">
                             <i class="fas fa-shopping-bag"></i> <?= $fr ? 'Commencer à magasiner' : 'Start Shopping' ?>
                         </a>
                     </div>
@@ -236,7 +236,7 @@ $fr = ($currentLang === 'fr');
                                 <?= $fr ? 'Procéder au paiement' : 'Proceed to Checkout' ?>
                             </button>
 
-                            <a href="<?php echo url('home'); ?>" class="continue-shopping">
+                            <a href="<?php echo url('marketplace-central'); ?>" class="continue-shopping">
                                 <i class="fas fa-arrow-left"></i> <?= $fr ? 'Continuer mes achats' : 'Continue Shopping' ?>
                             </a>
 
@@ -276,7 +276,7 @@ $fr = ($currentLang === 'fr');
 
                 <div class="mc-footer-col">
                     <h5><?= $fr ? 'Écosystème OCSAPP' : 'OCSAPP Ecosystem' ?></h5>
-                    <a href="<?= url('home') ?>"><?= $fr ? 'Marché Central' : 'Marketplace Central' ?></a>
+                    <a href="<?= url('marketplace-central') ?>"><?= $fr ? 'Marché Central' : 'Marketplace Central' ?></a>
                     <a href="<?= url('buyer-central') ?>"><?= $fr ? 'Acheteur Central' : 'Buyer Central' ?></a>
                     <a href="<?= url('seller-central') ?>"><?= $fr ? 'Vendeur Central' : 'Seller Central' ?></a>
                     <a href="<?= url('supplier-central') ?>"><?= $fr ? 'Fournisseur Central' : 'Supplier Central' ?></a>

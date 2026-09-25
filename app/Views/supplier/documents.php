@@ -402,7 +402,7 @@ $_docLabelsFr = [
     <a href="<?= \App\Helpers\OnboardingPackageHelper::url('supplier') ?>" target="_blank" class="btn-view">
       <i class="fas fa-eye"></i> <?= $fr ? "Voir la trousse d'intégration" : 'View Onboarding Package' ?>
     </a>
-    <a href="<?= \App\Helpers\OnboardingPackageHelper::url('supplier') ?>" download class="btn-replace">
+    <a href="<?= \App\Helpers\OnboardingPackageHelper::pdfUrl('supplier') ?>" download class="btn-replace">
       <i class="fas fa-download"></i> <?= $fr ? 'Télécharger' : 'Download' ?>
     </a>
   </div>

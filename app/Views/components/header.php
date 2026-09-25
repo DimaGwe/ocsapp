@@ -46,7 +46,7 @@ $accountDashboardUrl = accountUrl(); // Uses new helper function
 <!-- Marché Central header (opt-in via $useMarcheHeader, staging redesign 2026-09-05) -->
 <header class="mc-header">
     <div class="mc-header-top">
-        <a href="<?= url('home') ?>" class="mc-brand">
+        <a href="<?= url('marketplace-central') ?>" class="mc-brand">
             <img src="<?= asset('images/logo.png') ?>" alt="OCSAPP Logo">
             <span>OCSAPP</span>
         </a>
@@ -62,8 +62,8 @@ $accountDashboardUrl = accountUrl(); // Uses new helper function
                 <i class="fa-solid fa-chevron-down"></i>
             </button>
             <div class="mc-lang notranslate" translate="no">
-                <a href="?lang=fr" class="<?= $currentLang === 'fr' ? 'active' : '' ?>">FR</a>
-                <a href="?lang=en" class="<?= $currentLang === 'en' ? 'active' : '' ?>">EN</a>
+                <a href="<?= lang_switch_url('fr') ?>" class="<?= $currentLang === 'fr' ? 'active' : '' ?>">FR</a>
+                <a href="<?= lang_switch_url('en') ?>" class="<?= $currentLang === 'en' ? 'active' : '' ?>">EN</a>
             </div>
             <a href="<?= (function_exists('isLoggedIn') && isLoggedIn()) ? $accountDashboardUrl : url('login') ?>" class="mc-icon-btn" aria-label="<?= $t['account'] ?>">
                 <i class="fa-regular fa-user"></i>
@@ -79,7 +79,7 @@ $accountDashboardUrl = accountUrl(); // Uses new helper function
     $mcPath = fn($route) => rtrim((string) parse_url(url($route), PHP_URL_PATH), '/');
     ?>
     <div class="mc-header-nav">
-        <a class="mc-nav-link <?= $mcCurrentPath === $mcPath('home') ? 'active' : '' ?>" href="<?= url('home') ?>"><?= $currentLang === 'fr' ? 'Marché Central' : 'Marketplace Central' ?></a>
+        <a class="mc-nav-link <?= $mcCurrentPath === $mcPath('home') ? 'active' : '' ?>" href="<?= url('marketplace-central') ?>"><?= $currentLang === 'fr' ? 'Marché Central' : 'Marketplace Central' ?></a>
         <a class="mc-nav-link <?= $mcCurrentPath === $mcPath('categories') ? 'active' : '' ?>" href="<?= url('categories') ?>"><?= $t['categories'] ?></a>
         <a class="mc-nav-link <?= $mcCurrentPath === $mcPath('shops') ? 'active' : '' ?>" href="<?= url('shops') ?>"><?= $t['shops'] ?></a>
         <a class="mc-nav-link <?= $mcCurrentPath === $mcPath('waitlist') ? 'active' : '' ?>" href="<?= url('waitlist') ?>"><?= $currentLang === 'fr' ? "Liste d'attente" : 'Waitlist' ?></a>
@@ -90,7 +90,7 @@ $accountDashboardUrl = accountUrl(); // Uses new helper function
 <?php else: ?>
 <header class="header">
     <div class="logo-section">
-        <a href="<?= url('home') ?>" class="logo">
+        <a href="<?= url('marketplace-central') ?>" class="logo">
             <img src="<?= asset('images/logo.png') ?>" alt="OCSAPP Logo" class="logo-img">
             <span>OCSAPP</span>
         </a>

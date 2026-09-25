@@ -14,10 +14,19 @@ return [
         require __DIR__ . '/../public/landing.php';
         exit;
     },
+    // Main page, English address (the root is the French one)
+    'GET /home' => function() {
+        require __DIR__ . '/../public/landing.php';
+        exit;
+    },
+    'GET /accueil' => function() {
+        redirect('', 301);
+    },
 
 
     // Marketplace Home
-    'GET /home' => ['HomeController', 'index'],
+    'GET /marketplace-central' => ['HomeController', 'index'],
+    'GET /marche-central' => ['HomeController', 'index'],
 
     // Marketplace Home Redesign Preview (local-only concept, not linked from nav)
     'GET /home-redesign' => ['HomeController', 'homeRedesign'],
@@ -163,23 +172,30 @@ return [
     // SELLER PUBLIC PAGES
     // ===================================
     'GET /seller-central' => ['PageController', 'sellerCentral'],
+    'GET /vendeur-central' => ['PageController', 'sellerCentral'],
 
     // ===================================
     // BUYER PUBLIC PAGES
     // ===================================
     'GET /buyer-central' => ['PageController', 'buyerCentral'],
+    'GET /acheteur-central' => ['PageController', 'buyerCentral'],
     'GET /onboarding/{role}' => ['PageController', 'onboarding'],
+    'GET /onboarding/{role}/pdf' => ['PageController', 'onboardingPdf'],
+    'GET /guide-accueil/{role}' => ['PageController', 'onboarding'],
+    'GET /guide-accueil/{role}/pdf' => ['PageController', 'onboardingPdf'],
     'GET /founding' => ['PageController', 'founding'],
 
     // ===================================
     // DRIVER PUBLIC PAGES
     // ===================================
     'GET /driver-central' => ['PageController', 'driverCentral'],
+    'GET /livreur-central' => ['PageController', 'driverCentral'],
 
     // ===================================
     // SUPPLIER PUBLIC PAGES
     // ===================================
     'GET /supplier-central' => ['SupplierAuthController', 'landing'],
+    'GET /fournisseur-central' => ['SupplierAuthController', 'landing'],
     'GET /supplier/apply' => ['SupplierAuthController', 'apply'],
     'POST /supplier/apply' => ['SupplierAuthController', 'submitApplication'],
     'GET /supplier/verify-email' => ['SupplierAuthController', 'showVerifyEmail'],
@@ -778,6 +794,7 @@ return [
 
     // Distribution Landing & Auth
     'GET /distribution' => ['DistributionAuthController', 'landing'],
+    'GET /entreprise-centrale' => ['DistributionAuthController', 'landing'],
     'GET /distribution/login' => ['DistributionAuthController', 'showLogin'],
     'POST /distribution/login' => ['DistributionAuthController', 'login'],
     'GET /distribution/register' => ['DistributionAuthController', 'showRegister'],

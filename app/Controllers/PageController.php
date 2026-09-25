@@ -393,17 +393,39 @@ class PageController
 
     /**
      * Onboarding guide per role (linked from the invite email, /founding and the Centrals):
-     * redirects to the official onboarding package in the visitor's language.
+     * serves the official onboarding package at a clean URL: /onboarding/{role} (EN) or
+     * /guide-accueil/{slug} (FR); the address sets the language (apply_url_language()).
      */
     public function onboarding($role = null): void
     {
-        $role = strtolower((string) $role);
-        if (!\App\Helpers\OnboardingPackageHelper::exists($role)) {
+        $this->servePackage($role, 'html');
+    }
+
+    /** PDF twin: /onboarding/{role}/pdf, /guide-accueil/{slug}/pdf */
+    public function onboardingPdf($role = null): void
+    {
+        $this->servePackage($role, 'pdf');
+    }
+
+    private function servePackage($role, string $ext): void
+    {
+        $role = \App\Helpers\OnboardingPackageHelper::roleFromSlug(strtolower((string) $role));
+        $path = \App\Helpers\OnboardingPackageHelper::exists($role)
+            ? \App\Helpers\OnboardingPackageHelper::path($role, null, $ext) : '';
+        if ($path === '' || !is_file($path)) {
             http_response_code(404);
             echo 'Guide not found.';
             return;
         }
-        redirect(\App\Helpers\OnboardingPackageHelper::url($role));
+        if ($ext === 'pdf') {
+            header('Content-Type: application/pdf');
+            header('Content-Disposition: inline; filename="' . basename($path) . '"');
+        } else {
+            header('Content-Type: text/html; charset=utf-8');
+        }
+        header('Content-Length: ' . filesize($path));
+        header('Cache-Control: private, no-cache'); // language comes from the session
+        readfile($path);
     }
 
     /**

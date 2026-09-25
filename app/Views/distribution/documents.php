@@ -482,7 +482,7 @@ $agreedVersion = $profile['agreement_version'] ?? null;
     <a href="<?= \App\Helpers\OnboardingPackageHelper::url('business') ?>" target="_blank" class="btn-view">
       <i class="fas fa-eye"></i> <?= $t['view_onboarding'] ?>
     </a>
-    <a href="<?= \App\Helpers\OnboardingPackageHelper::url('business') ?>" download class="btn-replace">
+    <a href="<?= \App\Helpers\OnboardingPackageHelper::pdfUrl('business') ?>" download class="btn-replace">
       <i class="fas fa-download"></i> <?= $t['download_package'] ?>
     </a>
   </div>

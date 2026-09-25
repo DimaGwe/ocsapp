@@ -1,10 +1,7 @@
 <?php
 if (!defined('BASE_PATH')) { http_response_code(404); exit; }
-$currentLang = $_GET['lang'] ?? $_SESSION['language'] ?? $_SESSION['lang'] ?? 'fr';
-if (isset($_GET['lang'])) {
-    $_SESSION['lang'] = $_GET['lang'];
-    $_SESSION['language'] = $_GET['lang'];
-}
+// Language: / is French, /home is English (apply_url_language() in bootstrap/init.php)
+$currentLang = $_SESSION['language'] ?? 'fr';
 $fr = ($currentLang === 'fr');
 ?>
 <!DOCTYPE html>
@@ -13,6 +10,7 @@ $fr = ($currentLang === 'fr');
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?= $fr ? "OCSAPP - L'écosystème numérique du commerce d'ici" : 'OCSAPP - The Digital Ecosystem for Local Commerce' ?></title>
+  <?= seo_lang_links() ?>
   <meta name="description" content="<?= $fr
       ? "OCSAPP relie marché, vendeurs, fournisseurs, acheteurs, entreprises et livreurs dans un seul écosystème numérique pour le commerce d'ici."
       : 'OCSAPP connects marketplace, sellers, suppliers, buyers, businesses and drivers within one digital ecosystem built for local commerce.'
@@ -463,8 +461,8 @@ $fr = ($currentLang === 'fr');
         <a class="nav-link" href="#fonctionnement"><?= $fr ? 'Comment ça fonctionne' : 'How it works' ?></a>
         <a class="nav-link" href="<?= url('about') ?>"><?= $fr ? 'À propos' : 'About' ?></a>
         <div class="lang" aria-label="<?= $fr ? 'Langue' : 'Language' ?>">
-          <a href="?lang=fr" class="<?= $fr ? 'active' : '' ?>" aria-current="<?= $fr ? 'page' : 'false' ?>">FR</a>
-          <a href="?lang=en" class="<?= !$fr ? 'active' : '' ?>" aria-current="<?= !$fr ? 'page' : 'false' ?>">EN</a>
+          <a href="<?= lang_switch_url('fr') ?>" class="<?= $fr ? 'active' : '' ?>" aria-current="<?= $fr ? 'page' : 'false' ?>">FR</a>
+          <a href="<?= lang_switch_url('en') ?>" class="<?= !$fr ? 'active' : '' ?>" aria-current="<?= !$fr ? 'page' : 'false' ?>">EN</a>
         </div>
         <a class="btn btn-secondary" href="<?= url('login') ?>"><i class="fa-solid fa-arrow-right-to-bracket"></i> <?= $fr ? 'Se connecter' : 'Sign in' ?></a>
         <a class="btn btn-primary header-join" href="<?= url('waitlist') ?>"><?= $fr ? 'Rejoindre OCSAPP' : 'Join OCSAPP' ?></a>
@@ -480,8 +478,8 @@ $fr = ($currentLang === 'fr');
         <a class="mobile-menu-link" href="#fonctionnement"><?= $fr ? 'Comment ça fonctionne' : 'How it works' ?></a>
         <a class="mobile-menu-link" href="<?= url('about') ?>"><?= $fr ? 'À propos' : 'About' ?></a>
         <div class="mobile-menu-lang" aria-label="<?= $fr ? 'Langue' : 'Language' ?>">
-          <a href="?lang=fr" class="<?= $fr ? 'active' : '' ?>" aria-current="<?= $fr ? 'page' : 'false' ?>">FR</a>
-          <a href="?lang=en" class="<?= !$fr ? 'active' : '' ?>" aria-current="<?= !$fr ? 'page' : 'false' ?>">EN</a>
+          <a href="<?= lang_switch_url('fr') ?>" class="<?= $fr ? 'active' : '' ?>" aria-current="<?= $fr ? 'page' : 'false' ?>">FR</a>
+          <a href="<?= lang_switch_url('en') ?>" class="<?= !$fr ? 'active' : '' ?>" aria-current="<?= !$fr ? 'page' : 'false' ?>">EN</a>
         </div>
         <a class="btn btn-primary" style="width:100%" href="<?= url('waitlist') ?>"><?= $fr ? 'Rejoindre OCSAPP' : 'Join OCSAPP' ?></a>
       </div>
@@ -540,7 +538,7 @@ $fr = ($currentLang === 'fr');
                 </div>
               </div>
 
-              <a class="node n1" href="<?= url('home') ?>">
+              <a class="node n1" href="<?= url('marketplace-central') ?>">
                 <div class="ico"><img src="<?= asset('images/centrals/icon-marketplace.jpg') ?>" alt=""></div>
                 <div><strong><?= $fr ? 'Marché Central' : 'Marketplace Central' ?></strong><span><?= $fr ? 'Découvrir & magasiner' : 'Discover & shop' ?></span></div>
               </a>
@@ -611,7 +609,7 @@ $fr = ($currentLang === 'fr');
         </div>
 
         <div class="central-grid">
-          <a class="central-card" href="<?= url('home') ?>">
+          <a class="central-card" href="<?= url('marketplace-central') ?>">
             <div class="central-icon"><img src="<?= asset('images/centrals/icon-marketplace.jpg') ?>" alt="<?= $fr ? 'Icône officielle Marché Central' : 'Official Marketplace Central icon' ?>"></div>
             <div class="role-tag"><?= $fr ? 'Découvrir le commerce d\'ici' : 'Discover local commerce' ?></div>
             <h3><?= $fr ? 'Marché Central' : 'Marketplace Central' ?></h3>
@@ -827,7 +825,7 @@ $fr = ($currentLang === 'fr');
 
         <div class="footer-col">
           <h5><?= $fr ? 'Écosystème OCSAPP' : 'OCSAPP Ecosystem' ?></h5>
-          <a href="<?= url('home') ?>"><?= $fr ? 'Marché Central' : 'Marketplace Central' ?></a>
+          <a href="<?= url('marketplace-central') ?>"><?= $fr ? 'Marché Central' : 'Marketplace Central' ?></a>
           <a href="<?= url('buyer-central') ?>"><?= $fr ? 'Acheteur Central' : 'Buyer Central' ?></a>
           <a href="<?= url('seller-central') ?>"><?= $fr ? 'Vendeur Central' : 'Seller Central' ?></a>
           <a href="<?= url('supplier-central') ?>"><?= $fr ? 'Fournisseur Central' : 'Supplier Central' ?></a>

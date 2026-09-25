@@ -136,7 +136,7 @@ $fr = ($currentLang === 'fr');
   <a class="auth-logo" href="<?= url('/') ?>" aria-label="OCSAPP">OCSAPP</a>
   <nav class="auth-toplinks" aria-label="<?= $fr ? "Navigation d'inscription" : 'Registration navigation' ?>">
     <a href="<?= url('/') ?>"><?= $fr ? 'Écosystème' : 'Ecosystem' ?></a>
-    <a href="<?= url('home') ?>"><?= $fr ? 'Marché Central' : 'Market Central' ?></a>
+    <a href="<?= url('marketplace-central') ?>"><?= $fr ? 'Marché Central' : 'Market Central' ?></a>
     <a class="central-link" href="<?= url('seller-central') ?>"><?= $fr ? 'Vendeur Central' : 'Seller Central' ?></a>
   </nav>
 </header>

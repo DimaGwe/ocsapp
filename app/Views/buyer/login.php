@@ -22,7 +22,7 @@ $fr = ($currentLang === 'fr');
   <a class="auth-logo" href="<?= url('/') ?>" aria-label="<?= $fr ? 'OCSAPP - Accueil' : 'OCSAPP' ?>">OCSAPP</a>
   <nav class="auth-toplinks" aria-label="<?= $fr ? 'Navigation de connexion' : 'Login navigation' ?>">
     <a href="<?= url('/') ?>"><?= $fr ? 'Écosystème' : 'Ecosystem' ?></a>
-    <a href="<?= url('home') ?>"><?= $fr ? 'Marché Central' : 'Market Central' ?></a>
+    <a href="<?= url('marketplace-central') ?>"><?= $fr ? 'Marché Central' : 'Market Central' ?></a>
     <a class="central-link" href="<?= url('buyer-central') ?>"><?= $fr ? 'Acheteur Central' : 'Buyer Central' ?></a>
   </nav>
 </header>

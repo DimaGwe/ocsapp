@@ -411,7 +411,7 @@ $interacInstructions = $interacSettings['interac_instructions'] ?? 'Please send 
         <a href="<?= url('account/orders') ?>" class="btn btn-primary">
             <i class="fas fa-list"></i> View My Orders
         </a>
-        <a href="<?= url('home') ?>" class="btn btn-secondary">
+        <a href="<?= url('marketplace-central') ?>" class="btn btn-secondary">
             <i class="fas fa-shopping-bag"></i> Continue Shopping
         </a>
     </div>

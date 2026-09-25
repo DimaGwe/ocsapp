@@ -468,7 +468,7 @@ $recentOrders = $recentOrders ?? [];
                     <div class="empty-state-icon">📦</div>
                     <h3>No Orders Yet</h3>
                     <p>Start shopping and your orders will appear here</p>
-                    <a href="<?= url('home') ?>" class="btn btn-primary">
+                    <a href="<?= url('marketplace-central') ?>" class="btn btn-primary">
                         Start Shopping
                     </a>
                 </div>

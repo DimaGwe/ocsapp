@@ -14,7 +14,7 @@ $currentLang = $_SESSION['language'] ?? 'fr';
 $fr = ($currentLang === 'fr');
 ?>
 <!DOCTYPE html>
-<html lang="<?= htmlspecialchars($currentLang) ?>">
+<html lang="<?= $fr ? 'fr-CA' : 'en-CA' ?>">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,6 +22,7 @@ $fr = ($currentLang === 'fr');
   <meta name="description" content="<?= $fr
     ? "Magasinez local sur OCSAPP : compte gratuit pour toujours, prix du vendeur sans majoration, un seul frais de livraison divulgué avant le paiement."
     : "Shop local on OCSAPP: free-forever account, the seller's exact price with no markup, one disclosed delivery fee shown before checkout." ?>">
+  <?= seo_lang_links() ?>
   <link rel="icon" type="image/png" href="<?= asset('images/logo.png') ?>">
   <meta name="theme-color" content="#00b207">
   <?= csrfMeta() ?>
@@ -55,8 +56,8 @@ $fr = ($currentLang === 'fr');
       <a class="eco-nav-link" href="<?= url('') ?>#fonctionnement"><?= $fr ? 'Comment ça fonctionne' : 'How it works' ?></a>
       <a class="eco-nav-link" href="<?= url('about') ?>"><?= $fr ? 'À propos' : 'About' ?></a>
       <div class="eco-lang" aria-label="<?= $fr ? 'Langue' : 'Language' ?>">
-        <a href="?lang=fr" class="<?= $fr ? 'active' : '' ?>" aria-current="<?= $fr ? 'page' : 'false' ?>">FR</a>
-        <a href="?lang=en" class="<?= !$fr ? 'active' : '' ?>" aria-current="<?= !$fr ? 'page' : 'false' ?>">EN</a>
+        <a href="<?= lang_switch_url('fr') ?>" class="<?= $fr ? 'active' : '' ?>" aria-current="<?= $fr ? 'page' : 'false' ?>">FR</a>
+        <a href="<?= lang_switch_url('en') ?>" class="<?= !$fr ? 'active' : '' ?>" aria-current="<?= !$fr ? 'page' : 'false' ?>">EN</a>
       </div>
       <a class="eco-btn eco-btn-secondary" href="<?= url('login') ?>"><i class="fa-solid fa-arrow-right-to-bracket"></i> <?= $fr ? 'Se connecter' : 'Sign in' ?></a>
       <a class="eco-btn eco-btn-primary eco-header-join" href="<?= url('waitlist') ?>"><?= $fr ? 'Rejoindre OCSAPP' : 'Join OCSAPP' ?></a>
@@ -73,8 +74,8 @@ $fr = ($currentLang === 'fr');
       <a class="eco-mobile-menu-link" href="<?= url('about') ?>"><?= $fr ? 'À propos' : 'About' ?></a>
       <a class="eco-mobile-menu-link" href="<?= url('login') ?>"><?= $fr ? 'Se connecter' : 'Sign in' ?></a>
       <div class="eco-mobile-menu-lang" aria-label="<?= $fr ? 'Langue' : 'Language' ?>">
-        <a href="?lang=fr" class="<?= $fr ? 'active' : '' ?>" aria-current="<?= $fr ? 'page' : 'false' ?>">FR</a>
-        <a href="?lang=en" class="<?= !$fr ? 'active' : '' ?>" aria-current="<?= !$fr ? 'page' : 'false' ?>">EN</a>
+        <a href="<?= lang_switch_url('fr') ?>" class="<?= $fr ? 'active' : '' ?>" aria-current="<?= $fr ? 'page' : 'false' ?>">FR</a>
+        <a href="<?= lang_switch_url('en') ?>" class="<?= !$fr ? 'active' : '' ?>" aria-current="<?= !$fr ? 'page' : 'false' ?>">EN</a>
       </div>
       <a class="eco-btn eco-btn-primary" style="width:100%" href="<?= url('waitlist') ?>"><?= $fr ? 'Rejoindre OCSAPP' : 'Join OCSAPP' ?></a>
     </div>
@@ -95,7 +96,7 @@ $fr = ($currentLang === 'fr');
       : "Explore local products, growing in the West Island, with Laval and downtown Montreal coming soon. Order online, track your delivery in real time, and receive your purchases at home - effortlessly." ?></p>
     <div class="hero-actions">
       <?php if (function_exists('isLoggedIn') && isLoggedIn()): ?>
-        <a class="btn" href="<?= url('home') ?>"><?= $fr ? "Aller au Marketplace" : "Go to Marketplace" ?></a>
+        <a class="btn" href="<?= url('marketplace-central') ?>"><?= $fr ? "Aller au Marketplace" : "Go to Marketplace" ?></a>
       <?php else: ?>
         <a class="btn" href="<?= url('register') ?>"><?= $fr ? "Créer mon compte - c'est gratuit →" : "Create My Account - It's Free →" ?></a>
         <a class="btn-secondary" href="<?= url('buyer/login') ?>"><?= $fr ? "Connexion acheteur" : "Buyer Login" ?></a>
@@ -496,7 +497,7 @@ $fr = ($currentLang === 'fr');
     <p><?= $fr ? "Créez votre compte en 2 minutes. Gratuit pour toujours. Livraison rapide dès votre première commande." : "Create your account in 2 minutes. Free forever. Fast delivery from your very first order." ?></p>
     <div class="cta-actions">
       <a class="btn" href="<?= url('register') ?>"><?= $fr ? "Créer mon compte gratuit" : "Create My Free Account" ?></a>
-      <a class="btn-secondary" href="<?= url('home') ?>"><?= $fr ? "Parcourir le marketplace" : "Browse the Marketplace" ?></a>
+      <a class="btn-secondary" href="<?= url('marketplace-central') ?>"><?= $fr ? "Parcourir le marketplace" : "Browse the Marketplace" ?></a>
     </div>
   </div>
 </section>
@@ -525,7 +526,7 @@ $fr = ($currentLang === 'fr');
 
       <div class="mc-footer-col">
         <h5><?= $fr ? 'Écosystème OCSAPP' : 'OCSAPP Ecosystem' ?></h5>
-        <a href="<?= url('home') ?>"><?= $fr ? 'Marché Central' : 'Marketplace Central' ?></a>
+        <a href="<?= url('marketplace-central') ?>"><?= $fr ? 'Marché Central' : 'Marketplace Central' ?></a>
         <a href="<?= url('buyer-central') ?>"><?= $fr ? 'Acheteur Central' : 'Buyer Central' ?></a>
         <a href="<?= url('seller-central') ?>"><?= $fr ? 'Vendeur Central' : 'Seller Central' ?></a>
         <a href="<?= url('supplier-central') ?>"><?= $fr ? 'Fournisseur Central' : 'Supplier Central' ?></a>

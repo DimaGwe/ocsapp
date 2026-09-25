@@ -878,7 +878,7 @@ view('buyer.home', [
         } catch (\PDOException $e) {
             logger("Home redesign preview error: " . $e->getMessage(), 'error');
             setFlash('error', 'Error loading preview page');
-            redirect(url('home'));
+            redirect(url('marketplace-central'));
         }
     }
 

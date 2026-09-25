@@ -659,3 +659,9 @@ if (!function_exists('rateLimit')) {
         return true;
     }
 }
+
+// Pages with a French and an English address: the address decides the session language
+// (functions.php). Runs last: it needs env(), defined above.
+if (session_status() === PHP_SESSION_ACTIVE) {
+    apply_url_language();
+}

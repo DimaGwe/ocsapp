@@ -1,0 +1,16 @@
+# The packages are served at clean URLs by PageController: EN /onboarding/{role}, FR /guide-accueil/{slug}
+# (+ /pdf). Old direct .html links (already shared) redirect there; PDFs stay directly reachable.
+# Targets are absolute https: Apache sits behind the ALB and only sees http.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^OCSAPP_Buyer_Onboarding_Package_FR_QC\.html$ https://%{HTTP_HOST}/guide-accueil/acheteur [R=301,L]
+    RewriteRule ^OCSAPP_Buyer_Onboarding_Package_EN\.html$ https://%{HTTP_HOST}/onboarding/buyer [R=301,L]
+    RewriteRule ^OCSAPP_Seller_Onboarding_Package_FR_QC\.html$ https://%{HTTP_HOST}/guide-accueil/vendeur [R=301,L]
+    RewriteRule ^OCSAPP_Seller_Onboarding_Package_EN\.html$ https://%{HTTP_HOST}/onboarding/seller [R=301,L]
+    RewriteRule ^OCSAPP_Supplier_Onboarding_Package_FR_QC\.html$ https://%{HTTP_HOST}/guide-accueil/fournisseur [R=301,L]
+    RewriteRule ^OCSAPP_Supplier_Onboarding_Package_EN\.html$ https://%{HTTP_HOST}/onboarding/supplier [R=301,L]
+    RewriteRule ^OCSAPP_Driver_Onboarding_Package_FR_QC\.html$ https://%{HTTP_HOST}/guide-accueil/livreur [R=301,L]
+    RewriteRule ^OCSAPP_Driver_Onboarding_Package_EN\.html$ https://%{HTTP_HOST}/onboarding/driver [R=301,L]
+    RewriteRule ^OCSAPP_Business_Account_Onboarding_Package_FR_QC\.html$ https://%{HTTP_HOST}/guide-accueil/entreprise [R=301,L]
+    RewriteRule ^OCSAPP_Business_Account_Onboarding_Package_EN\.html$ https://%{HTTP_HOST}/onboarding/business [R=301,L]
+</IfModule>

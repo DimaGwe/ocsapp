@@ -227,7 +227,7 @@ $tr = $translations[$currentLang] ?? $translations['en'];
   <a class="auth-logo" href="<?= url('/') ?>" aria-label="OCSAPP">OCSAPP</a>
   <nav class="auth-toplinks" aria-label="<?= $fr ? "Navigation d'inscription" : 'Registration navigation' ?>">
     <a href="<?= url('/') ?>"><?= $fr ? 'Écosystème' : 'Ecosystem' ?></a>
-    <a href="<?= url('home') ?>"><?= $fr ? 'Marché Central' : 'Market Central' ?></a>
+    <a href="<?= url('marketplace-central') ?>"><?= $fr ? 'Marché Central' : 'Market Central' ?></a>
     <a class="central-link" href="<?= url('distribution') ?>"><?= $fr ? 'Entreprise Centrale' : 'Business Central' ?></a>
   </nav>
 </header>

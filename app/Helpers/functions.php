@@ -160,7 +160,16 @@ function jsonResponse(array $data, int $statusCode = 200): void {
 }
 
 // URL Helpers
-function url(string $path = ''): string {
+/**
+ * $lang: only matters for pages with a French and an English address (localized_paths());
+ * such paths are swapped to the address for $lang, or for the session language when null.
+ */
+function url(string $path = '', ?string $lang = null): string {
+    // The bare root is only swapped when $lang is explicit: url('') is also used as a base URL,
+    // and English visitors who land on the root are forwarded to /home (apply_url_language()).
+    if ($lang !== null || trim(substr($path, 0, strcspn($path, '?#')), '/') !== '') {
+        $path = localized_path($path, $lang ?? ($_SESSION['language'] ?? 'fr'));
+    }
     $baseUrl = env('APP_URL', '');
     $basePath = env('BASE_PATH', '');
 
@@ -181,6 +190,112 @@ function url(string $path = ''): string {
 
     // Build and return full URL
     return rtrim($baseUrl . $basePath, '/') . '/' . $path;
+}
+
+/**
+ * Public pages with a French and an English address, EN path => FR path. The address decides
+ * the language (apply_url_language() in bootstrap/init.php), so search engines can index both
+ * versions, linked with hreflang (seo_lang_links()). Existing url('buyer-central') links follow
+ * the visitor's language automatically.
+ * To add a page: one line here + a route for the FR path in routes/web.php + seo_lang_links()
+ * in its <head> + lang_switch_url() on its FR|EN toggle.
+ */
+function localized_paths(): array {
+    static $map = null;
+    if ($map === null) {
+        $map = [
+            'home'                => '',                 // main page: EN /home, FR = the root
+            'marketplace-central' => 'marche-central',
+            'buyer-central'    => 'acheteur-central',
+            'seller-central'   => 'vendeur-central',
+            'supplier-central' => 'fournisseur-central',
+            'driver-central'   => 'livreur-central',
+            'distribution'     => 'entreprise-centrale', // Business Central
+        ];
+        foreach (\App\Helpers\OnboardingPackageHelper::FR_SLUGS as $en => $fr) {
+            $map["onboarding/$en"]     = "guide-accueil/$fr";
+            $map["onboarding/$en/pdf"] = "guide-accueil/$fr/pdf";
+        }
+    }
+    return $map;
+}
+
+/** Language of a localized path ('fr'/'en'), or null when the path has one address. */
+function localized_path_lang(string $path): ?string {
+    $path = trim($path, '/');
+    if (isset(localized_paths()[$path])) {
+        return 'en';
+    }
+    return in_array($path, localized_paths(), true) ? 'fr' : null;
+}
+
+/** Swap a localized path (query string / #anchor kept) to its $lang address. */
+function localized_path(string $path, string $lang): string {
+    $cut  = strcspn($path, '?#');
+    $base = trim(substr($path, 0, $cut), '/');
+    $from = localized_path_lang($base);
+    if ($from === null || $from === $lang) {
+        return $path;
+    }
+    $base = $lang === 'fr' ? localized_paths()[$base] : array_search($base, localized_paths(), true);
+    return $base . substr($path, $cut);
+}
+
+/** Current request path without base path or slashes, e.g. 'buyer-central'. */
+function current_route_path(): string {
+    $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
+    $basePath = env('BASE_PATH', '');
+    if ($basePath !== '' && strpos($uri, $basePath) === 0) {
+        $uri = substr($uri, strlen($basePath));
+    }
+    return trim(rawurldecode($uri), '/');
+}
+
+/**
+ * On a localized page the address sets the language. An old ?lang= link that asks for the
+ * other language 301s to that language's address (other query params kept).
+ */
+function apply_url_language(): void {
+    $path = current_route_path();
+    $urlLang = localized_path_lang($path);
+    if ($urlLang === null) {
+        return;
+    }
+    $want = $_GET['lang'] ?? null;
+    if (in_array($want, ['en', 'fr'], true) && $want !== $urlLang) {
+        $query = $_GET;
+        unset($query['lang']);
+        header('Location: ' . url($path, $want) . ($query ? '?' . http_build_query($query) : ''), true, 301);
+        exit;
+    }
+    // The root is the French home page (what search engines see). A visitor who chose English
+    // (session 'en'; new sessions start 'fr') is sent to the English home page instead.
+    if ($path === '' && $want === null && ($_SESSION['language'] ?? 'fr') === 'en') {
+        header('Location: ' . url('home', 'en') . (empty($_GET) ? '' : '?' . http_build_query($_GET)), true, 302);
+        exit;
+    }
+    $_SESSION['language'] = $urlLang;
+}
+
+/** FR|EN toggle target: the other address on localized pages, ?lang= everywhere else. */
+function lang_switch_url(string $lang): string {
+    $path = current_route_path();
+    return localized_path_lang($path) !== null ? url($path, $lang) : '?lang=' . $lang;
+}
+
+/** canonical + hreflang tags for a localized page (x-default = French, Quebec first). */
+function seo_lang_links(): string {
+    $path = current_route_path();
+    $lang = localized_path_lang($path);
+    if ($lang === null) {
+        return '';
+    }
+    $fr = htmlspecialchars(url($path, 'fr'));
+    $en = htmlspecialchars(url($path, 'en'));
+    return '<link rel="canonical" href="' . ($lang === 'fr' ? $fr : $en) . "\">\n"
+         . '  <link rel="alternate" hreflang="fr-CA" href="' . $fr . "\">\n"
+         . '  <link rel="alternate" hreflang="en-CA" href="' . $en . "\">\n"
+         . '  <link rel="alternate" hreflang="x-default" href="' . $fr . "\">\n";
 }
 
 function asset(string $path): string {

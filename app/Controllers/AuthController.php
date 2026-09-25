@@ -594,7 +594,7 @@ class AuthController {
             }
 
             setFlash('success', 'Email verified! Welcome to OCSAPP.');
-            redirect(url('home'));
+            redirect(url('marketplace-central'));
 
         } catch (\PDOException $e) {
             logger("Email verification error: " . $e->getMessage(), 'error');
@@ -797,7 +797,7 @@ class AuthController {
                 ? 'Courriel vérifié ! Bienvenue sur OCSAPP.'
                 : 'Email verified! Welcome to OCSAPP.'
             );
-            redirect(url('home'));
+            redirect(url('marketplace-central'));
 
         } catch (\PDOException $e) {
             logger("Auto email verification error: " . $e->getMessage(), 'error');

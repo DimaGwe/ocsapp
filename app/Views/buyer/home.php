@@ -36,6 +36,7 @@ $cartCount = $cartCount ?? 0;
       : 'Discover local shops, boutiques, restaurants and homegrown products in Marketplace Central, the commerce layer of the OCSAPP ecosystem.'
   ?>">
   <?= csrfMeta() ?>
+  <?= seo_lang_links() ?>
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="<?= asset('images/logo.png') ?>">
   <link rel="apple-touch-icon" href="<?= asset('images/logo.png') ?>">
@@ -344,7 +345,7 @@ $cartCount = $cartCount ?? 0;
 
         <div class="mc-footer-col">
           <h5><?= $fr ? 'Écosystème OCSAPP' : 'OCSAPP Ecosystem' ?></h5>
-          <a href="<?= url('home') ?>"><?= $fr ? 'Marché Central' : 'Marketplace Central' ?></a>
+          <a href="<?= url('marketplace-central') ?>"><?= $fr ? 'Marché Central' : 'Marketplace Central' ?></a>
           <a href="<?= url('buyer-central') ?>"><?= $fr ? 'Acheteur Central' : 'Buyer Central' ?></a>
           <a href="<?= url('seller-central') ?>"><?= $fr ? 'Vendeur Central' : 'Seller Central' ?></a>
           <a href="<?= url('supplier-central') ?>"><?= $fr ? 'Fournisseur Central' : 'Supplier Central' ?></a>

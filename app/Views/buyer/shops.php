@@ -381,7 +381,7 @@ foreach ($taxonomy as $cat) {
                         <div class="mc-bridge-icon"><i class="fas fa-grip"></i></div>
                         <div><h3><?= $fr ? 'Catégories' : 'Categories' ?></h3><p><?= $fr ? 'Explorer les 11 catégories OCSAPP' : 'Explore the 11 OCSAPP categories' ?></p></div>
                     </a>
-                    <a class="mc-ecosystem-bridge-card" href="<?= url('home') ?>">
+                    <a class="mc-ecosystem-bridge-card" href="<?= url('marketplace-central') ?>">
                         <div class="mc-bridge-icon"><i class="fas fa-bag-shopping"></i></div>
                         <div><h3><?= $fr ? 'Produits' : 'Products' ?></h3><p><?= $fr ? 'Parcourir les produits disponibles' : 'Browse available products' ?></p></div>
                     </a>
@@ -389,7 +389,7 @@ foreach ($taxonomy as $cat) {
                         <div class="mc-bridge-icon"><i class="fas fa-location-dot"></i></div>
                         <div><h3><?= $fr ? 'À proximité' : 'Nearby' ?></h3><p><?= $fr ? 'Découvrir selon votre emplacement' : 'Discover based on your location' ?></p></div>
                     </a>
-                    <a class="mc-ecosystem-bridge-card" href="<?= url('home') ?>">
+                    <a class="mc-ecosystem-bridge-card" href="<?= url('marketplace-central') ?>">
                         <div class="mc-bridge-icon"><i class="fas fa-store"></i></div>
                         <div><h3><?= $fr ? 'Marché Central' : 'Marketplace Central' ?></h3><p><?= $fr ? "Retourner au point d'entrée du marché" : 'Return to the marketplace entry point' ?></p></div>
                     </a>
@@ -423,7 +423,7 @@ foreach ($taxonomy as $cat) {
 
                 <div class="mc-footer-col">
                     <h5><?= $fr ? 'Écosystème OCSAPP' : 'OCSAPP Ecosystem' ?></h5>
-                    <a href="<?= url('home') ?>"><?= $fr ? 'Marché Central' : 'Marketplace Central' ?></a>
+                    <a href="<?= url('marketplace-central') ?>"><?= $fr ? 'Marché Central' : 'Marketplace Central' ?></a>
                     <a href="<?= url('buyer-central') ?>"><?= $fr ? 'Acheteur Central' : 'Buyer Central' ?></a>
                     <a href="<?= url('seller-central') ?>"><?= $fr ? 'Vendeur Central' : 'Seller Central' ?></a>
                     <a href="<?= url('supplier-central') ?>"><?= $fr ? 'Fournisseur Central' : 'Supplier Central' ?></a>
