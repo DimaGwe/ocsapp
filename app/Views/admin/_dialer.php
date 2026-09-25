@@ -1,22 +1,30 @@
 <?php
 /**
- * Admin click-to-call bar (Twilio bridge). Included once by admin/layout.php.
+ * Admin click-to-call. Included once by admin/layout.php.
  *
  *   ocsCall({phone, name, type, id, email, ticketId})
  *
- * Twilio rings the agent's own phone first ("press 1 to connect"), then the contact.
- * When the call ends, the Log a Call form opens pre-filled and linked to the call.
+ * Softphone set up: the call is placed from the agent's Phone window (/admin/phone, Twilio Voice JS SDK),
+ * which is opened if needed. Otherwise (bridge fallback) Twilio rings the agent's own phone first
+ * ("press 1 to connect"), then the contact, and the Log a Call form opens when it ends.
  */
 $__twilioReady = false;
+$__softphone = false;
 try {
     require_once BASE_PATH . '/app/Helpers/TwilioHelper.php';
     $__twilioReady = \App\Helpers\TwilioHelper::isConfigured();
+    $__softphone = $__twilioReady && \App\Helpers\TwilioHelper::isSoftphoneConfigured();
 } catch (\Throwable $e) {
     $__twilioReady = false;
 }
 ?>
 <style>
-#ocsCallBar { display:none; position:fixed; right:28px; bottom:92px; z-index:9005; width:300px; background:#111827; color:white; border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,.3); padding:14px 16px; font-size:13px; }
+#ocsPhoneBtn { position:fixed; right:28px; bottom:92px; z-index:9000; height:40px; padding:0 14px 0 12px; border-radius:20px; border:none; background:#111827; color:white; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:8px; box-shadow:0 4px 14px rgba(0,0,0,.25); }
+#ocsPhoneBtn .dot { width:9px; height:9px; border-radius:50%; background:#6b7280; }
+#ocsPhoneBtn.online .dot { background:#4ade80; }
+#ocsPhoneBtn.ringing { background:#00b207; animation:ocsPulse 1s infinite; }
+@keyframes ocsPulse { 50% { box-shadow:0 0 0 8px rgba(0,178,7,.25); } }
+#ocsCallBar { display:none; position:fixed; right:28px; bottom:142px; z-index:9005; width:300px; background:#111827; color:white; border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,.3); padding:14px 16px; font-size:13px; }
 #ocsCallBar .ocb-top { display:flex; align-items:center; gap:10px; }
 #ocsCallBar .ocb-icon { width:34px; height:34px; border-radius:50%; background:#00b207; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 #ocsCallBar .ocb-icon.ended { background:#6b7280; }
@@ -27,6 +35,12 @@ try {
 #ocsCallBar .ocb-close { margin-left:auto; background:rgba(255,255,255,.1); border:none; color:white; width:26px; height:26px; border-radius:50%; cursor:pointer; }
 @media (max-width: 480px) { #ocsCallBar { right:12px; left:12px; width:auto; } }
 </style>
+
+<?php if ($__softphone): ?>
+<button type="button" id="ocsPhoneBtn" onclick="ocsOpenPhone()" title="Open the OCSAPP Phone window (make and take calls from this computer)">
+  <span class="dot"></span><i class="fa-solid fa-headset"></i> <span id="ocsPhoneLbl">Phone</span>
+</button>
+<?php endif; ?>
 
 <div id="ocsCallBar" role="status" aria-live="polite">
   <div class="ocb-top">
@@ -43,8 +57,67 @@ try {
 <script>
 (function () {
   const READY = <?= $__twilioReady ? 'true' : 'false' ?>;
+  const SOFTPHONE = <?= $__softphone ? 'true' : 'false' ?>;
   let pollTimer = null;
   let current = null;
+
+  // ---------------------------------------------------------------- softphone (Phone window)
+  const channel = (SOFTPHONE && 'BroadcastChannel' in window) ? new BroadcastChannel('ocs-phone') : null;
+  let phoneAliveAt = 0;
+  let phoneOnline = false;
+
+  function phoneWindow(url) {
+    // Named window: reuses the open Phone window instead of opening a second one
+    return window.open(url, 'ocsPhone', 'width=380,height=660,resizable=yes');
+  }
+
+  window.ocsOpenPhone = function () {
+    const w = phoneWindow(Date.now() - phoneAliveAt < 9000 ? '' : '/admin/phone');
+    if (w) w.focus();
+  };
+
+  if (channel) {
+    channel.onmessage = e => {
+      const m = e.data || {};
+      const btn = document.getElementById('ocsPhoneBtn');
+      if (m.type === 'alive') {
+        phoneAliveAt = Date.now();
+        phoneOnline = !!m.online;
+        if (btn) {
+          btn.classList.toggle('online', phoneOnline);
+          btn.classList.remove('ringing');
+          document.getElementById('ocsPhoneLbl').textContent = m.busy ? 'On a call' : (phoneOnline ? 'Online' : 'Phone');
+        }
+      }
+      if (m.type === 'incoming' && btn) {
+        btn.classList.add('ringing');
+        document.getElementById('ocsPhoneLbl').textContent = 'Incoming: ' + (m.name || m.number || 'call');
+      }
+    };
+    channel.postMessage({ type: 'ping' });
+    setInterval(() => {
+      if (Date.now() - phoneAliveAt > 9000) {
+        const btn = document.getElementById('ocsPhoneBtn');
+        if (btn) { btn.classList.remove('online', 'ringing'); document.getElementById('ocsPhoneLbl').textContent = 'Phone'; }
+      }
+    }, 3000);
+  }
+
+  function softphoneDial(c) {
+    const payload = { phone: c.phone, name: c.name || '', type: c.type || 'unknown', id: c.id || 0, email: c.email || '', ticketId: c.ticketId || 0 };
+    if (Date.now() - phoneAliveAt < 9000) {
+      channel.postMessage({ type: 'dial', c: payload });
+      const w = phoneWindow('');
+      if (w) w.focus();
+      return;
+    }
+    // Phone window not open: queue the dial and open it (must happen inside the click for popup blockers)
+    try { localStorage.setItem('ocsPendingDial', JSON.stringify({ c: payload, at: Date.now() })); } catch (e) {}
+    const w = phoneWindow('/admin/phone');
+    if (!w) {
+      show(c.name, c.phone, 'Your browser blocked the Phone window. Allow pop-ups for this site, then try again.', true);
+    }
+  }
 
   const STATUS_TEXT = {
     agent_ringing:   'Calling your phone... answer it, then press 1.',
@@ -88,6 +161,10 @@ try {
 
     if (!READY) {
       window.location.href = 'tel:' + c.phone;
+      return;
+    }
+    if (SOFTPHONE && channel) {
+      softphoneDial(c);
       return;
     }
     if (current && !current.final) {

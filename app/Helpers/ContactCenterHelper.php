@@ -128,21 +128,54 @@ class ContactCenterHelper
         ")->execute([$userId, $phone]);
     }
 
-    /** Agents marked Available who have a callable phone: [['id','name','phone']] */
+    /** Twilio Client identity for an agent's browser Phone window */
+    public static function agentIdentity(int $userId): string
+    {
+        return 'agent_' . $userId;
+    }
+
+    /** User id from a Twilio "client:agent_119" / "agent_119" caller, or 0 */
+    public static function userIdFromIdentity(string $identity): int
+    {
+        return preg_match('/(?:^|client:)agent_(\d+)$/', $identity, $m) ? (int)$m[1] : 0;
+    }
+
+    /** Phone window heartbeat: online = Available + seen now; offline = Offline */
+    public static function setSoftphonePresence(int $userId, bool $online): void
+    {
+        self::db()->prepare("
+            INSERT INTO support_agent_status (user_id, status, softphone_seen_at) VALUES (?, ?, ?)
+            ON DUPLICATE KEY UPDATE status = VALUES(status), softphone_seen_at = VALUES(softphone_seen_at)
+        ")->execute([$userId, $online ? 'available' : 'offline', $online ? date('Y-m-d H:i:s') : null]);
+    }
+
+    /**
+     * Agents marked Available who can take a call:
+     * [['id','name','browser' => bool (Phone window online in the last 90s),'phone' => E.164|null]]
+     * Browser agents are rung in the browser only; others on their phone.
+     */
     public static function availableAgents(): array
     {
         $rows = self::db()->query("
-            SELECT u.id, u.first_name, u.last_name, s.phone
+            SELECT u.id, u.first_name, u.last_name, s.phone,
+                   (s.softphone_seen_at IS NOT NULL AND s.softphone_seen_at > NOW() - INTERVAL 90 SECOND) AS browser
             FROM support_agent_status s
             JOIN users u ON u.id = s.user_id
-            WHERE s.status = 'available' AND s.phone IS NOT NULL AND s.phone <> '' AND u.status = 'active'
+            WHERE s.status = 'available' AND u.status = 'active'
             ORDER BY s.updated_at DESC
         ")->fetchAll(\PDO::FETCH_ASSOC);
 
         $agents = [];
         foreach ($rows as $r) {
-            if ($phone = self::e164($r['phone'])) {
-                $agents[] = ['id' => (int)$r['id'], 'name' => trim($r['first_name'] . ' ' . $r['last_name']), 'phone' => $phone];
+            $browser = (bool)$r['browser'];
+            $phone = self::e164($r['phone']);
+            if ($browser || $phone) {
+                $agents[] = [
+                    'id' => (int)$r['id'],
+                    'name' => trim($r['first_name'] . ' ' . $r['last_name']),
+                    'browser' => $browser,
+                    'phone' => $browser ? null : $phone
+                ];
             }
         }
         return $agents;

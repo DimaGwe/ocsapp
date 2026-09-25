@@ -306,6 +306,55 @@ class TwilioHelper
     }
 
     /**
+     * Browser softphone needs an API key (sid + secret) and a TwiML App, stored in the Integrations settings
+     */
+    public static function isSoftphoneConfigured(): bool
+    {
+        return self::isConfigured()
+            && setting('twilio_api_key_sid', '') !== ''
+            && setting('twilio_api_key_secret', '') !== ''
+            && setting('twilio_twiml_app_sid', '') !== '';
+    }
+
+    /**
+     * Access token for the Twilio Voice JS SDK (a JWT signed with the API key secret).
+     * The browser can receive calls for $identity and place calls through the TwiML App.
+     */
+    public static function voiceAccessToken(string $identity, int $ttl = 3600): ?string
+    {
+        self::init();
+
+        if (!self::isSoftphoneConfigured()) {
+            return null;
+        }
+
+        $keySid = (string)setting('twilio_api_key_sid', '');
+        $keySecret = (string)setting('twilio_api_key_secret', '');
+        $now = time();
+
+        $b64 = fn(string $s) => rtrim(strtr(base64_encode($s), '+/', '-_'), '=');
+        $header = ['typ' => 'JWT', 'alg' => 'HS256', 'cty' => 'twilio-fpa;v=1'];
+        $payload = [
+            'jti' => $keySid . '-' . $now . '-' . bin2hex(random_bytes(4)),
+            'iss' => $keySid,
+            'sub' => self::$accountSid,
+            'iat' => $now,
+            'nbf' => $now,
+            'exp' => $now + $ttl,
+            'grants' => [
+                'identity' => $identity,
+                'voice' => [
+                    'incoming' => ['allow' => true],
+                    'outgoing' => ['application_sid' => (string)setting('twilio_twiml_app_sid', '')]
+                ]
+            ]
+        ];
+
+        $unsigned = $b64(json_encode($header)) . '.' . $b64(json_encode($payload));
+        return $unsigned . '.' . $b64(hash_hmac('sha256', $unsigned, $keySecret, true));
+    }
+
+    /**
      * Public base URL Twilio calls back to (e.g. https://ocsapp.ca), no trailing slash
      */
     public static function appUrl(): string

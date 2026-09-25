@@ -14,7 +14,7 @@ class AdminCommandCenterController
         if (session_status() === PHP_SESSION_NONE) session_start();
 
         if (!isset($_SESSION['user']) || !\AdminPermissionHelper::isAdminRole($_SESSION['user']['role'] ?? null)) {
-            header('Location: /admin/login');
+            header('Location: /login');
             exit;
         }
 

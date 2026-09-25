@@ -22,7 +22,7 @@ class AdminAgentDashboardController
         if (session_status() === PHP_SESSION_NONE) session_start();
 
         if (!isset($_SESSION['user']) || !\AdminPermissionHelper::isAdminRole($_SESSION['user']['role'] ?? null)) {
-            header('Location: /admin/login');
+            header('Location: /login');
             exit;
         }
 
@@ -176,6 +176,20 @@ class AdminAgentDashboardController
 
         header('Content-Type: application/json');
         echo json_encode(['success' => true, 'status' => $status]);
+        exit;
+    }
+
+    // -------------------------------------------------------------------------
+    // Browser softphone window (standalone page, no admin layout)
+    // -------------------------------------------------------------------------
+    public function phone(): void
+    {
+        $agentName      = trim(($this->user['first_name'] ?? '') . ' ' . ($this->user['last_name'] ?? ''));
+        $softphoneReady = TwilioHelper::isSoftphoneConfigured();
+        $twilioNumber   = TwilioHelper::isConfigured() ? TwilioHelper::formatPhoneForDisplay(TwilioHelper::getPhoneNumber()) : '';
+
+        header('Cache-Control: no-store');
+        require __DIR__ . '/../Views/admin/phone.php';
         exit;
     }
 

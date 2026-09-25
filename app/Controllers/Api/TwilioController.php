@@ -12,8 +12,11 @@
  *                    -> voicemailDone / recordingStatus, inboundStatus
  *   SMS:             smsWebhook (inbound), smsStatus (delivery), callStatus (legacy lead calls)
  *
- * Outbound calls ring the agent's own phone first ("press 1 to connect"), then dial the contact
- * from the OCSAPP number, so the contact never sees the agent's personal number.
+ * Browser softphone (preferred): the agent's Phone window (Twilio Voice JS SDK) places and receives
+ * calls as the OCSAPP number. Outgoing browser calls hit browserOutbound (the TwiML App voice URL).
+ *
+ * Phone bridge (fallback when the softphone is not set up): Twilio rings the agent's own phone first
+ * ("press 1 to connect"), then dials the contact from the OCSAPP number.
  */
 
 namespace App\Controllers\Api;
@@ -58,8 +61,54 @@ class TwilioController
             'success' => true,
             'configured' => $configured,
             'phone_number' => $configured ? TwilioHelper::formatPhoneForDisplay(TwilioHelper::getPhoneNumber()) : null,
-            'agent_phone' => ContactCenterHelper::agentPhone($uid)
+            'agent_phone' => ContactCenterHelper::agentPhone($uid),
+            'softphone' => TwilioHelper::isSoftphoneConfigured()
         ]);
+    }
+
+    // =====================================================================
+    // Admin: browser softphone
+    // =====================================================================
+
+    /**
+     * Access token for the Phone window.
+     * GET /api/twilio/token
+     */
+    public function token(): void
+    {
+        if (!$this->isAuthenticated()) {
+            jsonResponse(['success' => false, 'error' => 'Unauthorized'], 401);
+            return;
+        }
+
+        $identity = ContactCenterHelper::agentIdentity((int)$_SESSION['user']['id']);
+        $token = TwilioHelper::voiceAccessToken($identity);
+
+        if (!$token) {
+            jsonResponse(['success' => false, 'error' => 'The browser phone is not set up on this server.']);
+            return;
+        }
+
+        jsonResponse(['success' => true, 'token' => $token, 'identity' => $identity, 'ttl' => 3600]);
+    }
+
+    /**
+     * Phone window heartbeat / going offline (also used by sendBeacon when the window closes).
+     * POST /api/twilio/presence  {online: 1|0}
+     */
+    public function presence(): void
+    {
+        if (!$this->isAuthenticated()) {
+            jsonResponse(['success' => false, 'error' => 'Unauthorized'], 401);
+            return;
+        }
+        verifyCsrfForApi();
+
+        $in = $this->input();
+        $online = !empty($in['online']) && $in['online'] !== '0' && $in['online'] !== 'false';
+        ContactCenterHelper::setSoftphonePresence((int)$_SESSION['user']['id'], $online);
+
+        jsonResponse(['success' => true, 'online' => $online]);
     }
 
     /**
@@ -260,8 +309,14 @@ class TwilioController
             return;
         }
 
-        $agentPhone = ContactCenterHelper::agentPhone($agentId);
-        if (!$agentPhone) {
+        $browser = ($in['mode'] ?? '') === 'browser';
+        if ($browser && !TwilioHelper::isSoftphoneConfigured()) {
+            jsonResponse(['success' => false, 'error' => 'The browser phone is not set up on this server.']);
+            return;
+        }
+
+        $agentPhone = $browser ? null : ContactCenterHelper::agentPhone($agentId);
+        if (!$browser && !$agentPhone) {
             jsonResponse(['success' => false, 'code' => 'no_agent_phone', 'error' => 'Set the phone Twilio should ring for you on the Agent Dashboard first.']);
             return;
         }
@@ -271,7 +326,7 @@ class TwilioController
             jsonResponse(['success' => false, 'error' => 'That phone number is not valid.']);
             return;
         }
-        if ($to === $agentPhone) {
+        if (!$browser && $to === $agentPhone) {
             jsonResponse(['success' => false, 'error' => 'That is your own calling phone.']);
             return;
         }
@@ -296,12 +351,18 @@ class TwilioController
             INSERT INTO call_logs
                 (agent_id, direction, contact_type, contact_id, contact_name, contact_phone, contact_email,
                  outcome, ticket_id, call_status, needs_outcome)
-            VALUES (?, 'outbound', ?, ?, ?, ?, ?, 'other', ?, 'agent_ringing', 1)
+            VALUES (?, 'outbound', ?, ?, ?, ?, ?, 'other', ?, ?, 1)
         ")->execute([
             $agentId, $type, $contactId, mb_substr($name, 0, 120), $to,
-            mb_substr((string)($in['email'] ?? ''), 0, 180), $ticketId
+            mb_substr((string)($in['email'] ?? ''), 0, 180), $ticketId, $browser ? 'connecting' : 'agent_ringing'
         ]);
         $callId = (int)$this->db->lastInsertId();
+
+        // Browser: the Phone window connects the call itself (Device.connect with To + CallLogId)
+        if ($browser) {
+            jsonResponse(['success' => true, 'call_log_id' => $callId, 'to' => $to, 'name' => $name, 'contact_type' => $type, 'contact_id' => $contactId ?? 0]);
+            return;
+        }
 
         $base = TwilioHelper::appUrl() . '/api/twilio';
         $result = TwilioHelper::makeCall($agentPhone, "$base/bridge-connect?call=$callId", [
@@ -497,19 +558,95 @@ class TwilioController
     {
         $this->requireTwilio();
         $call = $this->getCallLog((int)($_GET['call'] ?? 0));
-        $twilioStatus = $_POST['CallStatus'] ?? '';
+        if ($call) {
+            $this->finalizeFromAgentLeg($call, (string)($_POST['CallStatus'] ?? ''));
+        }
+        $this->emptyOk();
+    }
 
-        if ($call && in_array($twilioStatus, ['completed', 'no-answer', 'busy', 'failed', 'canceled'], true)
-            && !in_array($call['call_status'], self::FINAL_STATES, true)) {
+    /** The agent's leg (phone or browser) ended: close the call if the Dial callback has not already */
+    private function finalizeFromAgentLeg(array $call, string $twilioStatus): void
+    {
+        if (!in_array($twilioStatus, ['completed', 'no-answer', 'busy', 'failed', 'canceled'], true)
+            || in_array($call['call_status'], self::FINAL_STATES, true)) {
+            return;
+        }
 
-            if (in_array($call['call_status'], ['agent_ringing', 'agent_answered'], true)) {
-                $this->finishOutbound($call, $call['call_status'] === 'agent_answered' ? 'agent_declined' : 'agent_no_answer', 0);
-            } elseif ($call['call_status'] === 'in_progress') {
-                $duration = $call['answered_at'] ? max(0, time() - strtotime($call['answered_at'])) : 0;
-                $this->finishOutbound($call, 'completed', $duration);
-            } else {
-                $this->finishOutbound($call, 'canceled', 0);
-            }
+        if (in_array($call['call_status'], ['agent_ringing', 'agent_answered'], true)) {
+            $this->finishOutbound($call, $call['call_status'] === 'agent_answered' ? 'agent_declined' : 'agent_no_answer', 0);
+        } elseif ($call['call_status'] === 'in_progress') {
+            $duration = $call['answered_at'] ? max(0, time() - strtotime($call['answered_at'])) : 0;
+            $this->finishOutbound($call, 'completed', $duration);
+        } else {
+            $this->finishOutbound($call, 'canceled', 0);
+        }
+    }
+
+    // =====================================================================
+    // Webhooks: browser softphone (TwiML App)
+    // =====================================================================
+
+    /**
+     * A Phone window placed a call (TwiML App voice URL). Params: To, CallLogId, Caller=client:agent_X
+     * POST /api/twilio/browser-outbound
+     */
+    public function browserOutbound(): void
+    {
+        $this->requireTwilio();
+
+        $agentId = ContactCenterHelper::userIdFromIdentity((string)($_POST['Caller'] ?? $_POST['From'] ?? ''));
+        $call = $this->getCallLog((int)($_POST['CallLogId'] ?? 0));
+        $to = ContactCenterHelper::e164((string)($_POST['To'] ?? ''));
+
+        // Only dial what this agent's own call log row says (the token cannot be used to call anywhere else)
+        if (!$agentId || !$call || (int)$call['agent_id'] !== $agentId || !$to || $call['contact_phone'] !== $to
+            || $call['call_status'] !== 'connecting') {
+            $this->twiml($this->say('This call could not be placed.', 'en') . '<Hangup/>');
+        }
+
+        $this->db->prepare("UPDATE call_logs SET call_status = 'contact_ringing', twilio_call_sid = ? WHERE id = ?")
+            ->execute([$_POST['CallSid'] ?? null, $call['id']]);
+
+        $this->twiml(
+            '<Dial callerId="' . $this->xml(TwilioHelper::getPhoneNumber()) . '" timeout="30" answerOnBridge="true"'
+            . ' action="' . $this->xml($this->hook('bridge-complete', ['call' => $call['id']])) . '" method="POST">'
+            . '<Number statusCallbackEvent="answered" statusCallback="' . $this->xml($this->hook('bridge-contact-status', ['call' => $call['id']])) . '" statusCallbackMethod="POST">'
+            . $this->xml($to)
+            . '</Number></Dial>'
+        );
+    }
+
+    /**
+     * Browser leg ended (TwiML App status callback): covers the agent hanging up mid-dial.
+     * POST /api/twilio/browser-status
+     */
+    public function browserStatus(): void
+    {
+        $this->requireTwilio();
+
+        $stmt = $this->db->prepare("SELECT * FROM call_logs WHERE twilio_call_sid = ? AND direction = 'outbound' LIMIT 1");
+        $stmt->execute([$_POST['CallSid'] ?? '']);
+        $call = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if ($call) {
+            $this->finalizeFromAgentLeg($call, (string)($_POST['CallStatus'] ?? ''));
+        }
+        $this->emptyOk();
+    }
+
+    /**
+     * A browser agent answered an inbound call (Client statusCallback).
+     * POST /api/twilio/inbound-client-answered?call=X&agent=Y
+     */
+    public function inboundClientAnswered(): void
+    {
+        $this->requireTwilio();
+
+        if (in_array($_POST['CallStatus'] ?? '', ['in-progress', 'answered'], true)) {
+            $this->db->prepare("
+                UPDATE call_logs SET agent_id = ?, call_status = 'in_progress', answered_at = NOW(), needs_outcome = 1
+                WHERE id = ? AND direction = 'inbound' AND call_status = 'ringing_agents'
+            ")->execute([(int)($_GET['agent'] ?? 0) ?: null, (int)($_GET['call'] ?? 0)]);
         }
         $this->emptyOk();
     }
@@ -547,10 +684,21 @@ class TwilioController
             $this->twiml($greeting . $this->voicemailPrompt($callId));
         }
 
+        $callerName = $contact['name'] ?? '';
         $numbers = '';
         foreach ($agents as $agent) {
-            $numbers .= '<Number url="' . $this->xml($this->hook('inbound-screen', ['call' => $callId, 'agent' => $agent['id']])) . '" method="POST">'
-                . $this->xml($agent['phone']) . '</Number>';
+            if ($agent['browser']) {
+                $numbers .= '<Client statusCallbackEvent="answered" statusCallbackMethod="POST"'
+                    . ' statusCallback="' . $this->xml($this->hook('inbound-client-answered', ['call' => $callId, 'agent' => $agent['id']])) . '">'
+                    . '<Identity>' . $this->xml(ContactCenterHelper::agentIdentity($agent['id'])) . '</Identity>'
+                    . '<Parameter name="callLogId" value="' . $callId . '"/>'
+                    . '<Parameter name="callerName" value="' . $this->xml($callerName) . '"/>'
+                    . '<Parameter name="callerNumber" value="' . $this->xml($from) . '"/>'
+                    . '</Client>';
+            } else {
+                $numbers .= '<Number url="' . $this->xml($this->hook('inbound-screen', ['call' => $callId, 'agent' => $agent['id']])) . '" method="POST">'
+                    . $this->xml($agent['phone']) . '</Number>';
+            }
         }
 
         $this->twiml(

@@ -1049,8 +1049,14 @@ return [
     'POST /api/twilio/call' => ['Api\\TwilioController', 'startCall'],
     'GET /api/twilio/call-state' => ['Api\\TwilioController', 'callState'],
     'GET /api/twilio/recording' => ['Api\\TwilioController', 'recording'],
+    'GET /api/twilio/token' => ['Api\\TwilioController', 'token'],
+    'POST /api/twilio/presence' => ['Api\\TwilioController', 'presence'],
+    'GET /admin/phone' => ['AdminAgentDashboardController', 'phone'],
 
     // Twilio Webhooks (public, called by Twilio servers; each checks the X-Twilio-Signature)
+    'POST /api/twilio/browser-outbound' => ['Api\\TwilioController', 'browserOutbound'],
+    'POST /api/twilio/browser-status' => ['Api\\TwilioController', 'browserStatus'],
+    'POST /api/twilio/inbound-client-answered' => ['Api\\TwilioController', 'inboundClientAnswered'],
     'POST /api/twilio/bridge-connect' => ['Api\\TwilioController', 'bridgeConnect'],
     'POST /api/twilio/bridge-dial' => ['Api\\TwilioController', 'bridgeDial'],
     'POST /api/twilio/bridge-contact-status' => ['Api\\TwilioController', 'bridgeContactStatus'],
