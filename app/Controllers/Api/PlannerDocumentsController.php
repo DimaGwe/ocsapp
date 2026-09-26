@@ -7,11 +7,46 @@ require_once __DIR__ . '/../../Helpers/AdminPermissionHelper.php';
 /**
  * Planner Documents API Controller
  * Handles file uploads and document management
+ *
+ * Files live outside the web root (storage/uploads/planner/) and are only
+ * reachable through view()/download(), which require an admin session.
  */
 class PlannerDocumentsController
 {
     private $db;
     private $uploadDir;
+
+    // Max upload size in bytes (PHP's upload_max_filesize can be lower; that limit wins)
+    private const MAX_SIZE = 20 * 1024 * 1024;
+
+    // Allowed extensions => Content-Type we serve them with (never trust the browser's type)
+    private const ALLOWED_TYPES = [
+        'pdf'  => 'application/pdf',
+        'doc'  => 'application/msword',
+        'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'xls'  => 'application/vnd.ms-excel',
+        'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'ppt'  => 'application/vnd.ms-powerpoint',
+        'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'csv'  => 'text/csv',
+        'txt'  => 'text/plain',
+        'html' => 'text/html',
+        'htm'  => 'text/html',
+        'png'  => 'image/png',
+        'jpg'  => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'gif'  => 'image/gif',
+        'webp' => 'image/webp',
+        'mp4'  => 'video/mp4',
+        'webm' => 'video/webm',
+        'mov'  => 'video/quicktime',
+        'mp3'  => 'audio/mpeg',
+        'wav'  => 'audio/wav',
+        'm4a'  => 'audio/mp4',
+    ];
+
+    // Served with a CSP sandbox so any script inside can't run on our domain
+    private const SANDBOXED_TYPES = ['html', 'htm', 'txt', 'csv'];
 
     public function __construct()
     {
@@ -32,11 +67,11 @@ class PlannerDocumentsController
         verifyCsrfForApi();
 
         $this->db = \Database::getConnection();
-        $this->uploadDir = __DIR__ . '/../../../public/uploads/planner/';
+        $this->uploadDir = __DIR__ . '/../../../storage/uploads/planner/';
 
         // Create upload directory if it doesn't exist
         if (!is_dir($this->uploadDir)) {
-            mkdir($this->uploadDir, 0755, true);
+            mkdir($this->uploadDir, 0750, true);
         }
 
         // Don't set JSON header here - let each method set appropriate headers
@@ -51,7 +86,7 @@ class PlannerDocumentsController
         try {
             $stmt = $this->db->query("
                 SELECT
-                    d.*,
+                    d.id, d.user_id, d.original_filename, d.mime_type, d.file_size, d.uploaded_at,
                     CONCAT(u.first_name, ' ', u.last_name) as user_name
                 FROM planner_documents d
                 LEFT JOIN users u ON d.user_id = u.id
@@ -73,26 +108,43 @@ class PlannerDocumentsController
     {
         header('Content-Type: application/json');
         try {
-            if (!isset($_FILES['file']) || !isset($_POST['user_id'])) {
+            if (!isset($_FILES['file'])) {
                 http_response_code(400);
-                echo json_encode(['error' => 'File and user_id are required']);
+                echo json_encode(['error' => 'File is required']);
                 return;
             }
 
             $file = $_FILES['file'];
-            $userId = $_POST['user_id'];
+            $userId = (int)($_SESSION['user']['id'] ?? 0);
 
             // Validate file upload
-            if ($file['error'] !== UPLOAD_ERR_OK) {
+            if ($file['error'] === UPLOAD_ERR_INI_SIZE || $file['error'] === UPLOAD_ERR_FORM_SIZE) {
+                http_response_code(400);
+                echo json_encode(['error' => 'File is too large (server limit ' . ini_get('upload_max_filesize') . ')']);
+                return;
+            }
+            if ($file['error'] !== UPLOAD_ERR_OK || !is_uploaded_file($file['tmp_name'])) {
                 http_response_code(400);
                 echo json_encode(['error' => 'File upload failed']);
                 return;
             }
+            if ($file['size'] > self::MAX_SIZE) {
+                http_response_code(400);
+                echo json_encode(['error' => 'File is too large (max 20 MB)']);
+                return;
+            }
 
-            // Generate unique filename
-            $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
-            $storedFilename = uniqid() . '_' . time() . '.' . $extension;
+            $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            if (!isset(self::ALLOWED_TYPES[$extension])) {
+                http_response_code(400);
+                echo json_encode(['error' => 'File type not allowed. Allowed: ' . implode(', ', array_keys(self::ALLOWED_TYPES))]);
+                return;
+            }
+
+            // Random, unguessable stored name (the original name is kept in the DB only)
+            $storedFilename = bin2hex(random_bytes(16)) . '.' . $extension;
             $filePath = $this->uploadDir . $storedFilename;
+            $originalName = trim(str_replace(["\r", "\n", "\0"], '', basename($file['name'])));
 
             // Move uploaded file
             if (!move_uploaded_file($file['tmp_name'], $filePath)) {
@@ -100,6 +152,7 @@ class PlannerDocumentsController
                 echo json_encode(['error' => 'Failed to save file']);
                 return;
             }
+            chmod($filePath, 0640);
 
             // Save to database
             $stmt = $this->db->prepare("
@@ -109,18 +162,20 @@ class PlannerDocumentsController
 
             $stmt->execute([
                 $userId,
-                $file['name'],
+                $originalName,
                 $storedFilename,
-                'uploads/planner/' . $storedFilename,
-                $file['type'],
+                'storage/uploads/planner/' . $storedFilename,
+                self::ALLOWED_TYPES[$extension],
                 $file['size']
             ]);
+            // Read before logActivity(), whose insert would change lastInsertId()
+            $documentId = (int)$this->db->lastInsertId();
 
             // Log activity
             $this->logActivity($userId, 'document', 'uploaded a document');
 
             http_response_code(201);
-            echo json_encode(['success' => true, 'id' => $this->db->lastInsertId()]);
+            echo json_encode(['success' => true, 'id' => $documentId]);
         } catch (\Exception $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Failed to upload document']);
@@ -132,44 +187,7 @@ class PlannerDocumentsController
      */
     public function view(): void
     {
-        try {
-            $id = $_GET['id'] ?? null;
-
-            if (!$id) {
-                http_response_code(400);
-                echo json_encode(['error' => 'Document ID is required']);
-                return;
-            }
-
-            $stmt = $this->db->prepare("SELECT * FROM planner_documents WHERE id = ?");
-            $stmt->execute([$id]);
-            $document = $stmt->fetch(\PDO::FETCH_ASSOC);
-
-            if (!$document) {
-                http_response_code(404);
-                echo json_encode(['error' => 'Document not found']);
-                return;
-            }
-
-            $filePath = $this->uploadDir . $document['stored_filename'];
-
-            if (!file_exists($filePath)) {
-                http_response_code(404);
-                echo json_encode(['error' => 'File not found on server']);
-                return;
-            }
-
-            // Set headers for inline display
-            header('Content-Type: ' . $document['mime_type']);
-            header('Content-Disposition: inline; filename="' . $document['original_filename'] . '"');
-            header('Content-Length: ' . $document['file_size']);
-
-            readfile($filePath);
-            exit;
-        } catch (\Exception $e) {
-            http_response_code(500);
-            echo json_encode(['error' => 'Failed to view document']);
-        }
+        $this->sendFile('inline');
     }
 
     /**
@@ -177,10 +195,19 @@ class PlannerDocumentsController
      */
     public function download(): void
     {
+        $this->sendFile('attachment');
+    }
+
+    /**
+     * Stream a stored document to the logged-in admin
+     */
+    private function sendFile(string $disposition): void
+    {
         try {
-            $id = $_GET['id'] ?? null;
+            $id = (int)($_GET['id'] ?? 0);
 
             if (!$id) {
+                header('Content-Type: application/json');
                 http_response_code(400);
                 echo json_encode(['error' => 'Document ID is required']);
                 return;
@@ -191,29 +218,47 @@ class PlannerDocumentsController
             $document = $stmt->fetch(\PDO::FETCH_ASSOC);
 
             if (!$document) {
+                header('Content-Type: application/json');
                 http_response_code(404);
                 echo json_encode(['error' => 'Document not found']);
                 return;
             }
 
-            $filePath = $this->uploadDir . $document['stored_filename'];
+            $filePath = $this->uploadDir . basename($document['stored_filename']);
 
-            if (!file_exists($filePath)) {
+            if (!is_file($filePath)) {
+                header('Content-Type: application/json');
                 http_response_code(404);
                 echo json_encode(['error' => 'File not found on server']);
                 return;
             }
 
-            // Set headers for download
-            header('Content-Type: ' . $document['mime_type']);
-            header('Content-Disposition: attachment; filename="' . $document['original_filename'] . '"');
-            header('Content-Length: ' . $document['file_size']);
+            // Content-Type comes from our allowlist, not from what the browser sent at upload time
+            $extension = strtolower(pathinfo($document['stored_filename'], PATHINFO_EXTENSION));
+            $contentType = self::ALLOWED_TYPES[$extension] ?? 'application/octet-stream';
+            if (!isset(self::ALLOWED_TYPES[$extension])) {
+                $disposition = 'attachment';
+            }
+
+            // Header-safe filename (ASCII fallback + UTF-8 version)
+            $name = str_replace(["\r", "\n", "\0", '"'], '', $document['original_filename']);
+            $asciiName = preg_replace('/[^A-Za-z0-9._ ()-]/', '_', $name);
+
+            header('Content-Type: ' . $contentType);
+            header('Content-Disposition: ' . $disposition . '; filename="' . $asciiName . '"; filename*=UTF-8\'\'' . rawurlencode($name));
+            header('Content-Length: ' . filesize($filePath));
+            header('X-Content-Type-Options: nosniff');
+            header('Cache-Control: private, no-store');
+            if (in_array($extension, self::SANDBOXED_TYPES, true)) {
+                header('Content-Security-Policy: sandbox');
+            }
 
             readfile($filePath);
             exit;
         } catch (\Exception $e) {
+            header('Content-Type: application/json');
             http_response_code(500);
-            echo json_encode(['error' => 'Failed to download document']);
+            echo json_encode(['error' => 'Failed to load document']);
         }
     }
 
@@ -225,8 +270,9 @@ class PlannerDocumentsController
         header('Content-Type: application/json');
         try {
             $input = json_decode(file_get_contents('php://input'), true);
+            $docId = (int)($input['id'] ?? 0);
 
-            if (empty($input['id'])) {
+            if (!$docId) {
                 http_response_code(400);
                 echo json_encode(['error' => 'Document ID is required']);
                 return;
@@ -234,7 +280,7 @@ class PlannerDocumentsController
 
             // Get document info
             $stmt = $this->db->prepare("SELECT * FROM planner_documents WHERE id = ?");
-            $stmt->execute([$input['id']]);
+            $stmt->execute([$docId]);
             $document = $stmt->fetch(\PDO::FETCH_ASSOC);
 
             if (!$document) {
@@ -244,18 +290,19 @@ class PlannerDocumentsController
             }
 
             // Delete file from filesystem
-            $filePath = $this->uploadDir . $document['stored_filename'];
-            if (file_exists($filePath)) {
+            $filePath = $this->uploadDir . basename($document['stored_filename']);
+            if (is_file($filePath)) {
                 unlink($filePath);
             }
 
             // Delete from database
             $stmt = $this->db->prepare("DELETE FROM planner_documents WHERE id = ?");
-            $stmt->execute([$input['id']]);
+            $stmt->execute([$docId]);
 
             // Log activity
-            if (!empty($input['user_id'])) {
-                $this->logActivity($input['user_id'], 'document', 'deleted a document');
+            $userId = (int)($_SESSION['user']['id'] ?? 0);
+            if ($userId) {
+                $this->logActivity($userId, 'document', 'deleted a document');
             }
 
             echo json_encode(['success' => true]);

@@ -2063,7 +2063,7 @@ ob_start();
         if (file) {
             document.getElementById('selectedFile').style.display = 'block';
             document.getElementById('selectedFile').innerHTML = `
-                <strong>Selected:</strong> ${file.name} (${formatFileSize(file.size)})
+                <strong>Selected:</strong> ${escapeHtml(file.name)} (${formatFileSize(file.size)})
             `;
             document.getElementById('uploadBtn').style.display = 'block';
         }
@@ -2087,7 +2087,6 @@ ob_start();
         if (!file) return;
 
         formData.append('file', file);
-        formData.append('user_id', currentUser.id);
 
         try {
             const response = await fetch(`${API_URL}/documents`, {
@@ -2103,6 +2102,8 @@ ob_start();
                 document.getElementById('uploadBtn').style.display = 'none';
                 loadDocuments();
                 loadActivity();
+            } else {
+                alert(data.error || 'Failed to upload document');
             }
         } catch (error) {
             console.error('Error uploading document:', error);
@@ -2160,6 +2161,8 @@ ob_start();
         }
     }
 
+    let documentsById = {};
+
     function displayDocuments(documents) {
         const container = document.getElementById('documentsList');
 
@@ -2168,20 +2171,23 @@ ob_start();
             return;
         }
 
+        documentsById = {};
         const docsHTML = documents.map(doc => {
-            const fileInfo = getFileIcon(doc.original_filename, doc.mime_type);
+            documentsById[doc.id] = doc;
+            const fileInfo = getFileIcon(doc.original_filename, doc.mime_type || '');
+            const safeName = escapeHtml(doc.original_filename);
 
             return `
                 <div class="document-card">
                     <div class="doc-icon ${fileInfo.class}">${fileInfo.icon}</div>
                     <div class="doc-info">
-                        <div class="doc-name" title="${doc.original_filename}">${doc.original_filename}</div>
-                        <div class="doc-meta">by ${doc.user_name}</div>
+                        <div class="doc-name" title="${safeName}">${safeName}</div>
+                        <div class="doc-meta">by ${escapeHtml(doc.user_name)}</div>
                         <div class="doc-meta">${formatFileSize(doc.file_size)}</div>
                         <div class="doc-meta">${timeAgo(doc.uploaded_at)}</div>
                     </div>
                     <div class="doc-actions">
-                        <button class="btn-planner primary small" onclick="viewDocument(${doc.id}, '${doc.mime_type}', '${doc.original_filename}')">View</button>
+                        <button class="btn-planner primary small" onclick="viewDocument(${parseInt(doc.id, 10)})">View</button>
                         <button class="btn-planner primary small" onclick="downloadDocument(${doc.id})">Download</button>
                         <button class="btn-planner danger small" onclick="deleteDocument(${doc.id})">Delete</button>
                     </div>
@@ -2192,7 +2198,12 @@ ob_start();
         container.innerHTML = docsHTML;
     }
 
-    function viewDocument(id, mimeType, filename) {
+    function viewDocument(id) {
+        const doc = documentsById[id];
+        if (!doc) return;
+        const filename = doc.original_filename || '';
+        const mimeType = doc.mime_type || '';
+
         const modal = document.getElementById('docModal');
         const modalTitle = document.getElementById('modalTitle');
         const modalBody = document.getElementById('modalBody');
@@ -2205,7 +2216,17 @@ ob_start();
 
         // Images - direct preview
         if (mimeType.includes('image')) {
-            modalBody.innerHTML = `<img src="${API_URL}/documents/view?id=${id}" alt="${filename}" style="width: 100%; height: 100%; object-fit: contain;">`;
+            modalBody.innerHTML = `<img src="${API_URL}/documents/view?id=${id}" alt="${escapeHtml(filename)}" style="width: 100%; height: 100%; object-fit: contain;">`;
+        }
+        // HTML documents (reports) - rendered in a sandboxed frame, scripts never run
+        else if (mimeType.includes('html') || ['html', 'htm'].includes(ext)) {
+            modalBody.innerHTML = `
+                <iframe sandbox src="${API_URL}/documents/view?id=${id}" style="width: 100%; height: calc(100% - 70px); border: none; background: #fff;"></iframe>
+                <div style="padding: 15px; text-align: center; background: #f8f9fa;">
+                    <button class="btn-planner primary small" onclick="window.open('${API_URL}/documents/view?id=${id}', '_blank')">Open in New Tab</button>
+                    <button class="btn-planner primary small" onclick="window.open('${API_URL}/documents/download?id=${id}', '_blank')">Download</button>
+                </div>
+            `;
         }
         // PDFs - iframe preview
         else if (mimeType.includes('pdf')) {
