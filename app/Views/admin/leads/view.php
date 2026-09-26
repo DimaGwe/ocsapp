@@ -1014,7 +1014,7 @@ ob_start();
                                     </div>
                                     <div style="font-size: 11px; color: #6b7280; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"><?= htmlspecialchars(basename($supplierApp[$field])) ?></div>
                                 </div>
-                                <a href="<?= url($supplierApp[$field]) ?>" target="_blank" class="btn btn-secondary btn-sm" style="flex-shrink: 0;">
+                                <a href="<?= \App\Helpers\PrivateUploadHelper::url($supplierApp[$field]) ?>" target="_blank" class="btn btn-secondary btn-sm" style="flex-shrink: 0;">
                                     <i class="fas fa-download"></i> View
                                 </a>
                             <?php else: ?>
@@ -1181,7 +1181,7 @@ ob_start();
             <div style="display:flex; align-items:center; gap:10px; padding:10px 14px; background:#f9fafb; border-radius:8px; font-size:13px; color:#374151; border:1px solid #e5e7eb;">
                 <i class="fas fa-<?= $docExt === 'pdf' ? 'file-pdf' : 'file-image' ?>" style="color:<?= $docExt === 'pdf' ? '#dc2626' : '#3b82f6' ?>;"></i>
                 <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars(basename($businessProfile['doc_certificate'])) ?></span>
-                <a href="<?= url($businessProfile['doc_certificate']) ?>" target="_blank" class="btn btn-secondary btn-sm" style="font-size:12px; flex-shrink:0;">
+                <a href="<?= \App\Helpers\PrivateUploadHelper::url($businessProfile['doc_certificate']) ?>" target="_blank" class="btn btn-secondary btn-sm" style="font-size:12px; flex-shrink:0;">
                     <i class="fas fa-external-link-alt"></i> View
                 </a>
             </div>

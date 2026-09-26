@@ -137,11 +137,9 @@ class SupplierAuthController {
             }
 
             // Handle document uploads
+            // Private folder (storage/), served via PrivateDocumentController
             $uploadDir = 'uploads/supplier-applications';
-            $fullUploadDir = BASE_PATH . '/public/' . $uploadDir;
-            if (!is_dir($fullUploadDir)) {
-                mkdir($fullUploadDir, 0755, true);
-            }
+            $fullUploadDir = \App\Helpers\PrivateUploadHelper::dir('supplier-applications');
 
             $docFields = [
                 'doc_certificate_incorporation' => 'doc_certificate_incorporation',
@@ -1145,11 +1143,9 @@ class SupplierAuthController {
             }
 
             // Handle document uploads (same rules as self-apply)
+            // Private folder (storage/), served via PrivateDocumentController
             $uploadDir     = 'uploads/supplier-applications';
-            $fullUploadDir = BASE_PATH . '/public/' . $uploadDir;
-            if (!is_dir($fullUploadDir)) {
-                mkdir($fullUploadDir, 0755, true);
-            }
+            $fullUploadDir = \App\Helpers\PrivateUploadHelper::dir('supplier-applications');
 
             $docFields  = ['doc_certificate_incorporation','doc_declaration_registration','doc_enterprise_register'];
             $docPaths   = array_fill_keys($docFields, null);

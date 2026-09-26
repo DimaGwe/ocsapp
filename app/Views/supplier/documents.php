@@ -280,7 +280,7 @@ $_docLabelsFr = [
         </div>
 
         <div class="doc-actions">
-          <a href="<?= url($application[$field]) ?>" target="_blank" class="btn-view">
+          <a href="<?= \App\Helpers\PrivateUploadHelper::url($application[$field]) ?>" target="_blank" class="btn-view">
             <i class="fas fa-external-link-alt"></i> <?= $fr ? 'Voir le document' : 'View Document' ?>
           </a>
           <?php if ($reviewSt !== 'approved'): ?>

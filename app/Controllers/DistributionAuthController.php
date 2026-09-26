@@ -246,11 +246,9 @@ class DistributionAuthController
             } elseif (!in_array(mime_content_type($file['tmp_name']), $allowedMimes)) {
                 $uploadError = ($fr ? "Type de fichier invalide." : 'Invalid file type.');
             } else {
+                // Private folder (storage/), served via PrivateDocumentController
                 $uploadDir     = 'uploads/distribution-applications';
-                $fullUploadDir = BASE_PATH . '/public/' . $uploadDir;
-                if (!is_dir($fullUploadDir)) {
-                    mkdir($fullUploadDir, 0755, true);
-                }
+                $fullUploadDir = \App\Helpers\PrivateUploadHelper::dir('distribution-applications');
                 $safeFilename = 'distapp_' . uniqid('', true) . '_' . time() . '.' . $ext;
                 $destPath     = $fullUploadDir . '/' . $safeFilename;
                 if (move_uploaded_file($file['tmp_name'], $destPath)) {
@@ -409,8 +407,8 @@ class DistributionAuthController
 
             // Clean up uploaded file if DB failed
             if ($docPath) {
-                $fullPath = BASE_PATH . '/public/' . $docPath;
-                if (file_exists($fullPath)) {
+                $fullPath = \App\Helpers\PrivateUploadHelper::absolutePath($docPath);
+                if ($fullPath && file_exists($fullPath)) {
                     unlink($fullPath);
                 }
             }
@@ -1563,11 +1561,9 @@ class DistributionAuthController
             return;
         }
 
+        // Private folder (storage/), served via PrivateDocumentController
         $uploadDir     = 'uploads/distribution-docs';
-        $fullUploadDir = BASE_PATH . '/public/' . $uploadDir;
-        if (!is_dir($fullUploadDir)) {
-            mkdir($fullUploadDir, 0755, true);
-        }
+        $fullUploadDir = \App\Helpers\PrivateUploadHelper::dir('distribution-docs');
 
         $safeFilename = 'bizdoc_' . uniqid('', true) . '_' . time() . '.' . $ext;
         $destPath     = $fullUploadDir . '/' . $safeFilename;

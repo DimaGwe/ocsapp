@@ -147,11 +147,9 @@ class SellerAuthController
             }
 
             // Document uploads - same validated pattern as SupplierAuthController::submitApplication()
+            // Private folder (storage/), served via PrivateDocumentController
             $uploadDir = 'uploads/seller-applications';
-            $fullUploadDir = BASE_PATH . '/public/' . $uploadDir;
-            if (!is_dir($fullUploadDir)) {
-                mkdir($fullUploadDir, 0755, true);
-            }
+            $fullUploadDir = \App\Helpers\PrivateUploadHelper::dir('seller-applications');
 
             $docFields = ['doc_certificate_incorporation', 'doc_declaration_registration', 'doc_enterprise_register'];
             $docPaths = [];

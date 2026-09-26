@@ -2533,11 +2533,9 @@ class SupplierProductController {
             }
 
             // Upload
+            // Private folder (storage/), served via PrivateDocumentController
             $uploadDir = 'uploads/supplier-applications';
-            $fullUploadDir = BASE_PATH . '/public/' . $uploadDir;
-            if (!is_dir($fullUploadDir)) {
-                mkdir($fullUploadDir, 0755, true);
-            }
+            $fullUploadDir = \App\Helpers\PrivateUploadHelper::dir('supplier-applications');
 
             $safeFilename = 'supapp_' . uniqid('', true) . '_' . time() . '.' . $ext;
             $destPath = $fullUploadDir . '/' . $safeFilename;

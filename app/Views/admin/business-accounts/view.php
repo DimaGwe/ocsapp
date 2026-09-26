@@ -449,7 +449,7 @@ ob_start();
                 <?php foreach ($documents as $doc): ?>
                 <?php
                     $docExt = strtolower(pathinfo($doc['file_path'], PATHINFO_EXTENSION));
-                    $docUrl = url($doc['file_path']);
+                    $docUrl = \App\Helpers\PrivateUploadHelper::url($doc['file_path']);
                     $statusColors = [
                         'pending'  => ['bg' => '#fef9c3', 'color' => '#854d0e', 'icon' => 'clock'],
                         'verified' => ['bg' => '#dcfce7', 'color' => '#15803d', 'icon' => 'check-circle'],

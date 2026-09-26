@@ -369,7 +369,7 @@ $pendingRequests = $pendingRequests ?? [];
         <span style="color:var(--gray-400);text-transform:uppercase;font-weight:600;font-size:11px;"><?= strtoupper($ext) ?></span>
       </div>
       <div class="doc-actions">
-        <a href="<?= url($profile[$docField]) ?>" target="_blank" class="btn-view">
+        <a href="<?= \App\Helpers\PrivateUploadHelper::url($profile[$docField]) ?>" target="_blank" class="btn-view">
           <i class="fas fa-external-link-alt"></i> <?= $t['view_document'] ?>
         </a>
         <button type="button" class="btn-replace" onclick="document.getElementById('<?= $replaceId ?>').classList.toggle('active')">
