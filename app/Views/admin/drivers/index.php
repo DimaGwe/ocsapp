@@ -293,7 +293,7 @@ ob_start();
                 <div class="driver-cell">
                   <div class="driver-avatar">
                     <?php if (!empty($driver['avatar'])): ?>
-                      <img src="<?= htmlspecialchars('https://ocsapp.ca/' . ltrim($driver['avatar'], '/')) ?>" alt="">
+                      <img src="<?= htmlspecialchars(\App\Helpers\MediaUrlHelper::url($driver['avatar']) ?? '') ?>" alt="">
                     <?php else: ?>
                       <?= strtoupper(substr($driver['first_name'] ?? '?', 0, 1)) ?>
                     <?php endif; ?>

@@ -71,7 +71,7 @@
                 <!-- Avatar Section -->
                 <div class="avatar-section">
                     <?php if (!empty($user['avatar'])): ?>
-                        <img src="<?= asset('uploads/avatars/' . $user['avatar']) ?>" alt="Avatar" class="avatar-preview">
+                        <img src="<?= htmlspecialchars(\App\Helpers\MediaUrlHelper::url(str_contains($user['avatar'], '/') ? $user['avatar'] : 'uploads/avatars/' . $user['avatar']) ?? '') ?>" alt="Avatar" class="avatar-preview">
                     <?php else: ?>
                         <?php 
                             $userName = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));

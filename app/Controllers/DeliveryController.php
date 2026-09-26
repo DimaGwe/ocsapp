@@ -1033,10 +1033,8 @@ class DeliveryController {
     }
     
     private function uploadProof($file) {
-        $uploadDir = __DIR__ . '/../../public/uploads/delivery/proof/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
+        // Private folder (storage/), served through signed /media links
+        $uploadDir = \App\Helpers\MediaUrlHelper::dir('delivery/proof') . '/';
 
         $finfo    = new \finfo(FILEINFO_MIME_TYPE);
         $mimeType = $finfo->file($file['tmp_name']);
@@ -2030,10 +2028,8 @@ class DeliveryController {
             return;
         }
 
-        $uploadDir = BASE_PATH . '/public/uploads/avatars/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0775, true);
-        }
+        // Private folder (storage/), served through signed /media links
+        $uploadDir = \App\Helpers\MediaUrlHelper::dir('avatars') . '/';
 
         $ext      = $mime === 'image/png' ? 'png' : ($mime === 'image/webp' ? 'webp' : 'jpg');
         $filename = 'driver_' . userId() . '_' . time() . '.' . $ext;
@@ -2048,8 +2044,8 @@ class DeliveryController {
         // Delete old avatar file if it's in the avatars folder
         $current = user()['avatar'] ?? '';
         if ($current && str_starts_with($current, 'uploads/avatars/')) {
-            $oldPath = BASE_PATH . '/public/' . $current;
-            if (file_exists($oldPath)) {
+            $oldPath = \App\Helpers\MediaUrlHelper::absolutePath($current);
+            if ($oldPath && file_exists($oldPath)) {
                 @unlink($oldPath);
             }
         }

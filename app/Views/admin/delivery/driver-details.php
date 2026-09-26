@@ -607,7 +607,7 @@ ob_start();
       <div class="driver-profile">
         <div class="driver-avatar-large">
           <?php if (!empty($driver['avatar'])): ?>
-            <img src="<?= htmlspecialchars('https://ocsapp.ca/' . ltrim($driver['avatar'], '/')) ?>"
+            <img src="<?= htmlspecialchars(\App\Helpers\MediaUrlHelper::url($driver['avatar']) ?? '') ?>"
                  alt="<?= htmlspecialchars($driver['first_name'] ?? '') ?>">
           <?php else: ?>
             <?= strtoupper(substr($driver['first_name'] ?? 'D', 0, 1)) ?>

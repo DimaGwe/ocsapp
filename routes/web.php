@@ -237,6 +237,7 @@ return [
     'POST /admin/sellers/verification/approve' => ['AdminSellerController', 'verificationAction'],
     'GET /admin/sellers/document' => ['AdminSellerController', 'downloadDocument'],
     'GET /documents/file' => ['PrivateDocumentController', 'show'],
+    'GET /media' => ['MediaController', 'show'],
     'GET /admin/sellers/edit' => ['AdminController', 'editSeller'],
     'POST /admin/sellers/update' => ['AdminController', 'updateSeller'],
     'POST /admin/sellers/suspend' => ['AdminSellerController', 'suspend'],

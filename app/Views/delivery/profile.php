@@ -371,7 +371,7 @@
         <div class="avatar-wrap">
           <?php if (!empty($driver['avatar'])): ?>
             <img class="avatar-img"
-                 src="<?= htmlspecialchars('https://ocsapp.ca/' . ltrim($driver['avatar'], '/')) ?>"
+                 src="<?= htmlspecialchars(\App\Helpers\MediaUrlHelper::url($driver['avatar']) ?? '') ?>"
                  alt="Profile photo">
           <?php else: ?>
             <div class="avatar-initials">

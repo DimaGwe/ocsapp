@@ -295,7 +295,7 @@ ob_start();
     <h3><?= $t['contact_information'] ?></h3>
     <?php if (!empty($seller['avatar'])): ?>
       <div style="text-align:center;margin-bottom:20px;">
-        <img src="<?= htmlspecialchars('https://ocsapp.ca/' . ltrim($seller['avatar'], '/')) ?>"
+        <img src="<?= htmlspecialchars(\App\Helpers\MediaUrlHelper::url($seller['avatar']) ?? '') ?>"
              alt="<?= htmlspecialchars($seller['first_name']) ?>"
              style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--border);">
       </div>

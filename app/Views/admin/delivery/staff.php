@@ -786,7 +786,7 @@ $stageLabels = [
                             <div class="table-user-info">
                                 <div class="table-avatar">
                                     <?php if (!empty($driver['avatar'])): ?>
-                                      <img src="<?= htmlspecialchars('https://ocsapp.ca/' . ltrim($driver['avatar'], '/')) ?>"
+                                      <img src="<?= htmlspecialchars(\App\Helpers\MediaUrlHelper::url($driver['avatar']) ?? '') ?>"
                                            alt="<?= htmlspecialchars($driver['first_name'] ?? '') ?>">
                                     <?php else: ?>
                                       <?= strtoupper(substr($driver['first_name'] ?? '', 0, 1) . substr($driver['last_name'] ?? '', 0, 1)) ?>

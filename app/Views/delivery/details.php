@@ -1002,7 +1002,7 @@
                 <?php if (!empty($delivery['proof_of_delivery'])): ?>
                 <div class="proof-image">
                     <h4><?php echo $fr ? 'Preuve de livraison' : 'Proof of Delivery'; ?></h4>
-                    <img src="/uploads/delivery/<?= htmlspecialchars($delivery['proof_of_delivery']) ?>" alt="<?php echo $fr ? 'Preuve de livraison' : 'Proof of Delivery'; ?>">
+                    <img src="<?= htmlspecialchars(\App\Helpers\MediaUrlHelper::url($delivery['proof_of_delivery']) ?? '') ?>" alt="<?php echo $fr ? 'Preuve de livraison' : 'Proof of Delivery'; ?>">
                 </div>
                 <?php endif; ?>
 

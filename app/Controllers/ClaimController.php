@@ -99,10 +99,8 @@ class ClaimController
         // Evidence photo uploads (optional, multiple)
         $evidencePaths = [];
         if (!empty($_FILES['evidence']) && is_array($_FILES['evidence']['tmp_name'])) {
-            $destDir = __DIR__ . '/../../public/uploads/claims/';
-            if (!is_dir($destDir)) {
-                mkdir($destDir, 0775, true);
-            }
+            // Private folder (storage/), served through signed /media links
+            $destDir = \App\Helpers\MediaUrlHelper::dir('claims') . '/';
             $allowed = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
             foreach ($_FILES['evidence']['tmp_name'] as $i => $tmpPath) {
                 if ($_FILES['evidence']['error'][$i] !== UPLOAD_ERR_OK) continue;

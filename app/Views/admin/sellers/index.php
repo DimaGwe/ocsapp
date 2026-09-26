@@ -665,7 +665,7 @@ ob_start();
                 <div class="seller-cell">
                   <div class="seller-avatar">
                     <?php if (!empty($seller['avatar'])): ?>
-                      <img src="<?= htmlspecialchars('https://ocsapp.ca/' . ltrim($seller['avatar'], '/')) ?>"
+                      <img src="<?= htmlspecialchars(\App\Helpers\MediaUrlHelper::url($seller['avatar']) ?? '') ?>"
                            alt="<?= htmlspecialchars($seller['first_name']) ?>">
                     <?php else: ?>
                       <?= strtoupper(substr($seller['first_name'], 0, 1)) ?>

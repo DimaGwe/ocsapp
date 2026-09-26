@@ -292,7 +292,7 @@
                     <div class="avatar-wrap" id="avatarWrap">
                         <?php if (!empty($driver['avatar'])): ?>
                             <img class="avatar-img" id="avatarImg"
-                                 src="<?= htmlspecialchars('https://ocsapp.ca/' . ltrim($driver['avatar'], '/')) ?>"
+                                 src="<?= htmlspecialchars(\App\Helpers\MediaUrlHelper::url($driver['avatar']) ?? '') ?>"
                                  alt="">
                         <?php else: ?>
                             <div class="avatar-initials" id="avatarImg">

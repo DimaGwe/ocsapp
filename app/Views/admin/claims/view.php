@@ -37,7 +37,7 @@ ob_start();
         <h4 style="margin-top:16px;">Claim Evidence</h4>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
             <?php foreach ($evidence_photos as $photo): ?>
-                <img src="<?= url($photo) ?>" style="width:120px; height:120px; object-fit:cover; border-radius:6px;">
+                <img src="<?= htmlspecialchars(\App\Helpers\MediaUrlHelper::url($photo) ?? '') ?>" style="width:120px; height:120px; object-fit:cover; border-radius:6px;">
             <?php endforeach; ?>
         </div>
         <?php endif; ?>
@@ -47,7 +47,7 @@ ob_start();
             <div>
                 <p style="color:#6b7280; font-size:13px;">Pickup photo</p>
                 <?php if (!empty($evidence['pickup_photo_path'])): ?>
-                    <img src="<?= url($evidence['pickup_photo_path']) ?>" style="width:150px; border-radius:6px;">
+                    <img src="<?= htmlspecialchars(\App\Helpers\MediaUrlHelper::url($evidence['pickup_photo_path']) ?? '') ?>" style="width:150px; border-radius:6px;">
                 <?php else: ?>
                     <p style="color:#dc2626;">None on file</p>
                 <?php endif; ?>
@@ -55,7 +55,7 @@ ob_start();
             <div>
                 <p style="color:#6b7280; font-size:13px;">Delivery photo</p>
                 <?php if (!empty($evidence['proof_of_delivery'])): ?>
-                    <img src="<?= url($evidence['proof_of_delivery']) ?>" style="width:150px; border-radius:6px;">
+                    <img src="<?= htmlspecialchars(\App\Helpers\MediaUrlHelper::url($evidence['proof_of_delivery']) ?? '') ?>" style="width:150px; border-radius:6px;">
                 <?php else: ?>
                     <p style="color:#dc2626;">None on file</p>
                 <?php endif; ?>

@@ -806,7 +806,8 @@ class DriverApiController
 
         $ext      = $allowed[$mime];
         $filename = "avatar_{$userId}_" . time() . ".{$ext}";
-        $destDir  = __DIR__ . '/../../../public/uploads/avatars/';
+        // Private folder (storage/), served through signed /media links
+        $destDir  = \App\Helpers\MediaUrlHelper::dir('avatars') . '/';
         $destPath = $destDir . $filename;
 
         if (!move_uploaded_file($file['tmp_name'], $destPath)) {
@@ -2326,8 +2327,8 @@ class DriverApiController
 
     private function fullAvatarUrl(string $path): string
     {
-        if (str_starts_with($path, 'http')) return $path;
-        return 'https://ocsapp.ca/' . ltrim($path, '/');
+        // Signed, expiring link for private media (external URLs pass through)
+        return \App\Helpers\MediaUrlHelper::url($path) ?? 'https://ocsapp.ca/' . ltrim($path, '/');
     }
 
     private function driverApplicationId(int $userId): ?int
@@ -2494,10 +2495,8 @@ class DriverApiController
 
         $ext      = $allowed[$mime];
         $filename = "proof_{$id}_{$userId}_" . time() . ".{$ext}";
-        $destDir  = __DIR__ . '/../../../public/uploads/delivery/';
-        if (!is_dir($destDir)) {
-            mkdir($destDir, 0775, true);
-        }
+        // Private folder (storage/), served through signed /media links
+        $destDir  = \App\Helpers\MediaUrlHelper::dir('delivery') . '/';
         $destPath = $destDir . $filename;
 
         if (!move_uploaded_file($file['tmp_name'], $destPath)) {
@@ -2546,10 +2545,8 @@ class DriverApiController
         }
 
         $filename = "signature_{$id}_{$userId}_" . time() . ".png";
-        $destDir  = __DIR__ . '/../../../public/uploads/delivery/';
-        if (!is_dir($destDir)) {
-            mkdir($destDir, 0775, true);
-        }
+        // Private folder (storage/), served through signed /media links
+        $destDir  = \App\Helpers\MediaUrlHelper::dir('delivery') . '/';
         file_put_contents($destDir . $filename, $decoded);
 
         $this->db->prepare(
@@ -2598,10 +2595,8 @@ class DriverApiController
 
         $ext      = $allowed[$mime];
         $filename = "pickup_{$id}_{$userId}_" . time() . ".{$ext}";
-        $destDir  = __DIR__ . '/../../../public/uploads/delivery/';
-        if (!is_dir($destDir)) {
-            mkdir($destDir, 0775, true);
-        }
+        // Private folder (storage/), served through signed /media links
+        $destDir  = \App\Helpers\MediaUrlHelper::dir('delivery') . '/';
         $destPath = $destDir . $filename;
 
         if (!move_uploaded_file($file['tmp_name'], $destPath)) {
@@ -2672,10 +2667,8 @@ class DriverApiController
 
         $ext      = $allowed[$mime];
         $filename = "weight_discrepancy_{$id}_{$userId}_" . time() . ".{$ext}";
-        $destDir  = __DIR__ . '/../../../public/uploads/delivery/';
-        if (!is_dir($destDir)) {
-            mkdir($destDir, 0775, true);
-        }
+        // Private folder (storage/), served through signed /media links
+        $destDir  = \App\Helpers\MediaUrlHelper::dir('delivery') . '/';
         $destPath = $destDir . $filename;
 
         if (!move_uploaded_file($file['tmp_name'], $destPath)) {
