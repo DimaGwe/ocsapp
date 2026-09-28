@@ -178,7 +178,8 @@ if (!function_exists('generateCsrfToken')) {
 
 if (!function_exists('verifyCsrfToken')) {
     function verifyCsrfToken($token): bool {
-        return isset($_SESSION['_csrf_token']) && hash_equals($_SESSION['_csrf_token'], $token);
+        // untyped + is_string: a missing field (post() returns null) or token[]= must fail, not fatal
+        return is_string($token) && isset($_SESSION['_csrf_token']) && hash_equals($_SESSION['_csrf_token'], $token);
     }
 }
 

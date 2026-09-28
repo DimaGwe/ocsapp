@@ -82,24 +82,38 @@ return [
 
     // Static Pages
     'GET /terms' => ['PageController', 'terms'],
+    'GET /conditions-utilisation' => ['PageController', 'terms'],
     'GET /privacy' => ['PageController', 'privacy'],
+    'GET /confidentialite' => ['PageController', 'privacy'],
     'GET /cookies' => ['PageController', 'cookies'],
+    'GET /temoins' => ['PageController', 'cookies'],
     'GET /returns' => ['PageController', 'returns'],
+    'GET /retours' => ['PageController', 'returns'],
     'GET /accessibility' => ['PageController', 'accessibility'],
+    'GET /accessibilite' => ['PageController', 'accessibility'],
     'GET /seller-agreement'       => ['PageController', 'sellerAgreement'],
+    'GET /entente-vendeur'       => ['PageController', 'sellerAgreement'],
     'GET /supplier-agreement'     => ['PageController', 'supplierAgreement'],
+    'GET /entente-fournisseur'     => ['PageController', 'supplierAgreement'],
     'GET /driver-agreement'       => ['PageController', 'driverAgreement'],
+    'GET /entente-livreur'       => ['PageController', 'driverAgreement'],
     'GET /distribution-agreement' => ['PageController', 'distributionAgreement'],
+    'GET /entente-distribution' => ['PageController', 'distributionAgreement'],
     'GET /nda'                    => ['PageController', 'nda'],
+    'GET /entente-confidentialite'                    => ['PageController', 'nda'],
     'GET /about' => ['PageController', 'about'],
+    'GET /a-propos' => ['PageController', 'about'],
     'GET /contact' => ['PageController', 'contact'],
+    'GET /nous-joindre' => ['PageController', 'contact'],
     'POST /contact/submit' => ['PageController', 'submitContact'],
 
     // ===================================
     // AUTHENTICATION
     // ===================================
     'GET /login' => ['AuthController', 'showLogin'],
+    'GET /connexion' => ['AuthController', 'showLogin'],
     'POST /login' => ['AuthController', 'login'],
+    'POST /connexion' => ['AuthController', 'login'],
     'GET /seller/login' => ['AuthController', 'showSellerLogin'],
     'GET /seller/apply' => ['SellerAuthController', 'apply'],
     'POST /seller/apply' => ['SellerAuthController', 'submitApplication'],
@@ -165,8 +179,10 @@ return [
     // WAITLIST
     // ===================================
     'GET /waitlist'  => ['WaitlistController', 'index'],
+    'GET /liste-attente'  => ['WaitlistController', 'index'],
     'GET /waitlist/unsubscribe' => ['WaitlistController', 'unsubscribe'],
     'POST /waitlist' => ['WaitlistController', 'store'],
+    'POST /liste-attente' => ['WaitlistController', 'store'],
 
     // ===================================
     // SELLER PUBLIC PAGES
@@ -184,6 +200,7 @@ return [
     'GET /guide-accueil/{role}' => ['PageController', 'onboarding'],
     'GET /guide-accueil/{role}/pdf' => ['PageController', 'onboardingPdf'],
     'GET /founding' => ['PageController', 'founding'],
+    'GET /programmes-fondateurs' => ['PageController', 'founding'],
 
     // ===================================
     // DRIVER PUBLIC PAGES

@@ -16,8 +16,8 @@ $navLinks = array_merge($navLinks ?? [], [[url('about'), $fr ? 'À propos' : 'Ab
       <a class="eco-nav-link" href="<?= $navUrl ?>"><?= htmlspecialchars($navLabel) ?></a>
       <?php endforeach; ?>
       <div class="eco-lang" aria-label="<?= $fr ? 'Langue' : 'Language' ?>">
-        <a href="?lang=fr" class="<?= $fr ? 'active' : '' ?>">FR</a>
-        <a href="?lang=en" class="<?= !$fr ? 'active' : '' ?>">EN</a>
+        <a href="<?= lang_switch_url('fr') ?>" class="<?= $fr ? 'active' : '' ?>">FR</a>
+        <a href="<?= lang_switch_url('en') ?>" class="<?= !$fr ? 'active' : '' ?>">EN</a>
       </div>
       <a class="eco-btn eco-btn-secondary" href="<?= url('login') ?>"><i class="fa-solid fa-arrow-right-to-bracket"></i> <?= $fr ? 'Se connecter' : 'Sign in' ?></a>
       <button type="button" class="eco-mobile-toggle" id="navToggle" aria-label="Menu" aria-expanded="false" aria-controls="mobileMenu">
@@ -32,8 +32,8 @@ $navLinks = array_merge($navLinks ?? [], [[url('about'), $fr ? 'À propos' : 'Ab
       <?php endforeach; ?>
       <a class="eco-mobile-menu-link" href="<?= url('login') ?>"><?= $fr ? 'Se connecter' : 'Sign in' ?></a>
       <div class="eco-mobile-menu-lang">
-        <a href="?lang=fr" class="<?= $fr ? 'active' : '' ?>">FR</a>
-        <a href="?lang=en" class="<?= !$fr ? 'active' : '' ?>">EN</a>
+        <a href="<?= lang_switch_url('fr') ?>" class="<?= $fr ? 'active' : '' ?>">FR</a>
+        <a href="<?= lang_switch_url('en') ?>" class="<?= !$fr ? 'active' : '' ?>">EN</a>
       </div>
     </div>
   </div>

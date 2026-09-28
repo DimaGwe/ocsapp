@@ -87,6 +87,7 @@ $content = [
   <meta name="description" content="<?= $fr
     ? "Les programmes fondateurs d'OCSAPP pour les acheteurs, vendeurs, fournisseurs, livreurs et entreprises : avantages, places restantes et admissibilité."
     : "OCSAPP's founding programs for buyers, sellers, suppliers, drivers and businesses: perks, spots remaining and eligibility." ?>">
+  <?= seo_lang_links() ?>
   <link rel="icon" type="image/png" href="<?= asset('images/logo.png') ?>">
   <meta name="theme-color" content="#00b207">
   <?= csrfMeta() ?>

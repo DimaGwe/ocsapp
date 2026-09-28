@@ -18,8 +18,9 @@ if (!function_exists('generateCsrfToken')) {
 }
 
 if (!function_exists('verifyCsrfToken')) {
-    function verifyCsrfToken(string $token): bool {
-        return isset($_SESSION['_csrf_token']) && hash_equals($_SESSION['_csrf_token'], $token);
+    function verifyCsrfToken($token): bool {
+        // untyped + is_string: a missing field (post() returns null) or token[]= must fail, not fatal
+        return is_string($token) && isset($_SESSION['_csrf_token']) && hash_equals($_SESSION['_csrf_token'], $token);
     }
 }
 
@@ -211,6 +212,22 @@ function localized_paths(): array {
             'supplier-central' => 'fournisseur-central',
             'driver-central'   => 'livreur-central',
             'distribution'     => 'entreprise-centrale', // Business Central
+            'about'            => 'a-propos',
+            'contact'          => 'nous-joindre',
+            'login'            => 'connexion',
+            'waitlist'         => 'liste-attente',
+            'founding'         => 'programmes-fondateurs',
+            // legal pages (legal/dynamic.php)
+            'terms'                  => 'conditions-utilisation',
+            'privacy'                => 'confidentialite',
+            'cookies'                => 'temoins',
+            'returns'                => 'retours',
+            'accessibility'          => 'accessibilite',
+            'seller-agreement'       => 'entente-vendeur',
+            'supplier-agreement'     => 'entente-fournisseur',
+            'driver-agreement'       => 'entente-livreur',
+            'distribution-agreement' => 'entente-distribution',
+            'nda'                    => 'entente-confidentialite',
         ];
         foreach (\App\Helpers\OnboardingPackageHelper::FR_SLUGS as $en => $fr) {
             $map["onboarding/$en"]     = "guide-accueil/$fr";
@@ -264,8 +281,19 @@ function apply_url_language(): void {
     $want = $_GET['lang'] ?? null;
     if (in_array($want, ['en', 'fr'], true) && $want !== $urlLang) {
         $query = $_GET;
-        unset($query['lang']);
+        if ($want !== 'fr' || $path !== 'home') {
+            unset($query['lang']); // kept for /home -> root so the root switches the session (below)
+        }
         header('Location: ' . url($path, $want) . ($query ? '?' . http_build_query($query) : ''), true, 301);
+        exit;
+    }
+    // A matching ?lang= (the FR toggle on /home sends /?lang=fr) switches the session, then drops
+    // the parameter. 302, not 301: a cached redirect would skip the session switch next time.
+    if ($want === $urlLang) {
+        $_SESSION['language'] = $urlLang;
+        $query = $_GET;
+        unset($query['lang']);
+        header('Location: ' . url($path, $want) . ($query ? '?' . http_build_query($query) : ''), true, 302);
         exit;
     }
     // The root is the French home page (what search engines see). A visitor who chose English
@@ -280,7 +308,11 @@ function apply_url_language(): void {
 /** FR|EN toggle target: the other address on localized pages, ?lang= everywhere else. */
 function lang_switch_url(string $lang): string {
     $path = current_route_path();
-    return localized_path_lang($path) !== null ? url($path, $lang) : '?lang=' . $lang;
+    if (localized_path_lang($path) === null) {
+        return '?lang=' . $lang;
+    }
+    // The root sends English sessions back to /home, so the link to it must switch the session too
+    return url($path, $lang) . ($lang === 'fr' && in_array($path, ['', 'home'], true) ? '?lang=fr' : '');
 }
 
 /** canonical + hreflang tags for a localized page (x-default = French, Quebec first). */
