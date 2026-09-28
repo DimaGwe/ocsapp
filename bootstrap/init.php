@@ -663,6 +663,8 @@ if (!function_exists('rateLimit')) {
 
 // Pages with a French and an English address: the address decides the session language
 // (functions.php). Runs last: it needs env(), defined above.
-if (session_status() === PHP_SESSION_ACTIVE) {
+// function_exists: CLI scripts (migrations) load init.php without the Composer autoloader, so
+// functions.php is not loaded yet; there is no URL to localize there anyway.
+if (session_status() === PHP_SESSION_ACTIVE && function_exists('apply_url_language')) {
     apply_url_language();
 }
