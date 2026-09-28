@@ -138,6 +138,8 @@ class AdminShopController
                             'shop_name' => $shopInfo['name'],
                             'founding_partner_number' => $foundingClaim['founding_partner_number'],
                         ]);
+                        // Founders' Wall: confirm their display choice + change link (sent once)
+                        \App\Helpers\FoundersWallHelper::onFoundingGranted($shopInfo['email'], 'seller', (int) $foundingClaim['founding_partner_number']);
                     }
                 } catch (\Exception $e) {
                     error_log('Founding Seller notification error: ' . $e->getMessage());

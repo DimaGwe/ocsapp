@@ -339,6 +339,8 @@ class AdminBusinessController
                         'Welcome, Founding Business Partner!',
                         "You're Founding Business Partner #{$foundingResult['founding_partner_number']} - your 5% Distribution rate is locked with no monthly fee for 6 months."
                     );
+                    // Founders' Wall: confirm their display choice + change link (sent once)
+                    \App\Helpers\FoundersWallHelper::onFoundingGranted((string) ($business['email'] ?? ''), 'business', (int) $foundingResult['founding_partner_number']);
                 }
             } catch (\Exception $e) {
                 error_log('FoundingBusinessHelper claim on approval failed: ' . $e->getMessage());

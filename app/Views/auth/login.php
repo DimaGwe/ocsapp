@@ -123,7 +123,7 @@ $driverVerifiedMsg = $fr
       ? 'Plateforme en cours de développement. Certaines fonctionnalités ne sont pas encore disponibles.'
       : 'Platform under development. Some features are not yet available.'
   ?></span>
-  <a href="<?= url('waitlist') ?>"><?= $fr ? "Rejoindre la liste d'attente" : 'Join the waitlist' ?></a>
+  <a href="<?= url('founding') ?>"><?= $fr ? 'Devenir fondateur' : 'Become a founder' ?></a>
 </div>
 
 <header class="eco-header">
@@ -142,7 +142,7 @@ $driverVerifiedMsg = $fr
         <a href="<?= lang_switch_url('fr') ?>" class="<?= $fr ? 'active' : '' ?>" aria-current="<?= $fr ? 'page' : 'false' ?>">FR</a>
         <a href="<?= lang_switch_url('en') ?>" class="<?= !$fr ? 'active' : '' ?>" aria-current="<?= !$fr ? 'page' : 'false' ?>">EN</a>
       </div>
-      <a class="eco-btn eco-btn-primary eco-header-join" href="<?= url('waitlist') ?>"><?= $fr ? 'Rejoindre OCSAPP' : 'Join OCSAPP' ?></a>
+      <a class="eco-btn eco-btn-primary eco-header-join" href="<?= url('founding') ?>"><?= $fr ? 'Devenir fondateur' : 'Become a founder' ?></a>
       <button type="button" class="eco-mobile-toggle" id="navToggle" aria-label="Menu" aria-expanded="false" aria-controls="mobileMenu">
         <i class="fa-solid fa-bars"></i>
       </button>
@@ -158,7 +158,7 @@ $driverVerifiedMsg = $fr
         <a href="<?= lang_switch_url('fr') ?>" class="<?= $fr ? 'active' : '' ?>" aria-current="<?= $fr ? 'page' : 'false' ?>">FR</a>
         <a href="<?= lang_switch_url('en') ?>" class="<?= !$fr ? 'active' : '' ?>" aria-current="<?= !$fr ? 'page' : 'false' ?>">EN</a>
       </div>
-      <a class="eco-btn eco-btn-primary" style="width:100%" href="<?= url('waitlist') ?>"><?= $fr ? 'Rejoindre OCSAPP' : 'Join OCSAPP' ?></a>
+      <a class="eco-btn eco-btn-primary" style="width:100%" href="<?= url('founding') ?>"><?= $fr ? 'Devenir fondateur' : 'Become a founder' ?></a>
     </div>
   </div>
 </header>
@@ -306,7 +306,7 @@ $driverVerifiedMsg = $fr
           <a id="learnLink" href="<?= htmlspecialchars($dr['learnUrl']) ?>"><?= htmlspecialchars($dr['learnLabel']) ?></a>
         </div>
         <div class="divider"></div>
-        <div class="register-note"><?= $fr ? 'Nouveau sur OCSAPP?' : 'New to OCSAPP?' ?> <a href="<?= url('waitlist') ?>"><?= $fr ? "Rejoindre la liste d'attente" : 'Join the waitlist' ?></a></div>
+        <div class="register-note"><?= $fr ? 'Nouveau sur OCSAPP?' : 'New to OCSAPP?' ?> <a href="<?= url('founding') ?>"><?= $fr ? 'Devenir fondateur' : 'Become a founder' ?></a></div>
       </div><!-- /auth-main -->
     </section>
   </div>

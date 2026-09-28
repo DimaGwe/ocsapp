@@ -1095,6 +1095,8 @@ class AdminController
                     } catch (\Exception $e) {
                         error_log('Founding Supplier notification error: ' . $e->getMessage());
                     }
+                    // Founders' Wall: confirm their display choice + change link (sent once)
+                    \App\Helpers\FoundersWallHelper::onFoundingGranted((string) ($supplier['email'] ?? ''), 'supplier', (int) $foundingClaim['founding_partner_number']);
                 }
             }
 

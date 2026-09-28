@@ -669,6 +669,8 @@ class AdminDeliveryController {
                         "Welcome as Founding Driver Partner #{$foundingResult['founding_driver_number']}! Your permanent badge is now active on your profile.",
                         'founding_partner'
                     );
+                    // Founders' Wall: confirm their display choice + change link (sent once)
+                    \App\Helpers\FoundersWallHelper::onFoundingGrantedForUser((int) $finalUserId, 'driver', (int) $foundingResult['founding_driver_number']);
                 }
             } catch (\Exception $e) {
                 logger('FoundingDriverHelper claim on approval failed: ' . $e->getMessage(), 'warning');

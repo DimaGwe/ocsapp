@@ -1,0 +1,85 @@
+/* Founding Quarter sections on /founding (partials/founding-quarter.php). Loaded after founding.css; fq- scoped.
+   Quarter band (countdown + total spots), live meters on the program cards, Founders' Wall, "just joined" toast. */
+
+/* Quarter band */
+.fq-band-sec { background: #fff; border-bottom: 1px solid var(--fd-line); padding: 56px 0; }
+.fq-hero-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 56px; align-items: center; }
+.fq-band-sec h2 { font: 700 clamp(28px, 3.2vw, 40px)/1.12 Poppins, sans-serif; letter-spacing: -1px; margin: 12px 0 14px; color: var(--fd-ink); }
+.fq-band-sec p { font-size: 15.5px; line-height: 1.7; color: var(--fd-muted); max-width: 620px; margin: 0; }
+.fq-band-sec .fq-cd-note { font-size: 12.5px; margin-top: 10px; }
+.fq-eyebrow { display: inline-flex; align-items: center; gap: 8px; }
+.fq-live-dot { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; box-shadow: 0 0 0 0 rgba(239, 68, 68, .6); animation: fq-pulse 1.6s infinite; }
+@keyframes fq-pulse { 70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+
+.fq-countdown { display: flex; gap: 10px; margin-top: 28px; }
+.fq-cd-cell { background: var(--fd-forest); color: #fff; border-radius: 12px; min-width: 76px; padding: 12px 10px; text-align: center; }
+.fq-cd-cell strong { display: block; font: 700 28px/1 Poppins, sans-serif; font-variant-numeric: tabular-nums; }
+.fq-cd-cell span { display: block; margin-top: 6px; font-size: 10.5px; letter-spacing: 1px; text-transform: uppercase; color: #a7d8aa; }
+
+.fq-total-card { background: linear-gradient(180deg, #0f1a12, #071009); color: #fff; border-radius: 22px; padding: 30px; text-align: center; box-shadow: 0 24px 60px rgba(13, 63, 16, .22); }
+.fq-total-num strong { font: 800 72px/1 Poppins, sans-serif; color: #74ef79; font-variant-numeric: tabular-nums; }
+.fq-total-num span { font: 600 22px Poppins, sans-serif; color: #9fb8a2; margin-left: 6px; }
+.fq-total-label { color: #cfe3d1; font-size: 14px; margin: 6px 0 18px; }
+.fq-bar { height: 8px; background: rgba(0, 178, 7, .12); border-radius: 8px; overflow: hidden; }
+.fq-bar span { display: block; height: 100%; background: var(--fd-g); border-radius: 8px; transition: width 1.4s ease; }
+.fq-total-card .fq-bar { background: rgba(255, 255, 255, .1); }
+.fq-bar-lg { height: 10px; }
+.fq-total-meta { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 12px; font-size: 12px; color: #cfe3d1; }
+.fq-total-meta i { color: #74ef79; }
+.fq-total-links { display: flex; justify-content: center; gap: 18px; margin-top: 18px; font-size: 12.5px; font-weight: 600; }
+.fd-main .fq-total-links a { color: #74ef79; text-decoration: none; }
+
+/* Live meter on each program card */
+.fd-pill .fq-count { font-weight: 800; }
+.fq-card-meter { width: 100%; display: flex; align-items: center; gap: 10px; margin-top: 10px; font-size: 11px; font-weight: 600; color: var(--fd-muted); }
+.fq-card-meter .fq-bar { flex: 1; height: 6px; }
+.fq-card-meter.fq-low { color: #c2410c; }
+.fq-card-meter.fq-low .fq-bar span { background: linear-gradient(90deg, #f59e0b, #ef4444); }
+
+/* Founders' Wall */
+.fq-wall-sec { background: #fff; border-top: 1px solid var(--fd-line); padding: 46px 0 70px; }
+.fq-wall-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; margin-bottom: 22px; }
+.fq-wall-head h2 { font: 700 30px Poppins, sans-serif; margin: 10px 0 8px; color: var(--fd-ink); }
+.fq-wall-head p { color: var(--fd-muted); font-size: 14px; max-width: 560px; margin: 0; line-height: 1.6; }
+.fq-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+.fq-chip { border: 1px solid var(--fd-line); background: #fff; border-radius: 999px; padding: 7px 12px; font: 600 12px Inter, sans-serif; color: #4d5b50; cursor: pointer; }
+.fq-chip em { font-style: normal; color: #97a198; margin-left: 3px; }
+.fq-chip.active { background: var(--fd-forest); border-color: var(--fd-forest); color: #fff; }
+.fq-chip.active em { color: #a7d8aa; }
+
+.fq-wall { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+.fq-founder { position: relative; display: flex; gap: 12px; align-items: center; background: #fff; border: 1px solid var(--fd-line); border-radius: 14px; padding: 14px; animation: fq-in .5s ease both; }
+.fq-founder[hidden] { display: none; }
+@keyframes fq-in { from { opacity: 0; transform: translateY(8px); } }
+.fq-avatar { flex: 0 0 auto; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font: 700 14px Poppins, sans-serif; color: #fff; background: var(--fd-g); }
+.fq-r-seller .fq-avatar { background: #0d7a3a; }
+.fq-r-supplier .fq-avatar { background: #0e7490; }
+.fq-r-driver .fq-avatar { background: #b45309; }
+.fq-r-business .fq-avatar { background: #4338ca; }
+.fq-founder-body { min-width: 0; }
+.fq-founder-name { font: 600 14px Poppins, sans-serif; color: var(--fd-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fq-founder-role { font-size: 12px; color: #315c35; font-weight: 600; margin-top: 2px; }
+.fq-founder-role b { color: var(--fd-g); }
+.fq-founder-meta { font-size: 11.5px; color: #8a948b; margin-top: 3px; }
+.fq-new { padding-right: 62px; border-color: #b7e4ba; box-shadow: 0 0 0 3px rgba(0, 178, 7, .08); }
+.fq-new-tag { position: absolute; top: 10px; right: 10px; background: #ecfdf0; color: #15803d; border-radius: 999px; font-size: 10px; font-weight: 700; padding: 2px 8px; text-transform: uppercase; letter-spacing: .5px; }
+.fd-main .fq-you { border-style: dashed; border-color: #b7cdb9; background: #f6faf6; text-decoration: none; }
+.fq-you .fq-avatar { background: #fff; color: var(--fd-g); border: 2px dashed #9dc9a0; }
+.fq-wall-empty { grid-column: 1 / -1; display: flex; gap: 14px; align-items: center; border: 1px dashed #b7cdb9; background: #f6faf6; border-radius: 14px; padding: 18px 20px; font-size: 14px; color: #465348; }
+.fq-wall-empty i { font-size: 22px; color: var(--fd-g); }
+.fq-wall-empty strong { display: block; color: var(--fd-ink); font-family: Poppins, sans-serif; }
+
+/* "just joined" toast (real founders only) */
+.fq-toast { position: fixed; left: 20px; bottom: 20px; z-index: 50; display: flex; gap: 10px; align-items: center; max-width: 340px; background: #fff; border: 1px solid var(--fd-line); border-radius: 14px; padding: 12px 14px; box-shadow: 0 18px 44px rgba(13, 63, 16, .18); font-size: 12.5px; line-height: 1.45; color: var(--fd-ink); opacity: 0; transform: translateY(16px); transition: opacity .35s ease, transform .35s ease; pointer-events: none; }
+.fq-toast.show { opacity: 1; transform: none; }
+.fq-toast small { display: block; color: #8a948b; font-size: 11px; margin-top: 2px; }
+.fq-avatar-sm { width: 36px; height: 36px; font-size: 12px; }
+
+@media (max-width: 920px) { .fq-hero-grid { grid-template-columns: 1fr; } }
+@media (max-width: 650px) {
+  .fq-countdown { gap: 6px; }
+  .fq-cd-cell { min-width: 0; flex: 1; }
+  .fq-cd-cell strong { font-size: 22px; }
+  .fq-total-num strong { font-size: 56px; }
+  .fq-toast { left: 12px; right: 12px; max-width: none; }
+}

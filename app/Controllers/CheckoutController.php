@@ -636,6 +636,12 @@ class CheckoutController
 
         $this->db->commit();
 
+        // Founders' Wall: first eligible order made them a Founding Buyer; confirm their display
+        // choice + change link. Sent once (re-reported slots on later checkouts are ignored).
+        if (!empty($foundingClaim['eligible']) && !empty($foundingClaim['founding_buyer_number'])) {
+            \App\Helpers\FoundersWallHelper::onFoundingGrantedForUser((int) $userId, 'buyer', (int) $foundingClaim['founding_buyer_number']);
+        }
+
         // Store pending order IDs in session for payment verification
         $orderIds = array_column($createdOrders, 'order_id');
         $_SESSION['pending_order_ids'] = $orderIds;

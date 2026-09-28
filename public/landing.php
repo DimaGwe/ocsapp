@@ -445,7 +445,7 @@ $fr = ($currentLang === 'fr');
         ? 'Plateforme en cours de développement. Certaines fonctionnalités ne sont pas encore disponibles.'
         : 'Platform under development. Some features are not yet available.'
     ?></span>
-    <a href="<?= url('waitlist') ?>"><?= $fr ? "Rejoindre la liste d'attente" : 'Join the waitlist' ?></a>
+    <a href="<?= url('founding') ?>"><?= $fr ? 'Devenir fondateur' : 'Become a founder' ?></a>
   </div>
 
   <header>
@@ -465,7 +465,7 @@ $fr = ($currentLang === 'fr');
           <a href="<?= lang_switch_url('en') ?>" class="<?= !$fr ? 'active' : '' ?>" aria-current="<?= !$fr ? 'page' : 'false' ?>">EN</a>
         </div>
         <a class="btn btn-secondary" href="<?= url('login') ?>"><i class="fa-solid fa-arrow-right-to-bracket"></i> <?= $fr ? 'Se connecter' : 'Sign in' ?></a>
-        <a class="btn btn-primary header-join" href="<?= url('waitlist') ?>"><?= $fr ? 'Rejoindre OCSAPP' : 'Join OCSAPP' ?></a>
+        <a class="btn btn-primary header-join" href="<?= url('founding') ?>"><?= $fr ? 'Devenir fondateur' : 'Become a founder' ?></a>
         <button type="button" class="mobile-toggle" id="navToggle" aria-label="Menu" aria-expanded="false" aria-controls="mobileMenu">
           <i class="fa-solid fa-bars"></i>
         </button>
@@ -481,7 +481,7 @@ $fr = ($currentLang === 'fr');
           <a href="<?= lang_switch_url('fr') ?>" class="<?= $fr ? 'active' : '' ?>" aria-current="<?= $fr ? 'page' : 'false' ?>">FR</a>
           <a href="<?= lang_switch_url('en') ?>" class="<?= !$fr ? 'active' : '' ?>" aria-current="<?= !$fr ? 'page' : 'false' ?>">EN</a>
         </div>
-        <a class="btn btn-primary" style="width:100%" href="<?= url('waitlist') ?>"><?= $fr ? 'Rejoindre OCSAPP' : 'Join OCSAPP' ?></a>
+        <a class="btn btn-primary" style="width:100%" href="<?= url('founding') ?>"><?= $fr ? 'Devenir fondateur' : 'Become a founder' ?></a>
       </div>
     </div>
   </header>
@@ -504,7 +504,7 @@ $fr = ($currentLang === 'fr');
           </p>
           <div class="hero-actions">
             <a class="btn btn-primary" href="#centrales"><?= $fr ? "Explorer l'écosystème" : 'Explore the ecosystem' ?> <i class="fa-solid fa-arrow-down"></i></a>
-            <a class="btn btn-secondary" href="<?= url('waitlist') ?>"><?= $fr ? "Rejoindre la liste d'attente" : 'Join the waitlist' ?></a>
+            <a class="btn btn-secondary" href="<?= url('founding') ?>"><?= $fr ? 'Devenir fondateur' : 'Become a founder' ?></a>
           </div>
           <div class="hero-note">
             <i class="fa-solid fa-circle-nodes" aria-hidden="true"></i>
@@ -788,13 +788,13 @@ $fr = ($currentLang === 'fr');
             <span class="eyebrow">OCSAPP</span>
             <h2><?= $fr ? 'Votre commerce. Votre rôle. Un seul écosystème.' : 'Your commerce. Your role. One ecosystem.' ?></h2>
             <p><?= $fr
-              ? "Explorez la Centrale qui vous correspond ou rejoignez la liste d'attente pour suivre l'évolution de la plateforme."
-              : "Explore the Central that fits you or join the waitlist to follow the platform's evolution."
+              ? "Explorez la Centrale qui vous correspond ou devenez membre fondateur pour profiter des avantages réservés aux premiers membres."
+              : "Explore the Central that fits you or become a founder to get the perks reserved for early members."
             ?></p>
           </div>
           <div class="cta-actions">
             <a class="btn btn-light" href="#centrales"><?= $fr ? 'Explorer les Centrales' : 'Explore the Centrals' ?></a>
-            <a class="btn btn-dark-outline" href="<?= url('waitlist') ?>"><?= $fr ? 'Rejoindre OCSAPP' : 'Join OCSAPP' ?></a>
+            <a class="btn btn-dark-outline" href="<?= url('founding') ?>"><?= $fr ? 'Devenir fondateur' : 'Become a founder' ?></a>
           </div>
         </div>
       </div>

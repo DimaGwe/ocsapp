@@ -27,6 +27,41 @@ class WaitlistController
     }
 
     /**
+     * Founders' Wall preferences (no login): /founders-wall/preferences?t=<wall_token>, linked from the
+     * founding-status email. Shows the current choice and what would be displayed; lets the person
+     * give or withdraw consent at any time (Law 25 / CAI guidelines 2023-1, section 2.6).
+     */
+    public function wallPreferences(): void
+    {
+        $row = $this->findByWallToken((string) get('t', ''));
+        view('waitlist/wall-preferences', ['row' => $row, 'saved' => (bool) get('saved', false)]);
+    }
+
+    public function saveWallPreferences(): void
+    {
+        $token = (string) post('t', '');
+        $row   = $this->findByWallToken($token);
+        if (!$row || !verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
+            view('waitlist/wall-preferences', ['row' => $row, 'saved' => false, 'error' => true]);
+            return;
+        }
+        $consent = post('wall_consent', '') === 'yes' && $row['role'] !== 'partner';
+        \App\Helpers\FoundersWallHelper::recordConsent((int) $row['id'], $consent, 'preferences', $_SESSION['language'] ?? $row['locale']);
+        redirect(url('founders-wall/preferences') . '?t=' . $row['wall_token'] . '&saved=1');
+    }
+
+    private function findByWallToken(string $token): ?array
+    {
+        $token = preg_replace('/[^a-f0-9]/', '', strtolower($token));
+        if (strlen($token) !== 32) {
+            return null;
+        }
+        $stmt = $this->db->prepare("SELECT * FROM waitlist WHERE wall_token = ? LIMIT 1");
+        $stmt->execute([$token]);
+        return $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
+    }
+
+    /**
      * One-click unsubscribe from waitlist emails (link in the confirmation email footer).
      * Token is random per signup; unknown/missing tokens show the same neutral page.
      */
@@ -92,6 +127,7 @@ class WaitlistController
 
         $discoverySource = sanitize(post('discovery_source', ''));
         $marketingConsent = post('marketing_consent', '') === 'yes' ? 1 : 0;
+        $wallConsent      = post('wall_consent', '') === 'yes'; // Founders' Wall opt-in, default no
         $utmSource   = sanitize(post('utm_source', ''));
         $utmMedium   = sanitize(post('utm_medium', ''));
         $utmCampaign = sanitize(post('utm_campaign', ''));
@@ -226,6 +262,13 @@ class WaitlistController
 
             $newId = (int) $this->db->lastInsertId();
             $pos   = $this->assignPosition($newId, $role);
+
+            // Founders' Wall choice + proof (a refusal is logged too). Partners have no founding program.
+            try {
+                \App\Helpers\FoundersWallHelper::recordConsent($newId, $wallConsent && $role !== 'partner', 'waitlist_form', $preferredLang ?: $lang);
+            } catch (\Throwable $e) {
+                logger('Founders wall consent record failed for waitlist #' . $newId . ': ' . $e->getMessage(), 'error');
+            }
 
             $this->notifyAdmin($newId, $firstName, $lastName, $email, $role, $businessName, $referredBy, $pos);
             $this->sendConfirmation($email, $firstName, $role, $refCode, $pos, $fr, $businessName, $unsubToken);

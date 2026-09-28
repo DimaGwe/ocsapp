@@ -82,7 +82,7 @@ $accountDashboardUrl = accountUrl(); // Uses new helper function
         <a class="mc-nav-link <?= $mcCurrentPath === $mcPath('home') ? 'active' : '' ?>" href="<?= url('marketplace-central') ?>"><?= $currentLang === 'fr' ? 'Marché Central' : 'Marketplace Central' ?></a>
         <a class="mc-nav-link <?= $mcCurrentPath === $mcPath('categories') ? 'active' : '' ?>" href="<?= url('categories') ?>"><?= $t['categories'] ?></a>
         <a class="mc-nav-link <?= $mcCurrentPath === $mcPath('shops') ? 'active' : '' ?>" href="<?= url('shops') ?>"><?= $t['shops'] ?></a>
-        <a class="mc-nav-link <?= $mcCurrentPath === $mcPath('waitlist') ? 'active' : '' ?>" href="<?= url('waitlist') ?>"><?= $currentLang === 'fr' ? "Liste d'attente" : 'Waitlist' ?></a>
+        <a class="mc-nav-link <?= $mcCurrentPath === $mcPath('founding') ? 'active' : '' ?>" href="<?= url('founding') ?>"><?= $currentLang === 'fr' ? 'Devenir fondateur' : 'Become a founder' ?></a>
         <div class="mc-nav-spacer"></div>
         <a class="mc-central-pill" href="<?= url('') ?>"><i class="fa-solid fa-circle-nodes"></i> <?= $currentLang === 'fr' ? "Voir l'écosystème" : 'View the ecosystem' ?></a>
     </div>

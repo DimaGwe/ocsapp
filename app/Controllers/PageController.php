@@ -366,9 +366,45 @@ class PageController
     }
 
     /**
-     * Founding programs overview, with live spots remaining per cohort.
+     * Founding programs overview, with live spots remaining per cohort and the Founding Quarter
+     * sections: Founders' Wall (only founders who consented, FoundersWallHelper) and, once the
+     * `founding_quarter_end` setting holds a future date (YYYY-MM-DD), the countdown.
      */
     public function founding(): void
+    {
+        try {
+            $founders = \App\Helpers\FoundersWallHelper::founders();
+        } catch (\Throwable $e) {
+            logger('Founders wall read failed: ' . $e->getMessage(), 'warning');
+            $founders = []; // the page still renders, with the empty wall
+        }
+        view('pages/founding', [
+            'programs' => $this->foundingPrograms(),
+            'quarter'  => ['founders' => $founders, 'end' => $this->foundingQuarterEnd()],
+        ]);
+    }
+
+    /**
+     * End of the Founding Quarter for the countdown, from the `founding_quarter_end` setting
+     * (editable in /admin/settings). Null (countdown hidden) when unset, invalid or past: a
+     * countdown must only show a real deadline (Competition Act, fake urgency cues).
+     */
+    private function foundingQuarterEnd(): ?string
+    {
+        $raw = trim((string) setting('founding_quarter_end', ''));
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $raw)) {
+            return null;
+        }
+        try {
+            $end = new \DateTimeImmutable($raw . ' 23:59:59', new \DateTimeZone('America/Montreal'));
+        } catch (\Throwable $e) {
+            return null;
+        }
+        return $end > new \DateTimeImmutable('now') ? $end->format(DATE_ATOM) : null;
+    }
+
+    /** Live spots per cohort from the founding_*_program counters. */
+    private function foundingPrograms(): array
     {
         $helpers = [
             'buyer'    => \App\Helpers\FoundingBuyerHelper::class,
@@ -388,7 +424,7 @@ class PageController
             }
             $programs[$role] = ['total' => $total, 'remaining' => max(0, min($remaining, $total))];
         }
-        view('pages/founding', ['programs' => $programs]);
+        return $programs;
     }
 
     /**

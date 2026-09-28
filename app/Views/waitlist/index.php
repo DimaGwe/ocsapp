@@ -83,6 +83,9 @@ $rolePlural = [
     .wl-card{position:relative;z-index:1;background:#fff;border:1px solid rgba(229,231,228,.95);border-radius:22px;padding:38px;max-width:680px;margin:0 auto;text-align:left;box-shadow:0 24px 64px rgba(0,0,0,.22)}
     .wl-card h2{font-family:'Poppins',sans-serif;font-size:1.4rem;font-weight:700;color:var(--ocs-text);margin-bottom:8px;text-align:center}
     .wl-card .wl-sub{font-size:.9rem;color:var(--ocs-muted);margin-bottom:28px;text-align:center}
+    .wl-founding{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px 10px;margin:-12px 0 24px;padding:10px 14px;border-radius:12px;background:rgba(var(--ocs-green-rgb),.08);color:#166534;font-size:13px;text-align:center}
+    .wl-founding[hidden]{display:none}
+    .wl-founding a{color:var(--ocs-green);font-weight:600}
     .wl-form-group{margin-bottom:18px}
     .wl-form-group label{display:block;font-size:.85rem;font-weight:600;color:#374151;margin-bottom:6px}
     .wl-form-group input,.wl-form-group select,.wl-form-group textarea{width:100%;padding:12px 14px;border:1.5px solid var(--ocs-border);border-radius:11px;font:14px 'Inter',sans-serif;color:#111;background:#FBFCFB;outline:none;transition:border-color .2s,background .2s,box-shadow .2s}
@@ -96,10 +99,17 @@ $rolePlural = [
     .wl-consent-row{display:flex;gap:10px;align-items:flex-start;margin:20px 0 4px}
     .wl-consent-row input{width:auto;margin-top:3px;accent-color:var(--ocs-green)}
     .wl-consent-row label{margin:0;font-size:.79rem;line-height:1.5;color:#4b5563;font-weight:400}
+    .wl-consent-row label strong{color:#142017;font-weight:600}
+    .wl-wall-consent[hidden],.wl-wall-more[hidden]{display:none}
+    .wl-wall-more{margin:6px 0 4px 26px;font-size:.76rem;color:#4b5563}
+    .wl-wall-more summary{cursor:pointer;color:var(--ocs-green);font-weight:600}
+    .wl-wall-more ul{margin:8px 0 0;padding-left:18px;line-height:1.55}
+    .wl-wall-more li{margin-bottom:4px}
     .wl-btn-submit{width:100%;padding:14px;background:var(--ocs-green);color:#fff;font:700 1rem 'Poppins',sans-serif;border:none;border-radius:12px;cursor:pointer;transition:background .2s;margin-top:8px;box-shadow:0 12px 28px rgba(0,178,7,.22)}
     .wl-btn-submit:hover{background:var(--ocs-green-dark)}
     .wl-btn-submit:disabled{opacity:.6;cursor:not-allowed}
-    .wl-privacy{font-size:.78rem;color:var(--ocs-muted);text-align:center;margin-top:14px}
+    /* .wl-card prefix: the form sits inside .wl-hero, whose white `.wl-hero p` rule otherwise wins */
+    .wl-card .wl-privacy{font-size:.78rem;color:var(--ocs-muted);text-align:center;margin-top:14px}
     #form-error{display:none;color:#dc2626;font-size:.85rem;margin-top:10px;text-align:center}
 
     /* Success state */
@@ -251,6 +261,21 @@ $rolePlural = [
     <div class="wl-card">
       <h2><?= $fr ? 'Réservez votre place' : 'Reserve your spot' ?></h2>
       <p class="wl-sub"><?= $fr ? 'Quelques renseignements nous aideront à mieux préparer votre accès OCSAPP.' : 'A few details will help us better prepare your OCSAPP access.' ?></p>
+      <?php
+      // Arrived from /founding with a program picked (?role=seller etc.); hidden by JS if the role is changed
+      $foundingNames = [
+          'buyer'    => ['Acheteur fondateur', 'Founding Buyer'],
+          'seller'   => ['Vendeur fondateur', 'Founding Seller'],
+          'supplier' => ['Fournisseur fondateur', 'Founding Supplier'],
+          'driver'   => ['Livreur fondateur', 'Founding Driver'],
+          'business' => ['Entreprise fondatrice', 'Founding Business'],
+      ];
+      if (isset($foundingNames[$myRole])): ?>
+      <div class="wl-founding" id="wl-founding" data-role="<?= $myRole ?>">
+        <span><?= $fr ? 'Programme choisi :' : 'Program selected:' ?> <strong><?= $foundingNames[$myRole][$fr ? 0 : 1] ?></strong></span>
+        <a href="<?= url('founding') ?>"><?= $fr ? 'Changer' : 'Change' ?></a>
+      </div>
+      <?php endif; ?>
 
       <form id="waitlist-form" novalidate>
         <input type="hidden" name="<?= htmlspecialchars(env('CSRF_TOKEN_NAME', '_csrf_token')) ?>" value="<?= htmlspecialchars(csrfToken()) ?>">
@@ -415,6 +440,36 @@ $rolePlural = [
             : 'I agree to receive news, launch updates and promotional communications from OCSAPP. I can withdraw my consent at any time.' ?></label>
         </div>
 
+        <?php
+        // Founders' Wall consent: its own unchecked box, separate from marketing (Law 25 s. 9.1 and s. 14,
+        // CAI guidelines 2023-1). Wording lives in FoundersWallHelper::consentText() (versioned in the log).
+        [$wallTitle, $wallBody] = \App\Helpers\FoundersWallHelper::consentText($fr);
+        ?>
+        <div class="wl-consent-row wl-wall-consent" id="wall-consent-row">
+          <input type="checkbox" id="wall-consent" name="wall_consent" value="yes">
+          <label for="wall-consent"><strong><?= htmlspecialchars($wallTitle) ?></strong> <?= htmlspecialchars($wallBody) ?></label>
+        </div>
+        <details class="wl-wall-more">
+          <summary><?= $fr ? 'En savoir plus sur le Mur des fondateurs' : "Learn more about the Founders' Wall" ?></summary>
+          <ul>
+            <li><?= $fr
+              ? "Le Mur des fondateurs est une section publique de la page Programmes fondateurs d'OCSAPP, visible par tous les visiteurs du site."
+              : "The Founders' Wall is a public section of OCSAPP's Founding programs page, visible to every visitor of the site." ?></li>
+            <li><?= $fr
+              ? "Votre nom n'y apparaît que si vous devenez réellement membre fondateur (statut accordé à l'approbation de votre compte ou à votre première commande admissible) et que vous avez coché cette case."
+              : 'Your name only appears if you actually become a founding member (status granted when your account is approved or at your first eligible order) and you ticked this box.' ?></li>
+            <li><?= $fr
+              ? "Ce qui est affiché : votre prénom et l'initiale de votre nom (ou le nom de votre entreprise pour les vendeurs, fournisseurs et entreprises), votre ville, votre programme fondateur et votre numéro de fondateur. Jamais votre courriel ni votre téléphone."
+              : 'What is shown: your first name and last initial (or your business name for sellers, suppliers and businesses), your city, your founding program and your founder number. Never your email or phone.' ?></li>
+            <li><?= $fr
+              ? "Vous pouvez modifier ou retirer votre choix en tout temps grâce au lien inclus dans le courriel qui confirme votre statut fondateur, ou en écrivant à privacy@ocsapp.ca. Votre nom est retiré du mur immédiatement."
+              : 'You can change or withdraw your choice at any time with the link in the email confirming your founding status, or by writing to privacy@ocsapp.ca. Your name is removed from the wall immediately.' ?></li>
+            <li><?= $fr
+              ? "Si vous ne cochez pas la case, rien ne change pour votre inscription ni pour vos avantages fondateurs."
+              : 'If you leave the box unchecked, nothing changes for your sign-up or your founding perks.' ?></li>
+          </ul>
+        </details>
+
         <button type="submit" class="wl-btn-submit" id="submit-btn">
           <?= $fr ? "Rejoindre la liste d'attente" : 'Join the waitlist' ?>
         </button>
@@ -562,6 +617,15 @@ document.querySelectorAll('[data-auto-dismiss]').forEach(function(el) {
       group.classList.toggle('active', active);
       group.querySelectorAll('input,select,textarea').forEach(function(el) { el.disabled = !active; });
     });
+    const founding = document.getElementById('wl-founding');
+    if (founding) { founding.hidden = founding.dataset.role !== value; }
+    const wallRow = document.getElementById('wall-consent-row');
+    if (wallRow) {
+      const noProgram = value === 'partner';
+      wallRow.hidden = noProgram;
+      wallRow.nextElementSibling.hidden = noProgram;
+      if (noProgram) { document.getElementById('wall-consent').checked = false; }
+    }
   }
   if (role) { role.addEventListener('change', syncRoleFields); syncRoleFields(); }
 

@@ -181,6 +181,8 @@ return [
     'GET /waitlist'  => ['WaitlistController', 'index'],
     'GET /liste-attente'  => ['WaitlistController', 'index'],
     'GET /waitlist/unsubscribe' => ['WaitlistController', 'unsubscribe'],
+    'GET /founders-wall/preferences'  => ['WaitlistController', 'wallPreferences'],     // Founders' Wall consent, token link
+    'POST /founders-wall/preferences' => ['WaitlistController', 'saveWallPreferences'],
     'POST /waitlist' => ['WaitlistController', 'store'],
     'POST /liste-attente' => ['WaitlistController', 'store'],
 

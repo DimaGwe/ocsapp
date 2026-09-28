@@ -20,7 +20,7 @@ $t = getTranslations($currentLang);
         ? 'Plateforme en cours de développement. Certaines fonctionnalités ne sont pas encore disponibles.'
         : 'Platform under development. Some features are not yet available.'
     ?></span>
-    <a href="<?= url('waitlist') ?>"><?= $currentLang === 'fr' ? "Rejoindre la liste d'attente" : 'Join the waitlist' ?></a>
+    <a href="<?= url('founding') ?>"><?= $currentLang === 'fr' ? 'Devenir fondateur' : 'Become a founder' ?></a>
 </div>
 <?php else: ?>
 <!-- Persistent Beta Banner -->
