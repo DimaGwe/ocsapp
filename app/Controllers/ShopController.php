@@ -43,7 +43,10 @@ class ShopController
                         COUNT(*) as total_orders,
                         SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_orders,
                         SUM(CASE WHEN DATE(created_at) = CURDATE() THEN 1 ELSE 0 END) as today_orders,
-                        SUM(CASE WHEN status IN ('completed','delivered') THEN total ELSE 0 END) as total_revenue
+                        -- Paid sales: product subtotal of paid, not cancelled/refunded orders (taxes and
+                        -- delivery are not the seller's). Was delivered-only totals, so it read $0 for
+                        -- every paid order still in progress and disagreed with the Orders page.
+                        SUM(CASE WHEN payment_status = 'paid' AND status NOT IN ('cancelled','refunded') THEN subtotal ELSE 0 END) as total_revenue
                     FROM orders
                     WHERE shop_id = ?
                 ");
@@ -93,7 +96,7 @@ class ShopController
         $shop = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         if (!$shop) {
-            setFlash('error', 'No shop found');
+            setFlash('error', lang_pick('Aucun commerce trouvé.', 'No shop found'));
             redirect(url('seller/shop/create'));
             return;
         }
@@ -125,8 +128,10 @@ class ShopController
                 $stmt = $this->db->prepare("
                     SELECT
                         COUNT(*) AS total_orders,
-                        SUM(total) AS all_orders_total,
-                        SUM(CASE WHEN status = 'delivered' THEN total ELSE 0 END) AS total_revenue,
+                        -- Paid sales (product subtotal of paid, non-cancelled orders): same definition
+                        -- as the dashboard and orders page. Was delivered-only order totals.
+                        SUM(CASE WHEN payment_status = 'paid' AND status NOT IN ('cancelled','refunded') THEN subtotal ELSE 0 END) AS total_revenue,
+                        SUM(CASE WHEN payment_status = 'paid' AND status NOT IN ('cancelled','refunded') THEN 1 ELSE 0 END) AS paid_orders,
                         SUM(CASE WHEN status = 'delivered' THEN 1 ELSE 0 END) AS completed_orders
                     FROM orders
                     WHERE shop_id = ? AND DATE(created_at) BETWEEN ? AND ?
@@ -141,9 +146,8 @@ class ShopController
             $summary['total_orders']      = (int) ($current['total_orders'] ?? 0);
             $summary['completed_orders']  = (int) ($current['completed_orders'] ?? 0);
             $summary['total_revenue']     = (float) ($current['total_revenue'] ?? 0);
-            $summary['avg_order_value']   = $summary['total_orders'] > 0
-                ? (float) ($current['all_orders_total'] ?? 0) / $summary['total_orders']
-                : 0;
+            $paidOrders = (int) ($current['paid_orders'] ?? 0);
+            $summary['avg_order_value']   = $paidOrders > 0 ? $summary['total_revenue'] / $paidOrders : 0;
 
             $prevRevenue = (float) ($previous['total_revenue'] ?? 0);
             $prevOrders  = (int) ($previous['total_orders'] ?? 0);
@@ -173,6 +177,7 @@ class ShopController
                 FROM order_items oi
                 INNER JOIN orders o ON o.id = oi.order_id
                 WHERE o.shop_id = ? AND DATE(o.created_at) BETWEEN ? AND ?
+                  AND o.payment_status = 'paid' AND o.status NOT IN ('cancelled','refunded')
                 GROUP BY oi.product_id, oi.product_name, oi.sku
                 ORDER BY total_revenue DESC
                 LIMIT 5
@@ -210,7 +215,9 @@ class ShopController
 
             // Daily chart series (zero-filled for days with no orders)
             $stmt = $this->db->prepare("
-                SELECT DATE(created_at) AS d, SUM(total) AS rev, COUNT(*) AS cnt
+                SELECT DATE(created_at) AS d,
+                       SUM(CASE WHEN payment_status = 'paid' AND status NOT IN ('cancelled','refunded') THEN subtotal ELSE 0 END) AS rev,
+                       COUNT(*) AS cnt
                 FROM orders
                 WHERE shop_id = ? AND DATE(created_at) BETWEEN ? AND ?
                 GROUP BY DATE(created_at)
@@ -225,7 +232,9 @@ class ShopController
             $endTs  = strtotime($endDate);
             while ($cursor <= $endTs) {
                 $d = date('Y-m-d', $cursor);
-                $chartLabels[]  = date('M j', $cursor);
+                $chartLabels[]  = ($_SESSION['language'] ?? 'fr') === 'fr'
+                    ? date('j', $cursor) . ' ' . ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juill.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'][(int) date('n', $cursor) - 1]
+                    : date('M j', $cursor);
                 $chartRevenue[] = (float) ($byDay[$d]['rev'] ?? 0);
                 $chartOrders[]  = (int) ($byDay[$d]['cnt'] ?? 0);
                 $cursor = strtotime('+1 day', $cursor);
@@ -283,7 +292,7 @@ class ShopController
         }
 
         if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token'), ''))) {
-            setFlash('error', 'Invalid security token. Please try again.');
+            setFlash('error', lang_pick('Jeton de sécurité invalide. Veuillez réessayer.', 'Invalid security token. Please try again.'));
             redirect(url('seller/shop/create'));
             return;
         }
@@ -294,7 +303,7 @@ class ShopController
         $address = sanitize(post('address', ''));
 
         if (empty($name)) {
-            setFlash('error', 'Shop name is required');
+            setFlash('error', lang_pick('Le nom du commerce est requis.', 'Shop name is required'));
             redirect(url('seller/shop/create'));
             return;
         }
@@ -307,11 +316,11 @@ class ShopController
             ");
             $stmt->execute([userId(), $name, $slug, $description, $phone, $address]);
 
-            setFlash('success', 'Shop application submitted. Pending admin approval.');
+            setFlash('success', lang_pick('Demande de commerce envoyée. En attente d\'approbation par l\'équipe OCSAPP.', 'Shop application submitted. Pending admin approval.'));
             redirect(url('seller/dashboard'));
         } catch (\PDOException $e) {
             logger("ShopController store error: " . $e->getMessage(), 'error');
-            setFlash('error', 'Failed to create shop');
+            setFlash('error', lang_pick('Le commerce n\'a pas pu être créé.', 'Failed to create shop'));
             redirect(url('seller/shop/create'));
         }
     }
@@ -331,7 +340,7 @@ class ShopController
         $shop = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         if (!$shop) {
-            setFlash('error', 'No shop found');
+            setFlash('error', lang_pick('Aucun commerce trouvé.', 'No shop found'));
             redirect(url('seller/shop/create'));
             return;
         }
@@ -350,7 +359,7 @@ class ShopController
         }
 
         if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token'), ''))) {
-            setFlash('error', 'Invalid security token. Please try again.');
+            setFlash('error', lang_pick('Jeton de sécurité invalide. Veuillez réessayer.', 'Invalid security token. Please try again.'));
             redirect(url('seller/shop/settings'));
             return;
         }
@@ -360,7 +369,7 @@ class ShopController
         $shop = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         if (!$shop) {
-            setFlash('error', 'No shop found');
+            setFlash('error', lang_pick('Aucun commerce trouvé.', 'No shop found'));
             redirect(url('seller/dashboard'));
             return;
         }
@@ -415,10 +424,10 @@ class ShopController
             ");
             $stmt->execute([$name, $description, $phone, $email, $address, $logo, $coverImage, $shop['id'], userId()]);
 
-            setFlash('success', 'Shop settings updated successfully');
+            setFlash('success', lang_pick('Paramètres du commerce mis à jour.', 'Shop settings updated successfully'));
         } catch (\PDOException $e) {
             logger("ShopController update error: " . $e->getMessage(), 'error');
-            setFlash('error', 'Failed to update shop');
+            setFlash('error', lang_pick('Le commerce n\'a pas pu être mis à jour.', 'Failed to update shop'));
         }
 
         redirect(url('seller/shop/settings'));
@@ -441,7 +450,7 @@ class ShopController
         $shop = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         if (!$shop) {
-            setFlash('error', 'No shop found');
+            setFlash('error', lang_pick('Aucun commerce trouvé.', 'No shop found'));
             redirect(url('seller/shop/create'));
             return;
         }
@@ -484,7 +493,7 @@ class ShopController
 
         $token = post(env('CSRF_TOKEN_NAME', '_csrf_token'), '');
         if (!verifyCsrfToken($token)) {
-            setFlash('error', 'Invalid security token. Please try again.');
+            setFlash('error', lang_pick('Jeton de sécurité invalide. Veuillez réessayer.', 'Invalid security token. Please try again.'));
             redirect(url('seller/shop/settings'));
             return;
         }
@@ -495,19 +504,19 @@ class ShopController
         $confirmPassword = post('confirm_password', '');
 
         if (empty($currentPassword) || empty($newPassword)) {
-            setFlash('error', 'Current and new password are required.');
+            setFlash('error', lang_pick('Le mot de passe actuel et le nouveau sont requis.', 'Current and new password are required.'));
             redirect(url('seller/shop/settings'));
             return;
         }
 
         if (strlen($newPassword) < 8) {
-            setFlash('error', 'New password must be at least 8 characters.');
+            setFlash('error', lang_pick('Le nouveau mot de passe doit contenir au moins 8 caractères.', 'New password must be at least 8 characters.'));
             redirect(url('seller/shop/settings'));
             return;
         }
 
         if ($newPassword !== $confirmPassword) {
-            setFlash('error', 'New password and confirmation do not match.');
+            setFlash('error', lang_pick('Le nouveau mot de passe et sa confirmation ne correspondent pas.', 'New password and confirmation do not match.'));
             redirect(url('seller/shop/settings'));
             return;
         }
@@ -517,7 +526,7 @@ class ShopController
         $user = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         if (!$user || !password_verify($currentPassword, $user['password'])) {
-            setFlash('error', 'Current password is incorrect.');
+            setFlash('error', lang_pick('Le mot de passe actuel est incorrect.', 'Current password is incorrect.'));
             redirect(url('seller/shop/settings'));
             return;
         }
@@ -525,7 +534,7 @@ class ShopController
         $stmt = $this->db->prepare("UPDATE users SET password = ? WHERE id = ?");
         $stmt->execute([password_hash($newPassword, PASSWORD_BCRYPT), $userId]);
 
-        setFlash('success', 'Password updated successfully.');
+        setFlash('success', lang_pick('Mot de passe mis à jour.', 'Password updated successfully.'));
         redirect(url('seller/shop/settings'));
     }
 }

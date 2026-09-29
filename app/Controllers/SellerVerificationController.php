@@ -36,6 +36,12 @@ class SellerVerificationController
             return;
         }
 
+        if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
+            setFlash('error', ($_SESSION['language'] ?? 'fr') === 'fr' ? 'Requête invalide. Veuillez réessayer.' : 'Invalid request. Please try again.');
+            redirect(url('seller/verification'));
+            return;
+        }
+
         try {
             $userId = userId();
 
@@ -44,7 +50,7 @@ class SellerVerificationController
             $businessAddress = trim(post('business_address'));
 
             if (empty($businessName) || empty($businessAddress)) {
-                setFlash('error', 'Business name and address are required.');
+                setFlash('error', lang_pick('Le nom et l\'adresse de l\'entreprise sont requis.', 'Business name and address are required.'));
                 back();
                 return;
             }
@@ -114,7 +120,7 @@ class SellerVerificationController
 
             // Require at least one document
             if (empty($allDocuments)) {
-                setFlash('error', 'Please upload at least one verification document.');
+                setFlash('error', lang_pick('Veuillez téléverser au moins un document de vérification.', 'Please upload at least one verification document.'));
                 back();
                 return;
             }
@@ -160,7 +166,7 @@ class SellerVerificationController
 
         } catch (\PDOException $e) {
             logger("Verification submission error: " . $e->getMessage(), 'error');
-            setFlash('error', 'An error occurred. Please try again.');
+            setFlash('error', lang_pick('Une erreur est survenue. Veuillez réessayer.', 'An error occurred. Please try again.'));
             back();
         }
     }

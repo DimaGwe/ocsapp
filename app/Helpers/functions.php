@@ -1376,3 +1376,13 @@ function calculateB2BAdditionalStopFee(?string $zoneCode, int $stopCount): array
         'additional_stops' => $additionalStops,
     ];
 }
+
+if (!function_exists('lang_pick')) {
+    /**
+     * Pick the French or English text for the session language (fr-CA default, like init.php).
+     * For short controller messages (flashes, JSON errors) that have no translation-table key.
+     */
+    function lang_pick(string $fr, string $en): string {
+        return ($_SESSION['language'] ?? 'fr') === 'fr' ? $fr : $en;
+    }
+}

@@ -23,6 +23,13 @@ class SellerNotificationsController
         }
 
         $this->sellerId = userId();
+
+        // State-changing calls need the CSRF header the portal layout sends (they had no check)
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && !verifyCsrfToken($_SERVER['HTTP_X_CSRF_TOKEN'] ?? null)) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Invalid CSRF token']);
+            exit;
+        }
     }
 
     /**

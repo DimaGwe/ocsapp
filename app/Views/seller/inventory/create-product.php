@@ -1,67 +1,37 @@
 <?php
+/**
+ * Create a new product and add it to the seller's inventory (/seller/inventory/create-product)
+ * Updated 2026-09-28: seller-portal.css kit, bilingual EN/FR. Same form fields.
+ * NOTE: no product photo upload exists yet (InventoryController::storeProduct handles no files).
+ */
 $shop       = $shop ?? null;
 $categories = $categories ?? [];
-$pageTitle = 'Inventory';
+$pageTitle = 'Create Product';
 require __DIR__ . '/../layout-header.php';
 ?>
-
-<style>
-  .form-card { max-width:680px; background:#fff; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.1); padding:32px; }
-  .form-card h2 { font-size:18px; font-weight:700; color:var(--gray-700); margin-bottom:6px; }
-  .form-card p.sub { color:var(--gray-600); font-size:13px; margin-bottom:24px; }
-  label { display:block; font-size:13px; font-weight:600; color:var(--gray-700); margin-bottom:6px; }
-  input, select, textarea { width:100%; padding:10px 14px; border:1px solid var(--gray-200); border-radius:8px; font-size:14px; font-family:inherit; box-sizing:border-box; margin-bottom:18px; }
-  textarea { resize:vertical; min-height:90px; }
-  input:focus, select:focus, textarea:focus { outline:none; border-color:var(--primary); }
-  .row-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-  .btn-green { background:var(--primary); color:#fff; border:none; padding:12px 24px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; width:100%; margin-top:8px; }
-</style>
-
-<div class="form-card">
-    <h2>Create New Product</h2>
-    <p class="sub">The product will be added to your inventory automatically.</p>
-
-    <form method="POST" action="<?= url('seller/inventory/store-product') ?>">
-        <input type="hidden" name="<?= env('CSRF_TOKEN_NAME','_csrf_token') ?>" value="<?= generateCsrfToken() ?>">
-
-        <label for="name">Product Name <span style="color:var(--danger);">*</span></label>
-        <input type="text" name="name" id="name" placeholder="e.g. Organic Whole Milk 2L" required maxlength="200">
-
-        <label for="category_id">Category <span style="color:var(--danger);">*</span></label>
-        <select name="category_id" id="category_id" required>
-            <option value="">— Select category —</option>
-            <?php foreach ($categories as $cat): ?>
-                <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['name']) ?></option>
-            <?php endforeach; ?>
-        </select>
-
-        <label for="description">Description</label>
-        <textarea name="description" id="description" placeholder="Product details, ingredients, size, etc."></textarea>
-
-        <div class="row-2">
-            <div>
-                <label for="price">Selling Price (CAD) <span style="color:var(--danger);">*</span></label>
-                <input type="number" name="price" id="price" min="0.01" step="0.01" placeholder="9.99" required>
-            </div>
-            <div>
-                <label for="stock_quantity">Initial Stock Qty</label>
-                <input type="number" name="stock_quantity" id="stock_quantity" min="0" value="0">
-            </div>
-        </div>
-
-        <div class="row-2">
-            <div>
-                <label for="sku">SKU (optional)</label>
-                <input type="text" name="sku" id="sku" placeholder="e.g. MLK-ORG-2L" maxlength="100">
-            </div>
-            <div>
-                <label for="weight">Weight per unit (kg)</label>
-                <input type="number" name="weight" id="weight" min="0.01" step="0.01" placeholder="e.g. 2.0" required>
-            </div>
-        </div>
-
-        <button type="submit" class="btn-green"><i class="fa fa-plus"></i> Create Product &amp; Add to Inventory</button>
-    </form>
-</div>
-
+<section class="sp-card" style="max-width:760px">
+  <div class="sp-card-head"><h2><?= $fr ? 'Créer un produit' : 'Create a product' ?></h2>
+    <a href="<?= url('seller/inventory') ?>"><i class="fa-solid fa-arrow-left"></i> <?= $fr ? 'Inventaire' : 'Inventory' ?></a></div>
+  <p class="sp-muted" style="margin:-6px 0 18px"><?= $fr ? 'Le produit est ajouté automatiquement à votre inventaire.' : 'The product is added to your inventory automatically.' ?></p>
+  <form class="sp-form" method="POST" action="<?= url('seller/inventory/store-product') ?>">
+    <input type="hidden" name="<?= htmlspecialchars(env('CSRF_TOKEN_NAME', '_csrf_token')) ?>" value="<?= generateCsrfToken() ?>">
+    <label><?= $fr ? 'Nom du produit' : 'Product name' ?> *<input type="text" name="name" required maxlength="200" placeholder="<?= $fr ? 'ex. Lait biologique 2 L' : 'e.g. Organic whole milk 2L' ?>"></label>
+    <label><?= $fr ? 'Catégorie' : 'Category' ?> *
+      <select name="category_id" required>
+        <option value=""><?= $fr ? 'Choisir une catégorie' : 'Select a category' ?></option>
+        <?php foreach ($categories as $cat): ?><option value="<?= (int) $cat['id'] ?>"><?= htmlspecialchars(html_entity_decode((string) $cat['name'], ENT_QUOTES | ENT_HTML5, 'UTF-8')) ?></option><?php endforeach; ?>
+      </select></label>
+    <label><?= $fr ? 'Description' : 'Description' ?><textarea name="description" placeholder="<?= $fr ? 'Détails, ingrédients, format, etc.' : 'Details, ingredients, size, etc.' ?>"></textarea></label>
+    <div class="sp-form-row">
+      <label><?= $fr ? 'Prix de vente ($ CA)' : 'Selling price (CAD)' ?> *<input type="number" name="price" min="0.01" step="0.01" placeholder="9,99" required></label>
+      <label><?= $fr ? 'Stock initial' : 'Initial stock' ?><input type="number" name="stock_quantity" min="0" value="0"></label>
+    </div>
+    <div class="sp-form-row">
+      <label><?= $fr ? 'SKU (facultatif)' : 'SKU (optional)' ?><input type="text" name="sku" maxlength="100" placeholder="<?= $fr ? 'ex. LAIT-BIO-2L' : 'e.g. MLK-ORG-2L' ?>"></label>
+      <label><?= $fr ? 'Poids par unité (kg)' : 'Weight per unit (kg)' ?> *<input type="number" name="weight" min="0.01" step="0.01" placeholder="2" required>
+        <small><?= $fr ? 'Sert au calcul des frais de livraison surdimensionnée.' : 'Used to calculate oversize delivery fees.' ?></small></label>
+    </div>
+    <div><button type="submit" class="sp-btn sp-btn-primary"><i class="fa-solid fa-plus"></i> <?= $fr ? "Créer et ajouter à l'inventaire" : 'Create and add to inventory' ?></button></div>
+  </form>
+</section>
 <?php require __DIR__ . '/../layout-footer.php'; ?>

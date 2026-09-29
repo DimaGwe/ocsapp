@@ -1,179 +1,110 @@
 <?php
+/**
+ * Seller shop settings (/seller/shop/settings, ShopController::settings)
+ * Updated 2026-09-28: seller-portal.css kit, bilingual EN/FR. Same three forms and field names.
+ * Fixes: text fields showed the stored HTML-escaped value, so each save escaped it again
+ * ("L'Épicerie" -> "L&amp;#039;..."); images used asset() on "assets/..." paths (404).
+ */
 $shop = $shop ?? [];
 $pageTitle = 'Shop Settings';
 require __DIR__ . '/layout-header.php';
+$v = fn($k) => htmlspecialchars(html_entity_decode((string) ($shop[$k] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+$img = fn($p) => !empty($p) ? htmlspecialchars(url(ltrim($p, '/'))) : '';
 ?>
-
 <style>
-  .card { background: #fff; border-radius: 12px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; max-width: 720px; }
-  .card h2 { font-size: 16px; font-weight: 700; color: var(--gray-700); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--gray-100); }
-  .form-group { margin-bottom: 18px; }
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: var(--gray-700); }
-  input, textarea, select { width: 100%; padding: 11px 14px; border: 1px solid var(--gray-200); border-radius: 8px; font-size: 14px; font-family: inherit; box-sizing: border-box; }
-  input:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,178,7,.1); }
-  textarea { height: 100px; resize: vertical; }
-  .btn { padding: 12px 28px; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
-  .btn:hover { background: var(--primary-600); }
-  /* Image upload */
-  .image-upload-box { border: 2px dashed var(--gray-200); border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; transition: border-color .2s; position: relative; }
-  .image-upload-box:hover { border-color: var(--primary); }
-  .image-upload-box input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-  .image-preview { width: 100%; max-height: 160px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; display: block; }
-  .image-preview-logo { width: 80px; height: 80px; object-fit: cover; border-radius: 10px; margin: 0 auto 8px; display: block; }
-  .upload-hint { font-size: 12px; color: var(--gray-400); }
-  /* Toggle switch (notifications & sound) */
-  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; }
-  .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
-  .toggle-switch input { opacity: 0; width: 0; height: 0; }
-  .toggle-slider { position: absolute; cursor: pointer; inset: 0; background-color: var(--gray-300); border-radius: 24px; transition: .2s; }
-  .toggle-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: .2s; }
-  .toggle-switch input:checked + .toggle-slider { background-color: var(--primary); }
-  .toggle-switch input:checked + .toggle-slider:before { transform: translateX(20px); }
-  @media (max-width: 768px) { .form-row { grid-template-columns: 1fr; } }
+  .sp-upload{position:relative;display:grid;place-items:center;gap:6px;min-height:150px;border:1.5px dashed var(--sp-border);border-radius:14px;background:#FAFBFA;text-align:center;padding:16px;cursor:pointer}
+  .sp-upload:hover{border-color:var(--sp-green)}
+  .sp-upload input{position:absolute;inset:0;opacity:0;cursor:pointer}
+  .sp-upload img{max-width:100%;max-height:120px;border-radius:10px;object-fit:cover}
+  .sp-upload .logo{width:96px;height:96px;border-radius:50%}
+  .sp-upload > i{font-size:28px;color:#C9CFCA}
 </style>
-
-<!-- Shop Status -->
-<div style="padding:12px 16px;background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.1);margin-bottom:16px;font-size:13px;display:flex;align-items:center;gap:8px;max-width:720px;">
-    <strong>Shop Status:</strong>
-    <?php if ($shop['is_active']): ?>
-        <span style="color:#166534;font-weight:600;"><i class="fas fa-circle" style="font-size:8px;"></i> Active</span>
-    <?php elseif ($shop['is_approved']): ?>
-        <span style="color:var(--gray-600);">Inactive — contact admin to reactivate</span>
+<div class="sp-stack" style="max-width:820px">
+  <section class="sp-card sp-between" style="padding:14px 18px">
+    <span class="sp-strong"><?= $fr ? 'Statut du commerce' : 'Shop status' ?></span>
+    <?php if (!empty($shop['is_active'])): ?>
+      <span class="sp-badge sp-badge-active"><i class="fa-solid fa-circle" style="font-size:7px"></i> <?= $fr ? 'Actif' : 'Active' ?></span>
+    <?php elseif (!empty($shop['is_approved'])): ?>
+      <span class="sp-badge"><?= $fr ? "Inactif : contactez l'équipe OCSAPP pour le réactiver" : 'Inactive: contact the OCSAPP team to reactivate' ?></span>
     <?php else: ?>
-        <span style="color:#e65100;font-weight:600;"><i class="fas fa-clock" style="font-size:8px;"></i> Pending Approval</span>
+      <span class="sp-badge sp-badge-warn"><i class="fa-solid fa-clock"></i> <?= $fr ? "En attente d'approbation" : 'Pending approval' ?></span>
     <?php endif; ?>
-</div>
+  </section>
 
-<form method="POST" action="<?= url('seller/shop/update') ?>" enctype="multipart/form-data">
+  <form method="POST" action="<?= url('seller/shop/update') ?>" enctype="multipart/form-data" class="sp-stack">
     <?= csrfField() ?>
+    <section class="sp-card">
+      <div class="sp-card-head"><h2><?= $fr ? 'Images du commerce' : 'Shop images' ?></h2></div>
+      <div class="sp-grid-2">
+        <label class="sp-field"><?= $fr ? 'Logo' : 'Logo' ?>
+          <span class="sp-upload">
+            <input type="file" name="logo" accept="image/jpeg,image/png,image/webp" data-preview="logo-preview">
+            <img id="logo-preview" class="logo" src="<?= $img($shop['logo'] ?? '') ?>" alt="" <?= empty($shop['logo']) ? 'hidden' : '' ?>>
+            <?php if (empty($shop['logo'])): ?><i class="fa-solid fa-store"></i><?php endif; ?>
+            <span class="sp-dim"><?= $fr ? 'Cliquez pour téléverser. JPG, PNG ou WebP, 5 Mo max.' : 'Click to upload. JPG, PNG or WebP, 5 MB max.' ?></span>
+          </span></label>
+        <label class="sp-field"><?= $fr ? 'Bannière' : 'Banner' ?>
+          <span class="sp-upload">
+            <input type="file" name="cover_image" accept="image/jpeg,image/png,image/webp" data-preview="cover-preview">
+            <img id="cover-preview" src="<?= $img($shop['cover_image'] ?? '') ?>" alt="" <?= empty($shop['cover_image']) ? 'hidden' : '' ?>>
+            <?php if (empty($shop['cover_image'])): ?><i class="fa-solid fa-panorama"></i><?php endif; ?>
+            <span class="sp-dim"><?= $fr ? 'Format recommandé : 1200 x 300 px.' : 'Recommended: 1200 x 300 px.' ?></span>
+          </span></label>
+      </div>
+    </section>
 
-    <!-- Shop Images -->
-    <div class="card">
-        <h2><i class="fas fa-image" style="color:var(--primary);margin-right:6px;"></i>Shop Images</h2>
-        <div class="form-row">
-            <!-- Logo -->
-            <div class="form-group">
-                <label>Shop Logo</label>
-                <div class="image-upload-box" id="logo-box">
-                    <input type="file" name="logo" accept="image/*" onchange="previewImage(this,'logo-preview')">
-                    <?php if (!empty($shop['logo'])): ?>
-                        <img id="logo-preview" class="image-preview-logo" src="<?= asset($shop['logo']) ?>" alt="Logo">
-                    <?php else: ?>
-                        <img id="logo-preview" class="image-preview-logo" src="" alt="" style="display:none;">
-                        <i class="fas fa-store" style="font-size:32px;color:var(--gray-300);display:block;margin-bottom:6px;"></i>
-                    <?php endif; ?>
-                    <div class="upload-hint">Click to upload logo<br>JPG, PNG, WebP — max 5MB</div>
-                </div>
-            </div>
-            <!-- Banner -->
-            <div class="form-group">
-                <label>Shop Banner / Cover Image</label>
-                <div class="image-upload-box" id="cover-box">
-                    <input type="file" name="cover_image" accept="image/*" onchange="previewImage(this,'cover-preview')">
-                    <?php if (!empty($shop['cover_image'])): ?>
-                        <img id="cover-preview" class="image-preview" src="<?= asset($shop['cover_image']) ?>" alt="Banner">
-                    <?php else: ?>
-                        <img id="cover-preview" class="image-preview" src="" alt="" style="display:none;">
-                        <i class="fas fa-panorama" style="font-size:32px;color:var(--gray-300);display:block;margin-bottom:6px;"></i>
-                    <?php endif; ?>
-                    <div class="upload-hint">Click to upload banner<br>Recommended: 1200×300px</div>
-                </div>
-            </div>
+    <section class="sp-card">
+      <div class="sp-card-head"><h2><?= $fr ? 'Informations du commerce' : 'Shop information' ?></h2></div>
+      <div class="sp-form">
+        <label><?= $fr ? 'Nom du commerce' : 'Shop name' ?> *<input type="text" name="name" value="<?= $v('name') ?>" required></label>
+        <label><?= $fr ? 'Description' : 'Description' ?><textarea name="description"><?= $v('description') ?></textarea></label>
+        <div class="sp-form-row">
+          <label><?= $fr ? 'Téléphone' : 'Phone' ?><input type="tel" name="phone" value="<?= $v('phone') ?>"></label>
+          <label><?= $fr ? 'Courriel' : 'Email' ?><input type="email" name="email" value="<?= $v('email') ?>"></label>
         </div>
-    </div>
+        <label><?= $fr ? 'Adresse' : 'Address' ?><input type="text" name="address" value="<?= $v('address') ?>">
+          <small><?= $fr ? "Pour les commandes en ramassage, c'est l'adresse que voit le client." : 'For pickup orders, this is the address the customer sees.' ?></small></label>
+        <div><button type="submit" class="sp-btn sp-btn-primary"><i class="fa-solid fa-floppy-disk"></i> <?= $fr ? 'Enregistrer' : 'Save changes' ?></button></div>
+      </div>
+    </section>
+  </form>
 
-    <!-- Basic Info -->
-    <div class="card">
-        <h2><i class="fas fa-store" style="color:var(--primary);margin-right:6px;"></i>Shop Information</h2>
-        <div class="form-group">
-            <label>Shop Name *</label>
-            <input type="text" name="name" value="<?= htmlspecialchars($shop['name'] ?? '') ?>" required>
-        </div>
-        <div class="form-group">
-            <label>Description</label>
-            <textarea name="description"><?= htmlspecialchars($shop['description'] ?? '') ?></textarea>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label>Phone</label>
-                <input type="tel" name="phone" value="<?= htmlspecialchars($shop['phone'] ?? '') ?>">
-            </div>
-            <div class="form-group">
-                <label>Email</label>
-                <input type="email" name="email" value="<?= htmlspecialchars($shop['email'] ?? '') ?>">
-            </div>
-        </div>
-        <div class="form-group">
-            <label>Address</label>
-            <input type="text" name="address" value="<?= htmlspecialchars($shop['address'] ?? '') ?>">
-        </div>
+  <section class="sp-card">
+    <div class="sp-card-head"><h2><?= $fr ? 'Son des notifications' : 'Notification sound' ?></h2></div>
+    <label class="sp-between" style="cursor:pointer">
+      <span class="sp-muted"><?= $fr ? "Jouer un son à l'arrivée d'une notification ou d'un message." : 'Play a chime when a notification or message arrives.' ?></span>
+      <input type="checkbox" id="sellerSoundToggle" checked style="width:20px;height:20px;accent-color:var(--sp-green)">
+    </label>
+  </section>
 
-        <button type="submit" class="btn"><i class="fas fa-save"></i> Save Changes</button>
-    </div>
-</form>
-
-<!-- Notifications & Sound -->
-<div class="card">
-    <h2><i class="fas fa-bell" style="color:var(--primary);margin-right:6px;"></i>Notifications &amp; Sound</h2>
-    <div class="toggle-row">
-        <div>
-            <div style="font-weight:600;font-size:14px;color:var(--gray-700);">Notification sound</div>
-            <div style="font-size:13px;color:var(--gray-600);">Play a chime when a new notification or message arrives</div>
-        </div>
-        <label class="toggle-switch" title="Toggle notification sounds">
-            <input type="checkbox" id="sellerSoundToggle" checked>
-            <span class="toggle-slider"></span>
-        </label>
-    </div>
-</div>
-
-<!-- Change Password -->
-<div class="card">
-    <h2><i class="fas fa-lock" style="color:var(--primary);margin-right:6px;"></i>Change Password</h2>
-    <form method="POST" action="<?= url('seller/settings/password') ?>">
-        <?= csrfField() ?>
-        <div class="form-group">
-            <label>Current Password *</label>
-            <input type="password" name="current_password" required>
-        </div>
-        <div class="form-group">
-            <label>New Password *</label>
-            <input type="password" name="new_password" minlength="8" required>
-        </div>
-        <div class="form-group">
-            <label>Confirm New Password *</label>
-            <input type="password" name="confirm_password" minlength="8" required>
-        </div>
-        <button type="submit" class="btn"><i class="fas fa-key"></i> Update Password</button>
+  <section class="sp-card">
+    <div class="sp-card-head"><h2><?= $fr ? 'Mot de passe' : 'Password' ?></h2></div>
+    <form class="sp-form" method="POST" action="<?= url('seller/settings/password') ?>">
+      <?= csrfField() ?>
+      <label><?= $fr ? 'Mot de passe actuel' : 'Current password' ?> *<input type="password" name="current_password" required autocomplete="current-password"></label>
+      <div class="sp-form-row">
+        <label><?= $fr ? 'Nouveau mot de passe' : 'New password' ?> *<input type="password" name="new_password" minlength="8" required autocomplete="new-password"></label>
+        <label><?= $fr ? 'Confirmer' : 'Confirm' ?> *<input type="password" name="confirm_password" minlength="8" required autocomplete="new-password"></label>
+      </div>
+      <small class="sp-help"><?= $fr ? 'Au moins 8 caractères.' : 'At least 8 characters.' ?></small>
+      <div><button type="submit" class="sp-btn sp-btn-primary"><i class="fa-solid fa-key"></i> <?= $fr ? 'Mettre à jour le mot de passe' : 'Update password' ?></button></div>
     </form>
+  </section>
 </div>
-
 <script>
-function previewImage(input, previewId) {
-    var preview = document.getElementById(previewId);
-    if (input.files && input.files[0]) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-            var box = input.closest('.image-upload-box');
-            var icon = box.querySelector('i.fas:not(.fa-check)');
-            if (icon) icon.style.display = 'none';
-        };
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-
-// Notification sound toggle — client-side only, same pattern as the supplier portal
-(function() {
-    var toggle = document.getElementById('sellerSoundToggle');
-    if (!toggle) return;
-    toggle.checked = localStorage.getItem('sel_sound_enabled') !== 'off';
-    toggle.addEventListener('change', function() {
-        localStorage.setItem('sel_sound_enabled', toggle.checked ? 'on' : 'off');
-    });
+document.querySelectorAll('.sp-upload input[type=file]').forEach(function (input) {
+  input.addEventListener('change', function () {
+    var img = document.getElementById(input.dataset.preview);
+    if (!input.files || !input.files[0]) return;
+    var r = new FileReader();
+    r.onload = function (e) { img.src = e.target.result; img.hidden = false; var i = input.parentNode.querySelector(':scope > i'); if (i) i.hidden = true; };
+    r.readAsDataURL(input.files[0]);
+  });
+});
+(function () {
+  var t = document.getElementById('sellerSoundToggle');
+  try { t.checked = localStorage.getItem('sel_sound_enabled') !== 'off'; } catch (e) {}
+  t.addEventListener('change', function () { try { localStorage.setItem('sel_sound_enabled', t.checked ? 'on' : 'off'); } catch (e) {} });
 })();
 </script>
-
 <?php require __DIR__ . '/layout-footer.php'; ?>

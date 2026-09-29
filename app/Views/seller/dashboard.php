@@ -1,148 +1,103 @@
 <?php
-$cartCount = $cartCount ?? 0;
+/**
+ * Seller dashboard (/seller/dashboard, ShopController::dashboard)
+ * Updated 2026-09-28: seller-portal.css kit, bilingual EN/FR (was English), fr-CA money/dates,
+ * translated statuses; recent orders link to the new order detail. "Ventes payées" = product
+ * subtotal of paid, non-cancelled orders (controller).
+ */
 $shop = $shop ?? null;
 $stats = $stats ?? [];
 $recentOrders = $recentOrders ?? [];
 $pageTitle = 'Seller Dashboard';
 require __DIR__ . '/layout-header.php';
 ?>
-
-<style>
-  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
-  .stat-card { background: white; padding: 24px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-  .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; background: rgba(0,178,7,0.1); color: var(--primary); margin-bottom: 16px; }
-  .stat-value { font-size: 32px; font-weight: 700; color: var(--gray-700); }
-  .stat-label { font-size: 14px; color: var(--gray-600); margin-top: 4px; }
-
-  .card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 24px; margin-bottom: 24px; }
-  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-  .card-title { font-size: 18px; font-weight: 700; color: var(--gray-700); }
-  .btn-view-all { color: var(--primary); text-decoration: none; font-weight: 600; font-size: 14px; }
-
-  .order-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--gray-100); font-size: 14px; }
-  .order-row:last-child { border-bottom: none; }
-  .badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-  .badge-pending { background: #fff3e0; color: #e65100; }
-  .badge-confirmed, .badge-processing { background: #e3f2fd; color: #1565c0; }
-  .badge-completed, .badge-delivered { background: #dcfce7; color: #166534; }
-  .badge-cancelled { background: #fee2e2; color: #991b1b; }
-  .badge-ready { background: #ede9fe; color: #5b21b6; }
-
-  .empty-state { text-align: center; padding: 40px 20px; color: var(--gray-600); }
-  .empty-state i { font-size: 48px; margin-bottom: 16px; color: var(--gray-400); display: block; }
-
-  .no-shop { text-align: center; padding: 40px; }
-  .no-shop i { font-size: 56px; color: var(--gray-300); display: block; margin-bottom: 16px; }
-  .btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: var(--primary); color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; border: none; cursor: pointer; }
-</style>
-
 <?php if (!$shop): ?>
-  <div class="card">
-    <div class="no-shop">
-      <i class="fas fa-store"></i>
-      <h2 style="font-size:20px;font-weight:600;margin-bottom:8px;color:var(--gray-700);">You don't have a shop yet</h2>
-      <p style="color:var(--gray-600);margin-bottom:20px;">Create your shop to start selling on OCS Marketplace.</p>
-      <a href="<?= url('seller/shop/create') ?>" class="btn-primary"><i class="fas fa-plus"></i> Create My Shop</a>
+  <section class="sp-card">
+    <div class="sp-empty">
+      <i class="fa-solid fa-store"></i>
+      <h2><?= $fr ? "Vous n'avez pas encore de commerce" : "You don't have a shop yet" ?></h2>
+      <p><?= $fr ? 'Créez votre commerce pour commencer à vendre sur OCSAPP.' : 'Create your shop to start selling on OCSAPP.' ?></p>
+      <a href="<?= url('seller/shop/create') ?>" class="sp-btn sp-btn-primary"><i class="fa-solid fa-plus"></i> <?= $fr ? 'Créer mon commerce' : 'Create my shop' ?></a>
     </div>
-  </div>
+  </section>
 <?php else: ?>
-  <!-- Stats -->
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-icon"><i class="fas fa-shopping-bag"></i></div>
-      <div class="stat-value"><?= (int)($stats['total_orders'] ?? 0) ?></div>
-      <div class="stat-label">Total Orders</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon"><i class="fas fa-clock"></i></div>
-      <div class="stat-value"><?= (int)($stats['pending_orders'] ?? 0) ?></div>
-      <div class="stat-label">Pending</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon"><i class="fas fa-calendar-day"></i></div>
-      <div class="stat-value"><?= (int)($stats['today_orders'] ?? 0) ?></div>
-      <div class="stat-label">Today's Orders</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
-      <div class="stat-value">$<?= number_format((float)($stats['total_revenue'] ?? 0), 0) ?></div>
-      <div class="stat-label">Revenue</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon"><i class="fas fa-cubes"></i></div>
-      <div class="stat-value"><?= (int)($stats['products_count'] ?? 0) ?></div>
-      <div class="stat-label">Products</div>
-    </div>
-  </div>
-
-  <!-- My Plan -->
   <?php
-  $sellerPkg = $shop['subscription_package'] ?? 'Essential';
-  $sellerPkgColors = ['Essential'=>'#00b207','Experience'=>'#3b82f6','Prestige'=>'#7c3aed','Enterprise'=>'#1f2937'];
-  $sellerPkgColor = $sellerPkgColors[$sellerPkg] ?? '#00b207';
-  $sellerIsFounding = !empty($shop['founding_partner']);
+  $pending = (int) ($stats['pending_orders'] ?? 0);
+  $cards = [
+      ['fa-receipt',        (string) (int) ($stats['total_orders'] ?? 0), $fr ? 'Commandes' : 'Total orders', ''],
+      ['fa-hourglass-half', (string) $pending,                            $fr ? 'En attente' : 'Pending', $pending > 0 ? 'is-warn' : ''],
+      ['fa-calendar-day',   (string) (int) ($stats['today_orders'] ?? 0), $fr ? "Commandes aujourd'hui" : "Today's orders", ''],
+      ['fa-sack-dollar',    acct_money($stats['total_revenue'] ?? 0, $fr), $fr ? 'Ventes payées' : 'Paid sales', ''],
+      ['fa-cubes',          (string) (int) ($stats['products_count'] ?? 0), $fr ? 'Produits' : 'Products', ''],
+  ];
+  $pkg = $shop['subscription_package'] ?? 'Essential';
+  $isFounding = !empty($shop['founding_partner']);
+  $freeLeft = (int) ($shop['founding_free_deliveries_remaining'] ?? 0);
   ?>
-  <div class="card">
-    <div class="card-header"><h2 class="card-title">My Plan</h2></div>
-    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="width:40px;height:40px;border-radius:10px;background:<?= $sellerPkgColor ?>18;color:<?= $sellerPkgColor ?>;display:flex;align-items:center;justify-content:center;">
-          <i class="fas fa-star"></i>
-        </div>
-        <div>
-          <div style="font-weight:600;font-size:15px;color:<?= $sellerPkgColor ?>;"><?= htmlspecialchars($sellerPkg) ?></div>
-          <div style="font-size:13px;color:var(--gray-600);">
-            <?= number_format((float)($shop['commission_rate'] ?? 15), 2) ?>% delivery &middot; <?= number_format((float)($shop['pickup_commission_rate'] ?? 8), 2) ?>% pickup
-          </div>
-        </div>
-      </div>
-      <?php if ($sellerIsFounding): ?>
-        <div style="display:inline-flex;align-items:center;gap:6px;background:#fef3c722;color:#b45309;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;border:1px solid #fbbf2455;">
-          🌟 Founding Partner #<?= (int)$shop['founding_partner_number'] ?> of 20
-          <?php if (!empty($shop['founding_partner_expires_at'])): ?>
-            <span style="font-weight:400;opacity:.85;">&middot; locked until <?= formatDate($shop['founding_partner_expires_at'], 'M d, Y') ?></span>
-          <?php endif; ?>
-        </div>
-        <?php if ((int)($shop['founding_free_deliveries_remaining'] ?? 0) > 0): ?>
-          <div style="font-size:13px;color:#166534;"><?= (int)$shop['founding_free_deliveries_remaining'] ?> free delivery order<?= (int)$shop['founding_free_deliveries_remaining'] === 1 ? '' : 's' ?> remaining</div>
-        <?php endif; ?>
-      <?php endif; ?>
-    </div>
-  </div>
-
-  <!-- Recent Orders -->
-  <div class="card">
-    <div class="card-header">
-      <h2 class="card-title">Recent Orders</h2>
-      <a href="<?= url('seller/orders') ?>" class="btn-view-all">View all &rarr;</a>
-    </div>
-    <?php if (empty($recentOrders)): ?>
-      <div class="empty-state"><i class="fas fa-inbox"></i>No orders yet.</div>
-    <?php else: ?>
-      <?php foreach ($recentOrders as $order): ?>
-        <div class="order-row">
-          <div>
-            <strong>#<?= htmlspecialchars($order['order_number'] ?? $order['id']) ?></strong>
-            <span style="color:var(--gray-600);margin-left:8px;font-size:13px;"><?= htmlspecialchars(($order['first_name'] ?? '') . ' ' . ($order['last_name'] ?? '')) ?></span>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;">
-            <span class="badge badge-<?= htmlspecialchars($order['status']) ?>"><?= ucfirst($order['status']) ?></span>
-            <span style="font-weight:600;">$<?= number_format((float)$order['total'], 2) ?></span>
-          </div>
-        </div>
+  <div class="sp-stack">
+    <div class="sp-stats">
+      <?php foreach ($cards as [$icon, $value, $label, $cls]): ?>
+        <div class="sp-stat <?= $cls ?>"><i class="fa-solid <?= $icon ?>"></i><strong><?= htmlspecialchars($value) ?></strong><span><?= $label ?></span></div>
       <?php endforeach; ?>
-    <?php endif; ?>
-  </div>
-
-  <!-- Quick Actions -->
-  <div class="card">
-    <div class="card-header"><h2 class="card-title">Quick Actions</h2></div>
-    <div style="display:flex;gap:12px;flex-wrap:wrap;">
-      <a href="<?= url('seller/orders') ?>?status=pending" class="btn-primary" style="background:#e65100;"><i class="fas fa-box"></i> View Pending Orders</a>
-      <a href="<?= url('seller/inventory/add') ?>" class="btn-primary"><i class="fas fa-plus"></i> Add Product</a>
-      <a href="<?= url('seller/shop/settings') ?>" class="btn-primary" style="background:#555;"><i class="fas fa-cog"></i> Shop Settings</a>
     </div>
+
+    <div class="sp-grid-2">
+      <section class="sp-card">
+        <div class="sp-card-head"><h2><?= $fr ? 'Mon forfait' : 'My plan' ?></h2><a href="<?= url('seller/shop/settings') ?>"><?= $fr ? 'Paramètres' : 'Settings' ?> <i class="fa-solid fa-arrow-right"></i></a></div>
+        <div class="sp-row">
+          <span class="sp-badge sp-badge-ok"><i class="fa-solid fa-star"></i> <?= htmlspecialchars($pkg) ?></span>
+          <span class="sp-muted">
+            <?= $fr ? 'Commission : ' : 'Commission: ' ?><?= number_format((float) ($shop['commission_rate'] ?? 15), 2, $fr ? ',' : '.', '') ?>&nbsp;% <?= $fr ? 'livraison' : 'delivery' ?>
+            · <?= number_format((float) ($shop['pickup_commission_rate'] ?? 8), 2, $fr ? ',' : '.', '') ?>&nbsp;% <?= $fr ? 'ramassage' : 'pickup' ?>
+          </span>
+        </div>
+        <?php if ($isFounding): ?>
+          <div class="sp-row" style="margin-top:14px">
+            <span class="sp-badge sp-badge-gold"><i class="fa-solid fa-star"></i>
+              <?= $fr ? 'Partenaire fondateur n° ' : 'Founding Partner #' ?><?= (int) $shop['founding_partner_number'] ?><?= $fr ? ' sur 20' : ' of 20' ?></span>
+            <?php if (!empty($shop['founding_partner_expires_at'])): ?>
+              <span class="sp-dim"><?= $fr ? 'Taux verrouillé jusqu\'au ' : 'Rate locked until ' ?><?= acct_date($shop['founding_partner_expires_at'], $fr) ?></span>
+            <?php endif; ?>
+          </div>
+          <?php if ($freeLeft > 0): ?>
+            <p class="sp-muted" style="margin:10px 0 0"><?= $fr
+              ? $freeLeft . ' ' . ($freeLeft > 1 ? 'commandes de livraison sans commission restantes' : 'commande de livraison sans commission restante')
+              : $freeLeft . ' commission-free delivery order' . ($freeLeft === 1 ? '' : 's') . ' remaining' ?></p>
+          <?php endif; ?>
+        <?php endif; ?>
+      </section>
+
+      <section class="sp-card">
+        <div class="sp-card-head"><h2><?= $fr ? 'Actions rapides' : 'Quick actions' ?></h2></div>
+        <div class="sp-row">
+          <a href="<?= url('seller/orders') ?>?status=pending" class="sp-btn sp-btn-primary"><i class="fa-solid fa-hourglass-half"></i> <?= $fr ? 'Commandes en attente' : 'Pending orders' ?><?= $pending > 0 ? ' (' . $pending . ')' : '' ?></a>
+          <a href="<?= url('seller/inventory/add') ?>" class="sp-btn sp-btn-ghost"><i class="fa-solid fa-plus"></i> <?= $fr ? 'Ajouter un produit' : 'Add product' ?></a>
+          <a href="<?= url('seller/shop/settings') ?>" class="sp-btn sp-btn-ghost"><i class="fa-solid fa-gear"></i> <?= $fr ? 'Paramètres du commerce' : 'Shop settings' ?></a>
+        </div>
+      </section>
+    </div>
+
+    <section class="sp-card">
+      <div class="sp-card-head"><h2><?= $fr ? 'Commandes récentes' : 'Recent orders' ?></h2><a href="<?= url('seller/orders') ?>"><?= $fr ? 'Tout voir' : 'View all' ?> <i class="fa-solid fa-arrow-right"></i></a></div>
+      <?php if (empty($recentOrders)): ?>
+        <div class="sp-empty"><i class="fa-solid fa-inbox"></i><p><?= $fr ? "Aucune commande pour l'instant." : 'No orders yet.' ?></p></div>
+      <?php else: ?>
+        <?php foreach ($recentOrders as $order): ?>
+          <?php $cust = trim(html_entity_decode(($order['first_name'] ?? '') . ' ' . ($order['last_name'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8')); ?>
+          <a class="sp-list-row" href="<?= url('seller/orders/detail') ?>?id=<?= (int) $order['id'] ?>">
+            <div>
+              <div class="sp-strong">#<?= htmlspecialchars($order['order_number'] ?? $order['id']) ?></div>
+              <div class="sp-dim"><?= htmlspecialchars($cust) ?> · <?= acct_date($order['created_at'], $fr) ?><?= ($order['fulfillment_type'] ?? '') === 'pickup' ? ' · ' . ($fr ? 'Ramassage' : 'Pickup') : '' ?></div>
+            </div>
+            <div class="sp-row">
+              <span class="sp-badge sp-badge-<?= htmlspecialchars($order['status']) ?>"><?= htmlspecialchars(acct_status((string) $order['status'], $fr)) ?></span>
+              <span class="sp-strong"><?= acct_money($order['total'], $fr) ?></span>
+              <i class="fa-solid fa-chevron-right sp-dim"></i>
+            </div>
+          </a>
+        <?php endforeach; ?>
+      <?php endif; ?>
+    </section>
   </div>
 <?php endif; ?>
-
 <?php require __DIR__ . '/layout-footer.php'; ?>

@@ -14,7 +14,7 @@ class InventoryController
     {
         $this->db = \Database::getConnection();
         if (!isLoggedIn() || !hasRole('seller')) {
-            setFlash('error', 'Seller account required.');
+            setFlash('error', lang_pick('Un compte vendeur est requis.', 'Seller account required.'));
             redirect(url('login'));
             exit;
         }
@@ -36,7 +36,7 @@ class InventoryController
     {
         $shop = $this->getSellerShop();
         if (!$shop) {
-            setFlash('info', 'Please set up your shop first.');
+            setFlash('info', lang_pick('Veuillez d\'abord configurer votre commerce.', 'Please set up your shop first.'));
             redirect(url('seller/shop/create'));
             return;
         }
@@ -92,7 +92,7 @@ class InventoryController
         }
 
         if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token'), ''))) {
-            setFlash('error', 'Invalid security token.');
+            setFlash('error', lang_pick('Jeton de sécurité invalide. Rechargez la page.', 'Invalid security token.'));
             redirect(url('seller/inventory/add'));
             return;
         }
@@ -102,7 +102,7 @@ class InventoryController
         $stock     = intval(post('stock_quantity', 0));
 
         if ($productId <= 0 || $price <= 0) {
-            setFlash('error', 'Product and price are required.');
+            setFlash('error', lang_pick('Le produit et le prix sont requis.', 'Product and price are required.'));
             redirect(url('seller/inventory/add'));
             return;
         }
@@ -114,10 +114,10 @@ class InventoryController
                 ON DUPLICATE KEY UPDATE price = VALUES(price), stock_quantity = VALUES(stock_quantity), updated_at = NOW()
             ");
             $stmt->execute([$shop['id'], $productId, $price, $stock]);
-            setFlash('success', 'Product added to inventory.');
+            setFlash('success', lang_pick('Produit ajouté à l\'inventaire.', 'Product added to inventory.'));
         } catch (\PDOException $e) {
             logger("InventoryController::store() failed: " . $e->getMessage(), 'error');
-            setFlash('error', 'Could not add product. Please try again.');
+            setFlash('error', lang_pick('Le produit n\'a pas pu être ajouté. Veuillez réessayer.', 'Could not add product. Please try again.'));
         }
 
         redirect(url('seller/inventory'));
@@ -146,7 +146,7 @@ class InventoryController
         $item = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         if (!$item) {
-            setFlash('error', 'Inventory item not found.');
+            setFlash('error', lang_pick('Article d\'inventaire introuvable.', 'Inventory item not found.'));
             redirect(url('seller/inventory'));
             return;
         }
@@ -166,7 +166,7 @@ class InventoryController
         }
 
         if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token'), ''))) {
-            setFlash('error', 'Invalid security token.');
+            setFlash('error', lang_pick('Jeton de sécurité invalide. Rechargez la page.', 'Invalid security token.'));
             redirect(url('seller/inventory'));
             return;
         }
@@ -188,7 +188,7 @@ class InventoryController
             if (post('weight') !== null && post('weight') !== '') {
                 $weight = floatval(post('weight'));
                 if ($weight <= 0) {
-                    setFlash('error', 'Product weight (kg) must be greater than zero.');
+                    setFlash('error', lang_pick('Le poids du produit (kg) doit être supérieur à zéro.', 'Product weight (kg) must be greater than zero.'));
                     redirect(url('seller/inventory'));
                     return;
                 }
@@ -211,10 +211,10 @@ class InventoryController
                 }
             }
 
-            setFlash('success', 'Inventory updated.');
+            setFlash('success', lang_pick('Inventaire mis à jour.', 'Inventory updated.'));
         } catch (\PDOException $e) {
             logger("InventoryController::update() failed: " . $e->getMessage(), 'error');
-            setFlash('error', 'Update failed. Please try again.');
+            setFlash('error', lang_pick('La mise à jour a échoué. Veuillez réessayer.', 'Update failed. Please try again.'));
         }
 
         redirect(url('seller/inventory'));
@@ -232,7 +232,7 @@ class InventoryController
         }
 
         if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token'), ''))) {
-            setFlash('error', 'Invalid security token.');
+            setFlash('error', lang_pick('Jeton de sécurité invalide. Rechargez la page.', 'Invalid security token.'));
             redirect(url('seller/inventory'));
             return;
         }
@@ -244,10 +244,10 @@ class InventoryController
                 "DELETE FROM shop_inventory WHERE id = ? AND shop_id = ?"
             );
             $stmt->execute([$inventoryId, $shop['id']]);
-            setFlash('success', 'Item removed from inventory.');
+            setFlash('success', lang_pick('Article retiré de l\'inventaire.', 'Item removed from inventory.'));
         } catch (\PDOException $e) {
             logger("InventoryController::delete() failed: " . $e->getMessage(), 'error');
-            setFlash('error', 'Could not remove item.');
+            setFlash('error', lang_pick('L\'article n\'a pas pu être retiré.', 'Could not remove item.'));
         }
 
         redirect(url('seller/inventory'));
@@ -283,7 +283,7 @@ class InventoryController
         }
 
         if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token'), ''))) {
-            setFlash('error', 'Invalid security token.');
+            setFlash('error', lang_pick('Jeton de sécurité invalide. Rechargez la page.', 'Invalid security token.'));
             redirect(url('seller/inventory/create-product'));
             return;
         }
@@ -297,13 +297,13 @@ class InventoryController
         $weight      = floatval(post('weight', 0));
 
         if (empty($name) || $price <= 0 || $categoryId <= 0) {
-            setFlash('error', 'Product name, category, and price are required.');
+            setFlash('error', lang_pick('Le nom du produit, la catégorie et le prix sont requis.', 'Product name, category, and price are required.'));
             redirect(url('seller/inventory/create-product'));
             return;
         }
 
         if ($weight <= 0) {
-            setFlash('error', 'Product weight (kg) is required and must be greater than zero.');
+            setFlash('error', lang_pick('Le poids du produit (kg) est requis et doit être supérieur à zéro.', 'Product weight (kg) is required and must be greater than zero.'));
             redirect(url('seller/inventory/create-product'));
             return;
         }
@@ -348,11 +348,11 @@ class InventoryController
             $stmt2->execute([$shop['id'], $productId, $price, $stock]);
 
             $this->db->commit();
-            setFlash('success', 'Product created and added to your inventory.');
+            setFlash('success', lang_pick('Produit créé et ajouté à votre inventaire.', 'Product created and added to your inventory.'));
         } catch (\PDOException $e) {
             $this->db->rollBack();
             logger("InventoryController::storeProduct() failed: " . $e->getMessage(), 'error');
-            setFlash('error', 'Could not create product. Please try again.');
+            setFlash('error', lang_pick('Le produit n\'a pas pu être créé. Veuillez réessayer.', 'Could not create product. Please try again.'));
         }
 
         redirect(url('seller/inventory'));

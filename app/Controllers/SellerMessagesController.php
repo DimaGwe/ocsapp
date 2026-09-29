@@ -73,7 +73,7 @@ class SellerMessagesController
         }
 
         if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
-            setFlash('error', 'Invalid request. Please try again.');
+            setFlash('error', lang_pick('Requête invalide. Veuillez réessayer.', 'Invalid request. Please try again.'));
             redirect(url('seller/messages'));
             return;
         }
@@ -82,13 +82,13 @@ class SellerMessagesController
         $message  = trim(post('message', ''));
 
         if (empty($message)) {
-            setFlash('error', 'Message cannot be empty.');
+            setFlash('error', lang_pick('Le message ne peut pas être vide.', 'Message cannot be empty.'));
             redirect(url('seller/messages'));
             return;
         }
 
         if (mb_strlen($message) > 2000) {
-            setFlash('error', 'Message is too long (maximum 2000 characters).');
+            setFlash('error', lang_pick('Le message est trop long (2000 caractères au maximum).', 'Message is too long (maximum 2000 characters).'));
             redirect(url('seller/messages'));
             return;
         }
@@ -100,7 +100,7 @@ class SellerMessagesController
             ")->execute([$sellerId, $sellerId, $message]);
         } catch (\Exception $e) {
             error_log("SellerMessagesController::send insert error: " . $e->getMessage());
-            setFlash('error', 'Failed to send message. Please try again.');
+            setFlash('error', lang_pick('Le message n\'a pas pu être envoyé. Veuillez réessayer.', 'Failed to send message. Please try again.'));
             redirect(url('seller/messages'));
             return;
         }
@@ -136,7 +136,7 @@ class SellerMessagesController
             }
         }
 
-        setFlash('success', 'Message sent.');
+        setFlash('success', lang_pick('Message envoyé.', 'Message sent.'));
         redirect(url('seller/messages'));
     }
 

@@ -657,6 +657,7 @@ return [
 
     // Seller Order Management
     'GET /seller/orders' => ['OrderController', 'sellerOrders'],
+    'GET /seller/orders/detail' => ['OrderController', 'sellerOrderDetail'],
     'GET /seller/messages' => ['SellerMessagesController', 'index'],
     'POST /seller/messages/send' => ['SellerMessagesController', 'send'],
     'POST /seller/orders/update-status' => ['OrderController', 'updateOrderStatus'],

@@ -473,7 +473,7 @@ class OrderController
         $shop = $stmt->fetch(\PDO::FETCH_ASSOC);
         
         if (!$shop) {
-            setFlash('error', 'No active shop found');
+            setFlash('error', lang_pick('Aucun commerce actif trouvé.', 'No active shop found'));
             redirect(url('seller/dashboard'));
             return;
         }
@@ -546,7 +546,9 @@ class OrderController
                 SELECT 
                     status,
                     COUNT(*) as count,
-                    SUM(total) as total_amount
+                    SUM(total) as total_amount,
+                    -- Paid product sales, same definition as the dashboard Paid sales tile
+                    SUM(CASE WHEN payment_status = 'paid' AND status NOT IN ('cancelled','refunded') THEN subtotal ELSE 0 END) as paid_sales
                 FROM orders
                 WHERE shop_id = :shop_id
                 AND DATE(created_at) = CURDATE()
@@ -584,12 +586,89 @@ class OrderController
     }
     
     /**
+     * Next statuses a seller may pick for an order, in order. Mirrors isValidStatusTransition()
+     * minus the driver-owned steps (out_for_delivery, failed); a ready pickup order can be
+     * marked collected ('delivered'). Used by the seller order list and detail pages.
+     */
+    public static function sellerNextStatuses(string $status, string $fulfillmentType = 'delivery'): array
+    {
+        $map = [
+            'pending'    => ['confirmed', 'cancelled'],
+            'confirmed'  => ['processing', 'cancelled'],
+            'processing' => ['ready', 'cancelled'],
+            'ready'      => $fulfillmentType === 'pickup' ? ['delivered', 'cancelled'] : ['cancelled'],
+        ];
+        return $map[$status] ?? [];
+    }
+
+    /**
+     * Seller: one order of their shop - items to prepare, customer, delivery address or pickup,
+     * notes, totals, history and the allowed status actions (GET /seller/orders/detail?id=).
+     * Sellers had no way to see an order's items before this (2026-09-28).
+     */
+    public function sellerOrderDetail(): void
+    {
+        if (!hasRole('seller')) {
+            redirect(url('/'));
+            return;
+        }
+        $orderId = intval(get('id', 0));
+        $stmt = $this->db->prepare("
+            SELECT o.*, u.first_name, u.last_name, u.email AS customer_email, u.phone AS customer_phone,
+                   s.name AS shop_name
+            FROM orders o
+            JOIN shops s ON s.id = o.shop_id AND s.seller_id = :seller_id
+            LEFT JOIN users u ON u.id = o.user_id
+            WHERE o.id = :id
+            LIMIT 1
+        ");
+        $stmt->execute(['seller_id' => userId(), 'id' => $orderId]);
+        $order = $stmt->fetch(\PDO::FETCH_ASSOC);
+        if (!$order) {
+            setFlash('error', ($_SESSION['language'] ?? 'fr') === 'fr' ? 'Commande introuvable.' : 'Order not found.');
+            redirect(url('seller/orders'));
+            return;
+        }
+
+        $stmt = $this->db->prepare("
+            SELECT oi.*, p.slug AS product_slug, p.sku AS product_sku,
+                   (SELECT image_path FROM product_images WHERE product_id = oi.product_id AND is_primary = 1 LIMIT 1) AS image_path
+            FROM order_items oi
+            LEFT JOIN products p ON p.id = oi.product_id
+            WHERE oi.order_id = :id
+        ");
+        $stmt->execute(['id' => $orderId]);
+        $items = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $history = [];
+        try {
+            $stmt = $this->db->prepare("SELECT * FROM delivery_status_history WHERE order_id = :id ORDER BY created_at DESC, id DESC");
+            $stmt->execute(['id' => $orderId]);
+            $history = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            logger('Seller order history failed: ' . $e->getMessage(), 'warning');
+        }
+
+        view('seller/orders/detail', [
+            'order'        => $order,
+            'items'        => $items,
+            'history'      => $history,
+            'nextStatuses' => self::sellerNextStatuses((string) $order['status'], (string) ($order['fulfillment_type'] ?? 'delivery')),
+        ]);
+    }
+
+    /**
      * Seller: Update order status
      */
     public function updateOrderStatus(): void
     {
         if (!hasRole('seller')) {
             jsonResponse(['success' => false, 'message' => 'Unauthorized']);
+            return;
+        }
+        // The form sends a CSRF token; it was never checked (2026-09-28)
+        if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
+            jsonResponse(['success' => false, 'message' => 'Invalid token'], 403);
             return;
         }
 
