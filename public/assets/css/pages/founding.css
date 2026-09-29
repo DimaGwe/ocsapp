@@ -71,9 +71,9 @@
   box-shadow: 0 10px 30px rgba(13, 63, 16, .035); scroll-margin-top: 90px;
 }
 .fd-card:last-child { grid-column: 1 / -1; max-width: calc(50% - 10px); width: 100%; justify-self: center; }
-.fd-card-art { background: linear-gradient(180deg, #101713, #071009); display: flex; align-items: flex-start; justify-content: center; padding: 32px 18px; }
-/* Icon on its own black tile over the dark green panel, as in the mockup */
-.fd-card-art img { width: 138px; height: 138px; object-fit: contain; padding: 12px; background: #000; border-radius: 18px; box-shadow: 0 0 30px rgba(0, 178, 7, .16); }
+.fd-card-art { background: #fff; display: flex; align-items: flex-start; justify-content: center; padding: 32px 18px; }
+/* Icon on its own black tile over a white panel */
+.fd-card-art img { width: 138px; height: 138px; object-fit: contain; padding: 12px; background: #000; border-radius: 18px; box-shadow: 0 8px 24px rgba(0, 0, 0, .12); }
 .fd-card-copy { padding: 28px; position: relative; display: flex; flex-direction: column; align-items: flex-start; }
 .fd-index { position: absolute; right: 24px; top: 24px; color: #a8b1aa; font: 600 12px Poppins, sans-serif; }
 .fd-role { font: 700 10px Poppins, sans-serif; letter-spacing: 1.6px; text-transform: uppercase; color: var(--fd-g); }
