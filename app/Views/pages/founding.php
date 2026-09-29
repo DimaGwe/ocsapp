@@ -29,7 +29,7 @@ $content = [
     'buyer' => [
         'for'   => ['Pour les acheteurs', 'For buyers'],
         'name'  => ['Acheteur fondateur', 'Founding Buyer'],
-        'who'   => ['Les 200 premiers comptes acheteurs à passer une commande avec livraison admissible', 'The first 200 buyer accounts to place an eligible delivery order'],
+        'who'   => ['Les 200 premiers comptes acheteurs à passer et à payer une commande avec livraison admissible', 'The first 200 buyer accounts to place and pay for an eligible delivery order'],
         'perks' => [
             ["Votre première livraison est gratuite : OCSAPP absorbe le frais de zone standard, automatiquement.", 'Your first delivery is free: OCSAPP covers the standard zone fee, automatically.'],
             ["Les suppléments (commande volumineuse, arrêt additionnel) s'appliquent toujours à cette commande si elle y est admissible.", 'Surcharges (oversize order, additional stop) still apply to that order if it qualifies.'],

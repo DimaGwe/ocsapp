@@ -361,8 +361,8 @@ $fr = ($currentLang === 'fr');
       <h4><?= $fr ? "Aucun code, aucune demande à faire :" : "No code, nothing to request:" ?></h4>
       <ul style="grid-template-columns:1fr;">
         <li><?= $fr
-          ? "Si vous faites partie des 200 premiers comptes acheteurs à passer une commande avec livraison admissible, votre première livraison est gratuite - OCSAPP absorbe le frais de zone standard en votre nom, automatiquement."
-          : "If you're among the first 200 buyer accounts to place an eligible delivery order, your first delivery is free - OCSAPP covers the standard zone fee on your behalf, automatically." ?></li>
+          ? "Si vous faites partie des 200 premiers comptes acheteurs à passer et à payer une commande avec livraison admissible, votre première livraison est gratuite - OCSAPP absorbe le frais de zone standard en votre nom, automatiquement."
+          : "If you're among the first 200 buyer accounts to place and pay for an eligible delivery order, your first delivery is free - OCSAPP covers the standard zone fee on your behalf, automatically." ?></li>
         <li><?= $fr
           ? "Le supplément pour commande volumineuse et les frais d'arrêt additionnel s'appliquent toujours à cette première commande si elle y est admissible - ce bonus annule uniquement le frais de livraison standard."
           : "The oversize order surcharge and additional-stop fee still apply to this first order if it qualifies - this bonus waives the standard delivery fee only." ?></li>
