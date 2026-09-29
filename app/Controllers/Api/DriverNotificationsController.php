@@ -63,7 +63,7 @@ class DriverNotificationsController
         if ($this->viaToken || verifyCsrfToken($_SERVER['HTTP_X_CSRF_TOKEN'] ?? null)) {
             return true;
         }
-        http_response_code(419);
+        http_response_code(403); // not 419: Apache turns unknown codes into 500
         echo json_encode(['error' => 'Invalid CSRF token']);
         return false;
     }
