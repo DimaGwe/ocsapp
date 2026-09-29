@@ -123,7 +123,7 @@ $name = fn($s) => htmlspecialchars(html_entity_decode((string) $s, ENT_QUOTES | 
   new Chart(document.getElementById('statusChart'), {
     type: 'doughnut',
     data: { labels: <?= json_encode(array_map(fn($s) => acct_status((string) $s['status'], $fr), $statusBreakdown), JSON_UNESCAPED_UNICODE) ?>,
-            datasets: [{ data: <?= json_encode(array_map('intval', array_column($statusBreakdown, 'count'))) ?>, backgroundColor: ['#F5A700', '#1D4ED8', '#5B3CC4', '#00B207', '#B42318', '#929A94', '#0D3F10'] }] },
+            datasets: [{ data: <?= json_encode(array_map('intval', array_column($statusBreakdown, 'count'))) ?>, backgroundColor: <?= json_encode(array_map(fn($s) => ['pending' => '#F5A700', 'confirmed' => '#1D4ED8', 'processing' => '#3B6FE0', 'ready' => '#7AA2F0', 'out_for_delivery' => '#5B3CC4', 'delivered' => '#00B207', 'cancelled' => '#B42318', 'refunded' => '#E07A6F'][$s['status']] ?? '#929A94', $statusBreakdown)) ?> }] },
     options: { plugins: { legend: { display: false } } }
   });
   <?php endif; ?>
