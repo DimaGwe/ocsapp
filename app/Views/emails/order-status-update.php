@@ -1,225 +1,77 @@
 <?php
-$orderNumber = htmlspecialchars($order['order_number'] ?? 'N/A');
-$statusColors = [
-    'processing' => '#f59e0b',
-    'shipped' => '#3b82f6',
-    'delivered' => '#00b207',
-    'cancelled' => '#ef4444',
+/**
+ * Order status update - BILINGUAL (FR first, then EN). Rendered as PHP by EmailHelper::sendOrderStatusUpdate().
+ * Rewritten 2026-09-28: it used to go through sendTemplate(), which does not run PHP, so the raw
+ * template source would have been emailed; status labels were for statuses that no longer exist
+ * ("shipped"); the button linked to a dead /orders/{number} URL.
+ * Variables: $order (orders row), $user (email, first_name), $old_status, $new_status.
+ */
+$fmtMoney = fn($v, bool $fr) => $fr ? number_format((float) $v, 2, ',', "\u{00A0}") . "\u{00A0}$" : '$' . number_format((float) $v, 2);
+$orderNo  = htmlspecialchars($order['order_number'] ?? '');
+$first    = htmlspecialchars(html_entity_decode((string) ($user['first_name'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+$pickup   = ($order['fulfillment_type'] ?? '') === 'pickup';
+$link     = htmlspecialchars(rtrim(env('APP_URL', 'https://ocsapp.ca'), '/') . '/account/orders/detail?id=' . (int) ($order['id'] ?? 0));
+$labels = [
+    'pending'          => ['En attente', 'Pending'],
+    'confirmed'        => ['Confirmée', 'Confirmed'],
+    'processing'       => ['En préparation', 'Being prepared'],
+    'ready'            => ['Prête', 'Ready'],
+    'out_for_delivery' => ['En livraison', 'Out for delivery'],
+    'delivered'        => [$pickup ? 'Ramassée' : 'Livrée', $pickup ? 'Picked up' : 'Delivered'],
+    'cancelled'        => ['Annulée', 'Cancelled'],
 ];
-$statusColor = $statusColors[$new_status] ?? '#6b7280';
-$statusLabelsFr = [
-    'processing' => 'En traitement',
-    'shipped' => 'Expédié',
-    'delivered' => 'Livré',
-    'cancelled' => 'Annulé',
+$messages = [
+    'confirmed'        => ['Votre paiement est confirmé et votre commande a été transmise au commerce.', 'Your payment is confirmed and your order has been sent to the shop.'],
+    'processing'       => ['Le commerce prépare votre commande.', 'The shop is preparing your order.'],
+    'ready'            => $pickup
+        ? ['Votre commande est prête à ramasser au commerce.', 'Your order is ready for pickup at the shop.']
+        : ['Votre commande est prête. Un livreur ODA viendra la chercher sous peu.', 'Your order is ready. An ODA driver will pick it up shortly.'],
+    'out_for_delivery' => ['Votre commande est en route vers vous.', 'Your order is on its way to you.'],
+    'delivered'        => $pickup
+        ? ['Votre commande a été ramassée. Merci de faire vos achats locaux avec OCSAPP !', 'Your order has been picked up. Thank you for shopping local with OCSAPP!']
+        : ['Votre commande a été livrée. Merci de faire vos achats locaux avec OCSAPP !', 'Your order has been delivered. Thank you for shopping local with OCSAPP!'],
 ];
-$oldStatusFr = $statusLabelsFr[$old_status] ?? htmlspecialchars($old_status ?? 'N/A');
-$newStatusFr = $statusLabelsFr[$new_status] ?? htmlspecialchars($new_status ?? 'N/A');
+[$labelFr, $labelEn] = $labels[$new_status] ?? [htmlspecialchars((string) $new_status), htmlspecialchars((string) $new_status)];
+[$msgFr, $msgEn]     = $messages[$new_status] ?? ['Le statut de votre commande a changé.', 'Your order status has changed.'];
+$header = 'background-color:#00b207;background:linear-gradient(135deg,#00b207 0%,#009206 100%);padding:36px 30px;text-align:center;';
+$btn    = 'display:inline-block;background-color:#00b207;color:#fff;font-size:15px;font-weight:700;text-decoration:none;padding:13px 28px;border-radius:10px;';
+$box    = 'width:100%;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;margin:0 0 22px;';
+$section = function (bool $fr) use ($orderNo, $first, $labelFr, $labelEn, $msgFr, $msgEn, $order, $fmtMoney, $link, $header, $btn, $box) {
+    ob_start(); ?>
+        <tr><td bgcolor="#00b207" style="<?= $header ?>">
+          <img src="https://ocsapp.ca/assets/images/logo.png" alt="OCSAPP" style="max-width:150px;height:auto;margin:0 auto 14px;display:block;">
+          <h1 style="margin:0;color:#fff;font-size:24px;font-weight:700;"><?= $fr ? 'Mise à jour de votre commande' : 'Your order update' ?></h1>
+        </td></tr>
+        <tr><td style="padding:32px 30px 28px;">
+          <p style="margin:0 0 14px;color:#374151;font-size:16px;"><?= $fr ? 'Bonjour' : 'Hi' ?><?= $first !== '' ? ' ' . $first : '' ?>,</p>
+          <p style="margin:0 0 22px;color:#4b5563;font-size:15px;line-height:1.7;"><?= $fr ? $msgFr : $msgEn ?></p>
+          <table role="presentation" style="<?= $box ?>"><tr><td style="padding:16px 20px;font-size:14px;color:#374151;line-height:1.8;">
+            <strong><?= $fr ? 'Commande' : 'Order' ?> :</strong> #<?= $orderNo ?><br>
+            <strong><?= $fr ? 'Statut' : 'Status' ?> :</strong> <span style="color:#00920a;font-weight:700;"><?= $fr ? $labelFr : $labelEn ?></span><br>
+            <strong><?= $fr ? 'Total' : 'Total' ?> :</strong> <?= $fmtMoney($order['total'] ?? 0, $fr) ?>
+          </td></tr></table>
+          <p style="margin:0;text-align:center;"><a href="<?= $link ?>" style="<?= $btn ?>"><?= $fr ? 'Voir ma commande' : 'View my order' ?></a></p>
+        </td></tr>
+    <?php return ob_get_clean();
+};
 ?>
 <!DOCTYPE html>
 <html lang="fr-CA">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mise à jour de commande / Order Status Update</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5;">
-    <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f5f5f5;">
-        <tr>
-            <td align="center" style="padding: 40px 20px;">
-                <table role="presentation" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-
-                    <!-- Header -->
-                    <tr>
-                        <td style="background: linear-gradient(135deg, #00b207 0%, #009206 100%); padding: 40px 30px; text-align: center; border-radius: 12px 12px 0 0;">
-                            <img src="https://ocsapp.ca/assets/images/logo.png" alt="OCSAPP" style="max-width: 180px; height: auto; margin-bottom: 20px;">
-                            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">
-                                Mise à jour de commande / Order Status Update
-                            </h1>
-                        </td>
-                    </tr>
-
-                    <!-- French Body -->
-                    <tr>
-                        <td style="padding: 40px 30px 20px 30px;">
-                            <h2 style="margin: 0 0 20px; color: #1f2937; font-size: 24px;">
-                                Bonjour <?= htmlspecialchars($user['first_name'] ?? 'là') ?> !
-                            </h2>
-
-                            <p style="margin: 0 0 16px; color: #4b5563; font-size: 16px; line-height: 1.6;">
-                                Le statut de votre commande a été mis à jour.
-                            </p>
-
-                            <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f9fafb; border-radius: 8px; margin-bottom: 24px;">
-                                <tr>
-                                    <td style="padding: 20px;">
-                                        <h3 style="margin: 0 0 12px; color: #00b207; font-size: 18px;">Commande #<?= $orderNumber ?></h3>
-                                        <p style="margin: 0 0 8px; color: #6b7280; font-size: 14px;">
-                                            <strong>Statut précédent :</strong> <span style="text-transform: capitalize;"><?= $oldStatusFr ?></span>
-                                        </p>
-                                        <p style="margin: 0; color: #6b7280; font-size: 14px;">
-                                            <strong>Nouveau statut :</strong> <span style="color: <?= $statusColor ?>; font-weight: 600; text-transform: capitalize;"><?= $newStatusFr ?></span>
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <?php if ($new_status === 'shipped'): ?>
-                            <table role="presentation" style="width: 100%; border-collapse: collapse; border-left: 4px solid #f59e0b; background-color: #fffbeb; border-radius: 4px; margin-bottom: 24px;">
-                                <tr>
-                                    <td style="padding: 16px 20px;">
-                                        <p style="margin: 0 0 8px; color: #1f2937; font-size: 14px; font-weight: 600;">
-                                            🚚 Votre commande est en route !
-                                        </p>
-                                        <p style="margin: 0; color: #4b5563; font-size: 14px; line-height: 1.6;">
-                                            Votre colis a été expédié et est en chemin vers votre adresse de livraison. Suivez-le en cliquant sur le lien ci-dessous.
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-                            <?php elseif ($new_status === 'delivered'): ?>
-                            <table role="presentation" style="width: 100%; border-collapse: collapse; border-left: 4px solid #00b207; background-color: #f0fdf4; border-radius: 4px; margin-bottom: 24px;">
-                                <tr>
-                                    <td style="padding: 16px 20px;">
-                                        <p style="margin: 0 0 8px; color: #1f2937; font-size: 14px; font-weight: 600;">
-                                            ✓ Livraison confirmée !
-                                        </p>
-                                        <p style="margin: 0; color: #4b5563; font-size: 14px; line-height: 1.6;">
-                                            Votre commande a été livrée. Nous espérons que vous êtes satisfait de votre achat !
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-                            <?php endif; ?>
-
-                            <table role="presentation" style="width: 100%; margin-bottom: 24px;">
-                                <tr>
-                                    <td align="center">
-                                        <a href="https://ocsapp.ca/orders/<?= $orderNumber ?>" style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #00b207 0%, #009206 100%); color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 12px rgba(0, 178, 7, 0.3);">
-                                            Voir les détails →
-                                        </a>
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <p style="margin: 0 0 8px; color: #4b5563; font-size: 14px; line-height: 1.6;">
-                                Des questions sur votre commande ?
-                            </p>
-                            <p style="margin: 0; color: #4b5563; font-size: 14px; line-height: 1.6;">
-                                📧 <a href="mailto:info@ocsapp.ca" style="color: #00b207; text-decoration: none;">info@ocsapp.ca</a>
-                            </p>
-                        </td>
-                    </tr>
-
-                    <!-- Language Divider -->
-                    <tr>
-                      <td style="padding: 0 30px;">
-                        <table role="presentation" style="width:100%;border-collapse:collapse;">
-                          <tr>
-                            <td style="padding:24px 0 8px;text-align:center;">
-                              <hr style="border:none;border-top:2px dashed #e5e7eb;margin:0 0 12px;">
-                              <span style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:1.5px;">
-                                🇬🇧 English version follows below / La version française précède
-                              </span>
-                              <hr style="border:none;border-top:2px dashed #e5e7eb;margin:12px 0 0;">
-                            </td>
-                          </tr>
-                        </table>
-                      </td>
-                    </tr>
-
-                    <!-- English Body -->
-                    <tr>
-                        <td style="padding: 20px 30px 40px 30px;">
-                            <h2 style="margin: 0 0 20px; color: #1f2937; font-size: 24px;">
-                                Hi <?= htmlspecialchars($user['first_name'] ?? 'there') ?>! 👋
-                            </h2>
-
-                            <p style="margin: 0 0 16px; color: #4b5563; font-size: 16px; line-height: 1.6;">
-                                Your order status has been updated.
-                            </p>
-
-                            <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f9fafb; border-radius: 8px; margin-bottom: 24px;">
-                                <tr>
-                                    <td style="padding: 20px;">
-                                        <h3 style="margin: 0 0 12px; color: #00b207; font-size: 18px;">Order #<?= $orderNumber ?></h3>
-                                        <p style="margin: 0 0 8px; color: #6b7280; font-size: 14px;">
-                                            <strong>Previous Status:</strong> <span style="text-transform: capitalize;"><?= htmlspecialchars($old_status ?? 'N/A') ?></span>
-                                        </p>
-                                        <p style="margin: 0; color: #6b7280; font-size: 14px;">
-                                            <strong>New Status:</strong> <span style="color: <?= $statusColor ?>; font-weight: 600; text-transform: capitalize;"><?= htmlspecialchars($new_status ?? 'N/A') ?></span>
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <?php if ($new_status === 'shipped'): ?>
-                            <table role="presentation" style="width: 100%; border-collapse: collapse; border-left: 4px solid #f59e0b; background-color: #fffbeb; border-radius: 4px; margin-bottom: 24px;">
-                                <tr>
-                                    <td style="padding: 16px 20px;">
-                                        <p style="margin: 0 0 8px; color: #1f2937; font-size: 14px; font-weight: 600;">
-                                            🚚 Your order is on its way!
-                                        </p>
-                                        <p style="margin: 0; color: #4b5563; font-size: 14px; line-height: 1.6;">
-                                            Your package has been shipped and is en route to your delivery address. Track it using the link below.
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-                            <?php elseif ($new_status === 'delivered'): ?>
-                            <table role="presentation" style="width: 100%; border-collapse: collapse; border-left: 4px solid #00b207; background-color: #f0fdf4; border-radius: 4px; margin-bottom: 24px;">
-                                <tr>
-                                    <td style="padding: 16px 20px;">
-                                        <p style="margin: 0 0 8px; color: #1f2937; font-size: 14px; font-weight: 600;">
-                                            ✓ Delivered Successfully!
-                                        </p>
-                                        <p style="margin: 0; color: #4b5563; font-size: 14px; line-height: 1.6;">
-                                            Your order has been delivered. We hope you enjoy your purchase!
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-                            <?php endif; ?>
-
-                            <table role="presentation" style="width: 100%; margin-bottom: 24px;">
-                                <tr>
-                                    <td align="center">
-                                        <a href="https://ocsapp.ca/orders/<?= $orderNumber ?>" style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #00b207 0%, #009206 100%); color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 12px rgba(0, 178, 7, 0.3);">
-                                            View Order Details →
-                                        </a>
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <p style="margin: 0 0 8px; color: #4b5563; font-size: 14px; line-height: 1.6;">
-                                Questions about your order?
-                            </p>
-                            <p style="margin: 0; color: #4b5563; font-size: 14px; line-height: 1.6;">
-                                📧 <a href="mailto:info@ocsapp.ca" style="color: #00b207; text-decoration: none;">info@ocsapp.ca</a>
-                            </p>
-                        </td>
-                    </tr>
-
-                    <!-- Footer -->
-                    <tr>
-                        <td style="background-color: #f9fafb; padding: 30px; text-align: center; border-radius: 0 0 12px 12px; border-top: 1px solid #e5e7eb;">
-                            <p style="margin: 0 0 8px; color: #9ca3af; font-size: 12px;">
-                                &copy; <?= date('Y') ?> OCSAPP. Tous droits réservés. / All rights reserved.
-                            </p>
-                            <p style="margin: 0 0 12px; color: #9ca3af; font-size: 12px;">
-                                Courriel automatique — ne pas répondre. / Automated email — do not reply.
-                            </p>
-                            <p style="margin: 0; color: #9ca3af; font-size: 12px;">
-                                <a href="https://ocsapp.ca/terms" style="color: #6b7280; text-decoration: none;">Terms</a> •
-                                <a href="https://ocsapp.ca/privacy" style="color: #6b7280; text-decoration: none;">Privacy</a> •
-                                <a href="https://ocsapp.ca/unsubscribe" style="color: #6b7280; text-decoration: none;">Unsubscribe</a>
-                            </p>
-                        </td>
-                    </tr>
-
-                </table>
-            </td>
-        </tr>
-    </table>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Commande #<?= $orderNo ?> : <?= $labelFr ?> / Order #<?= $orderNo ?>: <?= $labelEn ?></title></head>
+<body style="margin:0;padding:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f5f5f5;">
+<table role="presentation" style="width:100%;border-collapse:collapse;background:#f5f5f5;"><tr><td align="center" style="padding:36px 16px;">
+  <table role="presentation" style="max-width:600px;width:100%;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.08);">
+    <?= $section(true) ?>
+    <tr><td style="padding:0 30px;"><hr style="border:none;border-top:2px dashed #e5e7eb;margin:8px 0 10px;">
+      <p style="text-align:center;margin:0 0 10px;font-size:11px;font-weight:700;color:#9ca3af;letter-spacing:1.5px;text-transform:uppercase;">English version below / Version anglaise ci-dessous</p></td></tr>
+    <?= $section(false) ?>
+    <tr><td style="background:#f9fafb;padding:22px 30px;border-top:1px solid #e5e7eb;text-align:center;">
+      <p style="margin:0 0 6px;font-size:12px;color:#9ca3af;">OCSAPP Inc. | Siège social : Laval, Québec (H7H) / Registered office: Laval, Quebec (H7H)</p>
+      <p style="margin:0 0 6px;font-size:12px;color:#9ca3af;">Questions : <a href="mailto:info@ocsapp.ca" style="color:#9ca3af;">info@ocsapp.ca</a></p>
+      <p style="margin:0;font-size:12px;color:#9ca3af;">Courriel transactionnel au sujet de votre commande. / Transactional email about your order.</p>
+    </td></tr>
+  </table>
+</td></tr></table>
 </body>
 </html>

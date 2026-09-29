@@ -495,9 +495,12 @@ class AdminOrdersController {
             // Founding Buyer status is earned on payment (idempotent, never throws)
             \App\Helpers\FoundingBuyerHelper::grantForPaidOrders([(int) $orderId]);
 
-            // Send payment confirmation email to buyer
+            // Send payment confirmation email to buyer. Needs the full row: the $order fetched above
+            // has no user_id, so the helper could not find the buyer and silently sent nothing.
             try {
-                \App\Helpers\EmailHelper::sendOrderStatusUpdate($order, $order['status'], 'confirmed');
+                $full = $this->db->prepare("SELECT * FROM orders WHERE id = ?");
+                $full->execute([$orderId]);
+                \App\Helpers\EmailHelper::sendOrderStatusUpdate($full->fetch(PDO::FETCH_ASSOC) ?: $order, $order['status'], 'confirmed');
             } catch (\Exception $e) {
                 logger("Failed to send payment confirmation email for order #{$order['order_number']}: " . $e->getMessage(), 'warning');
             }

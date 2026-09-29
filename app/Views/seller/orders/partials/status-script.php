@@ -24,7 +24,7 @@
         .then(function (d) {
           if (d.success) { window.location.reload(); return; }
           // The endpoint answers in English; show our own bilingual text
-          alert(/Cannot change order status/.test(d.message || '') ? T.transition : T.failed);
+          alert(d.code === 'payment_required' ? d.message : (/Cannot change order status/.test(d.message || '') ? T.transition : T.failed));
           btn.disabled = false;
         })
         .catch(function () { alert(T.failed); btn.disabled = false; });

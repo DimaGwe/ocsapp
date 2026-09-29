@@ -335,17 +335,20 @@ class EmailHelper
             return false;
         }
 
-        $data = [
-            'order' => $order,
-            'user' => $user,
-            'old_status' => $oldStatus,
-            'new_status' => $newStatus,
-            'subject' => str_replace('{order_number}', $order['order_number'],
-                        $config['notifications']['order_status_update']['subject'])
-        ];
+        $subject = str_replace('{order_number}', $order['order_number'],
+                    $config['notifications']['order_status_update']['subject']);
 
-        self::setNextMeta('order_status_update', 'user', (int)($order['user_id'] ?? 0));
-        return self::sendTemplate($user['email'], 'order-status-update', $data);
+        // PHP template: render it (sendTemplate() only swaps {{placeholders}} in the raw file,
+        // which would have emailed the template source)
+        $body = self::renderPhpTemplate('order-status-update', [
+            'order' => $order, 'user' => $user, 'old_status' => $oldStatus, 'new_status' => $newStatus,
+        ]);
+        if ($body === null) {
+            return false;
+        }
+
+        self::setNextMeta('order_status_update', 'order', (int)($order['id'] ?? 0));
+        return self::send($user['email'], $subject, $body);
     }
 
     /**
@@ -369,15 +372,33 @@ class EmailHelper
             return false;
         }
 
-        $data = [
-            'order' => $order,
-            'user' => $user,
-            'reason' => $reason,
-            'subject' => str_replace('{order_number}', $order['order_number'],
-                        $config['notifications']['order_cancelled']['subject'])
-        ];
+        $subject = str_replace('{order_number}', $order['order_number'],
+                    $config['notifications']['order_cancelled']['subject']);
 
-        return self::sendTemplate($user['email'], 'order-cancelled', $data);
+        $body = self::renderPhpTemplate('order-cancelled', ['order' => $order, 'user' => $user, 'reason' => $reason]);
+        if ($body === null) {
+            return false;
+        }
+
+        self::setNextMeta('order_cancelled', 'order', (int)($order['id'] ?? 0));
+        return self::send($user['email'], $subject, $body);
+    }
+
+    /**
+     * Render a PHP email template from the templates path with the given variables in scope.
+     * Null (and an error log line) when the template is missing.
+     */
+    private static function renderPhpTemplate(string $template, array $vars): ?string
+    {
+        $path = self::loadConfig()['templates_path'] . $template . '.php';
+        if (!file_exists($path)) {
+            logger("Email template not found: {$template}", 'error');
+            return null;
+        }
+        ob_start();
+        extract($vars);
+        include $path;
+        return ob_get_clean();
     }
 
     /**
@@ -410,7 +431,13 @@ class EmailHelper
                         $config['notifications']['low_stock_alert']['subject'])
         ];
 
-        return self::sendTemplate($seller['email'], 'low-stock-alert', $data);
+        // PHP template: render it (sendTemplate() would have emailed the raw source)
+        $body = self::renderPhpTemplate('low-stock-alert', $data + ['currentStock' => $currentStock]);
+        if ($body === null) {
+            return false;
+        }
+        self::setNextMeta('low_stock_alert', 'user', (int) $sellerId);
+        return self::send($seller['email'], $data['subject'], $body);
     }
 
     /**

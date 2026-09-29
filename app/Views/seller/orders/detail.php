@@ -42,10 +42,10 @@ $m = fn($k) => (float) ($order[$k] ?? 0);
       <?php if (isset($payLabel[$pay])): ?><span class="sp-badge sp-badge-<?= $pay === 'paid' ? 'paid' : ($pay === 'pending' ? 'warn' : 'danger') ?>"><i class="fa-solid fa-credit-card"></i> <?= $payLabel[$pay][$fr ? 0 : 1] ?></span><?php endif; ?>
       <span class="sp-badge"><i class="fa-solid <?= $isPickup ? 'fa-store' : 'fa-truck' ?>"></i> <?= $isPickup ? ($fr ? 'Ramassage en boutique' : 'Store pickup') : ($fr ? 'Livraison ODA' : 'ODA delivery') ?></span>
     </div>
-    <?php if ($pay === 'pending' && in_array($status, ['pending', 'confirmed'], true)): ?>
+    <?php if ($pay !== 'paid' && !in_array($status, ['cancelled', 'refunded', 'delivered'], true)): ?>
       <div class="sp-alert sp-alert-warn"><i class="fa-solid fa-circle-info"></i><div><?= $fr
-        ? "Le paiement de cette commande n'est pas encore confirmé (par exemple un virement Interac en attente)."
-        : "Payment for this order isn't confirmed yet (for example an Interac transfer on its way)." ?></div></div>
+        ? "Cette commande n'est pas encore payée (par exemple un virement Interac en attente). Ne la préparez pas : vous pourrez la traiter dès que le paiement sera confirmé."
+        : "This order isn't paid yet (for example an Interac transfer on its way). Don't prepare it: you can process it as soon as the payment is confirmed." ?></div></div>
     <?php endif; ?>
     <?php if ($nextStatuses): ?>
       <div class="sp-row">

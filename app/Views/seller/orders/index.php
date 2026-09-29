@@ -85,7 +85,7 @@ $qs = function (array $p) use ($status, $date): string {
           <?php foreach ($orders as $order): ?>
             <?php
             $ft = (string) ($order['fulfillment_type'] ?? 'delivery');
-            $next = \App\Controllers\OrderController::sellerNextStatuses((string) $order['status'], $ft);
+            $next = \App\Controllers\OrderController::sellerNextStatuses((string) $order['status'], $ft, (string) ($order['payment_status'] ?? ''));
             $items = (int) ($order['items_count'] ?? 0);
             $cust = trim(html_entity_decode(($order['first_name'] ?? '') . ' ' . ($order['last_name'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
             ?>

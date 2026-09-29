@@ -1,217 +1,62 @@
 <?php
-$orderNumber = htmlspecialchars($order['order_number'] ?? 'N/A');
-$orderTotal = number_format($order['total'] ?? 0, 2);
+/**
+ * Order cancelled - BILINGUAL (FR first, then EN). Rendered as PHP by EmailHelper::sendOrderCancelled().
+ * Rewritten 2026-09-28: it went through sendTemplate(), which does not run PHP (raw source would have
+ * been emailed); fr-CA amounts; the "continue shopping" button pointed to a dead /shop URL.
+ * The refund wording is unchanged from the previous version.
+ * Variables: $order (orders row), $user (email, first_name), $reason.
+ */
+$fmtMoney = fn($v, bool $fr) => $fr ? number_format((float) $v, 2, ',', "\u{00A0}") . "\u{00A0}$" : '$' . number_format((float) $v, 2);
+$orderNo  = htmlspecialchars($order['order_number'] ?? '');
+$first    = htmlspecialchars(html_entity_decode((string) ($user['first_name'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+$reasonTx = trim(html_entity_decode((string) ($reason ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+$shopUrl  = htmlspecialchars(rtrim(env('APP_URL', 'https://ocsapp.ca'), '/') . '/marketplace-central');
+$header = 'background-color:#374151;padding:36px 30px;text-align:center;';
+$btn    = 'display:inline-block;background-color:#00b207;color:#fff;font-size:15px;font-weight:700;text-decoration:none;padding:13px 28px;border-radius:10px;';
+$box    = 'width:100%;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;margin:0 0 18px;';
+$section = function (bool $fr) use ($orderNo, $first, $reasonTx, $order, $fmtMoney, $shopUrl, $header, $btn, $box) {
+    $total = $fmtMoney($order['total'] ?? 0, $fr);
+    ob_start(); ?>
+        <tr><td bgcolor="#374151" style="<?= $header ?>">
+          <img src="https://ocsapp.ca/assets/images/logo.png" alt="OCSAPP" style="max-width:150px;height:auto;margin:0 auto 14px;display:block;">
+          <h1 style="margin:0;color:#fff;font-size:24px;font-weight:700;"><?= $fr ? 'Commande annulée' : 'Order cancelled' ?></h1>
+        </td></tr>
+        <tr><td style="padding:32px 30px 28px;">
+          <p style="margin:0 0 14px;color:#374151;font-size:16px;"><?= $fr ? 'Bonjour' : 'Hi' ?><?= $first !== '' ? ' ' . $first : '' ?>,</p>
+          <p style="margin:0 0 22px;color:#4b5563;font-size:15px;line-height:1.7;"><?= $fr ? 'Votre commande a été annulée.' : 'Your order has been cancelled.' ?></p>
+          <table role="presentation" style="<?= $box ?>"><tr><td style="padding:16px 20px;font-size:14px;color:#374151;line-height:1.8;">
+            <strong><?= $fr ? 'Commande' : 'Order' ?> :</strong> #<?= $orderNo ?><br>
+            <strong><?= $fr ? 'Montant' : 'Amount' ?> :</strong> <?= $total ?>
+            <?php if ($reasonTx !== ''): ?><br><strong><?= $fr ? "Motif d'annulation" : 'Reason' ?> :</strong> <?= htmlspecialchars($reasonTx) ?><?php endif; ?>
+          </td></tr></table>
+          <table role="presentation" style="<?= $box ?>"><tr><td style="padding:16px 20px;font-size:14px;color:#374151;line-height:1.7;">
+            <strong><?= $fr ? 'Remboursement' : 'Refund' ?></strong><br>
+            <?= $fr
+              ? "Si vous avez déjà été débité, un remboursement complet de {$total} sera traité sur votre mode de paiement d'origine dans un délai de 5 à 7 jours ouvrables."
+              : "If you were already charged, a full refund of {$total} will be processed to your original payment method within 5 to 7 business days." ?>
+          </td></tr></table>
+          <p style="margin:0;text-align:center;"><a href="<?= $shopUrl ?>" style="<?= $btn ?>"><?= $fr ? 'Continuer mes achats' : 'Continue shopping' ?></a></p>
+        </td></tr>
+    <?php return ob_get_clean();
+};
 ?>
 <!DOCTYPE html>
 <html lang="fr-CA">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Commande annulée / Order Cancelled</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5;">
-    <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f5f5f5;">
-        <tr>
-            <td align="center" style="padding: 40px 20px;">
-                <table role="presentation" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-
-                    <!-- Header -->
-                    <tr>
-                        <td style="background: linear-gradient(135deg, #00b207 0%, #009206 100%); padding: 40px 30px; text-align: center; border-radius: 12px 12px 0 0;">
-                            <img src="https://ocsapp.ca/assets/images/logo.png" alt="OCSAPP" style="max-width: 180px; height: auto; margin-bottom: 20px;">
-                            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">
-                                Commande annulée / Order Cancelled
-                            </h1>
-                        </td>
-                    </tr>
-
-                    <!-- French Body -->
-                    <tr>
-                        <td style="padding: 40px 30px 20px 30px;">
-                            <h2 style="margin: 0 0 20px; color: #1f2937; font-size: 24px;">
-                                Bonjour <?= htmlspecialchars($user['first_name'] ?? 'là') ?>,
-                            </h2>
-
-                            <p style="margin: 0 0 16px; color: #4b5563; font-size: 16px; line-height: 1.6;">
-                                Votre commande a été annulée. Nous sommes désolés de l'apprendre.
-                            </p>
-
-                            <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #fef2f2; border-radius: 8px; margin-bottom: 24px; border: 1px solid #fecaca;">
-                                <tr>
-                                    <td style="padding: 20px;">
-                                        <h3 style="margin: 0 0 12px; color: #ef4444; font-size: 18px;">Détails de la commande annulée</h3>
-                                        <p style="margin: 0 0 8px; color: #6b7280; font-size: 14px;">
-                                            <strong>Numéro de commande :</strong> <?= $orderNumber ?>
-                                        </p>
-                                        <p style="margin: 0 0 8px; color: #6b7280; font-size: 14px;">
-                                            <strong>Montant :</strong> $<?= $orderTotal ?>
-                                        </p>
-                                        <p style="margin: 0; color: #6b7280; font-size: 14px;">
-                                            <strong>Statut :</strong> <span style="color: #ef4444; font-weight: 600;">Annulé</span>
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <?php if (!empty($reason)): ?>
-                            <table role="presentation" style="width: 100%; border-collapse: collapse; border-left: 4px solid #ef4444; background-color: #fef2f2; border-radius: 4px; margin-bottom: 24px;">
-                                <tr>
-                                    <td style="padding: 16px 20px;">
-                                        <p style="margin: 0 0 8px; color: #1f2937; font-size: 14px; font-weight: 600;">
-                                            Motif d'annulation :
-                                        </p>
-                                        <p style="margin: 0; color: #4b5563; font-size: 14px; line-height: 1.6;">
-                                            <?= htmlspecialchars($reason) ?>
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-                            <?php endif; ?>
-
-                            <table role="presentation" style="width: 100%; border-collapse: collapse; border-left: 4px solid #00b207; background-color: #f0fdf4; border-radius: 4px; margin-bottom: 24px;">
-                                <tr>
-                                    <td style="padding: 16px 20px;">
-                                        <p style="margin: 0 0 8px; color: #1f2937; font-size: 14px; font-weight: 600;">
-                                            💳 Informations de remboursement
-                                        </p>
-                                        <p style="margin: 0; color: #4b5563; font-size: 14px; line-height: 1.6;">
-                                            Si vous avez déjà été débité, un remboursement complet de $<?= $orderTotal ?> sera traité sur votre mode de paiement d'origine dans un délai de 5 à 7 jours ouvrables.
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <table role="presentation" style="width: 100%; margin-bottom: 24px;">
-                                <tr>
-                                    <td align="center">
-                                        <a href="https://ocsapp.ca/shop" style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #00b207 0%, #009206 100%); color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 12px rgba(0, 178, 7, 0.3);">
-                                            Continuer mes achats →
-                                        </a>
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <p style="margin: 0 0 8px; color: #4b5563; font-size: 14px; line-height: 1.6;">
-                                Des questions sur cette annulation ?
-                            </p>
-                            <p style="margin: 0; color: #4b5563; font-size: 14px; line-height: 1.6;">
-                                📧 <a href="mailto:info@ocsapp.ca" style="color: #00b207; text-decoration: none;">info@ocsapp.ca</a>
-                            </p>
-                        </td>
-                    </tr>
-
-                    <!-- Language Divider -->
-                    <tr>
-                      <td style="padding: 0 30px;">
-                        <table role="presentation" style="width:100%;border-collapse:collapse;">
-                          <tr>
-                            <td style="padding:24px 0 8px;text-align:center;">
-                              <hr style="border:none;border-top:2px dashed #e5e7eb;margin:0 0 12px;">
-                              <span style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:1.5px;">
-                                🇬🇧 English version follows below / La version française précède
-                              </span>
-                              <hr style="border:none;border-top:2px dashed #e5e7eb;margin:12px 0 0;">
-                            </td>
-                          </tr>
-                        </table>
-                      </td>
-                    </tr>
-
-                    <!-- English Body -->
-                    <tr>
-                        <td style="padding: 20px 30px 40px 30px;">
-                            <h2 style="margin: 0 0 20px; color: #1f2937; font-size: 24px;">
-                                Hi <?= htmlspecialchars($user['first_name'] ?? 'there') ?>,
-                            </h2>
-
-                            <p style="margin: 0 0 16px; color: #4b5563; font-size: 16px; line-height: 1.6;">
-                                Your order has been cancelled. We're sorry to see this happen.
-                            </p>
-
-                            <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #fef2f2; border-radius: 8px; margin-bottom: 24px; border: 1px solid #fecaca;">
-                                <tr>
-                                    <td style="padding: 20px;">
-                                        <h3 style="margin: 0 0 12px; color: #ef4444; font-size: 18px;">Cancelled Order Details</h3>
-                                        <p style="margin: 0 0 8px; color: #6b7280; font-size: 14px;">
-                                            <strong>Order Number:</strong> <?= $orderNumber ?>
-                                        </p>
-                                        <p style="margin: 0 0 8px; color: #6b7280; font-size: 14px;">
-                                            <strong>Order Amount:</strong> $<?= $orderTotal ?>
-                                        </p>
-                                        <p style="margin: 0; color: #6b7280; font-size: 14px;">
-                                            <strong>Status:</strong> <span style="color: #ef4444; font-weight: 600;">Cancelled</span>
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <?php if (!empty($reason)): ?>
-                            <table role="presentation" style="width: 100%; border-collapse: collapse; border-left: 4px solid #ef4444; background-color: #fef2f2; border-radius: 4px; margin-bottom: 24px;">
-                                <tr>
-                                    <td style="padding: 16px 20px;">
-                                        <p style="margin: 0 0 8px; color: #1f2937; font-size: 14px; font-weight: 600;">
-                                            Cancellation Reason:
-                                        </p>
-                                        <p style="margin: 0; color: #4b5563; font-size: 14px; line-height: 1.6;">
-                                            <?= htmlspecialchars($reason) ?>
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-                            <?php endif; ?>
-
-                            <table role="presentation" style="width: 100%; border-collapse: collapse; border-left: 4px solid #00b207; background-color: #f0fdf4; border-radius: 4px; margin-bottom: 24px;">
-                                <tr>
-                                    <td style="padding: 16px 20px;">
-                                        <p style="margin: 0 0 8px; color: #1f2937; font-size: 14px; font-weight: 600;">
-                                            💳 Refund Information
-                                        </p>
-                                        <p style="margin: 0; color: #4b5563; font-size: 14px; line-height: 1.6;">
-                                            If you've already been charged, a full refund of $<?= $orderTotal ?> will be processed to your original payment method within 5-7 business days.
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <table role="presentation" style="width: 100%; margin-bottom: 24px;">
-                                <tr>
-                                    <td align="center">
-                                        <a href="https://ocsapp.ca/shop" style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #00b207 0%, #009206 100%); color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 12px rgba(0, 178, 7, 0.3);">
-                                            Continue Shopping →
-                                        </a>
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <p style="margin: 0 0 8px; color: #4b5563; font-size: 14px; line-height: 1.6;">
-                                Questions about this cancellation?
-                            </p>
-                            <p style="margin: 0; color: #4b5563; font-size: 14px; line-height: 1.6;">
-                                📧 <a href="mailto:info@ocsapp.ca" style="color: #00b207; text-decoration: none;">info@ocsapp.ca</a>
-                            </p>
-                        </td>
-                    </tr>
-
-                    <!-- Footer -->
-                    <tr>
-                        <td style="background-color: #f9fafb; padding: 30px; text-align: center; border-radius: 0 0 12px 12px; border-top: 1px solid #e5e7eb;">
-                            <p style="margin: 0 0 8px; color: #9ca3af; font-size: 12px;">
-                                &copy; <?= date('Y') ?> OCSAPP. Tous droits réservés. / All rights reserved.
-                            </p>
-                            <p style="margin: 0 0 12px; color: #9ca3af; font-size: 12px;">
-                                Courriel automatique — ne pas répondre. / Automated email — do not reply.
-                            </p>
-                            <p style="margin: 0; color: #9ca3af; font-size: 12px;">
-                                <a href="https://ocsapp.ca/terms" style="color: #6b7280; text-decoration: none;">Terms</a> •
-                                <a href="https://ocsapp.ca/privacy" style="color: #6b7280; text-decoration: none;">Privacy</a> •
-                                <a href="https://ocsapp.ca/unsubscribe" style="color: #6b7280; text-decoration: none;">Unsubscribe</a>
-                            </p>
-                        </td>
-                    </tr>
-
-                </table>
-            </td>
-        </tr>
-    </table>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Commande annulée #<?= $orderNo ?> / Order cancelled #<?= $orderNo ?></title></head>
+<body style="margin:0;padding:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f5f5f5;">
+<table role="presentation" style="width:100%;border-collapse:collapse;background:#f5f5f5;"><tr><td align="center" style="padding:36px 16px;">
+  <table role="presentation" style="max-width:600px;width:100%;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.08);">
+    <?= $section(true) ?>
+    <tr><td style="padding:0 30px;"><hr style="border:none;border-top:2px dashed #e5e7eb;margin:8px 0 10px;">
+      <p style="text-align:center;margin:0 0 10px;font-size:11px;font-weight:700;color:#9ca3af;letter-spacing:1.5px;text-transform:uppercase;">English version below / Version anglaise ci-dessous</p></td></tr>
+    <?= $section(false) ?>
+    <tr><td style="background:#f9fafb;padding:22px 30px;border-top:1px solid #e5e7eb;text-align:center;">
+      <p style="margin:0 0 6px;font-size:12px;color:#9ca3af;">OCSAPP Inc. | Siège social : Laval, Québec (H7H) / Registered office: Laval, Quebec (H7H)</p>
+      <p style="margin:0 0 6px;font-size:12px;color:#9ca3af;">Questions : <a href="mailto:info@ocsapp.ca" style="color:#9ca3af;">info@ocsapp.ca</a></p>
+      <p style="margin:0;font-size:12px;color:#9ca3af;">Courriel transactionnel au sujet de votre commande. / Transactional email about your order.</p>
+    </td></tr>
+  </table>
+</td></tr></table>
 </body>
 </html>

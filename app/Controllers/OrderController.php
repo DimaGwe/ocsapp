@@ -297,15 +297,15 @@ class OrderController
             $stmt = $this->db->prepare("
                 UPDATE orders 
                 SET status = 'cancelled',
-                    cancellation_reason = :reason,
                     cancelled_at = NOW(),
                     cancelled_by = :user_id,
                     updated_at = NOW()
                 WHERE id = :id
             ");
             
+            // orders has no cancellation_reason column (the update always failed): the reason is kept
+            // in delivery_status_history.notes (below) and in the cancellation email
             $stmt->execute([
-                'reason' => $reason,
                 'user_id' => $userId,
                 'id' => $orderId
             ]);
@@ -324,48 +324,9 @@ class OrderController
                 'reason' => $reason
             ]);
             
-            // Restore inventory stock
-            $stmt = $this->db->prepare("SELECT * FROM order_items WHERE order_id = :order_id");
-            $stmt->execute(['order_id' => $orderId]);
-            $items = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            // Restore inventory stock (inside the cancel transaction)
+            $this->restockOrder((int) $orderId, (int) $order['shop_id'], "Order #{$order['order_number']} cancelled by buyer: {$reason}", (int) $userId);
 
-            foreach ($items as $item) {
-                if ($item['shop_inventory_id']) {
-                    // Restore stock to shop_inventory
-                    // Distinct placeholders: a repeated :quantity fails with native prepares (HY093),
-                    // which rolled back the whole buyer cancellation
-                    $stmt = $this->db->prepare("
-                        UPDATE shop_inventory
-                        SET stock_quantity = stock_quantity + :qty_back,
-                            sold_quantity = sold_quantity - :qty_sold,
-                            updated_at = NOW()
-                        WHERE id = :shop_inventory_id
-                    ");
-
-                    $stmt->execute([
-                        'qty_back' => $item['quantity'],
-                        'qty_sold' => $item['quantity'],
-                        'shop_inventory_id' => $item['shop_inventory_id']
-                    ]);
-
-                    // Log stock movement
-                    $stmt = $this->db->prepare("
-                        INSERT INTO stock_movements
-                        (shop_inventory_id, type, quantity, reference_type, reference_id, reason, created_at)
-                        VALUES (:shop_inventory_id, 'return', :quantity, 'order', :order_id, :reason, NOW())
-                    ");
-
-                    $stmt->execute([
-                        'shop_inventory_id' => $item['shop_inventory_id'],
-                        'quantity' => $item['quantity'],
-                        'order_id' => $orderId,
-                        'reason' => "Order #{$order['order_number']} cancelled: {$reason}"
-                    ]);
-
-                    logger("Restored {$item['quantity']} units to shop_inventory #{$item['shop_inventory_id']} for cancelled order", 'info');
-                }
-            }
-            
             $this->db->commit();
             
             // Send cancellation email to customer
@@ -586,12 +547,47 @@ class OrderController
     }
     
     /**
+     * Put a cancelled order's items back in stock and log each movement. Call inside the cancel
+     * transaction. stock_movements is (product_id, shop_id, movement_type, quantity, previous_quantity,
+     * new_quantity, reference_type, reference_id, notes, created_by): the old insert used columns that
+     * do not exist (shop_inventory_id, type, reason), which rolled back every cancellation.
+     */
+    private function restockOrder(int $orderId, int $shopId, string $note, int $userId): void
+    {
+        $items = $this->db->prepare("SELECT shop_inventory_id, quantity FROM order_items WHERE order_id = ? AND shop_inventory_id IS NOT NULL");
+        $items->execute([$orderId]);
+        $lock = $this->db->prepare("SELECT product_id, stock_quantity FROM shop_inventory WHERE id = ? AND shop_id = ? FOR UPDATE");
+        $update = $this->db->prepare("UPDATE shop_inventory SET stock_quantity = ?, sold_quantity = GREATEST(sold_quantity - ?, 0), updated_at = NOW() WHERE id = ?");
+        $log = $this->db->prepare("
+            INSERT INTO stock_movements (product_id, shop_id, movement_type, quantity, previous_quantity, new_quantity,
+                                         reference_type, reference_id, notes, created_by, created_at)
+            VALUES (?, ?, 'order_cancel', ?, ?, ?, 'order', ?, ?, ?, NOW())
+        ");
+        foreach ($items->fetchAll(\PDO::FETCH_ASSOC) as $it) {
+            $lock->execute([$it['shop_inventory_id'], $shopId]);
+            $row = $lock->fetch(\PDO::FETCH_ASSOC);
+            if (!$row) {
+                continue; // inventory row gone (item removed from the shop): nothing to restore
+            }
+            $qty = (int) $it['quantity'];
+            $prev = (int) $row['stock_quantity'];
+            $update->execute([$prev + $qty, $qty, $it['shop_inventory_id']]);
+            $log->execute([$row['product_id'], $shopId, $qty, $prev, $prev + $qty, $orderId, mb_substr($note, 0, 1000), $userId ?: null]);
+        }
+    }
+
+    /**
      * Next statuses a seller may pick for an order, in order. Mirrors isValidStatusTransition()
      * minus the driver-owned steps (out_for_delivery, failed); a ready pickup order can be
      * marked collected ('delivered'). Used by the seller order list and detail pages.
      */
-    public static function sellerNextStatuses(string $status, string $fulfillmentType = 'delivery'): array
+    public static function sellerNextStatuses(string $status, string $fulfillmentType = 'delivery', string $paymentStatus = 'paid'): array
     {
+        // OCSAPP rule (Dima 2026-09-28): an order must be paid before the seller works on it.
+        // An unpaid order can only be cancelled (e.g. an Interac transfer that never came).
+        if ($paymentStatus !== 'paid') {
+            return in_array($status, ['pending', 'confirmed', 'processing', 'ready'], true) ? ['cancelled'] : [];
+        }
         $map = [
             'pending'    => ['confirmed', 'cancelled'],
             'confirmed'  => ['processing', 'cancelled'],
@@ -653,7 +649,7 @@ class OrderController
             'order'        => $order,
             'items'        => $items,
             'history'      => $history,
-            'nextStatuses' => self::sellerNextStatuses((string) $order['status'], (string) ($order['fulfillment_type'] ?? 'delivery')),
+            'nextStatuses' => self::sellerNextStatuses((string) $order['status'], (string) ($order['fulfillment_type'] ?? 'delivery'), (string) ($order['payment_status'] ?? '')),
         ]);
     }
 
@@ -696,6 +692,7 @@ class OrderController
                 FROM orders o
                 JOIN shops s ON o.shop_id = s.id
                 WHERE o.id = :id AND s.seller_id = :seller_id
+                FOR UPDATE
             ");
 
             $stmt->execute(['id' => $orderId, 'seller_id' => $userId]);
@@ -709,6 +706,18 @@ class OrderController
 
             $oldStatus = $order['status'];
             $fulfillmentType = $order['fulfillment_type'] ?? 'delivery';
+
+            // Paid first: a seller only moves an order forward once its payment is confirmed
+            if ($newStatus !== 'cancelled' && ($order['payment_status'] ?? '') !== 'paid') {
+                $this->db->rollBack();
+                jsonResponse([
+                    'success' => false,
+                    'code'    => 'payment_required',
+                    'message' => lang_pick("Cette commande n'est pas encore payée. Vous pourrez la traiter dès que le paiement sera confirmé.",
+                                           "This order isn't paid yet. You can process it as soon as the payment is confirmed."),
+                ]);
+                return;
+            }
 
             // Validate status transition
             if (!$this->isValidStatusTransition($oldStatus, $newStatus, $fulfillmentType)) {
@@ -759,10 +768,31 @@ class OrderController
                 'notes' => $notes
             ]);
             
+            // Seller cancel restores stock, like the buyer cancel (Dima 2026-09-28)
+            if ($newStatus === 'cancelled') {
+                $this->restockOrder($orderId, (int) $order['shop_id'], "Order #{$order['order_number']} cancelled by seller", (int) $userId);
+            }
+
             $this->db->commit();
             
-            // Send status update email to customer
-            if (in_array($newStatus, ['confirmed', 'processing', 'ready', 'out_for_delivery', 'delivered'])) {
+            // Buyer is told when the seller cancels (this was never sent)
+            if ($newStatus === 'cancelled') {
+                try {
+                    require_once __DIR__ . '/../Helpers/EmailHelper.php';
+                    $stmt = $this->db->prepare("SELECT * FROM orders WHERE id = :id");
+                    $stmt->execute(['id' => $orderId]);
+                    if ($cancelled = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+                        \App\Helpers\EmailHelper::sendOrderCancelled($cancelled, $notes);
+                    }
+                } catch (\Exception $e) {
+                    logger("Failed to send seller-cancel email: " . $e->getMessage(), 'warning');
+                }
+            }
+
+            // Send status update email to customer (a ready pickup order gets the dedicated
+            // ready-for-pickup email below instead, not both)
+            if (in_array($newStatus, ['confirmed', 'processing', 'ready', 'out_for_delivery', 'delivered'])
+                && !($newStatus === 'ready' && $fulfillmentType === 'pickup')) {
                 try {
                     require_once __DIR__ . '/../Helpers/EmailHelper.php';
                     
