@@ -69,7 +69,7 @@ class SupplierProductController {
 
         } catch (\PDOException $e) {
             logger("Supplier products list error: " . $e->getMessage(), 'error');
-            setFlash('error', 'Error loading products');
+            setFlash('error', lang_pick('Erreur lors du chargement des produits.', 'Error loading products'));
             back();
         }
     }
@@ -82,17 +82,33 @@ class SupplierProductController {
         ]);
     }
 
+    /**
+     * Product photo via the shared ImageUploadHelper (extension + finfo MIME + real image checks,
+     * 5 MB) into public/uploads/supplier-products. Returns ['success', 'path', 'error' (bilingual)].
+     */
+    private function uploadProductImage(): array
+    {
+        $result = (new \App\Helpers\ImageUploadHelper('uploads/supplier-products'))->upload($_FILES['image']);
+        if (!empty($result['success'])) {
+            return ['success' => true, 'path' => $result['path'], 'error' => null];
+        }
+        return ['success' => false, 'path' => null, 'error' => lang_pick(
+            'Image refusée : JPG, PNG, GIF ou WebP de 5 Mo maximum.',
+            'Image rejected: JPG, PNG, GIF or WebP up to 5 MB.'
+        )];
+    }
+
     public function store(): void {
         $supplierId = $this->checkAuth();
 
         if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
-            setFlash('error', 'Invalid request');
+            setFlash('error', lang_pick('Requête invalide.', 'Invalid request'));
             back();
         }
 
         $weightKg = floatval(post('weight_kg', 0));
         if ($weightKg <= 0) {
-            setFlash('error', 'Product weight (kg) is required and must be greater than zero');
+            setFlash('error', lang_pick('Le poids du produit (kg) est requis et doit être supérieur à zéro.', 'Product weight (kg) is required and must be greater than zero'));
             back();
             return;
         }
@@ -102,36 +118,15 @@ class SupplierProductController {
 
             // Handle image upload
             $imagePath = null;
-            if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-                $uploadDir = __DIR__ . '/../../public/uploads/supplier-products/';
-
-                // Create directory if it doesn't exist
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0775, true);
-                }
-
-                $fileExtension = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
-                $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-
-                if (in_array($fileExtension, $allowedExtensions)) {
-                    // Check file size (max 5MB)
-                    if ($_FILES['image']['size'] <= 5 * 1024 * 1024) {
-                        $fileName = 'supplier_' . $supplierId . '_' . uniqid() . '.' . $fileExtension;
-                        $uploadPath = $uploadDir . $fileName;
-
-                        if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadPath)) {
-                            $imagePath = 'uploads/supplier-products/' . $fileName;
-                        }
-                    } else {
-                        setFlash('error', 'Image file too large (max 5MB)');
-                        back();
-                        return;
-                    }
-                } else {
-                    setFlash('error', 'Invalid image format. Only JPG, PNG, GIF, and WebP are allowed');
+            if (!empty($_FILES['image']['name'])) {
+                // Shared uploader: extension + finfo MIME + real image checks, 5 MB (was extension only)
+                $upload = $this->uploadProductImage();
+                if (!$upload['success']) {
+                    setFlash('error', $upload['error']);
                     back();
                     return;
                 }
+                $imagePath = $upload['path'];
             }
 
             $stockQuantity = post('stock_quantity');
@@ -170,12 +165,12 @@ class SupplierProductController {
                 );
             }
 
-            setFlash('success', 'Product added successfully');
+            setFlash('success', lang_pick('Produit ajouté.', 'Product added successfully'));
             redirect(url('supplier/products'));
 
         } catch (\PDOException $e) {
             logger("Supplier product create error: " . $e->getMessage(), 'error');
-            setFlash('error', 'Error adding product');
+            setFlash('error', lang_pick('Erreur lors de l\'ajout du produit.', 'Error adding product'));
             back();
         }
     }
@@ -186,7 +181,7 @@ class SupplierProductController {
         try {
             $id = (int) get('id');
             if (!$id) {
-                setFlash('error', 'Invalid product ID');
+                setFlash('error', lang_pick('Numéro de produit invalide.', 'Invalid product ID'));
                 redirect(url('supplier/products'));
             }
 
@@ -199,7 +194,7 @@ class SupplierProductController {
             $product = $stmt->fetch();
 
             if (!$product) {
-                setFlash('error', 'Product not found');
+                setFlash('error', lang_pick('Produit introuvable.', 'Product not found'));
                 redirect(url('supplier/products'));
             }
 
@@ -210,7 +205,7 @@ class SupplierProductController {
 
         } catch (\PDOException $e) {
             logger("Supplier product edit error: " . $e->getMessage(), 'error');
-            setFlash('error', 'Error loading product');
+            setFlash('error', lang_pick('Erreur lors du chargement du produit.', 'Error loading product'));
             redirect(url('supplier/products'));
         }
     }
@@ -219,13 +214,13 @@ class SupplierProductController {
         $supplierId = $this->checkAuth();
 
         if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
-            setFlash('error', 'Invalid request');
+            setFlash('error', lang_pick('Requête invalide.', 'Invalid request'));
             back();
         }
 
         $weightKg = floatval(post('weight_kg', 0));
         if ($weightKg <= 0) {
-            setFlash('error', 'Product weight (kg) is required and must be greater than zero');
+            setFlash('error', lang_pick('Le poids du produit (kg) est requis et doit être supérieur à zéro.', 'Product weight (kg) is required and must be greater than zero'));
             back();
             return;
         }
@@ -233,7 +228,7 @@ class SupplierProductController {
         try {
             $id = (int) post('id');
             if (!$id) {
-                throw new \Exception('Invalid product ID');
+                throw new \Exception(lang_pick('Numéro de produit invalide.', 'Invalid product ID'));
             }
 
             $db = \Database::getConnection();
@@ -247,48 +242,23 @@ class SupplierProductController {
             $currentProduct = $stmt->fetch();
 
             if (!$currentProduct) {
-                throw new \Exception('Product not found');
+                throw new \Exception(lang_pick('Produit introuvable.', 'Product not found'));
             }
 
             // Handle image upload
             $imagePath = $currentProduct['image']; // Keep current image by default
-            if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-                $uploadDir = __DIR__ . '/../../public/uploads/supplier-products/';
-
-                // Create directory if it doesn't exist
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0775, true);
-                }
-
-                $fileExtension = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
-                $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-
-                if (in_array($fileExtension, $allowedExtensions)) {
-                    // Check file size (max 5MB)
-                    if ($_FILES['image']['size'] <= 5 * 1024 * 1024) {
-                        $fileName = 'supplier_' . $supplierId . '_' . uniqid() . '.' . $fileExtension;
-                        $uploadPath = $uploadDir . $fileName;
-
-                        if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadPath)) {
-                            // Delete old image file if exists
-                            if (!empty($currentProduct['image'])) {
-                                $oldImagePath = __DIR__ . '/../../public/' . $currentProduct['image'];
-                                if (file_exists($oldImagePath)) {
-                                    unlink($oldImagePath);
-                                }
-                            }
-                            $imagePath = 'uploads/supplier-products/' . $fileName;
-                        }
-                    } else {
-                        setFlash('error', 'Image file too large (max 5MB)');
-                        back();
-                        return;
-                    }
-                } else {
-                    setFlash('error', 'Invalid image format. Only JPG, PNG, GIF, and WebP are allowed');
+            if (!empty($_FILES['image']['name'])) {
+                $upload = $this->uploadProductImage();
+                if (!$upload['success']) {
+                    setFlash('error', $upload['error']);
                     back();
                     return;
                 }
+                // Replace: remove the previous file (the helper only deletes inside public/uploads)
+                if (!empty($currentProduct['image'])) {
+                    (new \App\Helpers\ImageUploadHelper('uploads/supplier-products'))->delete($currentProduct['image']);
+                }
+                $imagePath = $upload['path'];
             }
 
             $stockQuantity = post('stock_quantity');
@@ -338,7 +308,7 @@ class SupplierProductController {
                 );
             }
 
-            setFlash('success', 'Product updated successfully');
+            setFlash('success', lang_pick('Produit mis à jour.', 'Product updated successfully'));
             redirect(url('supplier/products'));
 
         } catch (\Exception $e) {
@@ -352,13 +322,13 @@ class SupplierProductController {
         $supplierId = $this->checkAuth();
 
         if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
-            jsonResponse(['success' => false, 'message' => 'Invalid request'], 400);
+            jsonResponse(['success' => false, 'message' => lang_pick('Requête invalide.', 'Invalid request')], 400);
         }
 
         try {
             $id = (int) post('id');
             if (!$id) {
-                jsonResponse(['success' => false, 'message' => 'Invalid product ID'], 400);
+                jsonResponse(['success' => false, 'message' => lang_pick('Numéro de produit invalide.', 'Invalid product ID')], 400);
             }
 
             $db = \Database::getConnection();
@@ -374,7 +344,7 @@ class SupplierProductController {
             $count = $stmt->fetch()['count'] ?? 0;
 
             if ($count > 0) {
-                jsonResponse(['success' => false, 'message' => 'Cannot delete product that has been ordered'], 400);
+                jsonResponse(['success' => false, 'message' => lang_pick('Impossible de supprimer un produit qui a déjà été commandé.', 'Cannot delete product that has been ordered')], 400);
             }
 
             $stmt = $db->prepare("
@@ -383,11 +353,11 @@ class SupplierProductController {
             ");
             $stmt->execute([$id, $supplierId]);
 
-            jsonResponse(['success' => true, 'message' => 'Product deleted successfully']);
+            jsonResponse(['success' => true, 'message' => lang_pick('Produit supprimé.', 'Product deleted successfully')]);
 
         } catch (\PDOException $e) {
             logger("Supplier product delete error: " . $e->getMessage(), 'error');
-            jsonResponse(['success' => false, 'message' => 'Error deleting product'], 500);
+            jsonResponse(['success' => false, 'message' => lang_pick('Erreur lors de la suppression du produit.', 'Error deleting product')], 500);
         }
     }
 
@@ -521,7 +491,7 @@ class SupplierProductController {
 
         } catch (\PDOException $e) {
             logger("Supplier analytics error: " . $e->getMessage(), 'error');
-            setFlash('error', 'Error loading analytics');
+            setFlash('error', lang_pick('Erreur lors du chargement de l\'analytique.', 'Error loading analytics'));
             redirect(url('supplier/dashboard'));
         }
     }
@@ -579,7 +549,7 @@ class SupplierProductController {
 
         } catch (\PDOException $e) {
             logger("Supplier orders list error: " . $e->getMessage(), 'error');
-            setFlash('error', 'Error loading orders');
+            setFlash('error', lang_pick('Erreur lors du chargement des commandes.', 'Error loading orders'));
             back();
         }
     }
@@ -590,7 +560,7 @@ class SupplierProductController {
         try {
             $id = (int) get('id');
             if (!$id) {
-                setFlash('error', 'Invalid order ID');
+                setFlash('error', lang_pick('Numéro de commande invalide.', 'Invalid order ID'));
                 redirect(url('supplier/orders'));
             }
 
@@ -620,7 +590,7 @@ class SupplierProductController {
             $order = $stmt->fetch();
 
             if (!$order) {
-                setFlash('error', 'Order not found');
+                setFlash('error', lang_pick('Commande introuvable.', 'Order not found'));
                 redirect(url('supplier/orders'));
             }
 
@@ -642,7 +612,7 @@ class SupplierProductController {
 
         } catch (\PDOException $e) {
             logger("Supplier order view error: " . $e->getMessage(), 'error');
-            setFlash('error', 'Error loading order');
+            setFlash('error', lang_pick('Erreur lors du chargement de la commande.', 'Error loading order'));
             redirect(url('supplier/orders'));
         }
     }
@@ -651,14 +621,14 @@ class SupplierProductController {
         $supplierId = $this->checkAuth();
 
         if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
-            setFlash('error', 'Invalid request');
+            setFlash('error', lang_pick('Requête invalide.', 'Invalid request'));
             back();
         }
 
         try {
             $orderId = (int) post('order_id');
             if (!$orderId) {
-                setFlash('error', 'Invalid order ID');
+                setFlash('error', lang_pick('Numéro de commande invalide.', 'Invalid order ID'));
                 back();
             }
 
@@ -674,7 +644,7 @@ class SupplierProductController {
             $order = $stmt->fetch();
 
             if (!$order) {
-                setFlash('error', 'Order not found');
+                setFlash('error', lang_pick('Commande introuvable.', 'Order not found'));
                 redirect(url('supplier/orders'));
             }
 
@@ -855,12 +825,12 @@ class SupplierProductController {
             $this->checkAllSuppliersConfirmed($orderId, $db);
 
             logger("Supplier {$supplierId} accepted purchase order #{$order['po_number']}", 'info');
-            setFlash('success', 'Purchase order accepted. Click "Start Preparing" when you begin packing the items.');
+            setFlash('success', lang_pick('Bon de commande accepté. Cliquez sur « Commencer la préparation » quand vous commencez à emballer les articles.', 'Purchase order accepted. Click "Start Preparing" when you begin packing the items.'));
             redirect(url('supplier/orders/view?id=' . $orderId));
 
         } catch (\Exception $e) {
             logger("Supplier accept order error: " . $e->getMessage(), 'error');
-            setFlash('error', 'Error accepting order');
+            setFlash('error', lang_pick('Erreur lors de l\'acceptation de la commande.', 'Error accepting order'));
             back();
         }
     }
@@ -869,7 +839,7 @@ class SupplierProductController {
         $supplierId = $this->checkAuth();
 
         if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
-            setFlash('error', 'Invalid request');
+            setFlash('error', lang_pick('Requête invalide.', 'Invalid request'));
             back();
         }
 
@@ -878,12 +848,12 @@ class SupplierProductController {
             $declineReason = post('decline_reason', '');
 
             if (!$orderId) {
-                setFlash('error', 'Invalid order ID');
+                setFlash('error', lang_pick('Numéro de commande invalide.', 'Invalid order ID'));
                 back();
             }
 
             if (empty($declineReason)) {
-                setFlash('error', 'Please provide a reason for declining the order');
+                setFlash('error', lang_pick('Veuillez indiquer la raison du refus de la commande.', 'Please provide a reason for declining the order'));
                 back();
             }
 
@@ -899,7 +869,7 @@ class SupplierProductController {
             $order = $stmt->fetch();
 
             if (!$order) {
-                setFlash('error', 'Order not found');
+                setFlash('error', lang_pick('Commande introuvable.', 'Order not found'));
                 redirect(url('supplier/orders'));
             }
 
@@ -978,12 +948,12 @@ class SupplierProductController {
             }
 
             logger("Supplier {$supplierId} declined purchase order #{$order['po_number']}. Reason: {$declineReason}", 'info');
-            setFlash('success', 'Purchase order declined. The administrator has been notified.');
+            setFlash('success', lang_pick('Bon de commande refusé. L\'équipe OCSAPP a été avisée.', 'Purchase order declined. The administrator has been notified.'));
             redirect(url('supplier/orders'));
 
         } catch (\PDOException $e) {
             logger("Supplier decline order error: " . $e->getMessage(), 'error');
-            setFlash('error', 'Error declining order');
+            setFlash('error', lang_pick('Erreur lors du refus de la commande.', 'Error declining order'));
             back();
         }
     }
@@ -1365,14 +1335,14 @@ class SupplierProductController {
         $supplierId = $this->checkAuth();
 
         if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
-            setFlash('error', 'Invalid request');
+            setFlash('error', lang_pick('Requête invalide.', 'Invalid request'));
             back();
         }
 
         try {
             $orderId = (int) post('order_id');
             if (!$orderId) {
-                setFlash('error', 'Invalid order ID');
+                setFlash('error', lang_pick('Numéro de commande invalide.', 'Invalid order ID'));
                 back();
             }
 
@@ -1389,13 +1359,13 @@ class SupplierProductController {
             $order = $stmt->fetch(\PDO::FETCH_ASSOC);
 
             if (!$order || $order['status'] !== 'accepted') {
-                setFlash('error', 'Order cannot be moved to preparing at this stage.');
+                setFlash('error', lang_pick('La commande ne peut pas passer en préparation à cette étape.', 'Order cannot be moved to preparing at this stage.'));
                 redirect(url('supplier/orders/view?id=' . $orderId));
             }
 
             // Block distribution POs until OCSApp has paid the supplier
             if (!empty($order['distribution_request_id']) && empty($order['admin_paid_at'])) {
-                setFlash('error', 'You cannot begin preparing this order until OCSApp has sent your payment. You will be notified when payment is confirmed.');
+                setFlash('error', lang_pick('Vous ne pouvez pas commencer à préparer cette commande avant qu\'OCSAPP ait envoyé votre paiement. Vous serez avisé dès que le paiement sera confirmé.', 'You cannot begin preparing this order until OCSApp has sent your payment. You will be notified when payment is confirmed.'));
                 redirect(url('supplier/orders/view?id=' . $orderId));
             }
 
@@ -1427,12 +1397,12 @@ class SupplierProductController {
             }
 
             logger("Supplier {$supplierId} started preparing PO #{$order['po_number']}", 'info');
-            setFlash('success', 'Order marked as being prepared. Click "Ready for Pickup" when all items are packed.');
+            setFlash('success', lang_pick('Commande en préparation. Cliquez sur « Prêt pour le ramassage » quand tous les articles sont emballés.', 'Order marked as being prepared. Click "Ready for Pickup" when all items are packed.'));
             redirect(url('supplier/orders/view?id=' . $orderId));
 
         } catch (\Exception $e) {
             logger("startPreparing error: " . $e->getMessage(), 'error');
-            setFlash('error', 'Error updating order status.');
+            setFlash('error', lang_pick('Erreur lors de la mise à jour du statut de la commande.', 'Error updating order status.'));
             back();
         }
     }
@@ -1446,7 +1416,7 @@ class SupplierProductController {
         $supplierId = $this->checkAuth();
 
         if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
-            setFlash('error', 'Invalid request.');
+            setFlash('error', lang_pick('Requête invalide.', 'Invalid request.'));
             back();
         }
 
@@ -1455,7 +1425,7 @@ class SupplierProductController {
         $message   = trim(post('message', ''));
 
         if (!$orderId || empty($issueType) || empty($message)) {
-            setFlash('error', 'Please fill in all fields.');
+            setFlash('error', lang_pick('Veuillez remplir tous les champs.', 'Please fill in all fields.'));
             back();
         }
 
@@ -1475,7 +1445,7 @@ class SupplierProductController {
             $order = $stmt->fetch(\PDO::FETCH_ASSOC);
 
             if (!$order) {
-                setFlash('error', 'Order not found.');
+                setFlash('error', lang_pick('Commande introuvable.', 'Order not found.'));
                 redirect(url('supplier/orders'));
             }
 
@@ -1505,12 +1475,12 @@ class SupplierProductController {
             );
 
             logger("Supplier {$supplierId} reported issue on PO #{$order['po_number']}: {$issueLabel}", 'info');
-            setFlash('success', 'Issue reported. Our team has been notified and will follow up shortly.');
+            setFlash('success', lang_pick('Problème signalé. Notre équipe a été avisée et fera un suivi rapidement.', 'Issue reported. Our team has been notified and will follow up shortly.'));
             redirect(url('supplier/orders/view?id=' . $orderId));
 
         } catch (\Exception $e) {
             logger('reportIssue error: ' . $e->getMessage(), 'error');
-            setFlash('error', 'Error reporting issue. Please try again.');
+            setFlash('error', lang_pick('Le problème n\'a pas pu être signalé. Veuillez réessayer.', 'Error reporting issue. Please try again.'));
             back();
         }
     }
@@ -1523,14 +1493,14 @@ class SupplierProductController {
         $supplierId = $this->checkAuth();
 
         if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
-            setFlash('error', 'Invalid request');
+            setFlash('error', lang_pick('Requête invalide.', 'Invalid request'));
             back();
         }
 
         try {
             $orderId = (int) post('order_id');
             if (!$orderId) {
-                setFlash('error', 'Invalid order ID');
+                setFlash('error', lang_pick('Numéro de commande invalide.', 'Invalid order ID'));
                 back();
             }
 
@@ -1548,7 +1518,7 @@ class SupplierProductController {
             $order = $stmt->fetch(\PDO::FETCH_ASSOC);
 
             if (!$order || $order['status'] !== 'preparing') {
-                setFlash('error', 'Order cannot be marked ready for pickup at this stage.');
+                setFlash('error', lang_pick('La commande ne peut pas être marquée prête pour le ramassage à cette étape.', 'Order cannot be marked ready for pickup at this stage.'));
                 redirect(url('supplier/orders/view?id=' . $orderId));
             }
 
@@ -1648,12 +1618,12 @@ class SupplierProductController {
             }
 
             logger("Supplier {$supplierId} marked PO #{$order['po_number']} ready for pickup", 'info');
-            setFlash('success', 'Order marked as ready for pickup. Admin has been notified to assign a driver.');
+            setFlash('success', lang_pick('Commande prête pour le ramassage. L\'équipe OCSAPP a été avisée pour assigner un livreur.', 'Order marked as ready for pickup. Admin has been notified to assign a driver.'));
             redirect(url('supplier/orders/view?id=' . $orderId));
 
         } catch (\Exception $e) {
             logger("markReadyForPickup error: " . $e->getMessage(), 'error');
-            setFlash('error', 'Error updating order status.');
+            setFlash('error', lang_pick('Erreur lors de la mise à jour du statut de la commande.', 'Error updating order status.'));
             back();
         }
     }
@@ -1731,7 +1701,7 @@ class SupplierProductController {
 
         } catch (\PDOException $e) {
             logger("Supplier invoices error: " . $e->getMessage(), 'error');
-            setFlash('error', 'Error loading invoices');
+            setFlash('error', lang_pick('Erreur lors du chargement des factures.', 'Error loading invoices'));
             redirect(url('supplier/dashboard'));
         }
     }
@@ -1745,7 +1715,7 @@ class SupplierProductController {
         $id = (int)get('id');
 
         if (!$id) {
-            setFlash('error', 'Invoice not specified.');
+            setFlash('error', lang_pick('Aucune facture indiquée.', 'Invoice not specified.'));
             redirect(url('supplier/invoices'));
             return;
         }
@@ -1764,7 +1734,7 @@ class SupplierProductController {
             $invoice = $stmt->fetch(\PDO::FETCH_ASSOC);
 
             if (!$invoice) {
-                setFlash('error', 'Invoice not found.');
+                setFlash('error', lang_pick('Facture introuvable.', 'Invoice not found.'));
                 redirect(url('supplier/invoices'));
                 return;
             }
@@ -1802,7 +1772,7 @@ class SupplierProductController {
 
         } catch (\PDOException $e) {
             logger("Supplier view invoice error: " . $e->getMessage(), 'error');
-            setFlash('error', 'Error loading invoice.');
+            setFlash('error', lang_pick('Erreur lors du chargement de la facture.', 'Error loading invoice.'));
             redirect(url('supplier/invoices'));
         }
     }
@@ -1816,7 +1786,7 @@ class SupplierProductController {
         $id = (int)get('id');
 
         if (!$id) {
-            setFlash('error', 'Invoice not specified.');
+            setFlash('error', lang_pick('Aucune facture indiquée.', 'Invoice not specified.'));
             redirect(url('supplier/invoices'));
             return;
         }
@@ -1830,7 +1800,7 @@ class SupplierProductController {
             $invoice = $stmt->fetch(\PDO::FETCH_ASSOC);
 
             if (!$invoice) {
-                setFlash('error', 'Invoice not found.');
+                setFlash('error', lang_pick('Facture introuvable.', 'Invoice not found.'));
                 redirect(url('supplier/invoices'));
                 return;
             }
@@ -1838,7 +1808,7 @@ class SupplierProductController {
             $pdfPath = \App\Controllers\AdminPayablesController::generateInvoicePdf($id);
 
             if (!$pdfPath || !file_exists($pdfPath)) {
-                setFlash('error', 'Could not generate PDF.');
+                setFlash('error', lang_pick('Le PDF n\'a pas pu être généré.', 'Could not generate PDF.'));
                 redirect(url('supplier/invoices'));
                 return;
             }
@@ -1851,7 +1821,7 @@ class SupplierProductController {
 
         } catch (\Exception $e) {
             logger("Supplier invoice PDF download error: " . $e->getMessage(), 'error');
-            setFlash('error', 'Error generating PDF.');
+            setFlash('error', lang_pick('Erreur lors de la génération du PDF.', 'Error generating PDF.'));
             redirect(url('supplier/invoices'));
         }
     }
@@ -1867,7 +1837,7 @@ class SupplierProductController {
         $type = get('type', 'po'); // 'po' or 'so'
 
         if (!$id) {
-            setFlash('error', 'Order not specified.');
+            setFlash('error', lang_pick('Aucune commande indiquée.', 'Order not specified.'));
             redirect(url('supplier/orders'));
             return;
         }
@@ -1890,14 +1860,14 @@ class SupplierProductController {
             $order = $stmt->fetch(\PDO::FETCH_ASSOC);
 
             if (!$order) {
-                setFlash('error', 'Order not found.');
+                setFlash('error', lang_pick('Commande introuvable.', 'Order not found.'));
                 redirect(url('supplier/orders'));
                 return;
             }
 
             // SO requires an accepted order with a so_number
             if ($type === 'so' && empty($order['so_number'])) {
-                setFlash('error', 'Sales Order is only available once a Purchase Order is accepted.');
+                setFlash('error', lang_pick('Le bon de vente n\'est disponible qu\'une fois le bon de commande accepté.', 'Sales Order is only available once a Purchase Order is accepted.'));
                 redirect(url('supplier/orders/view?id=' . $id));
                 return;
             }
@@ -2061,7 +2031,7 @@ class SupplierProductController {
 
         } catch (\Exception $e) {
             logger("Supplier order PDF error: " . $e->getMessage(), 'error');
-            setFlash('error', 'Error generating PDF.');
+            setFlash('error', lang_pick('Erreur lors de la génération du PDF.', 'Error generating PDF.'));
             redirect(url('supplier/orders/view?id=' . $id));
         }
     }
@@ -2082,7 +2052,7 @@ class SupplierProductController {
             $supplierEmail = $stmt->fetchColumn();
 
             if (!$supplierEmail) {
-                setFlash('error', 'Supplier not found.');
+                setFlash('error', lang_pick('Fournisseur introuvable.', 'Supplier not found.'));
                 redirect(url('supplier/dashboard'));
                 return;
             }
@@ -2120,7 +2090,7 @@ class SupplierProductController {
 
         } catch (\PDOException $e) {
             logger("Supplier emails error: " . $e->getMessage(), 'error');
-            setFlash('error', 'Error loading email history');
+            setFlash('error', lang_pick('Erreur lors du chargement de l\'historique des courriels.', 'Error loading email history'));
             redirect(url('supplier/dashboard'));
         }
     }
@@ -2181,7 +2151,7 @@ class SupplierProductController {
 
         } catch (\PDOException $e) {
             logger("Supplier documents error: " . $e->getMessage(), 'error');
-            setFlash('error', 'Error loading documents');
+            setFlash('error', lang_pick('Erreur lors du chargement des documents.', 'Error loading documents'));
             redirect(url('supplier/dashboard'));
         }
     }
@@ -2255,7 +2225,7 @@ class SupplierProductController {
         $supplierId = $this->checkAuth();
 
         if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
-            setFlash('error', 'Invalid security token. Please try again.');
+            setFlash('error', lang_pick('Jeton de sécurité invalide. Veuillez réessayer.', 'Invalid security token. Please try again.'));
             redirect(url('supplier/documents'));
             return;
         }
@@ -2328,7 +2298,7 @@ class SupplierProductController {
 
         } catch (\PDOException $e) {
             logger("Supplier confirmAgreement error: " . $e->getMessage(), 'error');
-            setFlash('error', 'Error saving agreement. Please try again.');
+            setFlash('error', lang_pick('L\'entente n\'a pas pu être enregistrée. Veuillez réessayer.', 'Error saving agreement. Please try again.'));
             redirect(url('supplier/documents'));
         }
     }
@@ -2459,7 +2429,7 @@ class SupplierProductController {
         $supplierId = $this->checkAuth();
 
         if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
-            setFlash('error', 'Invalid security token. Please try again.');
+            setFlash('error', lang_pick('Jeton de sécurité invalide. Veuillez réessayer.', 'Invalid security token. Please try again.'));
             redirect(url('supplier/documents'));
             return;
         }
@@ -2468,7 +2438,7 @@ class SupplierProductController {
         $validTypes = ['doc_certificate_incorporation', 'doc_declaration_registration', 'doc_enterprise_register'];
 
         if (!in_array($docType, $validTypes, true)) {
-            setFlash('error', 'Invalid document type.');
+            setFlash('error', lang_pick('Type de document invalide.', 'Invalid document type.'));
             redirect(url('supplier/documents'));
             return;
         }
@@ -2482,14 +2452,14 @@ class SupplierProductController {
             $application = $stmt->fetch(\PDO::FETCH_ASSOC);
 
             if (!$application) {
-                setFlash('error', 'No application found for your account.');
+                setFlash('error', lang_pick('Aucune demande trouvée pour votre compte.', 'No application found for your account.'));
                 redirect(url('supplier/documents'));
                 return;
             }
 
             // Validate file upload
             if (empty($_FILES['document']['tmp_name']) || !is_uploaded_file($_FILES['document']['tmp_name'])) {
-                setFlash('error', 'Please select a file to upload.');
+                setFlash('error', lang_pick('Veuillez choisir un fichier à téléverser.', 'Please select a file to upload.'));
                 redirect(url('supplier/documents'));
                 return;
             }
@@ -2500,14 +2470,14 @@ class SupplierProductController {
             $allowedMimes = ['application/pdf', 'image/jpeg', 'image/png'];
 
             if ($file['size'] > $maxSize) {
-                setFlash('error', 'File size must be less than 5MB.');
+                setFlash('error', lang_pick('Le fichier doit faire moins de 5 Mo.', 'File size must be less than 5MB.'));
                 redirect(url('supplier/documents'));
                 return;
             }
 
             $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
             if (!in_array($ext, $allowedExts)) {
-                setFlash('error', 'Only PDF, JPG, and PNG files are allowed.');
+                setFlash('error', lang_pick('Seuls les fichiers PDF, JPG et PNG sont acceptés.', 'Only PDF, JPG, and PNG files are allowed.'));
                 redirect(url('supplier/documents'));
                 return;
             }
@@ -2516,7 +2486,7 @@ class SupplierProductController {
             $filename = basename($file['name']);
             if (preg_match('/\.(php|phtml|php3|php4|php5|phar|exe|sh|bat|cmd)/i', pathinfo($filename, PATHINFO_FILENAME))) {
                 logger("Suspicious supplier doc upload blocked: {$filename}", 'error');
-                setFlash('error', 'Invalid file detected.');
+                setFlash('error', lang_pick('Fichier invalide détecté.', 'Invalid file detected.'));
                 redirect(url('supplier/documents'));
                 return;
             }
@@ -2527,7 +2497,7 @@ class SupplierProductController {
             finfo_close($finfo);
 
             if (!in_array($mimeType, $allowedMimes, true)) {
-                setFlash('error', 'Invalid file type detected.');
+                setFlash('error', lang_pick('Type de fichier invalide détecté.', 'Invalid file type detected.'));
                 redirect(url('supplier/documents'));
                 return;
             }
@@ -2541,7 +2511,7 @@ class SupplierProductController {
             $destPath = $fullUploadDir . '/' . $safeFilename;
 
             if (!move_uploaded_file($file['tmp_name'], $destPath)) {
-                setFlash('error', 'Failed to upload file. Please try again.');
+                setFlash('error', lang_pick('Le fichier n\'a pas pu être téléversé. Veuillez réessayer.', 'Failed to upload file. Please try again.'));
                 redirect(url('supplier/documents'));
                 return;
             }
@@ -2585,12 +2555,12 @@ class SupplierProductController {
             );
 
             logger("Supplier #{$supplierId} uploaded {$docType}", 'info');
-            setFlash('success', 'Document uploaded successfully.');
+            setFlash('success', lang_pick('Document téléversé.', 'Document uploaded successfully.'));
             redirect(url('supplier/documents'));
 
         } catch (\PDOException $e) {
             logger("Supplier document upload error: " . $e->getMessage(), 'error');
-            setFlash('error', 'Error uploading document. Please try again.');
+            setFlash('error', lang_pick('Le document n\'a pas pu être téléversé. Veuillez réessayer.', 'Error uploading document. Please try again.'));
             redirect(url('supplier/documents'));
         }
     }
@@ -2661,7 +2631,7 @@ class SupplierProductController {
 
         } catch (\PDOException $e) {
             logger("Supplier pickup index error: " . $e->getMessage(), 'error');
-            setFlash('error', 'Error loading pickup page.');
+            setFlash('error', lang_pick('Erreur lors du chargement de la page de ramassage.', 'Error loading pickup page.'));
             redirect(url('supplier/dashboard'));
         }
     }
@@ -2674,7 +2644,7 @@ class SupplierProductController {
         $supplierId = $this->checkAuth();
 
         if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
-            setFlash('error', 'Invalid request.');
+            setFlash('error', lang_pick('Requête invalide.', 'Invalid request.'));
             redirect(url('supplier/pickup'));
             return;
         }
@@ -2691,22 +2661,22 @@ class SupplierProductController {
 
             // Validate required fields
             if (empty($poIds)) {
-                setFlash('error', 'Please select at least one purchase order.');
+                setFlash('error', lang_pick('Veuillez sélectionner au moins un bon de commande.', 'Please select at least one purchase order.'));
                 redirect(url('supplier/pickup'));
                 return;
             }
             if (empty($pickupAddr)) {
-                setFlash('error', 'Pickup address is required.');
+                setFlash('error', lang_pick('L\'adresse de ramassage est requise.', 'Pickup address is required.'));
                 redirect(url('supplier/pickup'));
                 return;
             }
             if (empty($reqDate) || strtotime($reqDate) < strtotime('tomorrow')) {
-                setFlash('error', 'Pickup date must be at least tomorrow.');
+                setFlash('error', lang_pick('La date de ramassage doit être au plus tôt demain.', 'Pickup date must be at least tomorrow.'));
                 redirect(url('supplier/pickup'));
                 return;
             }
             if (empty($timeFrom) || empty($timeTo) || $timeTo <= $timeFrom) {
-                setFlash('error', 'Please provide a valid time window (From must be before To).');
+                setFlash('error', lang_pick('Veuillez indiquer une plage horaire valide (le début doit précéder la fin).', 'Please provide a valid time window (From must be before To).'));
                 redirect(url('supplier/pickup'));
                 return;
             }
@@ -2719,7 +2689,7 @@ class SupplierProductController {
             ");
             $verifyStmt->execute([...$poIds, $supplierId]);
             if ((int) $verifyStmt->fetchColumn() !== count($poIds)) {
-                setFlash('error', 'One or more selected orders are not eligible for pickup.');
+                setFlash('error', lang_pick('Une ou plusieurs commandes sélectionnées ne sont pas admissibles au ramassage.', 'One or more selected orders are not eligible for pickup.'));
                 redirect(url('supplier/pickup'));
                 return;
             }
@@ -2759,12 +2729,12 @@ class SupplierProductController {
             }
 
             logger("Supplier #{$supplierId} submitted pickup request for POs: " . implode(',', $poIds), 'info');
-            setFlash('success', 'Pickup request submitted. Our team will confirm the schedule shortly.');
+            setFlash('success', lang_pick('Demande de ramassage envoyée. Notre équipe confirmera l\'horaire sous peu.', 'Pickup request submitted. Our team will confirm the schedule shortly.'));
             redirect(url('supplier/pickup'));
 
         } catch (\PDOException $e) {
             logger("Supplier pickup request error: " . $e->getMessage(), 'error');
-            setFlash('error', 'Error submitting pickup request. Please try again.');
+            setFlash('error', lang_pick('La demande de ramassage n\'a pas pu être envoyée. Veuillez réessayer.', 'Error submitting pickup request. Please try again.'));
             redirect(url('supplier/pickup'));
         }
     }
@@ -2777,7 +2747,7 @@ class SupplierProductController {
         $supplierId = $this->checkAuth();
 
         if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
-            jsonResponse(['success' => false, 'message' => 'Invalid request'], 403);
+            jsonResponse(['success' => false, 'message' => lang_pick('Requête invalide.', 'Invalid request')], 403);
             return;
         }
 
@@ -2793,16 +2763,16 @@ class SupplierProductController {
             $stmt->execute([$requestId, $supplierId]);
 
             if ($stmt->rowCount() === 0) {
-                jsonResponse(['success' => false, 'message' => 'Request not found or cannot be cancelled'], 404);
+                jsonResponse(['success' => false, 'message' => lang_pick('Demande introuvable ou impossible à annuler.', 'Request not found or cannot be cancelled')], 404);
                 return;
             }
 
             logger("Supplier #{$supplierId} cancelled pickup request #{$requestId}", 'info');
-            jsonResponse(['success' => true, 'message' => 'Pickup request cancelled']);
+            jsonResponse(['success' => true, 'message' => lang_pick('Demande de ramassage annulée.', 'Pickup request cancelled')]);
 
         } catch (\PDOException $e) {
             logger("Supplier pickup cancel error: " . $e->getMessage(), 'error');
-            jsonResponse(['success' => false, 'message' => 'Error cancelling request'], 500);
+            jsonResponse(['success' => false, 'message' => lang_pick('Erreur lors de l\'annulation de la demande.', 'Error cancelling request')], 500);
         }
     }
 }

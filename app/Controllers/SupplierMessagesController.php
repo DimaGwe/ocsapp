@@ -84,7 +84,7 @@ class SupplierMessagesController
         }
 
         if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
-            setFlash('error', 'Invalid request. Please try again.');
+            setFlash('error', lang_pick('Requête invalide. Veuillez réessayer.', 'Invalid request. Please try again.'));
             redirect('supplier/messages');
             return;
         }
@@ -93,13 +93,13 @@ class SupplierMessagesController
         $message    = trim(post('message', ''));
 
         if (empty($message)) {
-            setFlash('error', 'Message cannot be empty.');
+            setFlash('error', lang_pick('Le message ne peut pas être vide.', 'Message cannot be empty.'));
             redirect('supplier/messages');
             return;
         }
 
         if (mb_strlen($message) > 2000) {
-            setFlash('error', 'Message is too long (maximum 2000 characters).');
+            setFlash('error', lang_pick('Le message est trop long (2000 caractères au maximum).', 'Message is too long (maximum 2000 characters).'));
             redirect('supplier/messages');
             return;
         }
@@ -112,7 +112,7 @@ class SupplierMessagesController
             ")->execute([$supplierId, $supplierId, $message]);
         } catch (\Exception $e) {
             error_log("SupplierMessagesController::send insert error: " . $e->getMessage());
-            setFlash('error', 'Failed to send message. Please try again.');
+            setFlash('error', lang_pick('Le message n\'a pas pu être envoyé. Veuillez réessayer.', 'Failed to send message. Please try again.'));
             redirect('supplier/messages');
             return;
         }
@@ -163,7 +163,7 @@ class SupplierMessagesController
             }
         }
 
-        setFlash('success', 'Message sent.');
+        setFlash('success', lang_pick('Message envoyé.', 'Message sent.'));
         redirect('supplier/messages');
     }
 
@@ -200,7 +200,7 @@ class SupplierMessagesController
 
         if (mb_strlen($message) > 2000) {
             http_response_code(400);
-            echo json_encode(['error' => 'Message is too long (maximum 2000 characters)']);
+            echo json_encode(['error' => lang_pick('Le message est trop long (2000 caractères au maximum).', 'Message is too long (maximum 2000 characters)')]);
             return;
         }
 

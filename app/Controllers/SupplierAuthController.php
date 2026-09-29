@@ -43,7 +43,7 @@ class SupplierAuthController {
      */
     public function submitApplication(): void {
         if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
-            setFlash('error', 'Invalid request. Please try again.');
+            setFlash('error', lang_pick('Requête invalide. Veuillez réessayer.', 'Invalid request. Please try again.'));
             back();
             return;
         }
@@ -79,7 +79,7 @@ class SupplierAuthController {
         $required = ['first_name', 'last_name', 'email', 'phone', 'business_name', 'neq_number', 'legal_name', 'registered_address_street', 'registered_address_city', 'registered_address_postal'];
         foreach ($required as $field) {
             if (empty($data[$field])) {
-                setFlash('error', 'Please fill in all required fields.');
+                setFlash('error', lang_pick('Veuillez remplir tous les champs obligatoires.', 'Please fill in all required fields.'));
                 back();
                 return;
             }
@@ -87,14 +87,14 @@ class SupplierAuthController {
 
         // Validate email
         if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-            setFlash('error', 'Please enter a valid email address.');
+            setFlash('error', lang_pick('Veuillez entrer une adresse courriel valide.', 'Please enter a valid email address.'));
             back();
             return;
         }
 
         // Validate NEQ (10 digits)
         if (!preg_match('/^[0-9]{10}$/', $data['neq_number'])) {
-            setFlash('error', 'NEQ must be exactly 10 digits.');
+            setFlash('error', lang_pick('Le NEQ doit compter exactement 10 chiffres.', 'NEQ must be exactly 10 digits.'));
             back();
             return;
         }
@@ -121,7 +121,7 @@ class SupplierAuthController {
             $stmt = $db->prepare("SELECT id FROM supplier_applications WHERE email = ? AND status IN ('pending', 'under_review')");
             $stmt->execute([$data['email']]);
             if ($stmt->fetch()) {
-                setFlash('error', 'An application with this email is already under review.');
+                setFlash('error', lang_pick('Une demande avec cette adresse courriel est déjà en cours d\'examen.', 'An application with this email is already under review.'));
                 back();
                 return;
             }
@@ -160,7 +160,7 @@ class SupplierAuthController {
 
                     // Validate size
                     if ($file['size'] > $maxSize) {
-                        setFlash('error', 'Document file size must be less than 5MB.');
+                        setFlash('error', lang_pick('Le document doit faire moins de 5 Mo.', 'Document file size must be less than 5MB.'));
                         back();
                         return;
                     }
@@ -168,7 +168,7 @@ class SupplierAuthController {
                     // Validate extension
                     $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
                     if (!in_array($ext, $allowedExts)) {
-                        setFlash('error', 'Only PDF, JPG, and PNG files are allowed for documents.');
+                        setFlash('error', lang_pick('Seuls les fichiers PDF, JPG et PNG sont acceptés pour les documents.', 'Only PDF, JPG, and PNG files are allowed for documents.'));
                         back();
                         return;
                     }
@@ -177,7 +177,7 @@ class SupplierAuthController {
                     $filename = basename($file['name']);
                     if (preg_match('/\.(php|phtml|php3|php4|php5|phar|exe|sh|bat|cmd)/i', pathinfo($filename, PATHINFO_FILENAME))) {
                         logger("Suspicious supplier doc upload blocked: {$filename}", 'error');
-                        setFlash('error', 'Invalid file detected.');
+                        setFlash('error', lang_pick('Fichier invalide détecté.', 'Invalid file detected.'));
                         back();
                         return;
                     }
@@ -188,7 +188,7 @@ class SupplierAuthController {
                     finfo_close($finfo);
 
                     if (!in_array($mimeType, $allowedMimes, true)) {
-                        setFlash('error', 'Invalid file type detected.');
+                        setFlash('error', lang_pick('Type de fichier invalide détecté.', 'Invalid file type detected.'));
                         back();
                         return;
                     }
@@ -360,7 +360,7 @@ class SupplierAuthController {
                 $db->rollBack();
             }
             logger("Supplier application error: " . $e->getMessage(), 'error');
-            setFlash('error', 'An error occurred while submitting your application. Please try again.');
+            setFlash('error', lang_pick('Une erreur est survenue lors de l\'envoi de votre demande. Veuillez réessayer.', 'An error occurred while submitting your application. Please try again.'));
             back();
         }
     }
@@ -486,7 +486,7 @@ class SupplierAuthController {
         }
 
         if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
-            setFlash('error', 'Invalid request. Please try again.');
+            setFlash('error', lang_pick('Requête invalide. Veuillez réessayer.', 'Invalid request. Please try again.'));
             redirect(url('supplier/verify-email'));
             return;
         }
@@ -501,7 +501,7 @@ class SupplierAuthController {
         $attempts    = &$_SESSION['supplier_verification_attempts'];
 
         if ($attempts >= $maxAttempts) {
-            setFlash('error', 'Too many attempts. Please request a new code.');
+            setFlash('error', lang_pick('Trop de tentatives. Veuillez demander un nouveau code.', 'Too many attempts. Please request a new code.'));
             redirect(url('supplier/verify-email'));
             return;
         }
@@ -510,7 +510,7 @@ class SupplierAuthController {
 
         if (strlen($submitted) !== 6) {
             $attempts++;
-            setFlash('error', 'Please enter the complete 6-digit code.');
+            setFlash('error', lang_pick('Veuillez entrer le code complet à 6 chiffres.', 'Please enter the complete 6-digit code.'));
             redirect(url('supplier/verify-email'));
             return;
         }
@@ -526,14 +526,14 @@ class SupplierAuthController {
             $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
             if (!$row) {
-                setFlash('error', 'Account not found. Please apply again.');
+                setFlash('error', lang_pick('Compte introuvable. Veuillez présenter une nouvelle demande.', 'Account not found. Please apply again.'));
                 unset($_SESSION['pending_supplier_verification'], $_SESSION['supplier_verification_attempts']);
                 redirect(url('supplier/apply'));
                 return;
             }
 
             if (new \DateTime() > new \DateTime($row['email_verification_expires_at'])) {
-                setFlash('error', 'Your code has expired. Please request a new one.');
+                setFlash('error', lang_pick('Votre code a expiré. Veuillez en demander un nouveau.', 'Your code has expired. Please request a new one.'));
                 redirect(url('supplier/verify-email'));
                 return;
             }
@@ -608,7 +608,7 @@ class SupplierAuthController {
 
         } catch (\PDOException $e) {
             logger("Supplier email verification error: " . $e->getMessage(), 'error');
-            setFlash('error', 'An error occurred. Please try again.');
+            setFlash('error', lang_pick('Une erreur est survenue. Veuillez réessayer.', 'An error occurred. Please try again.'));
             redirect(url('supplier/verify-email'));
         }
     }
@@ -620,7 +620,7 @@ class SupplierAuthController {
         }
 
         if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
-            setFlash('error', 'Invalid request. Please try again.');
+            setFlash('error', lang_pick('Requête invalide. Veuillez réessayer.', 'Invalid request. Please try again.'));
             redirect(url('supplier/verify-email'));
             return;
         }
@@ -663,12 +663,12 @@ class SupplierAuthController {
                 logger("Failed to resend supplier verification code: " . $e->getMessage(), 'warning');
             }
 
-            setFlash('success', 'A new code has been sent to your email.');
+            setFlash('success', lang_pick('Un nouveau code vous a été envoyé par courriel.', 'A new code has been sent to your email.'));
             redirect(url('supplier/verify-email'));
 
         } catch (\PDOException $e) {
             logger("Supplier resend verification error: " . $e->getMessage(), 'error');
-            setFlash('error', 'An error occurred. Please try again.');
+            setFlash('error', lang_pick('Une erreur est survenue. Veuillez réessayer.', 'An error occurred. Please try again.'));
             redirect(url('supplier/verify-email'));
         }
     }
@@ -816,7 +816,7 @@ class SupplierAuthController {
 
     public function processLogin(): void {
         if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
-            setFlash('error', 'Invalid request');
+            setFlash('error', lang_pick('Requête invalide.', 'Invalid request'));
             back();
         }
 
@@ -825,7 +825,7 @@ class SupplierAuthController {
         $remember = post('remember', false);
 
         if (empty($email) || empty($password)) {
-            setFlash('error', 'Email and password are required');
+            setFlash('error', lang_pick('L\'adresse courriel et le mot de passe sont requis.', 'Email and password are required'));
             back();
         }
 
@@ -848,9 +848,9 @@ class SupplierAuthController {
                 $checkStmt->execute([$email]);
                 $found = $checkStmt->fetch();
                 if ($found && $found['status'] === 'inactive') {
-                    setFlash('error', 'Your account has been deactivated. Your verification period may have expired. Please contact <a href="mailto:info@ocsapp.ca">info@ocsapp.ca</a> for assistance.');
+                    setFlash('error', lang_pick('Votre compte a été désactivé. Votre période de vérification est peut-être expirée. Écrivez-nous à <a href="mailto:info@ocsapp.ca">info@ocsapp.ca</a> pour obtenir de l\'aide.', 'Your account has been deactivated. Your verification period may have expired. Please contact <a href="mailto:info@ocsapp.ca">info@ocsapp.ca</a> for assistance.'));
                 } else {
-                    setFlash('error', 'Invalid email or password');
+                    setFlash('error', lang_pick('Adresse courriel ou mot de passe invalide.', 'Invalid email or password'));
                 }
                 logger("Supplier login failed: Email not found or inactive - {$email}", 'info');
                 back();
@@ -858,7 +858,7 @@ class SupplierAuthController {
 
             // Verify password
             if (!password_verify($password, $supplier['password_hash'])) {
-                setFlash('error', 'Invalid email or password');
+                setFlash('error', lang_pick('Adresse courriel ou mot de passe invalide.', 'Invalid email or password'));
                 logger("Supplier login failed: Invalid password - {$email}", 'info');
                 back();
             }
@@ -906,7 +906,7 @@ class SupplierAuthController {
 
         } catch (\PDOException $e) {
             logger("Supplier login error: " . $e->getMessage(), 'error');
-            setFlash('error', 'An error occurred. Please try again.');
+            setFlash('error', lang_pick('Une erreur est survenue. Veuillez réessayer.', 'An error occurred. Please try again.'));
             back();
         }
     }
@@ -991,7 +991,7 @@ class SupplierAuthController {
 
         } catch (\PDOException $e) {
             logger("Supplier dashboard error: " . $e->getMessage(), 'error');
-            setFlash('error', 'Error loading dashboard');
+            setFlash('error', lang_pick('Erreur lors du chargement du tableau de bord.', 'Error loading dashboard'));
             redirect(url('supplier/login'));
         }
     }
@@ -1000,7 +1000,7 @@ class SupplierAuthController {
         $token = get('token', '');
 
         if (empty($token)) {
-            setFlash('error', 'Invalid invitation link');
+            setFlash('error', lang_pick('Lien d\'invitation invalide.', 'Invalid invitation link'));
             redirect(url('/'));
         }
 
@@ -1019,7 +1019,7 @@ class SupplierAuthController {
             $invite = $stmt->fetch();
 
             if (!$invite) {
-                setFlash('error', 'This invitation is invalid or has expired');
+                setFlash('error', lang_pick('Cette invitation est invalide ou a expiré.', 'This invitation is invalid or has expired'));
                 redirect(url('/'));
             }
 
@@ -1031,14 +1031,14 @@ class SupplierAuthController {
 
         } catch (\PDOException $e) {
             logger("Accept invite error: " . $e->getMessage(), 'error');
-            setFlash('error', 'Error processing invitation');
+            setFlash('error', lang_pick('Erreur lors du traitement de l\'invitation.', 'Error processing invitation'));
             redirect(url('/'));
         }
     }
 
     public function completeRegistration(): void {
         if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
-            setFlash('error', 'Invalid request');
+            setFlash('error', lang_pick('Requête invalide.', 'Invalid request'));
             back();
             return;
         }
@@ -1072,7 +1072,7 @@ class SupplierAuthController {
 
         // Validate required fields
         if (empty($data['email']) || !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-            setFlash('error', 'Please enter a valid account email address.');
+            setFlash('error', lang_pick('Veuillez entrer une adresse courriel de compte valide.', 'Please enter a valid account email address.'));
             back();
             return;
         }
@@ -1080,14 +1080,14 @@ class SupplierAuthController {
         foreach (['first_name','last_name','phone','business_name','legal_name','neq_number',
                   'registered_address_street','registered_address_city','registered_address_postal'] as $f) {
             if (empty($data[$f])) {
-                setFlash('error', 'Please fill in all required fields.');
+                setFlash('error', lang_pick('Veuillez remplir tous les champs obligatoires.', 'Please fill in all required fields.'));
                 back();
                 return;
             }
         }
 
         if (!preg_match('/^[0-9]{10}$/', $data['neq_number'])) {
-            setFlash('error', 'NEQ must be exactly 10 digits.');
+            setFlash('error', lang_pick('Le NEQ doit compter exactement 10 chiffres.', 'NEQ must be exactly 10 digits.'));
             back();
             return;
         }
@@ -1117,7 +1117,7 @@ class SupplierAuthController {
             $invite = $stmt->fetch();
 
             if (!$invite) {
-                throw new \Exception('Invalid or expired invitation');
+                throw new \Exception(lang_pick('Invitation invalide ou expirée.', 'Invalid or expired invitation'));
             }
 
             $registeredEmail = $data['email'];
@@ -1127,7 +1127,7 @@ class SupplierAuthController {
                 $chk = $db->prepare("SELECT id FROM suppliers WHERE email = ? LIMIT 1");
                 $chk->execute([$registeredEmail]);
                 if ($chk->fetch()) {
-                    setFlash('error', 'A supplier account already exists with that email address.');
+                    setFlash('error', lang_pick('Un compte fournisseur existe déjà avec cette adresse courriel.', 'A supplier account already exists with that email address.'));
                     back();
                     return;
                 }
@@ -1137,7 +1137,7 @@ class SupplierAuthController {
             $dup = $db->prepare("SELECT id FROM supplier_applications WHERE email = ? AND status IN ('pending','under_review')");
             $dup->execute([$registeredEmail]);
             if ($dup->fetch()) {
-                setFlash('error', 'An application with this email is already under review.');
+                setFlash('error', lang_pick('Une demande avec cette adresse courriel est déjà en cours d\'examen.', 'An application with this email is already under review.'));
                 back();
                 return;
             }
@@ -1158,20 +1158,20 @@ class SupplierAuthController {
                     $file = $_FILES[$field];
 
                     if ($file['size'] > $maxSize) {
-                        setFlash('error', 'Document files must be under 5MB each.');
+                        setFlash('error', lang_pick('Chaque document doit faire moins de 5 Mo.', 'Document files must be under 5MB each.'));
                         back();
                         return;
                     }
 
                     $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
                     if (!in_array($ext, $allowedExts)) {
-                        setFlash('error', 'Only PDF, JPG, and PNG files are allowed for documents.');
+                        setFlash('error', lang_pick('Seuls les fichiers PDF, JPG et PNG sont acceptés pour les documents.', 'Only PDF, JPG, and PNG files are allowed for documents.'));
                         back();
                         return;
                     }
 
                     if (preg_match('/\.(php|phtml|php[0-9]|phar|exe|sh|bat)/i', pathinfo($file['name'], PATHINFO_FILENAME))) {
-                        setFlash('error', 'Invalid file detected.');
+                        setFlash('error', lang_pick('Fichier invalide détecté.', 'Invalid file detected.'));
                         back();
                         return;
                     }
@@ -1181,7 +1181,7 @@ class SupplierAuthController {
                     finfo_close($finfo);
 
                     if (!in_array($mimeType, $allowedMimes, true)) {
-                        setFlash('error', 'Invalid file type detected.');
+                        setFlash('error', lang_pick('Type de fichier invalide détecté.', 'Invalid file type detected.'));
                         back();
                         return;
                     }
@@ -1308,7 +1308,7 @@ class SupplierAuthController {
 
             $emailNote = ($registeredEmail !== $invite['email']) ? " [registered as {$registeredEmail}]" : '';
             logger("Invited supplier submitted application: {$invite['email']}{$emailNote} (Supplier #{$supplierId}, App #{$applicationId}, Lead #{$leadId})", 'info');
-            setFlash('success', 'Your application has been submitted! We\'ll review it and be in touch within 2–3 business days.');
+            setFlash('success', lang_pick('Votre demande a été envoyée ! Nous l\'examinerons et communiquerons avec vous d\'ici 2 à 3 jours ouvrables.', 'Your application has been submitted! We\'ll review it and be in touch within 2 to 3 business days.'));
             redirect(url('supplier/login'));
 
         } catch (\Exception $e) {
@@ -1339,7 +1339,7 @@ class SupplierAuthController {
      */
     public function sendResetLink(): void {
         if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
-            setFlash('error', 'Invalid request. Please try again.');
+            setFlash('error', lang_pick('Requête invalide. Veuillez réessayer.', 'Invalid request. Please try again.'));
             back();
             return;
         }
@@ -1347,7 +1347,7 @@ class SupplierAuthController {
         $email = trim(post('email', ''));
 
         if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            setFlash('error', 'Please enter a valid email address.');
+            setFlash('error', lang_pick('Veuillez entrer une adresse courriel valide.', 'Please enter a valid email address.'));
             back();
             return;
         }
@@ -1379,7 +1379,7 @@ class SupplierAuthController {
             $recent = $stmt->fetch();
 
             if ($recent && $recent['cnt'] >= 3) {
-                setFlash('error', 'Too many reset requests. Please try again in an hour.');
+                setFlash('error', lang_pick('Trop de demandes de réinitialisation. Veuillez réessayer dans une heure.', 'Too many reset requests. Please try again in an hour.'));
                 redirect(url('supplier/forgot-password'));
                 return;
             }
@@ -1408,7 +1408,7 @@ class SupplierAuthController {
 
         } catch (\PDOException $e) {
             logger("Supplier forgot password error: " . $e->getMessage(), 'error');
-            setFlash('error', 'An error occurred. Please try again.');
+            setFlash('error', lang_pick('Une erreur est survenue. Veuillez réessayer.', 'An error occurred. Please try again.'));
             back();
         }
     }
@@ -1420,7 +1420,7 @@ class SupplierAuthController {
         $token = get('token', '');
 
         if (empty($token)) {
-            setFlash('error', 'Invalid or missing reset token.');
+            setFlash('error', lang_pick('Jeton de réinitialisation invalide ou manquant.', 'Invalid or missing reset token.'));
             redirect(url('supplier/forgot-password'));
             return;
         }
@@ -1440,7 +1440,7 @@ class SupplierAuthController {
             $reset = $stmt->fetch();
 
             if (!$reset) {
-                setFlash('error', 'This password reset link is invalid or has expired. Please request a new one.');
+                setFlash('error', lang_pick('Ce lien de réinitialisation est invalide ou a expiré. Veuillez en demander un nouveau.', 'This password reset link is invalid or has expired. Please request a new one.'));
                 redirect(url('supplier/forgot-password'));
                 return;
             }
@@ -1453,7 +1453,7 @@ class SupplierAuthController {
 
         } catch (\PDOException $e) {
             logger("Supplier reset password view error: " . $e->getMessage(), 'error');
-            setFlash('error', 'An error occurred. Please try again.');
+            setFlash('error', lang_pick('Une erreur est survenue. Veuillez réessayer.', 'An error occurred. Please try again.'));
             redirect(url('supplier/forgot-password'));
         }
     }
@@ -1463,7 +1463,7 @@ class SupplierAuthController {
      */
     public function processResetPassword(): void {
         if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
-            setFlash('error', 'Invalid request. Please try again.');
+            setFlash('error', lang_pick('Requête invalide. Veuillez réessayer.', 'Invalid request. Please try again.'));
             back();
             return;
         }
@@ -1473,7 +1473,7 @@ class SupplierAuthController {
         $passwordConfirm = post('password_confirmation', '');
 
         if (empty($token)) {
-            setFlash('error', 'Invalid reset token.');
+            setFlash('error', lang_pick('Jeton de réinitialisation invalide.', 'Invalid reset token.'));
             redirect(url('supplier/forgot-password'));
             return;
         }
@@ -1507,7 +1507,7 @@ class SupplierAuthController {
             $reset = $stmt->fetch();
 
             if (!$reset) {
-                setFlash('error', 'This password reset link is invalid or has expired. Please request a new one.');
+                setFlash('error', lang_pick('Ce lien de réinitialisation est invalide ou a expiré. Veuillez en demander un nouveau.', 'This password reset link is invalid or has expired. Please request a new one.'));
                 redirect(url('supplier/forgot-password'));
                 return;
             }
@@ -1530,7 +1530,7 @@ class SupplierAuthController {
             $db->commit();
 
             logger("Supplier password reset completed: {$reset['supplier_email']}", 'info');
-            setFlash('success', 'Your password has been reset successfully. Please log in with your new password.');
+            setFlash('success', lang_pick('Votre mot de passe a été réinitialisé. Connectez-vous avec votre nouveau mot de passe.', 'Your password has been reset successfully. Please log in with your new password.'));
             redirect(url('supplier/login'));
 
         } catch (\PDOException $e) {
@@ -1538,7 +1538,7 @@ class SupplierAuthController {
                 $db->rollBack();
             }
             logger("Supplier reset password error: " . $e->getMessage(), 'error');
-            setFlash('error', 'An error occurred. Please try again.');
+            setFlash('error', lang_pick('Une erreur est survenue. Veuillez réessayer.', 'An error occurred. Please try again.'));
             back();
         }
     }
@@ -1613,7 +1613,7 @@ class SupplierAuthController {
 
         } catch (\PDOException $e) {
             logger("Supplier settings error: " . $e->getMessage(), 'error');
-            setFlash('error', 'Error loading settings');
+            setFlash('error', lang_pick('Erreur lors du chargement des paramètres.', 'Error loading settings'));
             redirect(url('supplier/dashboard'));
         }
     }
@@ -1623,7 +1623,7 @@ class SupplierAuthController {
      */
     public function updateProfile(): void {
         if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
-            jsonResponse(['success' => false, 'message' => 'Invalid request'], 403);
+            jsonResponse(['success' => false, 'message' => lang_pick('Requête invalide.', 'Invalid request')], 403);
             return;
         }
 
@@ -1640,14 +1640,14 @@ class SupplierAuthController {
             $phone = post('phone', '');
             $phoneDigits = preg_replace('/\D/', '', $phone);
             if ($phone && (strlen($phoneDigits) < 10 || strlen($phoneDigits) > 11)) {
-                jsonResponse(['success' => false, 'message' => 'Phone number must be 10-11 digits'], 422);
+                jsonResponse(['success' => false, 'message' => lang_pick('Le numéro de téléphone doit compter 10 ou 11 chiffres.', 'Phone number must be 10-11 digits')], 422);
                 return;
             }
 
             // Validate postal code
             $postalCode = post('postal_code', '');
             if ($postalCode && !preg_match('/^[A-Za-z]\d[A-Za-z]\s?\d[A-Za-z]\d$/', $postalCode)) {
-                jsonResponse(['success' => false, 'message' => 'Invalid Canadian postal code format (e.g. M5V 2T6)'], 422);
+                jsonResponse(['success' => false, 'message' => lang_pick('Format de code postal canadien invalide (ex. H7H 1A1).', 'Invalid Canadian postal code format (e.g. M5V 2T6)')], 422);
                 return;
             }
 
@@ -1689,11 +1689,11 @@ class SupplierAuthController {
             $_SESSION['supplier_name'] = post('company_name', $_SESSION['supplier_name'] ?? '');
 
             logger("Supplier profile updated: " . $_SESSION['supplier_email'], 'info');
-            jsonResponse(['success' => true, 'message' => 'Profile updated successfully']);
+            jsonResponse(['success' => true, 'message' => lang_pick('Profil mis à jour.', 'Profile updated successfully')]);
 
         } catch (\PDOException $e) {
             logger("Supplier profile update error: " . $e->getMessage(), 'error');
-            jsonResponse(['success' => false, 'message' => 'Error updating profile'], 500);
+            jsonResponse(['success' => false, 'message' => lang_pick('Erreur lors de la mise à jour du profil.', 'Error updating profile')], 500);
         }
     }
 
@@ -1702,7 +1702,7 @@ class SupplierAuthController {
      */
     public function updatePassword(): void {
         if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
-            jsonResponse(['success' => false, 'message' => 'Invalid request'], 403);
+            jsonResponse(['success' => false, 'message' => lang_pick('Requête invalide.', 'Invalid request')], 403);
             return;
         }
 
@@ -1718,17 +1718,17 @@ class SupplierAuthController {
 
         // Validation
         if (empty($currentPassword) || empty($newPassword) || empty($confirmPassword)) {
-            jsonResponse(['success' => false, 'message' => 'All fields are required']);
+            jsonResponse(['success' => false, 'message' => lang_pick('Tous les champs sont requis.', 'All fields are required')]);
             return;
         }
 
         if (strlen($newPassword) < 8) {
-            jsonResponse(['success' => false, 'message' => 'New password must be at least 8 characters']);
+            jsonResponse(['success' => false, 'message' => lang_pick('Le nouveau mot de passe doit contenir au moins 8 caractères.', 'New password must be at least 8 characters')]);
             return;
         }
 
         if ($newPassword !== $confirmPassword) {
-            jsonResponse(['success' => false, 'message' => 'New passwords do not match']);
+            jsonResponse(['success' => false, 'message' => lang_pick('Les nouveaux mots de passe ne correspondent pas.', 'New passwords do not match')]);
             return;
         }
 
@@ -1742,13 +1742,13 @@ class SupplierAuthController {
             $supplier = $stmt->fetch();
 
             if (!$supplier) {
-                jsonResponse(['success' => false, 'message' => 'Supplier not found'], 404);
+                jsonResponse(['success' => false, 'message' => lang_pick('Fournisseur introuvable.', 'Supplier not found')], 404);
                 return;
             }
 
             // Verify current password
             if (!password_verify($currentPassword, $supplier['password_hash'])) {
-                jsonResponse(['success' => false, 'message' => 'Current password is incorrect']);
+                jsonResponse(['success' => false, 'message' => lang_pick('Le mot de passe actuel est incorrect.', 'Current password is incorrect')]);
                 return;
             }
 
@@ -1761,11 +1761,11 @@ class SupplierAuthController {
             unset($_SESSION['supplier_password_reminder']);
 
             logger("Supplier password changed: " . $_SESSION['supplier_email'], 'info');
-            jsonResponse(['success' => true, 'message' => 'Password updated successfully']);
+            jsonResponse(['success' => true, 'message' => lang_pick('Mot de passe mis à jour.', 'Password updated successfully')]);
 
         } catch (\PDOException $e) {
             logger("Supplier password update error: " . $e->getMessage(), 'error');
-            jsonResponse(['success' => false, 'message' => 'Error updating password'], 500);
+            jsonResponse(['success' => false, 'message' => lang_pick('Erreur lors de la mise à jour du mot de passe.', 'Error updating password')], 500);
         }
     }
 
@@ -1775,7 +1775,7 @@ class SupplierAuthController {
      */
     public function updateBanking(): void {
         if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
-            jsonResponse(['success' => false, 'message' => 'Invalid request'], 403);
+            jsonResponse(['success' => false, 'message' => lang_pick('Requête invalide.', 'Invalid request')], 403);
             return;
         }
 
@@ -1790,14 +1790,14 @@ class SupplierAuthController {
 
             $pref = post('payment_preference', '');
             if (!in_array($pref, ['eft', 'interac', 'cheque', ''])) {
-                jsonResponse(['success' => false, 'message' => 'Invalid payment preference'], 422);
+                jsonResponse(['success' => false, 'message' => lang_pick('Préférence de paiement invalide.', 'Invalid payment preference')], 422);
                 return;
             }
 
             // Validate interac email if preference is interac
             $interacEmail = trim(post('interac_email', ''));
             if ($pref === 'interac' && $interacEmail && !filter_var($interacEmail, FILTER_VALIDATE_EMAIL)) {
-                jsonResponse(['success' => false, 'message' => 'Invalid e-Transfer email address'], 422);
+                jsonResponse(['success' => false, 'message' => lang_pick('Adresse courriel de virement Interac invalide.', 'Invalid e-Transfer email address')], 422);
                 return;
             }
 
@@ -1845,7 +1845,7 @@ class SupplierAuthController {
 
         } catch (\PDOException $e) {
             logger("Supplier banking update error: " . $e->getMessage(), 'error');
-            jsonResponse(['success' => false, 'message' => 'Error saving payment information'], 500);
+            jsonResponse(['success' => false, 'message' => lang_pick('Erreur lors de l\'enregistrement des renseignements de paiement.', 'Error saving payment information')], 500);
         }
     }
 

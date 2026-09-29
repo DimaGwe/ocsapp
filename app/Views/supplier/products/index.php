@@ -339,10 +339,10 @@ function deleteProduct(id) {
       alert(data.message);
       location.reload();
     } else {
-      alert('Error: ' + data.message);
+      alert(data.message || <?= json_encode($fr ? 'Erreur lors de la suppression du produit.' : 'Error deleting product.', JSON_UNESCAPED_UNICODE) ?>);
     }
   })
-  .catch(() => alert('Error deleting product'));
+  .catch(() => alert(<?= json_encode($fr ? 'Erreur lors de la suppression du produit.' : 'Error deleting product.', JSON_UNESCAPED_UNICODE) ?>));
 }
 </script>
 

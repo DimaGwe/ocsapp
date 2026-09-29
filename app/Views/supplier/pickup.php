@@ -336,7 +336,7 @@ document.querySelectorAll('.btn-cancel-pickup').forEach(function(btn) {
                 alert(data.message || 'Error cancelling request.');
             }
         } catch (err) {
-            alert('An error occurred. Please try again.');
+            alert(<?= json_encode($fr ? 'Une erreur est survenue. Veuillez réessayer.' : 'An error occurred. Please try again.', JSON_UNESCAPED_UNICODE) ?>);
         }
     });
 });
