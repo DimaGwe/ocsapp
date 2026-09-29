@@ -196,32 +196,22 @@ class FoundersWallHelper
             $db->prepare("UPDATE waitlist SET wall_token = ?, wall_notified_at = NOW() WHERE id = ? AND wall_notified_at IS NULL")
                ->execute([$token, $w['id']]);
 
-            $link   = url('founders-wall/preferences') . '?t=' . $token;
-            $shown  = (int) $w['wall_consent'] === 1;
-            $as     = htmlspecialchars(self::displayName($role, $w['first_name'], $w['last_name'], $w['business_name'])
-                    . (self::displayCity($w['city_region']) !== '' ? ', ' . self::displayCity($w['city_region']) : ''));
-            [$progFr, $progEn] = self::PROGRAM_NAMES[$role];
-            $first  = htmlspecialchars(trim((string) $w['first_name']));
+            // Template variables (plain text; the template escapes them)
+            [$programFr, $programEn] = self::PROGRAM_NAMES[$role];
+            $firstName = self::plain($w['first_name']);
+            $wallShown = (int) $w['wall_consent'] === 1;
+            $city      = self::displayCity($w['city_region']);
+            $shownAs   = self::displayName($role, $w['first_name'], $w['last_name'], $w['business_name'])
+                       . ($city !== '' ? ', ' . $city : '');
+            $manageUrl = url('founders-wall/preferences') . '?t=' . $token;
 
-            $fr = "<p>Bonjour {$first},</p>"
-                . "<p>Félicitations : vous êtes <strong>{$progFr} n<sup>o</sup> {$number}</strong> d'OCSAPP.</p>"
-                . ($shown
-                    ? "<p>Lors de votre inscription, vous avez accepté d'apparaître sur le Mur des fondateurs sous le nom <strong>{$as}</strong>. Vous pouvez modifier ou retirer ce choix en tout temps.</p>"
-                    : "<p>Lors de votre inscription, vous avez choisi de ne pas apparaître sur le Mur des fondateurs. Votre nom ne sera pas affiché. Si vous changez d'avis, vous pouvez l'activer en tout temps.</p>")
-                . "<p><a href=\"{$link}\" style=\"color:#00b207;font-weight:600\">Gérer mon choix pour le Mur des fondateurs</a></p>";
-            $en = "<p>Hi {$first},</p>"
-                . "<p>Congratulations: you are OCSAPP <strong>{$progEn} #{$number}</strong>.</p>"
-                . ($shown
-                    ? "<p>When you signed up, you agreed to appear on the Founders' Wall as <strong>{$as}</strong>. You can change or withdraw this choice at any time.</p>"
-                    : "<p>When you signed up, you chose not to appear on the Founders' Wall. Your name will not be shown. If you change your mind, you can turn it on at any time.</p>")
-                . "<p><a href=\"{$link}\" style=\"color:#00b207;font-weight:600\">Manage my Founders' Wall choice</a></p>";
-
-            $body = "<div style=\"font-family:Arial,sans-serif;font-size:15px;line-height:1.6;color:#142017;max-width:560px\">"
-                  . $fr . "<hr style=\"border:none;border-top:1px solid #e5e7e4;margin:24px 0\">" . $en
-                  . "<p style=\"font-size:12px;color:#6b7280;margin-top:24px\">OCSAPP Inc. · Laval, Québec</p></div>";
+            ob_start();
+            require __DIR__ . '/../Views/emails/founding-status-granted.php';
+            $body = ob_get_clean();
 
             require_once __DIR__ . '/EmailHelper.php';
-            EmailHelper::sendRaw($email, "Vous êtes {$progFr} n° {$number} / You're {$progEn} #{$number}", $body);
+            EmailHelper::setNextMeta('founding_status_granted', 'waitlist', (int) $w['id']);
+            EmailHelper::send($email, "Vous êtes {$programFr} n° {$number} / You're {$programEn} #{$number}", $body);
         } catch (\Throwable $e) {
             logger('FoundersWallHelper::onFoundingGranted failed for ' . $email . ': ' . $e->getMessage(), 'warning');
         }
