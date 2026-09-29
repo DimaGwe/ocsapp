@@ -284,6 +284,9 @@ $fr = ($currentLang === 'fr');
         <li><?= $fr ? "Vos numéros d'inscription TPS / TVQ (taxes de vente fédérale et provinciale)" : "Your GST / QST registration numbers (federal and provincial sales tax)" ?></li>
         <li><?= $fr ? "Une assurance responsabilité civile générale, minimum 1 000 000 $ (garantie responsabilité produits requise pour les aliments, produits frais ou biens de consommation)" : "Commercial general liability insurance, minimum \$1,000,000 (product liability coverage required for food, produce, or consumable goods)" ?></li>
         <li><?= $fr ? "Un catalogue de produits prêt à lister, incluant le poids exact par unité" : "A product catalog ready to list, including accurate weight per unit" ?></li>
+        <li><?= $fr ? "Les permis qu'exige votre activité (par exemple un permis du MAPAQ pour la vente en gros ou l'entreposage d'aliments, une licence SAC de l'ACIA pour l'importation)" : "The permits your activity requires (for example a MAPAQ permit for food wholesale or warehousing, a CFIA SFC licence for imports)" ?></li>
+        <li><?= $fr ? "Des étiquettes, fiches techniques et factures conformes à la Charte de la langue française (loi 96)" : "Labels, technical sheets and invoices that comply with the Charter of the French Language (Bill 96)" ?></li>
+        <li><?= $fr ? "Un certificat d'occupation de votre ville ou arrondissement pour votre entrepôt ou vos locaux, lorsque votre municipalité l'exige" : "A certificate of occupancy (certificat d'occupation) from your city or borough for your warehouse or premises, where your municipality requires one" ?></li>
         <li><?= $fr ? "La capacité à exécuter les bons de commande et à les remettre au réseau de livreurs ODA dans les délais convenus" : "The ability to fulfill purchase orders and hand off to the ODA driver network within agreed lead times" ?></li>
       </ul>
     </div>
@@ -476,6 +479,25 @@ $fr = ($currentLang === 'fr');
         <p><?= $fr
           ? "Depuis le 1er juin 2025, les termes génériques ou descriptifs associés à une marque de commerce - par exemple un nom de saveur ou un ingrédient - doivent apparaître en français sur le produit lui-même, même si la marque elle-même peut demeurer dans une autre langue. Une période de transition s'applique jusqu'au 1er juin 2027 pour les produits fabriqués avant le 1er juin 2025. Cette exigence concerne particulièrement les produits alimentaires, les boissons, et les soins personnels. Vous êtes responsable de la conformité de l'emballage de vos produits avant de les lister sur la Plateforme."
           : "Since June 1, 2025, generic or descriptive terms tied to a trademark - like a flavour name or an ingredient - must appear in French on the product itself, even if the trademark itself can stay in another language. A transition period runs until June 1, 2027 for products manufactured before June 1, 2025. This requirement is especially relevant for food, beverage, and personal care products. You're responsible for your product packaging being compliant before listing it on the Platform." ?></p>
+      </div>
+      <div class="faq-item new">
+<?php if ($fr): ?>
+        <h4>Quels permis et licences un fournisseur doit-il détenir ?</h4>
+        <p>En plus de votre NEQ, de vos inscriptions à la TPS et à la TVQ et de votre assurance, selon votre activité :</p>
+        <p style="margin-top:10px;"><strong>Aliments importés ou vendus hors Québec :</strong> licence pour la salubrité des aliments au Canada (SAC) de l'ACIA et registres de traçabilité (une étape en amont, une étape en aval) selon le Règlement sur la salubrité des aliments au Canada.</p>
+        <p style="margin-top:10px;"><strong>Aliments manipulés au Québec :</strong> le permis du MAPAQ qui correspond à votre activité (par exemple vente en gros, entreposage ou transformation).</p>
+        <p style="margin-top:10px;"><strong>Langue :</strong> le français sur les emballages en vrac, les étiquettes, les fiches techniques, les mises en garde et les listes d'ingrédients expédiés aux entreprises québécoises.</p>
+        <p style="margin-top:10px;"><strong>Importation :</strong> un compte d'importateur auprès de l'Agence des services frontaliers du Canada (ASFC) et le respect des tarifs et déclarations.</p>
+        <p style="margin-top:10px;">Ce résumé est un guide et non un avis juridique. Détenir les permis qui s'appliquent à vos produits est votre responsabilité.</p>
+<?php else: ?>
+        <h4>What permits and licences do suppliers need?</h4>
+        <p>Besides your NEQ, GST/QST registration and insurance, depending on your activity:</p>
+        <p style="margin-top:10px;"><strong>Food imported or sold outside Quebec:</strong> a Safe Food for Canadians (SFC) licence from the CFIA and traceability records (one step back, one step forward) under the Safe Food for Canadians Regulations.</p>
+        <p style="margin-top:10px;"><strong>Food handled in Quebec:</strong> the MAPAQ permit that matches your activity (for example wholesale, warehousing or processing).</p>
+        <p style="margin-top:10px;"><strong>Language:</strong> French on bulk packaging, labels, technical sheets, safety warnings and ingredient lists shipped to Quebec businesses.</p>
+        <p style="margin-top:10px;"><strong>Imports:</strong> a Canada Border Services Agency (CBSA) import account and compliance with tariffs and declarations.</p>
+        <p style="margin-top:10px;">This summary is a guide, not legal advice. Holding the permits that apply to your products is your responsibility.</p>
+<?php endif; ?>
       </div>
       <div class="faq-item new">
         <h4><?= $fr ? "Comment fonctionne le programme Partenaire Fondateur ?" : "How does the Founding Partner Program work?" ?></h4>

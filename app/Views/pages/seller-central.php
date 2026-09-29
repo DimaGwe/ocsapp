@@ -413,6 +413,36 @@ $fr = ($currentLang === 'fr');
   </div>
 </section>
 
+<!-- LEGAL REQUIREMENTS -->
+<section class="card-section" style="background:var(--bg-light);">
+  <div class="wrap">
+    <div class="section-eyebrow"><?= $fr ? "EXIGENCES LÉGALES" : "LEGAL REQUIREMENTS" ?></div>
+    <h2><?= $fr ? "Vendre en toute légalité au Québec" : "Selling legally in Quebec" ?></h2>
+    <p style="max-width:760px;margin-bottom:22px;"><?= $fr
+      ? "Chaque boutique sur OCSAPP doit respecter les exigences légales de base du Québec, peu importe ce qu'elle vend. Notre équipe examine votre NEQ avant d'approuver votre boutique. Les permis propres à votre catégorie demeurent votre responsabilité, et votre entente vendeur prévoit que vous en fournissiez une copie à OCSAPP sur demande et à chaque renouvellement."
+      : "Every shop on OCSAPP must meet Quebec's baseline legal requirements, whatever it sells. Our team reviews your NEQ before approving your shop. The permits specific to your category remain your responsibility, and your Seller Agreement requires you to send OCSAPP a copy on request and at each renewal." ?></p>
+    <div class="requirements-box">
+      <h4><?= $fr ? "Obligatoire pour chaque boutique :" : "Required for every shop:" ?></h4>
+      <ul>
+        <li><?= $fr ? "Un numéro d'entreprise du Québec (NEQ) du Registraire des entreprises du Québec." : "A Quebec enterprise number (NEQ) from the Registraire des entreprises du Québec." ?></li>
+        <li><?= $fr ? "L'inscription aux fichiers de la TPS et de la TVQ auprès de Revenu Québec, sauf si vous êtes un petit fournisseur (30 000 \$ ou moins de ventes taxables sur quatre trimestres civils consécutifs)." : "GST/QST registration with Revenu Québec, unless you qualify as a small supplier (\$30,000 or less in taxable sales over four consecutive calendar quarters)." ?></li>
+        <li><?= $fr ? "Le respect de la Charte de la langue française (loi 96) : le français sur votre affichage, vos étiquettes, vos emballages et vos documents commerciaux." : "Compliance with the Charter of the French Language (Bill 96): French on your signage, product labels, packaging and commercial documents." ?></li>
+        <li><?= $fr ? "Un certificat d'occupation de votre ville ou arrondissement pour vos locaux, lorsque votre municipalité l'exige (par exemple Laval, Pointe-Claire ou un arrondissement de Montréal)." : "A certificate of occupancy (certificat d'occupation) from your city or borough for your premises, where your municipality requires one (for example Laval, Pointe-Claire or a Montreal borough)." ?></li>
+        <li><?= $fr ? "Une assurance responsabilité civile générale d'au moins 1 000 000 \$, incluant la responsabilité produits pour les aliments et les produits de consommation (exigée par l'entente vendeur)." : "Commercial general liability insurance of at least \$1,000,000, including product liability for food or consumable products (required by the Seller Agreement)." ?></li>
+        <li><?= $fr ? "Les permis et licences qu'exige votre catégorie (voir la FAQ ci-dessous)." : "Any permit or licence your category requires (see the FAQ below)." ?></li>
+      </ul>
+    </div>
+    <div class="requirements-box" style="margin-top:18px;">
+      <h4><?= $fr ? "Bon à avoir :" : "Good to have:" ?></h4>
+      <ul>
+        <li><?= $fr ? "Une couverture de 2 000 000 \$ ou plus : plusieurs propriétaires commerciaux, franchiseurs et municipalités de l'Ouest-de-l'Île exigent de 2 M\$ à 5 M\$." : "Liability coverage of \$2,000,000 or more: many West Island landlords, franchisors and municipalities ask for \$2M to \$5M." ?></li>
+        <li><?= $fr ? "Une formation en hygiène et salubrité alimentaires pour plus d'employés que le minimum réglementaire." : "Food hygiene and safety training for more of your staff than the regulatory minimum." ?></li>
+        <li><?= $fr ? "Une copie numérique de vos permis et certificats, avec leurs dates de renouvellement, pour pouvoir les transmettre rapidement sur demande." : "Digital copies of your permits and certificates, with their renewal dates, so you can send them quickly when asked." ?></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
 <!-- FAQ -->
 <section class="faq">
   <div class="wrap">
@@ -487,6 +517,57 @@ $fr = ($currentLang === 'fr');
         <p><?= $fr
           ? "Depuis le 1er juin 2025, les termes génériques ou descriptifs associés à une marque de commerce - par exemple un nom de saveur ou un ingrédient - doivent apparaître en français sur le produit lui-même, même si la marque elle-même peut demeurer dans une autre langue. Une période de transition s'applique jusqu'au 1er juin 2027 pour les produits fabriqués avant le 1er juin 2025. Vous êtes responsable de la conformité de l'emballage de vos produits avant de les lister sur la Plateforme."
           : "Since June 1, 2025, generic or descriptive terms tied to a trademark - like a flavour name or an ingredient - must appear in French on the product itself, even if the trademark itself can stay in another language. A transition period runs until June 1, 2027 for products manufactured before June 1, 2025. You're responsible for your product packaging being compliant before listing it on the Platform." ?></p>
+      </div>
+      <div class="faq-item new">
+<?php if ($fr): ?>
+        <h4>Quels permis s'appliquent à la catégorie de ma boutique ?</h4>
+        <p>En plus des exigences qui s'appliquent à toutes les boutiques, chaque catégorie a ses propres règles. Ce résumé est un guide et non un avis juridique : vérifiez auprès de l'organisme émetteur ou d'un professionnel pour votre situation.</p>
+        <p style="margin-top:10px;"><strong>Restauration :</strong> permis de restauration du MAPAQ avant de préparer ou de servir des aliments; formation en hygiène et salubrité alimentaires du MAPAQ pour les gestionnaires et les manipulateurs d'aliments; permis de la Régie des alcools, des courses et des jeux (RACJ) si vous servez de l'alcool; licence d'exécution publique d'Entandem si vous diffusez de la musique; règlements municipaux sur les séparateurs de graisse et les eaux usées.</p>
+        <p style="margin-top:10px;"><strong>Épicerie :</strong> permis de vente au détail du MAPAQ; entente de détaillant avec Loto-Québec pour vendre des billets de loterie; balances homologuées et inspectées selon les règles de Mesures Canada si vous vendez au poids.</p>
+        <p style="margin-top:10px;"><strong>Santé et pharmacie :</strong> une pharmacie doit appartenir à un pharmacien inscrit à l'Ordre des pharmaciens du Québec; règles de Santé Canada sur les substances contrôlées; licence d'établissement pour les instruments médicaux (LEIM) de Santé Canada si vous importez ou distribuez des instruments médicaux.</p>
+        <p style="margin-top:10px;"><strong>Mode et boutiques :</strong> étiquettes bilingues selon la Loi fédérale sur l'étiquetage des textiles (composition en fibres et identité du fournisseur); le français sur l'affichage et les étiquettes de prix selon la Charte de la langue française (OQLF).</p>
+        <p style="margin-top:10px;"><strong>Bien-être et beauté :</strong> règles municipales et de santé publique en hygiène, dont la stérilisation et l'élimination des déchets biomédicaux pour le tatouage et le perçage; déclaration de cosmétique à Santé Canada si vous fabriquez ou importez vos propres produits cosmétiques.</p>
+        <p style="margin-top:10px;"><strong>Événements et traiteur :</strong> permis du MAPAQ couvrant les activités de traiteur; permis de réunion de la RACJ pour chaque événement où de l'alcool est servi; permis municipaux d'événement, de sécurité incendie et de structures temporaires pour les grands événements ou ceux en plein air.</p>
+        <p style="margin-top:10px;"><strong>Artisans locaux :</strong> Loi canadienne sur la sécurité des produits de consommation (par exemple, les limites de plomb dans les bijoux pour enfants et les règles sur les jouets); règlement municipal sur les usages domestiques si vous travaillez de la maison.</p>
+        <p style="margin-top:10px;"><strong>Pièces auto et industrielles :</strong> élimination des matières dangereuses résiduelles (huiles usées, batteries, antigel) par une entreprise autorisée, selon les règles du MELCCFP; évaluation écrite obligatoire avant les réparations selon la Loi sur la protection du consommateur (OPC).</p>
+        <p style="margin-top:10px;"><strong>Maison et quotidien :</strong> SIMDUT pour les produits chimiques dans votre milieu de travail et règles d'étiquetage des produits chimiques de consommation (peintures, solvants, propane); règles municipales de sécurité incendie pour l'entreposage de produits inflammables; règles d'étiquetage applicables aux matelas et aux meubles rembourrés.</p>
+        <p style="margin-top:10px;"><strong>Électronique et techno :</strong> inscription à l'ARPE-Québec et remise des écofrais sur les produits électroniques que vous êtes le premier à vendre au Québec; homologation d'ISDE pour tout appareil radio ou sans fil.</p>
+        <p style="margin-top:10px;"><strong>Saveurs du monde :</strong> licence pour la salubrité des aliments au Canada (SAC) de l'ACIA si vous importez des aliments; compte d'importateur et déclarations auprès de l'ASFC; étiquetage alimentaire conforme aux règles fédérales et québécoises; permis du MAPAQ selon votre activité (vente au détail ou restauration).</p>
+        <p style="margin-top:10px;">Détenir un permis ne permet pas à lui seul de vendre un produit sur OCSAPP : les articles interdits et restreints prévus à votre entente vendeur s'appliquent toujours.</p>
+<?php else: ?>
+        <h4>What permits apply to my shop's category?</h4>
+        <p>On top of the requirements that apply to every shop, each category has its own rules. This summary is a guide, not legal advice: check with the issuing body or a professional for your situation.</p>
+        <p style="margin-top:10px;"><strong>Food &amp; Dining:</strong> a MAPAQ restaurant permit before any food is prepared or served; MAPAQ food hygiene and safety training for managers and food handlers; a permit from the Régie des alcools, des courses et des jeux (RACJ) if you serve alcohol; a public performance licence from Entandem if you play music; municipal grease trap and wastewater bylaws.</p>
+        <p style="margin-top:10px;"><strong>Grocery:</strong> a MAPAQ retail food permit; a Loto-Québec retailer agreement to sell lottery tickets; scales approved and inspected under Measurement Canada rules if you sell by weight.</p>
+        <p style="margin-top:10px;"><strong>Health &amp; Pharmacy:</strong> a pharmacy must be owned by a pharmacist registered with the Ordre des pharmaciens du Québec; Health Canada rules on controlled substances; a Medical Device Establishment Licence (MDEL) from Health Canada if you import or distribute medical devices.</p>
+        <p style="margin-top:10px;"><strong>Fashion &amp; Boutiques:</strong> bilingual labels under the federal Textile Labelling Act (fibre content and dealer identity); French on signage and price tags under the Charter of the French Language (OQLF).</p>
+        <p style="margin-top:10px;"><strong>Wellness &amp; Beauty:</strong> municipal and public health hygiene rules, including sterilization and biomedical waste disposal for tattooing and piercing; a Cosmetic Notification Form to Health Canada if you make or import your own cosmetic products.</p>
+        <p style="margin-top:10px;"><strong>Events &amp; Catering:</strong> a MAPAQ permit that covers catering; an RACJ reunion permit (permis de réunion) for each event where alcohol is served; municipal event, fire safety and temporary structure permits for large or outdoor events.</p>
+        <p style="margin-top:10px;"><strong>Local Artisans:</strong> the Canada Consumer Product Safety Act (for example, lead limits in children's jewellery and rules for toys); your municipality's home-based business bylaw if you work from home.</p>
+        <p style="margin-top:10px;"><strong>Auto &amp; Industrial Parts:</strong> disposal of hazardous residual materials (used oil, batteries, coolant) through an authorized company under MELCCFP rules; a mandatory written estimate before repairs under the Consumer Protection Act (OPC).</p>
+        <p style="margin-top:10px;"><strong>Home &amp; Everyday:</strong> WHMIS for chemicals in your workplace and consumer chemical labelling rules (paints, solvents, propane); municipal fire safety rules for storing flammable products; the labelling rules that apply to mattresses and upholstered furniture.</p>
+        <p style="margin-top:10px;"><strong>Electronics &amp; Tech:</strong> registration with ARPE-Québec (EPRA) and remittance of environmental handling fees on electronics you are the first to sell into Quebec; ISED certification for any radio or wireless device.</p>
+        <p style="margin-top:10px;"><strong>World Flavors:</strong> a Safe Food for Canadians (SFC) licence from the CFIA if you import food; a CBSA import account and declarations; food labelling that meets federal and Quebec rules; the MAPAQ permit that matches your activity (retail or restaurant).</p>
+        <p style="margin-top:10px;">Holding a permit does not by itself allow a product to be sold on OCSAPP: the prohibited and restricted items in your Seller Agreement still apply.</p>
+<?php endif; ?>
+      </div>
+      <div class="faq-item new">
+<?php if ($fr): ?>
+        <h4>OCSAPP vérifie-t-il mes permis ?</h4>
+        <p>Notre équipe examine votre NEQ et les documents d'immatriculation que vous téléversez avant d'approuver votre boutique. Vos permis de catégorie et votre assurance sont votre responsabilité selon l'entente vendeur : vous confirmez les détenir en signant l'entente, et vous vous engagez à en transmettre une copie à OCSAPP sur demande et à chaque renouvellement.</p>
+<?php else: ?>
+        <h4>Does OCSAPP check my permits?</h4>
+        <p>Our team reviews your NEQ and any registration documents you upload before approving your shop. Your category permits and insurance are your responsibility under the Seller Agreement: you confirm you hold them when you sign it, and you agree to send OCSAPP a copy on request and at each renewal.</p>
+<?php endif; ?>
+      </div>
+      <div class="faq-item new">
+<?php if ($fr): ?>
+        <h4>Ai-je besoin d'une assurance responsabilité civile ?</h4>
+        <p>Oui. La loi québécoise n'impose pas d'assurance générale à la plupart des commerces, mais votre entente vendeur l'exige : une assurance responsabilité civile générale d'au moins 1 000 000 $, incluant la responsabilité produits pour les aliments et les produits de consommation. En pratique, plusieurs propriétaires commerciaux, franchiseurs et municipalités de l'Ouest-de-l'Île demandent de 2 M$ à 5 M$ : vérifiez votre bail avant de choisir votre couverture.</p>
+<?php else: ?>
+        <h4>Do I need liability insurance?</h4>
+        <p>Yes. Quebec law doesn't impose a general insurance requirement on most shops, but your Seller Agreement does: at least $1,000,000 in commercial general liability coverage, including product liability for food or consumable products. In practice, many West Island landlords, franchisors and municipalities ask for $2M to $5M, so check your lease before choosing your coverage.</p>
+<?php endif; ?>
       </div>
       <div class="faq-item new">
         <h4><?= $fr ? "Comment fonctionne le programme Partenaire Fondateur ?" : "How does the Founding Partner Program work?" ?></h4>

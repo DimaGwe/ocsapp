@@ -494,6 +494,30 @@ $fr = ($currentLang === 'fr');
         <p><?= $fr ? "Oui. Votre entente avec OCSAPP est non exclusive - vous pouvez offrir vos services à toute autre personne ou entreprise, y compris des concurrents, et vous n'êtes jamais tenu d'accepter un minimum de courses." : "Yes. Your agreement with OCSAPP is non-exclusive - you can offer your services to any other person or business, including competitors, and you're never required to accept a minimum number of jobs." ?></p>
       </div>
       <div class="faq-item new">
+<?php if ($fr): ?>
+        <h4>Ai-je besoin d'un permis spécial ou d'une inscription à la CTQ ?</h4>
+        <p>Pour la plupart des livraisons OCSAPP, non. Un permis de classe 5 couvre les voitures, les VUS et les fourgonnettes. Si vous livrez avec un véhicule lourd (4 500 kg ou plus), il vous faut la classe de permis de la SAAQ correspondante et une inscription au Registre des propriétaires et des exploitants de véhicules lourds de la Commission des transports du Québec (CTQ).</p>
+        <p style="margin-top:10px;">Peu importe votre véhicule, votre assurance automobile doit couvrir l'usage commercial ou la livraison, comme le prévoit votre entente de livreur.</p>
+<?php else: ?>
+        <h4>Do I need a special licence or a CTQ registration?</h4>
+        <p>For most OCSAPP deliveries, no. A class 5 licence covers cars, SUVs and vans. If you deliver with a heavy vehicle (4,500 kg or more), you need the matching SAAQ licence class and a registration in the Commission des transports du Québec (CTQ) register of heavy vehicle owners and operators.</p>
+        <p style="margin-top:10px;">Whatever you drive, your auto insurance must cover commercial or delivery use, as your Driver Agreement requires.</p>
+<?php endif; ?>
+      </div>
+      <div class="faq-item new">
+<?php if ($fr): ?>
+        <h4>Suis-je un employé ? Qu'en est-il des impôts et de la CNESST ?</h4>
+        <p>Non. Selon votre entente de livreur, vous êtes un travailleur autonome : vous choisissez quand et où vous travaillez, vous utilisez votre propre véhicule et vous pouvez livrer pour d'autres plateformes.</p>
+        <p style="margin-top:10px;">Vous produisez donc vos propres déclarations de revenus, et vous devez vous inscrire à la TPS et à la TVQ auprès de Revenu Québec lorsque vos revenus taxables dépassent 30 000 $ sur quatre trimestres civils consécutifs.</p>
+        <p style="margin-top:10px;">Les travailleurs autonomes ne sont pas couverts automatiquement par la CNESST. Vous pouvez vous inscrire à la protection personnelle offerte par la CNESST si vous voulez être protégé en cas d'accident du travail.</p>
+<?php else: ?>
+        <h4>Am I an employee? What about taxes and the CNESST?</h4>
+        <p>No. Under your Driver Agreement you work as an independent contractor: you choose when and where you work, use your own vehicle, and can deliver for other platforms.</p>
+        <p style="margin-top:10px;">That means you file your own income taxes, and you must register for GST/QST with Revenu Québec once your taxable revenue passes $30,000 over four consecutive calendar quarters.</p>
+        <p style="margin-top:10px;">Independent workers aren't automatically covered by the CNESST. You can sign up for the CNESST's personal protection if you want coverage in case of a work accident.</p>
+<?php endif; ?>
+      </div>
+      <div class="faq-item new">
         <h4><?= $fr ? "Comment fonctionne le programme Partenaire Fondateur ?" : "How does the Founding Partner Program work?" ?></h4>
         <p><?= $fr
           ? "Les 50 premiers livreurs approuvés sur OCSAPP obtiennent automatiquement le statut de Livreur Fondateur - aucune candidature séparée requise. Vous obtenez un insigne permanent sur votre profil. La prime d'étape, la prime de parrainage et l'accès prioritaire décrits dans nos documents du programme sont prévus mais pas encore actifs - ils seront annoncés séparément une fois lancés."

@@ -458,6 +458,15 @@ $fr = ($currentLang === 'fr');
           : "Returns are covered by OCSAPP's Returns &amp; Refund Policy. If your claim is eligible, OCSAPP uses photo and scan evidence - captured both when the seller prepares your order and at delivery - to automatically determine whether an issue occurred before pickup or in transit, and resolves it accordingly (replacement, credit, or refund). You can submit a claim directly from your account or by contacting support." ?></p>
       </div>
       <div class="faq-item new">
+<?php if ($fr): ?>
+        <h4>Les boutiques sur OCSAPP sont-elles de vraies entreprises ?</h4>
+        <p>Oui. Chaque vendeur fournit son numéro d'entreprise du Québec (NEQ), et notre équipe examine chaque candidature avant qu'une boutique puisse vendre. Les vendeurs s'engagent aussi à détenir les permis qu'exige leur catégorie (par exemple un permis du MAPAQ pour les entreprises alimentaires) et à maintenir une assurance responsabilité civile.</p>
+<?php else: ?>
+        <h4>Are the shops on OCSAPP legitimate businesses?</h4>
+        <p>Yes. Every seller provides its Quebec enterprise number (NEQ), and our team reviews each application before a shop can sell. Sellers also agree to hold the permits their category requires (for example a MAPAQ permit for food businesses) and to carry liability insurance.</p>
+<?php endif; ?>
+      </div>
+      <div class="faq-item new">
         <h4><?= $fr ? "Les suppléments affectent-ils le prix affiché par le vendeur ?" : "Do surcharges affect the seller's listed price?" ?></h4>
         <p><?= $fr
           ? "Non. Le supplément pour commande volumineuse, les frais d'arrêt additionnel et le supplément longue distance s'ajoutent uniquement au frais de livraison - jamais au prix du produit lui-même, qui reste toujours le prix exact affiché par le vendeur."

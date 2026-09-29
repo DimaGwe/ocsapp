@@ -594,6 +594,27 @@ $fr = ($currentLang === 'fr');
           : "OCSAPP and your business will first attempt to resolve any dispute through good-faith negotiation. If unresolved within 30 days, it may be submitted to the courts of the judicial district of Montréal, Québec, to whose exclusive jurisdiction you and OCSAPP submit. OCSAPP does not require mandatory arbitration in your agreement." ?></p>
       </div>
       <div class="faq-item new">
+<?php if ($fr): ?>
+        <h4>Quelles exigences légales s'appliquent à mon entreprise ?</h4>
+        <p>Chaque compte entreprise doit avoir un NEQ, être inscrit à la TPS et à la TVQ (sauf exception pour les petits fournisseurs), respecter la Charte de la langue française (loi 96) dans son affichage et ses communications, et détenir le certificat d'occupation qu'exige sa ville ou son arrondissement pour ses locaux. Selon votre taille et votre activité, vous êtes aussi responsable de :</p>
+        <p style="margin-top:10px;"><strong>Registre des entreprises :</strong> tenir votre immatriculation à jour, y compris la déclaration des bénéficiaires ultimes.</p>
+        <p style="margin-top:10px;"><strong>CNESST :</strong> vous inscrire comme employeur si vous avez des employés, et respecter les règles de santé et de sécurité du travail.</p>
+        <p style="margin-top:10px;"><strong>Francisation :</strong> suivre la démarche de francisation de l'Office québécois de la langue française (OQLF) si vous comptez 25 employés ou plus au Québec.</p>
+        <p style="margin-top:10px;"><strong>Environnement :</strong> obtenir une autorisation du MELCCFP (article 22 de la Loi sur la qualité de l'environnement) si vos activités rejettent des contaminants ou des eaux usées.</p>
+        <p style="margin-top:10px;"><strong>Zonage :</strong> exercer vos activités dans une zone qui les permet, avec les certificats qu'exige votre municipalité.</p>
+        <p style="margin-top:10px;">Ce résumé est un guide et non un avis juridique.</p>
+<?php else: ?>
+        <h4>What legal requirements apply to my business?</h4>
+        <p>Every business account needs a NEQ, GST/QST registration (unless it qualifies as a small supplier), compliance with the Charter of the French Language (Bill 96) in its signage and communications, and the certificate of occupancy (certificat d'occupation) its city or borough requires for its premises. Depending on your size and activity, you're also responsible for:</p>
+        <p style="margin-top:10px;"><strong>Enterprise register:</strong> keeping your registration up to date, including the declaration of ultimate beneficiaries.</p>
+        <p style="margin-top:10px;"><strong>CNESST:</strong> registering as an employer if you have employees, and following workplace health and safety rules.</p>
+        <p style="margin-top:10px;"><strong>Francization:</strong> completing the Office québécois de la langue française (OQLF) francization process if you have 25 or more employees in Quebec.</p>
+        <p style="margin-top:10px;"><strong>Environment:</strong> an MELCCFP authorization (section 22 of the Environment Quality Act) if your operations release contaminants or wastewater.</p>
+        <p style="margin-top:10px;"><strong>Zoning:</strong> operating in a zone that permits your activity, with the certificates your municipality requires.</p>
+        <p style="margin-top:10px;">This summary is a guide, not legal advice.</p>
+<?php endif; ?>
+      </div>
+      <div class="faq-item new">
         <h4><?= $fr ? "Comment fonctionne le programme Partenaire Fondateur ?" : "How does the Founding Partner Program work?" ?></h4>
         <p><?= $fr
           ? "Les 5 premiers comptes entreprise approuvés sur OCSAPP obtiennent automatiquement le statut de Partenaire Fondateur - aucune candidature séparée requise. Vous obtenez le taux Distribution Débutant (5 %) verrouillé 6 mois sans frais mensuel et un gestionnaire de compte dédié. L'exemption des frais d'Approvisionnement décrite dans nos documents du programme est prévue mais pas encore active - elle sera annoncée séparément une fois lancée."
