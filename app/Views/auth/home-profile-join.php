@@ -92,8 +92,8 @@ $guardianName = $invite ? trim(html_entity_decode($invite['guardian_first_name']
         <div class="form-group">
           <label class="consent"><input type="checkbox" name="consent" required>
             <span><?= $fr
-              ? "J'accepte les <a href=\"" . url('conditions-utilisation') . "\" target=\"_blank\">Conditions d'utilisation</a> et la <a href=\"" . url('confidentialite') . "\" target=\"_blank\">Politique de confidentialité</a>, avec le consentement de mon parent ou tuteur."
-              : 'I agree to the <a href="' . url('terms') . '" target="_blank">Terms of Service</a> and <a href="' . url('privacy') . '" target="_blank">Privacy Policy</a>, with my parent\'s or guardian\'s consent.' ?></span>
+              ? "J'accepte, avec le consentement de mon parent ou tuteur, les <a href=\"" . url('conditions-utilisation') . "\" target=\"_blank\">Conditions d'utilisation</a>, qui incluent la <a href=\"" . url('confidentialite') . "\" target=\"_blank\">Politique de confidentialité</a>, la <a href=\"" . url('temoins') . "\" target=\"_blank\">Politique relative aux témoins</a> et la <a href=\"" . url('retours') . "\" target=\"_blank\">Politique de retours et remboursements</a>."
+              : "With my parent's or guardian's consent, I agree" . ' to the <a href="' . url('terms') . '" target="_blank">Terms of Service</a>, which include the <a href="' . url('privacy') . '" target="_blank">Privacy Policy</a>, <a href="' . url('cookies') . '" target="_blank">Cookie Policy</a> and <a href="' . url('returns') . '" target="_blank">Returns &amp; Refund Policy</a>.' ?></span>
           </label>
         </div>
         <button type="submit" class="btn"><?= $fr ? 'Créer mon compte' : 'Create my account' ?></button>

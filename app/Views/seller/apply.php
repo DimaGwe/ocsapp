@@ -449,9 +449,7 @@ $fr = ($currentLang === 'fr');
       <input type="checkbox" name="terms" id="terms" required>
       <label for="terms">
         <?= $fr ? "J'accepte les" : 'I agree to the' ?>
-        <a href="<?= url('terms') ?>" target="_blank"><?= $fr ? "Conditions d'utilisation" : 'Terms of Service' ?></a>
-        <?= $fr ? 'et la' : 'and' ?>
-        <a href="<?= url('privacy') ?>" target="_blank"><?= $fr ? 'Politique de confidentialité' : 'Privacy Policy' ?></a>
+        <?php if ($fr): ?><a href="<?= url('conditions-utilisation') ?>" target="_blank">Conditions d'utilisation</a>, qui incluent la <a href="<?= url('confidentialite') ?>" target="_blank">Politique de confidentialité</a>, la <a href="<?= url('temoins') ?>" target="_blank">Politique relative aux témoins</a> et la <a href="<?= url('retours') ?>" target="_blank">Politique de retours et remboursements</a><?php else: ?><a href="<?= url('terms') ?>" target="_blank">Terms of Service</a>, which include the <a href="<?= url('privacy') ?>" target="_blank">Privacy Policy</a>, <a href="<?= url('cookies') ?>" target="_blank">Cookie Policy</a> and <a href="<?= url('returns') ?>" target="_blank">Returns &amp; Refund Policy</a><?php endif; ?>.
       </label>
     </div>
     <div class="checkbox-group">
