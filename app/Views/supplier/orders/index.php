@@ -163,7 +163,7 @@ require dirname(__DIR__) . '/layout-header.php';
     <table>
       <thead>
         <tr>
-          <th><?= $fr ? 'No BC' : 'PO Number' ?></th>
+          <th><?= $fr ? 'N° BC' : 'PO number' ?></th>
           <th><?= $fr ? 'Date de commande' : 'Order Date' ?></th>
           <th><?= $fr ? 'Livraison prévue' : 'Expected Delivery' ?></th>
           <th><?= $fr ? 'Articles' : 'Items' ?></th>
@@ -179,12 +179,12 @@ require dirname(__DIR__) . '/layout-header.php';
                 <?= htmlspecialchars($order['po_number']) ?>
               </a>
             </td>
-            <td><?= date('M d, Y', strtotime($order['order_date'])) ?></td>
+            <td><?= acct_date($order['order_date'], acct_is_fr()) ?></td>
             <td>
-              <?= $order['expected_delivery_date'] ? date('M d, Y', strtotime($order['expected_delivery_date'])) : 'N/A' ?>
+              <?= $order['expected_delivery_date'] ? acct_date($order['expected_delivery_date'], acct_is_fr()) : 'N/A' ?>
             </td>
-            <td><?= $order['item_count'] ?> <?= $fr ? 'articles' : 'items' ?> (<?= $order['total_items'] ?> <?= $fr ? 'unités' : 'units' ?>)</td>
-            <td>$<?= number_format($order['total_amount'], 2) ?></td>
+            <td><?php $__n = (int) $order['item_count']; $__u = (int) $order['total_items']; ?><?= $__n ?> <?= $fr ? ($__n > 1 ? 'articles' : 'article') : ($__n === 1 ? 'item' : 'items') ?> (<?= $__u ?> <?= $fr ? ($__u > 1 ? 'unités' : 'unité') : ($__u === 1 ? 'unit' : 'units') ?>)</td>
+            <td><?= acct_money($order['total_amount'], acct_is_fr()) ?></td>
             <td>
               <span class="badge <?= $order['status'] ?>">
                 <?= $fr ? [

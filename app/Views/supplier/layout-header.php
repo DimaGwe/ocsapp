@@ -2,6 +2,7 @@
 $currentLang = $_SESSION['language'] ?? 'fr';
 $fr = ($currentLang === 'fr');
 $t = getTranslations($currentLang);
+require_once __DIR__ . '/../components/format-helpers.php'; // fr-CA money/dates (acct_*)
 
 $_pageTitleMap = [
     'Supplier Dashboard'  => $fr ? 'Tableau de bord'          : 'Supplier Dashboard',
@@ -89,7 +90,7 @@ if (!empty($_SESSION['supplier_id']) && ($_SESSION['supplier_status'] ?? '') !==
   <title><?= htmlspecialchars($_ptDisplay) ?></title>
   <?= csrfMeta() ?>
 
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
 
   <style>
@@ -588,8 +589,10 @@ if (!empty($_SESSION['supplier_id']) && ($_SESSION['supplier_status'] ?? '') !==
       }
     }
   </style>
+  <!-- Marché Central look (2026-09-29): overrides the block above without touching markup or scripts -->
+  <link rel="stylesheet" href="<?= asset('css/pages/supplier-portal.css') ?>">
 </head>
-<body>
+<body class="sp-body">
   <div class="dashboard-wrapper">
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
@@ -597,17 +600,23 @@ if (!empty($_SESSION['supplier_id']) && ($_SESSION['supplier_status'] ?? '') !==
         <div class="sidebar-logo">
           <img src="<?= url('assets/images/logo.png') ?>" alt="OCSAPP" style="height:36px;width:auto;object-fit:contain;flex-shrink:0;">
           <div style="display:flex;flex-direction:column;line-height:1.3;">
-            <span style="font-size:16px;font-weight:700;font-family:'Poppins',sans-serif;color:white;">OCSAPP</span>
-            <span style="font-size:10px;font-weight:500;color:rgba(255,255,255,0.7);letter-spacing:0.6px;text-transform:uppercase;font-family:'Poppins',sans-serif;"><?= $fr ? 'Portail fournisseur' : 'Supplier Portal' ?></span>
+            <span class="sup-brand-name" style="font-size:16px;font-weight:700;font-family:'Poppins',sans-serif;color:white;">OCSAPP</span>
+            <span class="sup-brand-sub" style="font-size:10px;font-weight:500;color:rgba(255,255,255,0.7);letter-spacing:0.6px;text-transform:uppercase;font-family:'Poppins',sans-serif;"><?= $fr ? 'Portail fournisseur' : 'Supplier Portal' ?></span>
           </div>
         </div>
       </div>
 
       <?php $isPendingVerification = ($_SESSION['supplier_status'] ?? '') === 'pending_verification'; ?>
+      <?php
+      // Active item from the URL (pages set $pageTitle inconsistently, some already in French, so
+      // title comparisons left the French sidebar with no active item)
+      $__path = rtrim(parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '', '/');
+      $__navOn = fn(string $seg) => (bool) preg_match('#/' . preg_quote($seg, '#') . '(/|$)#', $__path);
+      ?>
       <nav class="sidebar-nav">
 
         <?php /* ── Always accessible ── */ ?>
-        <a href="<?= url('supplier/dashboard') ?>" class="nav-link <?= ($pageTitle ?? '') === 'Supplier Dashboard' ? 'active' : '' ?>">
+        <a href="<?= url('supplier/dashboard') ?>" class="nav-link <?= $__navOn('supplier/dashboard') ? 'active' : '' ?>">
           <i class="fas fa-chart-line"></i>
           <span><?= $t['sup_dashboard'] ?? 'Dashboard' ?></span>
         </a>
@@ -645,15 +654,15 @@ if (!empty($_SESSION['supplier_id']) && ($_SESSION['supplier_status'] ?? '') !==
           <i class="fas fa-lock nav-lock-icon"></i>
         </span>
         <?php else: ?>
-        <a href="<?= url('supplier/analytics') ?>" class="nav-link <?= ($pageTitle ?? '') === 'Analytics' ? 'active' : '' ?>">
+        <a href="<?= url('supplier/analytics') ?>" class="nav-link <?= $__navOn('supplier/analytics') ? 'active' : '' ?>">
           <i class="fas fa-chart-bar"></i>
           <span><?= $t['sup_analytics'] ?? 'Analytics' ?></span>
         </a>
-        <a href="<?= url('supplier/products') ?>" class="nav-link <?= strpos($pageTitle ?? '', 'Product') !== false ? 'active' : '' ?>">
+        <a href="<?= url('supplier/products') ?>" class="nav-link <?= $__navOn('supplier/products') ? 'active' : '' ?>">
           <i class="fas fa-box"></i>
           <span><?= $t['sup_my_products'] ?? 'My Products' ?></span>
         </a>
-        <a href="<?= url('supplier/orders') ?>" class="nav-link <?= strpos($pageTitle ?? '', 'Purchase Order') !== false ? 'active' : '' ?>">
+        <a href="<?= url('supplier/orders') ?>" class="nav-link <?= $__navOn('supplier/orders') ? 'active' : '' ?>">
           <i class="fas fa-file-invoice"></i>
           <span><?= $t['sup_purchase_orders'] ?? 'Purchase Orders' ?></span>
           <?php $__totalPoBadge = $_pendingPoCount + $_activePoCount; ?>
@@ -668,7 +677,7 @@ if (!empty($_SESSION['supplier_id']) && ($_SESSION['supplier_status'] ?? '') !==
             <span id="poActiveNavBadge" class="notif-count-badge hidden" style="background:#d97706;"></span>
           <?php endif; ?>
         </a>
-        <a href="<?= url('supplier/sales-orders') ?>" class="nav-link <?= ($pageTitle ?? '') === 'Sales Orders' ? 'active' : '' ?>">
+        <a href="<?= url('supplier/sales-orders') ?>" class="nav-link <?= $__navOn('supplier/sales-orders') ? 'active' : '' ?>">
           <i class="fas fa-receipt"></i>
           <span><?= $t['sup_sales_orders'] ?? 'Sales Orders' ?></span>
           <?php
@@ -681,7 +690,7 @@ if (!empty($_SESSION['supplier_id']) && ($_SESSION['supplier_status'] ?? '') !==
           ?>
           <span id="soNavBadge" class="notif-count-badge<?= $__activeSoCount > 0 ? '' : ' hidden' ?>" style="background:#d97706;"><?= $__activeSoCount > 9 ? '9+' : $__activeSoCount ?></span>
         </a>
-        <a href="<?= url('supplier/receivables') ?>" class="nav-link <?= ($pageTitle ?? '') === 'Receivables' ? 'active' : '' ?>">
+        <a href="<?= url('supplier/receivables') ?>" class="nav-link <?= $__navOn('supplier/receivables') ? 'active' : '' ?>">
           <i class="fas fa-hand-holding-usd"></i>
           <span><?= $t['sup_receivables'] ?? 'Receivables' ?></span>
           <?php
@@ -694,7 +703,7 @@ if (!empty($_SESSION['supplier_id']) && ($_SESSION['supplier_status'] ?? '') !==
           ?>
           <span id="supReceivablesBadge" class="notif-count-badge<?= $__unpaidRecCount > 0 ? '' : ' hidden' ?>" style="background:#d97706;"><?= $__unpaidRecCount > 9 ? '9+' : $__unpaidRecCount ?></span>
         </a>
-        <a href="<?= url('supplier/invoices') ?>" class="nav-link <?= ($pageTitle ?? '') === 'Invoices & Payments' ? 'active' : '' ?>">
+        <a href="<?= url('supplier/invoices') ?>" class="nav-link <?= $__navOn('supplier/invoices') ? 'active' : '' ?>">
           <i class="fas fa-file-invoice-dollar"></i>
           <span><?= $t['sup_invoices'] ?? 'Invoices & Payments' ?></span>
           <span id="supInvoiceBadge" class="notif-count-badge<?= $_supplierUnpaidInvoiceCount > 0 ? '' : ' hidden' ?>"><?= $_supplierUnpaidInvoiceCount > 9 ? '9+' : $_supplierUnpaidInvoiceCount ?></span>
@@ -702,15 +711,15 @@ if (!empty($_SESSION['supplier_id']) && ($_SESSION['supplier_status'] ?? '') !==
         <?php endif; ?>
 
         <?php /* ── Always accessible ── */ ?>
-        <a href="<?= url('supplier/documents') ?>" class="nav-link <?= ($pageTitle ?? '') === 'My Documents' ? 'active' : '' ?>">
+        <a href="<?= url('supplier/documents') ?>" class="nav-link <?= $__navOn('supplier/documents') ? 'active' : '' ?>">
           <i class="fas fa-folder-open"></i>
           <span><?= $t['sup_documents'] ?? 'My Documents' ?></span>
         </a>
-        <a href="<?= url('supplier/emails') ?>" class="nav-link <?= ($pageTitle ?? '') === 'My Emails' ? 'active' : '' ?>">
+        <a href="<?= url('supplier/emails') ?>" class="nav-link <?= $__navOn('supplier/emails') ? 'active' : '' ?>">
           <i class="fas fa-envelope-open-text"></i>
           <span><?= $t['sup_emails'] ?? 'My Emails' ?></span>
         </a>
-        <a href="<?= url('supplier/messages') ?>" class="nav-link <?= ($pageTitle ?? '') === 'Messages' ? 'active' : '' ?>">
+        <a href="<?= url('supplier/messages') ?>" class="nav-link <?= $__navOn('supplier/messages') ? 'active' : '' ?>">
           <i class="fas fa-comments"></i>
           <span><?= $t['sup_messages'] ?? 'Messages' ?></span>
           <span id="msgNavBadge" class="notif-count-badge<?= $_unreadMsgCount > 0 ? '' : ' hidden' ?>"><?= $_unreadMsgCount > 0 ? min($_unreadMsgCount, 99) : '' ?></span>
@@ -724,14 +733,14 @@ if (!empty($_SESSION['supplier_id']) && ($_SESSION['supplier_status'] ?? '') !==
           <i class="fas fa-lock nav-lock-icon"></i>
         </span>
         <?php elseif (($_SESSION['supplier_status'] ?? '') === 'active'): ?>
-        <a href="<?= url('supplier/pickup') ?>" class="nav-link <?= ($pageTitle ?? '') === 'Schedule Pickup' ? 'active' : '' ?>">
+        <a href="<?= url('supplier/pickup') ?>" class="nav-link <?= $__navOn('supplier/pickup') ? 'active' : '' ?>">
           <i class="fas fa-truck-loading"></i>
           <span><?= $t['sup_schedule_pickup'] ?? 'Schedule Pickup' ?></span>
         </a>
         <?php endif; ?>
 
         <?php /* ── Settings: always accessible ── */ ?>
-        <a href="<?= url('supplier/settings') ?>" class="nav-link <?= ($pageTitle ?? '') === 'Settings' ? 'active' : '' ?>">
+        <a href="<?= url('supplier/settings') ?>" class="nav-link <?= $__navOn('supplier/settings') ? 'active' : '' ?>">
           <i class="fas fa-cog"></i>
           <span><?= $t['sup_settings'] ?? 'Settings' ?></span>
         </a>
@@ -815,14 +824,14 @@ if (!empty($_SESSION['supplier_id']) && ($_SESSION['supplier_status'] ?? '') !==
         <?php if (hasFlash('error')): ?>
           <div class="alert alert-error">
             <i class="fas fa-exclamation-circle"></i>
-            <?= getFlash('error') ?>
+            <?= htmlspecialchars(html_entity_decode((string) getFlash('error'), ENT_QUOTES | ENT_HTML5, 'UTF-8')) ?>
           </div>
         <?php endif; ?>
 
         <?php if (hasFlash('success')): ?>
           <div class="alert alert-success">
             <i class="fas fa-check-circle"></i>
-            <?= getFlash('success') ?>
+            <?= htmlspecialchars(html_entity_decode((string) getFlash('success'), ENT_QUOTES | ENT_HTML5, 'UTF-8')) ?>
           </div>
         <?php endif; ?>
 

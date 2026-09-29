@@ -116,7 +116,7 @@ require __DIR__ . '/layout-header.php';
 
         <!-- Step 1: Select POs -->
         <div class="card">
-            <div class="card-title"><i class="fas fa-file-invoice" style="color:#00b207;"></i> <?= $fr ? 'Étape 1 — Sélectionner les bons de commande' : 'Step 1 — Select Purchase Orders' ?></div>
+            <div class="card-title"><i class="fas fa-file-invoice" style="color:#00b207;"></i> <?= $fr ? 'Étape 1 : Sélectionner les bons de commande' : 'Step 1: Select Purchase Orders' ?></div>
             <p style="font-size:13px;color:#6b7280;margin-bottom:16px;"><?= $fr ? 'Sélectionnez les bons de commande que vous souhaitez faire ramasser. Vous pouvez combiner plusieurs commandes en un seul ramassage.' : 'Select the purchase orders you want picked up in this request. You can combine multiple orders in a single pickup.' ?></p>
 
             <div class="po-grid">
@@ -125,10 +125,10 @@ require __DIR__ . '/layout-header.php';
                     <input type="checkbox" id="po_<?= $po['id'] ?>" name="po_ids[]" value="<?= $po['id'] ?>">
                     <div class="po-number"><?= htmlspecialchars($po['po_number']) ?></div>
                     <div class="po-meta">
-                        <span><i class="fas fa-calendar" style="width:14px;"></i> <?= date('M j, Y', strtotime($po['order_date'])) ?></span>
+                        <span><i class="fas fa-calendar" style="width:14px;"></i> <?= acct_date($po['order_date'], acct_is_fr()) ?></span>
                         <span><i class="fas fa-box" style="width:14px;"></i> <?= (int)$po['item_count'] ?> <?= $fr ? ($po['item_count'] != 1 ? 'articles' : 'article') : ($po['item_count'] != 1 ? 'items' : 'item') ?></span>
                     </div>
-                    <div class="po-amount">$<?= number_format($po['total_amount'], 2) ?></div>
+                    <div class="po-amount"><?= acct_money($po['total_amount'], acct_is_fr()) ?></div>
                 </label>
                 <?php endforeach; ?>
             </div>
@@ -136,7 +136,7 @@ require __DIR__ . '/layout-header.php';
 
         <!-- Step 2: Pickup Address -->
         <div class="card">
-            <div class="card-title"><i class="fas fa-map-marker-alt" style="color:#00b207;"></i> <?= $fr ? 'Étape 2 — Adresse de ramassage' : 'Step 2 — Pickup Address' ?></div>
+            <div class="card-title"><i class="fas fa-map-marker-alt" style="color:#00b207;"></i> <?= $fr ? 'Étape 2 : Adresse de ramassage' : 'Step 2: Pickup Address' ?></div>
             <div class="form-group">
                 <label for="pickup_address"><?= $fr ? 'Adresse de ramassage' : 'Pickup Address' ?> <span class="required">*</span></label>
                 <textarea id="pickup_address" name="pickup_address" rows="3" required placeholder="<?= $fr ? 'Adresse complète où notre livreur doit récupérer les commandes' : 'Full address where our driver should pick up the orders' ?>"><?= htmlspecialchars($defaultAddress) ?></textarea>
@@ -146,7 +146,7 @@ require __DIR__ . '/layout-header.php';
 
         <!-- Step 3: Date & Time -->
         <div class="card">
-            <div class="card-title"><i class="fas fa-clock" style="color:#00b207;"></i> <?= $fr ? 'Étape 3 — Date et plage horaire souhaitées' : 'Step 3 — Preferred Date & Time Window' ?></div>
+            <div class="card-title"><i class="fas fa-clock" style="color:#00b207;"></i> <?= $fr ? 'Étape 3 : Date et plage horaire souhaitées' : 'Step 3: Preferred Date & Time Window' ?></div>
             <div class="form-row" style="margin-bottom:20px;">
                 <div class="form-group">
                     <label for="requested_date"><?= $fr ? 'Date de ramassage' : 'Pickup Date' ?> <span class="required">*</span></label>
@@ -164,7 +164,7 @@ require __DIR__ . '/layout-header.php';
                         for ($h = 7; $h <= 19; $h++) {
                             foreach (['00', '30'] as $m) {
                                 $val = sprintf('%02d:%s', $h, $m);
-                                $label = date('g:i A', strtotime("2000-01-01 {$val}:00"));
+                                $label = (acct_is_fr() ? date('G \h i', strtotime("2000-01-01 {$val}:00")) : date('g:i A', strtotime("2000-01-01 {$val}:00")));
                                 echo "<option value=\"{$val}\">{$label}</option>\n";
                             }
                         }
@@ -179,7 +179,7 @@ require __DIR__ . '/layout-header.php';
                         for ($h = 8; $h <= 20; $h++) {
                             foreach (['00', '30'] as $m) {
                                 $val = sprintf('%02d:%s', $h, $m);
-                                $label = date('g:i A', strtotime("2000-01-01 {$val}:00"));
+                                $label = (acct_is_fr() ? date('G \h i', strtotime("2000-01-01 {$val}:00")) : date('g:i A', strtotime("2000-01-01 {$val}:00")));
                                 echo "<option value=\"{$val}\">{$label}</option>\n";
                             }
                         }
@@ -191,7 +191,7 @@ require __DIR__ . '/layout-header.php';
 
         <!-- Step 4: Notes -->
         <div class="card">
-            <div class="card-title"><i class="fas fa-sticky-note" style="color:#00b207;"></i> <?= $fr ? 'Étape 4 — Notes supplémentaires (optionnel)' : 'Step 4 — Additional Notes (Optional)' ?></div>
+            <div class="card-title"><i class="fas fa-sticky-note" style="color:#00b207;"></i> <?= $fr ? 'Étape 4 : Notes supplémentaires (optionnel)' : 'Step 4: Additional Notes (Optional)' ?></div>
             <div class="form-group">
                 <label for="notes"><?= $fr ? 'Notes pour notre livreur' : 'Notes for our driver' ?></label>
                 <textarea id="notes" name="notes" rows="3" placeholder="<?= $fr ? 'ex. Interphone unité 4, quai de chargement à l\'arrière, appeler à l\'arrivée…' : 'e.g. Buzz unit 4, Loading dock at rear, call on arrival…' ?>"></textarea>
@@ -230,9 +230,9 @@ require __DIR__ . '/layout-header.php';
               <tbody>
                 <?php foreach ($pickupHistory as $req): ?>
                 <tr>
-                  <td><?= date('M j, Y', strtotime($req['created_at'])) ?></td>
-                  <td><?= date('M j, Y', strtotime($req['requested_date'])) ?></td>
-                  <td><?= date('g:i A', strtotime($req['requested_time_from'])) ?> – <?= date('g:i A', strtotime($req['requested_time_to'])) ?></td>
+                  <td><?= acct_date($req['created_at'], acct_is_fr()) ?></td>
+                  <td><?= acct_date($req['requested_date'], acct_is_fr()) ?></td>
+                  <td><?= (acct_is_fr() ? date('G \h i', strtotime($req['requested_time_from'])) : date('g:i A', strtotime($req['requested_time_from']))) ?> – <?= (acct_is_fr() ? date('G \h i', strtotime($req['requested_time_to'])) : date('g:i A', strtotime($req['requested_time_to']))) ?></td>
                   <td>
                     <?php $poList = json_decode($req['purchase_order_ids'], true) ?? []; ?>
                     <?= count($poList) ?> BC<?= count($poList) != 1 ? ($fr ? '' : 's') : '' ?>
@@ -259,7 +259,7 @@ require __DIR__ . '/layout-header.php';
                       <?= $statusLabels[$req['status']] ?? ucfirst($req['status']) ?>
                     </span>
                     <?php if ($req['status'] === 'scheduled' && $req['scheduled_at']): ?>
-                      <div style="font-size:11px;color:#6b7280;margin-top:3px;"><?= $fr ? 'Confirmé :' : 'Confirmed:' ?> <?= date('M j, Y', strtotime($req['scheduled_at'])) ?></div>
+                      <div style="font-size:11px;color:#6b7280;margin-top:3px;"><?= $fr ? 'Confirmé :' : 'Confirmed:' ?> <?= acct_date($req['scheduled_at'], acct_is_fr()) ?></div>
                     <?php endif; ?>
                   </td>
                   <td>
@@ -268,7 +268,7 @@ require __DIR__ . '/layout-header.php';
                         <i class="fas fa-times"></i> <?= $fr ? 'Annuler' : 'Cancel' ?>
                       </button>
                     <?php else: ?>
-                      <span style="color:#9ca3af;font-size:13px;">—</span>
+                      <span style="color:#9ca3af;font-size:13px;">-</span>
                     <?php endif; ?>
                   </td>
                 </tr>

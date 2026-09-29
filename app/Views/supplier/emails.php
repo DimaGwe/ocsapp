@@ -60,7 +60,7 @@ $_emailStatusEn = ['sent' => 'Sent',   'failed' => 'Failed',  'test_mode' => 'Te
   <div class="stat-card">
     <div class="stat-label"><?= $fr ? 'Dernier courriel' : 'Last Email' ?></div>
     <div class="stat-value" style="font-size:16px;">
-      <?= ($stats['last_email'] ?? null) ? _supDateFr($stats['last_email'], $fr, $_frM) : '—' ?>
+      <?= ($stats['last_email'] ?? null) ? _supDateFr($stats['last_email'], $fr, $_frM) : '-' ?>
     </div>
   </div>
 </div>

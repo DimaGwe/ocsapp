@@ -414,14 +414,14 @@ $t = getTranslations($currentLang);
           <select name="registered_address_province">
             <option value="Quebec" <?= ($old['registered_address_province'] ?? 'Quebec') === 'Quebec' ? 'selected' : '' ?>>Qu&eacute;bec</option>
             <option value="Ontario" <?= ($old['registered_address_province'] ?? '') === 'Ontario' ? 'selected' : '' ?>>Ontario</option>
-            <option value="British Columbia" <?= ($old['registered_address_province'] ?? '') === 'British Columbia' ? 'selected' : '' ?>>British Columbia</option>
+            <option value="British Columbia" <?= ($old['registered_address_province'] ?? '') === 'British Columbia' ? 'selected' : '' ?>><?= $fr ? 'Colombie-Britannique' : 'British Columbia' ?></option>
             <option value="Alberta" <?= ($old['registered_address_province'] ?? '') === 'Alberta' ? 'selected' : '' ?>>Alberta</option>
             <option value="Manitoba" <?= ($old['registered_address_province'] ?? '') === 'Manitoba' ? 'selected' : '' ?>>Manitoba</option>
             <option value="Saskatchewan" <?= ($old['registered_address_province'] ?? '') === 'Saskatchewan' ? 'selected' : '' ?>>Saskatchewan</option>
-            <option value="Nova Scotia" <?= ($old['registered_address_province'] ?? '') === 'Nova Scotia' ? 'selected' : '' ?>>Nova Scotia</option>
-            <option value="New Brunswick" <?= ($old['registered_address_province'] ?? '') === 'New Brunswick' ? 'selected' : '' ?>>New Brunswick</option>
-            <option value="Newfoundland and Labrador" <?= ($old['registered_address_province'] ?? '') === 'Newfoundland and Labrador' ? 'selected' : '' ?>>Newfoundland and Labrador</option>
-            <option value="Prince Edward Island" <?= ($old['registered_address_province'] ?? '') === 'Prince Edward Island' ? 'selected' : '' ?>>Prince Edward Island</option>
+            <option value="Nova Scotia" <?= ($old['registered_address_province'] ?? '') === 'Nova Scotia' ? 'selected' : '' ?>><?= $fr ? 'Nouvelle-Écosse' : 'Nova Scotia' ?></option>
+            <option value="New Brunswick" <?= ($old['registered_address_province'] ?? '') === 'New Brunswick' ? 'selected' : '' ?>><?= $fr ? 'Nouveau-Brunswick' : 'New Brunswick' ?></option>
+            <option value="Newfoundland and Labrador" <?= ($old['registered_address_province'] ?? '') === 'Newfoundland and Labrador' ? 'selected' : '' ?>><?= $fr ? 'Terre-Neuve-et-Labrador' : 'Newfoundland and Labrador' ?></option>
+            <option value="Prince Edward Island" <?= ($old['registered_address_province'] ?? '') === 'Prince Edward Island' ? 'selected' : '' ?>><?= $fr ? 'Île-du-Prince-Édouard' : 'Prince Edward Island' ?></option>
           </select>
         </div>
       </div>

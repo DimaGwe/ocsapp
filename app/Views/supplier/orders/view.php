@@ -1,5 +1,5 @@
 <?php
-$pageTitle = 'Order #' . $order['po_number'];
+$pageTitle = ((($_SESSION['language'] ?? 'fr') === 'fr') ? 'Bon de commande #' : 'Purchase Order #') . $order['po_number'];
 require dirname(__DIR__) . '/layout-header.php';
 
 $status = $order['status'];
@@ -271,6 +271,8 @@ if ($activeIdx === false) $activeIdx = -1;
       <?php
         $badgeClass = $effectiveStatus;
         $badgeLabel = $fr ? match($effectiveStatus) {
+          'sent'             => 'En attente de votre réponse',
+          'declined'         => 'Refusé',
           'accepted'         => 'Accepté',
           'preparing'        => 'En préparation',
           'ready_for_pickup' => 'Prêt pour ramassage',
@@ -281,6 +283,8 @@ if ($activeIdx === false) $activeIdx = -1;
           'cancelled'        => 'Annulé',
           default            => ucfirst(str_replace('_', ' ', $effectiveStatus)),
         } : match($effectiveStatus) {
+          'sent'             => 'Awaiting your response',
+          'declined'         => 'Declined',
           'accepted'         => 'Accepted',
           'preparing'        => 'Preparing',
           'ready_for_pickup' => 'Ready for Pickup',
@@ -297,20 +301,20 @@ if ($activeIdx === false) $activeIdx = -1;
 
     <div class="meta-item">
       <span class="meta-label"><?= $fr ? 'Date de commande' : 'Order Date' ?></span>
-      <span class="meta-value"><?= date('F d, Y', strtotime($order['order_date'])) ?></span>
+      <span class="meta-value"><?= acct_date($order['order_date'], acct_is_fr()) ?></span>
     </div>
 
     <?php if ($order['expected_delivery_date']): ?>
       <div class="meta-item">
         <span class="meta-label"><?= $fr ? 'Livraison prévue' : 'Expected Delivery' ?></span>
-        <span class="meta-value"><?= date('F d, Y', strtotime($order['expected_delivery_date'])) ?></span>
+        <span class="meta-value"><?= acct_date($order['expected_delivery_date'], acct_is_fr()) ?></span>
       </div>
     <?php endif; ?>
 
     <?php if (!empty($order['actual_delivery_date'])): ?>
       <div class="meta-item">
         <span class="meta-label"><?= $fr ? 'Date de réception' : 'Received Date' ?></span>
-        <span class="meta-value"><?= date('F d, Y', strtotime($order['actual_delivery_date'])) ?></span>
+        <span class="meta-value"><?= acct_date($order['actual_delivery_date'], acct_is_fr()) ?></span>
       </div>
     <?php endif; ?>
   </div>
@@ -345,8 +349,8 @@ if ($activeIdx === false) $activeIdx = -1;
               </span>
             <?php endif; ?>
           </td>
-          <td style="text-align: right;">$<?= number_format($item['unit_cost'], 2) ?></td>
-          <td style="text-align: right;">$<?= number_format($item['total_cost'], 2) ?></td>
+          <td style="text-align: right;"><?= acct_money($item['unit_cost'], acct_is_fr()) ?></td>
+          <td style="text-align: right;"><?= acct_money($item['total_cost'], acct_is_fr()) ?></td>
         </tr>
       <?php endforeach; ?>
     </tbody>
@@ -354,17 +358,17 @@ if ($activeIdx === false) $activeIdx = -1;
   </div>
 
   <div class="totals-section">
-    <div class="total-row"><span><?= $fr ? 'Sous-total :' : 'Subtotal:' ?></span><span>$<?= number_format($order['subtotal'], 2) ?></span></div>
+    <div class="total-row"><span><?= $fr ? 'Sous-total :' : 'Subtotal:' ?></span><span><?= acct_money($order['subtotal'], acct_is_fr()) ?></span></div>
     <?php if ($order['shipping_cost'] > 0): ?>
-      <div class="total-row"><span><?= $fr ? 'Livraison :' : 'Shipping:' ?></span><span>$<?= number_format($order['shipping_cost'], 2) ?></span></div>
+      <div class="total-row"><span><?= $fr ? 'Livraison :' : 'Shipping:' ?></span><span><?= acct_money($order['shipping_cost'], acct_is_fr()) ?></span></div>
     <?php endif; ?>
     <?php if (($order['tax_gst'] ?? 0) > 0): ?>
-      <div class="total-row"><span>TPS (5%) :</span><span>$<?= number_format($order['tax_gst'], 2) ?></span></div>
+      <div class="total-row"><span>TPS (5%) :</span><span><?= acct_money($order['tax_gst'], acct_is_fr()) ?></span></div>
     <?php endif; ?>
     <?php if (($order['tax_qst'] ?? 0) > 0): ?>
-      <div class="total-row"><span>TVQ (9,975%) :</span><span>$<?= number_format($order['tax_qst'], 2) ?></span></div>
+      <div class="total-row"><span>TVQ (9,975%) :</span><span><?= acct_money($order['tax_qst'], acct_is_fr()) ?></span></div>
     <?php endif; ?>
-    <div class="total-row final"><span><?= $fr ? 'Total :' : 'Total:' ?></span><span>$<?= number_format($order['total_amount'], 2) ?></span></div>
+    <div class="total-row final"><span><?= $fr ? 'Total :' : 'Total:' ?></span><span><?= acct_money($order['total_amount'], acct_is_fr()) ?></span></div>
   </div>
 </div>
 
@@ -415,7 +419,7 @@ if ($tlDrLinked && $tlDeadline && ($tlActive || in_array($tlStatus, ['completed'
         <div style="display:flex;align-items:center;gap:10px;">
             <span style="font-size:20px;"><?= $tlType === 'express' ? '⚡' : ($tlType === 'same_day' ? '☀️' : '📅') ?></span>
             <div>
-                <div style="font-weight:700;font-size:15px;color:<?= $tlC['color'] ?>;"><?= $tlC['label'] ?> — Order Timeline</div>
+                <div style="font-weight:700;font-size:15px;color:<?= $tlC['color'] ?>;"><?= $tlC['label'] ?> · <?= $fr ? 'Suivi de la commande' : 'Order timeline' ?></div>
                 <div style="font-size:12px;color:#6b7280;margin-top:1px;"><?= $tlC['promise'] ?></div>
             </div>
         </div>
@@ -432,7 +436,7 @@ if ($tlDrLinked && $tlDeadline && ($tlActive || in_array($tlStatus, ['completed'
             <div style="width:32px;height:32px;border-radius:50%;background:<?= $tlC['color'] ?>;display:flex;align-items:center;justify-content:center;">
                 <i class="fas fa-flag-checkered" style="color:white;font-size:13px;"></i>
             </div>
-            <div style="font-size:10px;color:#6b7280;margin-top:4px;text-align:center;max-width:70px;"><?= $fr ? 'Soumis' : 'Submitted' ?><br><?= $submittedTs ? date('g:i A', $submittedTs) : '—' ?></div>
+            <div style="font-size:10px;color:#6b7280;margin-top:4px;text-align:center;max-width:70px;"><?= $fr ? 'Soumis' : 'Submitted' ?><br><?= $submittedTs ? (acct_is_fr() ? date('G \h i', $submittedTs) : date('g:i A', $submittedTs)) : '-' ?></div>
         </div>
         <div style="flex:1;height:6px;background:#e5e7eb;border-radius:3px;margin:0 4px;overflow:hidden;">
             <div id="tlBar" style="height:100%;border-radius:3px;background:<?= $tlC['color'] ?>;width:<?= $done ? '100' : min(100, round(max(0, $nowTs - ($submittedTs ?? $nowTs)) / $totalSecs * 100)) ?>%;"></div>
@@ -441,7 +445,7 @@ if ($tlDrLinked && $tlDeadline && ($tlActive || in_array($tlStatus, ['completed'
             <div style="width:32px;height:32px;border-radius:50%;background:<?= $done ? '#059669' : '#e5e7eb' ?>;display:flex;align-items:center;justify-content:center;">
                 <i class="fas fa-<?= $done ? 'check' : 'map-marker-alt' ?>" style="color:<?= $done ? 'white' : '#9ca3af' ?>;font-size:13px;"></i>
             </div>
-            <div style="font-size:10px;color:#6b7280;margin-top:4px;text-align:center;max-width:70px;"><?= $fr ? 'Limite' : 'Deadline' ?><br><?= date('g:i A', $deadlineTs) ?></div>
+            <div style="font-size:10px;color:#6b7280;margin-top:4px;text-align:center;max-width:70px;"><?= $fr ? 'Limite' : 'Deadline' ?><br><?= (acct_is_fr() ? date('G \h i', $deadlineTs) : date('g:i A', $deadlineTs)) ?></div>
         </div>
     </div>
 
@@ -507,9 +511,9 @@ if ($tlDrLinked && $tlDeadline && ($tlActive || in_array($tlStatus, ['completed'
   ?>
   <div class="action-card blue" id="reviewAcceptCard" style="<?= $isExpress ? 'border-color:#dc2626;background:#fff5f5;' : '' ?>">
     <?php if ($isExpress): ?>
-      <h3 style="color:#dc2626;"><i class="fas fa-bolt"></i> <?= $fr ? 'Commande express — Confirmez maintenant' : 'Express Order — Confirm Now' ?></h3>
+      <h3 style="color:#dc2626;"><i class="fas fa-bolt"></i> <?= $fr ? 'Commande express : confirmez maintenant' : 'Express order: confirm now' ?></h3>
     <?php else: ?>
-      <h3><i class="fas fa-clipboard-check"></i> <?= $fr ? 'Examiner et accepter — Fenêtre de 10 minutes' : 'Review &amp; Accept — 10 Minute Window' ?></h3>
+      <h3><i class="fas fa-clipboard-check"></i> <?= $fr ? 'Examiner et accepter : fenêtre de 10 minutes' : 'Review &amp; accept: 10-minute window' ?></h3>
     <?php endif; ?>
 
     <?php if ($deadlineTs): ?>
@@ -517,7 +521,7 @@ if ($tlDrLinked && $tlDeadline && ($tlActive || in_array($tlStatus, ['completed'
         <i class="fas fa-hourglass-half" id="timerIcon" style="color:#1d4ed8;font-size:18px;"></i>
         <div style="flex:1;">
           <div style="font-size:13px;font-weight:600;color:#1e40af;">
-            <?= $fr ? 'Répondez avant' : 'Respond by' ?> <?= date('g:i A', $deadlineTs) ?> — <?= $fr ? 'le système réassignera si aucune réponse' : 'system will reassign if no response' ?>
+            <?= $fr ? 'Répondez avant' : 'Respond by' ?> <?= (acct_is_fr() ? date('G \h i', $deadlineTs) : date('g:i A', $deadlineTs)) ?>, <?= $fr ? 'le système réassignera si aucune réponse' : 'system will reassign if no response' ?>
           </div>
           <div id="countdownTimer" style="font-size:16px;font-weight:800;color:#1d4ed8;margin-top:3px;letter-spacing:1px;"></div>
         </div>
@@ -545,7 +549,7 @@ if ($tlDrLinked && $tlDeadline && ($tlActive || in_array($tlStatus, ['completed'
       </div>
       <input type="hidden" id="readyByTime" name="ready_by_time" value="">
       <input type="hidden" id="readyByLabel" value="">
-      <p id="readyByHint" style="font-size:12px;color:#6b7280;margin:6px 0 0;"><?= $fr ? 'Sélectionnez une fenêtre — cela nous aide à dépêcher le livreur au bon moment.' : 'Select a window — this helps us dispatch the driver at the right time.' ?></p>
+      <p id="readyByHint" style="font-size:12px;color:#6b7280;margin:6px 0 0;"><?= $fr ? 'Sélectionnez une fenêtre, cela nous aide à dépêcher le livreur au bon moment.' : 'Select a window, this helps us dispatch the driver at the right time.' ?></p>
     </div>
     <?php endif; ?>
 
@@ -573,7 +577,7 @@ if ($tlDrLinked && $tlDeadline && ($tlActive || in_array($tlStatus, ['completed'
       const diff = Math.floor((deadline - Date.now()) / 1000);
 
       if (diff <= 0) {
-        el.textContent = '<?= $fr ? 'Délai expiré — commande en cours de réassignation' : 'Time expired — order being reassigned' ?>';
+        el.textContent = '<?= $fr ? 'Délai expiré, commande en cours de réassignation' : 'Time expired, order being reassigned' ?>';
         el.style.color = '#dc2626';
         if (banner) { banner.style.background = '#fef2f2'; banner.style.borderColor = '#fecaca'; }
         if (icon)   icon.className = 'fas fa-times-circle';
@@ -630,7 +634,7 @@ if ($tlDrLinked && $tlDeadline && ($tlActive || in_array($tlStatus, ['completed'
     <div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;">
       <i class="fas fa-calendar-check" style="color:#7c3aed;"></i>
       <div>
-        <div style="font-size:13px;font-weight:700;color:#5b21b6;">📦 <?= $fr ? 'Prêt pour ramassage avant :' : 'Ready for pickup by:' ?> <?= date('M j, Y \a\t g:i A', strtotime($order['ready_by_time'])) ?></div>
+        <div style="font-size:13px;font-weight:700;color:#5b21b6;">📦 <?= $fr ? 'Prêt pour ramassage avant :' : 'Ready for pickup by:' ?> <?= acct_datetime($order['ready_by_time'], acct_is_fr()) ?></div>
         <div style="font-size:12px;color:#7c3aed;margin-top:2px;"><?= $fr ? 'Veuillez avoir tous les articles emballés et prêts avant cette heure.' : 'Please have all items packed and ready before this time.' ?></div>
       </div>
     </div>
@@ -654,7 +658,7 @@ if ($tlDrLinked && $tlDeadline && ($tlActive || in_array($tlStatus, ['completed'
     <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;">
       <i class="fas fa-clock" style="color:#ea580c;"></i>
       <div>
-        <div style="font-size:13px;font-weight:700;color:#c2410c;">⏰ <?= $fr ? 'Doit être prêt avant :' : 'Must be ready by:' ?> <?= date('M j, Y \a\t g:i A', strtotime($order['ready_by_time'])) ?></div>
+        <div style="font-size:13px;font-weight:700;color:#c2410c;">⏰ <?= $fr ? 'Doit être prêt avant :' : 'Must be ready by:' ?> <?= acct_datetime($order['ready_by_time'], acct_is_fr()) ?></div>
         <div style="font-size:12px;color:#ea580c;margin-top:2px;"><?= $fr ? 'Marquez prêt avant cette heure pour que le livreur puisse être dépêché selon le planning.' : 'Mark ready before this time so the driver can be dispatched on schedule.' ?></div>
       </div>
     </div>
@@ -700,7 +704,7 @@ if ($tlDrLinked && $tlDeadline && ($tlActive || in_array($tlStatus, ['completed'
   </div>
   <?php else: ?>
   <div class="action-card purple">
-    <h3><i class="fas fa-user-clock"></i> <?= $fr ? 'Livreur notifié — En attente d\'acceptation' : 'Driver Notified — Awaiting Acceptance' ?></h3>
+    <h3><i class="fas fa-user-clock"></i> <?= $fr ? 'Livreur notifié : en attente d\'acceptation' : 'Driver notified: awaiting acceptance' ?></h3>
     <p><?= $fr ? 'Un livreur a été notifié de cette mission de ramassage. Il confirmera sous peu. Veuillez vous assurer que les articles sont emballés et prêts.' : 'A driver has been notified of this pickup assignment. They will confirm shortly. Please ensure items are packed and ready.' ?></p>
     <?php if (!empty($order['driver_name'])): ?>
     <div style="display:flex; align-items:center; gap:14px; background:white; border-radius:10px; padding:14px 18px; margin-top:8px; border:1px solid #ddd6fe;">
@@ -782,10 +786,10 @@ if ($tlDrLinked && $tlDeadline && ($tlActive || in_array($tlStatus, ['completed'
       <div style="margin-bottom:14px;">
         <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px;"><?= $fr ? 'Type de problème' : 'Issue Type' ?></label>
         <select name="issue_type" required style="width:100%;padding:10px 12px;border:2px solid #e5e7eb;border-radius:8px;font-size:14px;font-family:inherit;">
-          <option value="">— <?= $fr ? 'Sélectionner' : 'Select' ?> —</option>
-          <option value="partial_stock"><?= $fr ? 'Stock partiel — Impossible de tout exécuter' : 'Partial Stock — Cannot fully fulfill' ?></option>
-          <option value="delay"><?= $fr ? 'Retard — Ne sera pas prêt à temps' : 'Delay — Will not be ready on time' ?></option>
-          <option value="out_of_stock"><?= $fr ? 'Rupture de stock — Impossible à exécuter' : 'Out of Stock — Cannot fulfill at all' ?></option>
+          <option value=""><?= $fr ? 'Sélectionner…' : 'Select…' ?></option>
+          <option value="partial_stock"><?= $fr ? 'Stock partiel. Impossible de tout exécuter' : 'Partial Stock. Cannot fully fulfill' ?></option>
+          <option value="delay"><?= $fr ? 'Retard. Ne sera pas prêt à temps' : 'Delay. Will not be ready on time' ?></option>
+          <option value="out_of_stock"><?= $fr ? 'Rupture de stock. Impossible à exécuter' : 'Out of Stock. Cannot fulfill at all' ?></option>
           <option value="damaged_goods"><?= $fr ? 'Marchandises endommagées' : 'Damaged Goods' ?></option>
           <option value="other"><?= $fr ? 'Autre problème' : 'Other Issue' ?></option>
         </select>
@@ -957,7 +961,7 @@ document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && doc
 }
 #poStatusToast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 </style>
-<div id="poStatusToast"><span>🔄</span> <span id="poToastMsg"><?= $fr ? 'Commande mise à jour — rechargement…' : 'Order updated — reloading…' ?></span></div>
+<div id="poStatusToast"><span>🔄</span> <span id="poToastMsg"><?= $fr ? 'Commande mise à jour, rechargement…' : 'Order updated, reloading…' ?></span></div>
 <script>
 (function() {
     var orderId       = <?= (int)$order['id'] ?>;
@@ -985,7 +989,7 @@ document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && doc
                 if (changed) {
                     reloading = true;
                     var label = data.status.replace(/_/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); });
-                    showToast('<?= $fr ? 'Commande mise à jour : ' : 'Order updated: ' ?>' + label + '<?= $fr ? ' — rechargement…' : ' — reloading…' ?>');
+                    showToast('<?= $fr ? 'Commande mise à jour : ' : 'Order updated: ' ?>' + label + '<?= $fr ? ', rechargement…' : ', reloading…' ?>');
                     sessionStorage.setItem('sup_order_scroll_<?= $order['id'] ?>', window.scrollY);
                     setTimeout(function() { location.reload(); }, 1800);
                 }

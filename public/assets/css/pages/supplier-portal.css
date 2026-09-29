@@ -1,0 +1,74 @@
+/* Supplier portal - Marché Central visual standard (2026-09-29).
+   Loaded after the layout's own <style>, so it re-skins the existing shell classes without changing
+   markup, IDs or scripts. Shared page classes (card, badge, stat-card, btn, forms, tables) are
+   restyled under .sp-body so they win over each page's own <style> block (same specificity, later
+   in the cascade would lose). Only visual properties are changed; page layouts stay as they are.
+   Tokens match css/pages/seller-portal.css and account.css. */
+
+:root{
+  --primary:#00B207; --primary-dark:#009206; --primary-600:#009206;
+  --success:#00B207; --warning:#B54708; --danger:#B42318;
+  --gray-50:#F7F8F7; --gray-100:#F3F6F3; --gray-200:#E5E7E4; --gray-300:#D5DAD6;
+  --gray-400:#929A94; --gray-600:#66706A; --gray-700:#17181A;
+  --sup-forest:#0D3F10; --sup-soft:#EEF8EF; --sup-line:#F0F2F0; --sup-shadow:0 6px 20px rgba(16,24,18,.05);
+}
+body.sp-body{font-family:'Inter',sans-serif;background:#F7F8F7;color:#17181A;font-size:14px}
+.sp-body h1,.sp-body h2,.sp-body h3,.sp-body h4{font-family:'Poppins',sans-serif}
+
+/* ===== Shell ===== */
+.sp-body .sidebar{background:#fff;color:#3F4842;border-right:1px solid var(--gray-200);width:256px}
+.sp-body .sidebar-header{border-bottom:1px solid var(--sup-line);padding:20px}
+.sp-body .sidebar-logo .sup-brand-name{color:var(--primary) !important;font-weight:800}
+.sp-body .sidebar-logo .sup-brand-sub{color:var(--gray-600) !important}
+.sp-body .sidebar-nav{padding:12px 10px;display:grid;gap:2px}
+.sp-body .nav-link{color:#3F4842;border-radius:10px;padding:10px 12px;font-size:14px;font-weight:500;gap:11px}
+.sp-body .nav-link i{color:var(--gray-400)}
+.sp-body .nav-link:hover{background:#F3F6F3;color:#17181A}
+.sp-body .nav-link.active{background:var(--sup-soft);color:var(--sup-forest);font-weight:600}
+.sp-body .nav-link.active i{color:var(--primary)}
+.sp-body .nav-link.locked,.sp-body .nav-link.locked:hover{color:#B6BCB7;background:none}
+.sp-body .nav-link.locked i{color:#C9CFCA}
+.sp-body .nav-unlock-hint{margin:8px 2px;padding:12px;border-radius:12px;background:#FFF4E5;color:#7A3B06;font-size:12px;line-height:1.5}
+.sp-body .nav-unlock-hint a{color:#7A3B06;font-weight:700}
+.sp-body .notif-count-badge{background:var(--primary)}
+.sp-body .main-content{margin-left:256px}
+.sp-body .topbar{background:rgba(255,255,255,.96);box-shadow:none;border-bottom:1px solid var(--gray-200);padding:14px 32px}
+.sp-body .topbar h1{font-size:20px;font-weight:700;color:#17181A}
+.sp-body .user-name{color:#17181A}
+.sp-body .user-role{color:var(--gray-600)}
+.sp-body .btn-logout{background:#FEF3F2;color:var(--danger);border:1px solid #FBD5D1;border-radius:10px}
+.sp-body .btn-logout:hover{background:var(--danger);color:#fff}
+.sp-body .notif-bell,.sp-body .lang-toggle-btn{border:1px solid var(--gray-200);border-radius:10px;background:#fff;color:#3F4842}
+.sp-body .notif-bell:hover,.sp-body .lang-toggle-btn:hover{border-color:var(--primary);color:var(--primary)}
+.sp-body .notif-badge{background:var(--danger)}
+.sp-body .notif-panel{border-radius:14px;box-shadow:0 18px 54px rgba(16,24,18,.14)}
+.sp-body .notif-item.unread{background:#F3FBF3}
+.sp-body .lang-option.active{background:var(--sup-soft);color:var(--sup-forest)}
+.sp-body .content-area{padding:28px 32px 56px;max-width:1320px}
+.sp-body .alert{border-radius:12px;border-left:0}
+.sp-body .alert-success{background:var(--sup-soft);color:#1E6B22;border:1px solid #CFE9D1}
+.sp-body .alert-error{background:#FEF3F2;color:var(--danger);border:1px solid #FBD5D1}
+
+/* ===== Shared page classes ===== */
+.sp-body .page-title{font-family:'Poppins',sans-serif;color:#17181A}
+.sp-body .card,.sp-body .table-card,.sp-body .filters-card,.sp-body .stat-card,.sp-body .section,.sp-body .chart-container{
+  background:#fff;border:1px solid var(--gray-200);border-radius:16px;box-shadow:var(--sup-shadow)}
+.sp-body .card-title{font-family:'Poppins',sans-serif;color:#17181A}
+.sp-body .stat-value{font-family:'Poppins',sans-serif;color:#17181A}
+.sp-body .stat-label{color:var(--gray-600)}
+.sp-body .stat-icon{border-radius:10px}
+.sp-body .btn,.sp-body .btn-primary,.sp-body .btn-filter{border-radius:10px;font-family:'Inter',sans-serif;font-weight:600}
+.sp-body .btn-primary,.sp-body .btn-filter{background:var(--primary);border-color:var(--primary);color:#fff}
+.sp-body .btn-primary:hover,.sp-body .btn-filter:hover{background:var(--primary-dark)}
+.sp-body .badge{border-radius:999px;font-weight:600}
+.sp-body .form-input,.sp-body .form-select,.sp-body .form-textarea,.sp-body .form-control{border:1px solid var(--gray-200);border-radius:10px;font-family:'Inter',sans-serif}
+.sp-body .form-input:focus,.sp-body .form-select:focus,.sp-body .form-textarea:focus,.sp-body .form-control:focus{outline:2px solid rgba(0,178,7,.25);border-color:var(--primary)}
+.sp-body table th{color:var(--gray-600);font-size:11.5px;text-transform:uppercase;letter-spacing:.5px}
+.sp-body .empty-state{color:var(--gray-600)}
+.sp-body .progress-fill{background:var(--primary)}
+
+@media (max-width:768px){
+  .sp-body .main-content{margin-left:0}
+  .sp-body .topbar{padding:12px 16px}
+  .sp-body .content-area{padding:16px}
+}

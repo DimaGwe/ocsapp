@@ -139,7 +139,7 @@
           $senderLabel = $isAdmin ? ($adminName ?: 'OCSAPP Team') : ($fr ? 'Vous' : 'You');
           $rowClass   = $isAdmin ? 'from-admin' : 'from-supplier';
           $initials   = $isAdmin ? 'OC' : strtoupper(substr($_SESSION['supplier_name'] ?? 'S', 0, 2));
-          $ts         = date('M j, g:i a', strtotime($msg['created_at']));
+          $ts         = acct_datetime($msg['created_at'], acct_is_fr());
         ?>
         <div class="msg-row <?= $rowClass ?>">
           <?php if ($isAdmin): ?>

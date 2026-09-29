@@ -39,7 +39,7 @@ $s = [
         'neq_hint'        => '10-digit Quebec Enterprise Number',
         'email_lbl'       => 'Account Email',
         'email_ph'        => 'you@example.com',
-        'email_hint'      => 'Pre-filled from your invitation — change if you prefer a different login email',
+        'email_hint'      => 'Pre-filled from your invitation, change if you prefer a different login email',
         'first_name'      => 'First Name',
         'first_name_ph'   => 'Jane',
         'last_name'       => 'Last Name',
@@ -122,7 +122,7 @@ $s = [
         'neq_hint'        => 'Numéro d\'entreprise du Québec à 10 chiffres',
         'email_lbl'       => 'Courriel du compte',
         'email_ph'        => 'vous@exemple.com',
-        'email_hint'      => 'Pré-rempli depuis votre invitation — modifiez-le si vous préférez une autre adresse de connexion',
+        'email_hint'      => 'Pré-rempli depuis votre invitation, modifiez-le si vous préférez une autre adresse de connexion',
         'first_name'      => 'Prénom',
         'first_name_ph'   => 'Marie',
         'last_name'       => 'Nom',
@@ -179,10 +179,10 @@ $s = [
 $inv = $s[$currentLang] ?? $s['fr'];
 
 $provinces = [
-    'AB' => 'Alberta', 'BC' => 'British Columbia', 'MB' => 'Manitoba',
-    'NB' => 'New Brunswick', 'NL' => 'Newfoundland and Labrador', 'NS' => 'Nova Scotia',
-    'ON' => 'Ontario', 'PE' => 'Prince Edward Island', 'QC' => 'Québec',
-    'SK' => 'Saskatchewan', 'NT' => 'Northwest Territories', 'NU' => 'Nunavut', 'YT' => 'Yukon',
+    'AB' => 'Alberta', 'BC' => ($fr ? 'Colombie-Britannique' : 'British Columbia'), 'MB' => 'Manitoba',
+    'NB' => ($fr ? 'Nouveau-Brunswick' : 'New Brunswick'), 'NL' => ($fr ? 'Terre-Neuve-et-Labrador' : 'Newfoundland and Labrador'), 'NS' => ($fr ? 'Nouvelle-Écosse' : 'Nova Scotia'),
+    'ON' => 'Ontario', 'PE' => ($fr ? 'Île-du-Prince-Édouard' : 'Prince Edward Island'), 'QC' => 'Québec',
+    'SK' => 'Saskatchewan', 'NT' => ($fr ? 'Territoires du Nord-Ouest' : 'Northwest Territories'), 'NU' => 'Nunavut', 'YT' => 'Yukon',
 ];
 $oldProv = $_SESSION['_old_input']['registered_address_province'] ?? 'QC';
 ?>

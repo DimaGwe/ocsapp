@@ -140,7 +140,7 @@
   function markNotifRead(id, event) {
       fetch('<?= url("api/supplier/notifications/mark-read") ?>', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': (document.querySelector('meta[name="csrf-token"]') || {}).content || '' },
           body: JSON.stringify({ id: id })
       })
       .then(function(r) { return r.json(); })
@@ -153,7 +153,7 @@
   function markAllNotifRead() {
       fetch('<?= url("api/supplier/notifications/mark-all-read") ?>', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': (document.querySelector('meta[name="csrf-token"]') || {}).content || '' }
       })
       .then(function(r) { return r.json(); })
       .then(function(data) {
@@ -288,7 +288,7 @@
   function _showBrowserNotif(title, body, link) {
     if (_browserNotifPermission !== 'granted') return;
     try {
-      var n = new Notification('OCSAPP — ' + title, {
+      var n = new Notification('OCSAPP · ' + title, {
         body: body,
         icon: '<?= url("assets/images/logo.png") ?>',
         tag: 'ocsapp-supplier',   // replaces previous notif so they don't stack

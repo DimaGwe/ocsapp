@@ -283,7 +283,7 @@ require dirname(__DIR__) . '/layout-header.php';
       <?php if (!empty($product['image'])): ?>
         <div class="image-preview-container">
           <img src="<?= asset($product['image']) ?>" alt="Current product image" class="current-image">
-          <p class="form-hint"><?= $fr ? 'Image actuelle — choisissez un fichier ou prenez une photo pour la remplacer' : 'Current image — choose a file or take a photo to replace it' ?></p>
+          <p class="form-hint"><?= $fr ? 'Image actuelle, choisissez un fichier ou prenez une photo pour la remplacer' : 'Current image, choose a file or take a photo to replace it' ?></p>
         </div>
       <?php endif; ?>
 
@@ -312,7 +312,7 @@ require dirname(__DIR__) . '/layout-header.php';
       </div>
       <canvas id="cameraCanvas" style="display:none;"></canvas>
 
-      <p class="form-hint">JPG, PNG, GIF, WebP — <?= $fr ? 'Max 5 Mo' : 'Max 5MB' ?></p>
+      <p class="form-hint">JPG, PNG, GIF, WebP. <?= $fr ? 'Max 5 Mo' : 'Max 5MB' ?></p>
 
       <!-- New image preview -->
       <img id="newImagePreview" class="new-preview" src="" alt="New image preview">

@@ -235,7 +235,7 @@ $_docLabelsFr = [
       // Badge config
       $badges = [
           'approved' => ['class' => 'badge-approved', 'icon' => 'fa-check-circle',  'label' => $fr ? 'Approuvé'                      : 'Approved'],
-          'rejected' => ['class' => 'badge-rejected', 'icon' => 'fa-times-circle',  'label' => $fr ? 'Rejeté - Veuillez retélécharger' : 'Rejected — Please re-upload'],
+          'rejected' => ['class' => 'badge-rejected', 'icon' => 'fa-times-circle',  'label' => $fr ? 'Rejeté - Veuillez retélécharger' : 'Rejected. Please re-upload'],
           'na'       => ['class' => 'badge-na',       'icon' => 'fa-minus-circle',  'label' => $fr ? 'Non requis'                    : 'Not Required'],
           'pending'  => $hasFile
               ? ['class' => 'badge-review',  'icon' => 'fa-clock',              'label' => $fr ? "En cours d'examen" : 'Under Review']
@@ -304,7 +304,7 @@ $_docLabelsFr = [
             <span class="file-name-display" id="name-replace-<?= $field ?>"><?= $fr ? 'Aucun fichier sélectionné' : 'No file chosen' ?></span>
             <button type="submit" class="btn-upload"><i class="fas fa-cloud-upload-alt"></i> <?= $fr ? 'Télécharger (nouveau)' : 'Upload New' ?></button>
           </form>
-          <div class="upload-hint"><?= $fr ? 'Acceptés : PDF, JPG, PNG — Max 5 Mo. Ce fichier remplacera le fichier actuel.' : 'Accepted: PDF, JPG, PNG — Max 5MB. This will replace the current file.' ?></div>
+          <div class="upload-hint"><?= $fr ? 'Acceptés : PDF, JPG, PNG. Max 5 Mo. Ce fichier remplacera le fichier actuel.' : 'Accepted: PDF, JPG, PNG. Max 5MB. This will replace the current file.' ?></div>
         </div>
         <?php endif; ?>
 
@@ -321,7 +321,7 @@ $_docLabelsFr = [
           <span class="file-name-display" id="name-upload-<?= $field ?>"><?= $fr ? 'Aucun fichier sélectionné' : 'No file chosen' ?></span>
           <button type="submit" class="btn-upload"><i class="fas fa-cloud-upload-alt"></i> <?= $fr ? 'Télécharger' : 'Upload' ?></button>
         </form>
-        <div class="upload-hint"><?= $fr ? 'Acceptés : PDF, JPG, PNG — Max 5 Mo' : 'Accepted: PDF, JPG, PNG — Max 5MB' ?></div>
+        <div class="upload-hint"><?= $fr ? 'Acceptés : PDF, JPG, PNG. Max 5 Mo' : 'Accepted: PDF, JPG, PNG. Max 5MB' ?></div>
       <?php endif; ?>
     </div>
   <?php endforeach; ?>

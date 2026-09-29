@@ -1853,6 +1853,10 @@ class SupplierAuthController {
      * Dismiss password change reminder for this session
      */
     public function dismissPasswordReminder(): void {
+        if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
+            jsonResponse(['success' => false], 403);
+            return;
+        }
         $_SESSION['supplier_reminder_dismissed'] = true;
         jsonResponse(['success' => true]);
     }

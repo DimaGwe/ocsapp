@@ -466,8 +466,8 @@ $_daysUrgent = $_daysLeft !== null && $_daysLeft <= 7;
                     </a>
                   </td>
                   <td><?= date($currentLang === 'fr' ? 'd M Y' : 'M d, Y', strtotime($order['order_date'])) ?></td>
-                  <td><?= $order['item_count'] ?> <?= $t['sup_items'] ?? 'items' ?></td>
-                  <td>$<?= number_format($order['total_amount'], 2) ?></td>
+                  <td><?php $__n = (int) $order['item_count']; ?><?= $__n ?> <?= $fr ? ($__n > 1 ? 'articles' : 'article') : ($__n === 1 ? 'item' : 'items') ?></td>
+                  <td><?= acct_money($order['total_amount'], acct_is_fr()) ?></td>
                   <td>
                     <span class="badge <?= $order['status'] ?>">
                       <?= htmlspecialchars($t['po_status_' . $order['status']] ?? ucfirst($order['status'])) ?>

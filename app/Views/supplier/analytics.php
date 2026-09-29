@@ -259,7 +259,7 @@ if ($acceptanceStats['total_received'] > 0) {
     <h2 style="margin:0 0 4px;"><?= $fr ? 'Analytique et aperçus' : 'Analytics & Insights' ?></h2>
     <?php if ($period === 'custom'): ?>
       <p style="margin:0;font-size:13px;color:var(--gray-500);">
-        <?= date('M j, Y', strtotime($startDate)) ?> &ndash; <?= date('M j, Y', strtotime($endDate)) ?>
+        <?= acct_date($startDate, acct_is_fr()) ?> &ndash; <?= acct_date($endDate, acct_is_fr()) ?>
       </p>
     <?php elseif ($period === 'all'): ?>
       <p style="margin:0;font-size:13px;color:var(--gray-500);"><?= $fr ? 'Toutes les données' : 'Showing all time' ?></p>
@@ -376,7 +376,7 @@ if ($acceptanceStats['total_received'] > 0) {
 <div class="card">
   <h3 class="card-title">
     <i class="fas fa-chart-bar"></i>
-    <?= $fr ? 'Tendance mensuelle — Commandes et revenus (6 derniers mois)' : 'Monthly Orders &amp; Revenue (Last 6 Months)' ?>
+    <?= $fr ? 'Tendance mensuelle : commandes et revenus (6 derniers mois)' : 'Monthly Orders &amp; Revenue (Last 6 Months)' ?>
   </h3>
   <div class="chart-container">
     <div class="chart-bar">
@@ -422,7 +422,7 @@ if ($acceptanceStats['total_received'] > 0) {
           <td><?= htmlspecialchars($product['sku']) ?></td>
           <td style="text-align: center;"><?= $product['order_count'] ?></td>
           <td style="text-align: center;"><?= number_format($product['total_quantity']) ?></td>
-          <td style="text-align: right;"><strong>$<?= number_format($product['total_revenue'], 2) ?></strong></td>
+          <td style="text-align: right;"><strong><?= acct_money($product['total_revenue'], acct_is_fr()) ?></strong></td>
         </tr>
       <?php endforeach; ?>
     </tbody>
@@ -466,14 +466,14 @@ if ($acceptanceStats['total_received'] > 0) {
               <?= htmlspecialchars($order['po_number']) ?>
             </a>
           </td>
-          <td><?= date('M d, Y', strtotime($order['created_at'])) ?></td>
+          <td><?= acct_date($order['created_at'], acct_is_fr()) ?></td>
           <td><?= $order['item_count'] ?> <?= $fr ? 'articles' : 'items' ?></td>
           <td><span class="badge <?= $order['status'] ?>"><?= $fr ? [
             'sent'=>'Envoyé','accepted'=>'Accepté','preparing'=>'En prép.','ready_for_pickup'=>'Prêt',
             'picked_up'=>'Ramassé','completed'=>'Complété','cancelled'=>'Annulé'
           ][$order['status']] ?? ucfirst($order['status'])
           : ($t['po_status_' . $order['status']] ?? ucfirst($order['status'])) ?></span></td>
-          <td style="text-align: right;"><strong>$<?= number_format($order['total_amount'], 2) ?></strong></td>
+          <td style="text-align: right;"><strong><?= acct_money($order['total_amount'], acct_is_fr()) ?></strong></td>
         </tr>
       <?php endforeach; ?>
     </tbody>

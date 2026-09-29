@@ -61,15 +61,15 @@
 <div class="stats-grid">
   <div class="stat-card">
     <div class="stat-label"><?= $fr ? 'Total facturé' : 'Total Invoiced' ?></div>
-    <div class="stat-value">$<?= number_format($stats['total_invoiced'] ?? 0, 2) ?></div>
+    <div class="stat-value"><?= acct_money($stats['total_invoiced'] ?? 0, acct_is_fr()) ?></div>
   </div>
   <div class="stat-card green">
     <div class="stat-label"><?= $fr ? 'Total reçu' : 'Total Received' ?></div>
-    <div class="stat-value">$<?= number_format($stats['total_received'] ?? 0, 2) ?></div>
+    <div class="stat-value"><?= acct_money($stats['total_received'] ?? 0, acct_is_fr()) ?></div>
   </div>
   <div class="stat-card <?= ($stats['total_outstanding'] ?? 0) > 0 ? 'amber' : 'green' ?>">
     <div class="stat-label"><?= $fr ? 'En souffrance' : 'Outstanding' ?></div>
-    <div class="stat-value">$<?= number_format($stats['total_outstanding'] ?? 0, 2) ?></div>
+    <div class="stat-value"><?= acct_money($stats['total_outstanding'] ?? 0, acct_is_fr()) ?></div>
     <div class="stat-sub"><?= $stats['unpaid_count'] ?? 0 ?> <?= $fr ? 'facture' . (($stats['unpaid_count'] ?? 0) != 1 ? 's' : '') . ' impayée' . (($stats['unpaid_count'] ?? 0) != 1 ? 's' : '') : 'unpaid invoice' . (($stats['unpaid_count'] ?? 0) != 1 ? 's' : '') ?></div>
   </div>
   <?php if (($stats['overdue_count'] ?? 0) > 0): ?>
@@ -138,12 +138,12 @@
           <?php if (!empty($inv['po_number'])): ?>
             <span style="font-family:'SF Mono',monospace;font-size:11px;color:#6b7280;"><?= htmlspecialchars($inv['po_number']) ?></span>
           <?php else: ?>
-            <span style="color:#9ca3af;">—</span>
+            <span style="color:#9ca3af;">-</span>
           <?php endif; ?>
         </td>
-        <td class="amount">$<?= number_format($inv['total_amount'], 2) ?></td>
-        <td class="amount green">$<?= number_format($inv['amount_paid'], 2) ?></td>
-        <td class="amount <?= $inv['balance_due'] > 0 ? 'red' : '' ?>">$<?= number_format($inv['balance_due'], 2) ?></td>
+        <td class="amount"><?= acct_money($inv['total_amount'], acct_is_fr()) ?></td>
+        <td class="amount green"><?= acct_money($inv['amount_paid'], acct_is_fr()) ?></td>
+        <td class="amount <?= $inv['balance_due'] > 0 ? 'red' : '' ?>"><?= acct_money($inv['balance_due'], acct_is_fr()) ?></td>
         <td>
           <?php
             $statusLabels = $fr
@@ -155,11 +155,11 @@
         </td>
         <td style="font-size:12px;color:#6b7280;">
           <?php if ($inv['due_date']): ?>
-            <?= date('M j, Y', strtotime($inv['due_date'])) ?>
+            <?= acct_date($inv['due_date'], acct_is_fr()) ?>
             <?php if ($s === 'overdue'): ?>
               <span style="color:#dc2626;font-size:11px;display:block;"><?= $fr ? 'En retard' : 'Overdue' ?></span>
             <?php endif; ?>
-          <?php else: ?>—<?php endif; ?>
+          <?php else: ?>-<?php endif; ?>
         </td>
         <td>
           <a href="<?= url('supplier/invoices/download-pdf?id=' . $inv['id']) ?>" style="color:#6b7280;font-size:14px;" title="Download PDF" target="_blank">
@@ -198,11 +198,11 @@
       <?php if ($pmt['reference_number']): ?>
         <span style="font-size:11px;color:#9ca3af;margin-left:8px;"><?= $fr ? 'Réf :' : 'Ref:' ?> <?= htmlspecialchars($pmt['reference_number']) ?></span>
       <?php endif; ?>
-      <div style="font-size:11px;color:#9ca3af;margin-top:2px;"><?= date('M j, Y', strtotime($pmt['payment_date'])) ?></div>
+      <div style="font-size:11px;color:#9ca3af;margin-top:2px;"><?= acct_date($pmt['payment_date'], acct_is_fr()) ?></div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <span class="payment-method"><?= htmlspecialchars($pmt['payment_method'] ?? 'N/A') ?></span>
-      <span class="amount green">+$<?= number_format($pmt['amount_applied'], 2) ?></span>
+      <span class="amount green">+<?= acct_money($pmt['amount_applied'], acct_is_fr()) ?></span>
     </div>
   </div>
   <?php endforeach; ?>

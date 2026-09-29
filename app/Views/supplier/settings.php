@@ -465,7 +465,7 @@
                             <input type="text" id="address" name="address" value="<?= htmlspecialchars($supplier['address'] ?? '') ?>" placeholder="<?= $fr ? 'Commencez à saisir une adresse...' : 'Start typing an address...' ?>" autocomplete="off">
                             <div id="addressSuggestions" class="address-suggestions"></div>
                         </div>
-                        <small id="addressHint"><i class="fas fa-magic"></i> <?= $fr ? 'Tapez pour rechercher — sélectionner une suggestion remplit tous les champs ci-dessous' : 'Type to search — selecting a suggestion auto-fills all fields below' ?></small>
+                        <small id="addressHint"><i class="fas fa-magic"></i> <?= $fr ? 'Tapez pour rechercher, sélectionner une suggestion remplit tous les champs ci-dessous' : 'Type to search, selecting a suggestion auto-fills all fields below' ?></small>
                         <input type="hidden" id="latitude" name="latitude" value="<?= htmlspecialchars($supplier['latitude'] ?? '') ?>">
                         <input type="hidden" id="longitude" name="longitude" value="<?= htmlspecialchars($supplier['longitude'] ?? '') ?>">
                     </div>
@@ -481,11 +481,11 @@
                                 <option value=""><?= $fr ? 'Sélectionner la province' : 'Select Province' ?></option>
                                 <?php
                                 $provinces = [
-                                    'AB' => 'Alberta', 'BC' => 'British Columbia', 'MB' => 'Manitoba',
-                                    'NB' => 'New Brunswick', 'NL' => 'Newfoundland and Labrador',
-                                    'NS' => 'Nova Scotia', 'NT' => 'Northwest Territories',
-                                    'NU' => 'Nunavut', 'ON' => 'Ontario', 'PE' => 'Prince Edward Island',
-                                    'QC' => 'Quebec', 'SK' => 'Saskatchewan', 'YT' => 'Yukon'
+                                    'AB' => 'Alberta', 'BC' => ($fr ? 'Colombie-Britannique' : 'British Columbia'), 'MB' => 'Manitoba',
+                                    'NB' => ($fr ? 'Nouveau-Brunswick' : 'New Brunswick'), 'NL' => ($fr ? 'Terre-Neuve-et-Labrador' : 'Newfoundland and Labrador'),
+                                    'NS' => ($fr ? 'Nouvelle-Écosse' : 'Nova Scotia'), 'NT' => ($fr ? 'Territoires du Nord-Ouest' : 'Northwest Territories'),
+                                    'NU' => 'Nunavut', 'ON' => 'Ontario', 'PE' => ($fr ? 'Île-du-Prince-Édouard' : 'Prince Edward Island'),
+                                    'QC' => ($fr ? 'Québec' : 'Quebec'), 'SK' => 'Saskatchewan', 'YT' => 'Yukon'
                                 ];
                                 $currentProvince = $supplier['province'] ?? '';
                                 foreach ($provinces as $code => $name):
@@ -513,7 +513,7 @@
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-save"></i> <?= $fr ? 'Enregistrer le profil' : 'Save Profile' ?>
                         </button>
-                        <span class="last-login-info"><?= $fr ? 'Dernière connexion :' : 'Last login:' ?> <?= $supplier['last_login_at'] ? date('F j, Y g:i A', strtotime($supplier['last_login_at'])) : 'Never' ?></span>
+                        <span class="last-login-info"><?= $fr ? 'Dernière connexion :' : 'Last login:' ?> <?= $supplier['last_login_at'] ? acct_datetime($supplier['last_login_at'], acct_is_fr()) : 'Never' ?></span>
                     </div>
                 </form>
             </div>
@@ -1073,7 +1073,7 @@ document.getElementById('profileForm').addEventListener('submit', async function
             highlightedIndex = -1;
 
             if (data.length === 0) {
-                suggestionsBox.innerHTML = '<div class="address-loading">No results found — try adding the city name</div>';
+                suggestionsBox.innerHTML = '<div class="address-loading">' + <?= json_encode($fr ? "Aucun résultat. Essayez d'ajouter le nom de la ville." : 'No results found. Try adding the city name.', JSON_UNESCAPED_UNICODE | JSON_HEX_APOS) ?> + '</div>';
                 return;
             }
 
@@ -1103,7 +1103,7 @@ document.getElementById('profileForm').addEventListener('submit', async function
 
         } catch (error) {
             console.error('Address search error:', error);
-            suggestionsBox.innerHTML = '<div class="address-loading">Search failed — try again</div>';
+            suggestionsBox.innerHTML = '<div class="address-loading">' + <?= json_encode($fr ? 'La recherche a échoué. Réessayez.' : 'Search failed. Try again.', JSON_UNESCAPED_UNICODE | JSON_HEX_APOS) ?> + '</div>';
         }
     }
 

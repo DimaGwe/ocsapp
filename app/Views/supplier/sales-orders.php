@@ -70,7 +70,7 @@
   </div>
   <div class="stat-card">
     <div class="stat-label"><?= $fr ? 'Valeur totale' : 'Total Value' ?></div>
-    <div class="stat-value">$<?= number_format($stats['total_value'] ?? 0, 2) ?></div>
+    <div class="stat-value"><?= acct_money($stats['total_value'] ?? 0, acct_is_fr()) ?></div>
   </div>
 </div>
 
@@ -134,11 +134,11 @@
           <?php if (!empty($so['request_number'])): ?>
             <span style="font-family:'SF Mono',monospace;font-size:12px;font-weight:600;color:#374151;"><?= htmlspecialchars($so['request_number']) ?></span>
           <?php else: ?>
-            <span style="color:#9ca3af;">—</span>
+            <span style="color:#9ca3af;">-</span>
           <?php endif; ?>
         </td>
         <td><?= number_format($so['item_count']) ?> <?= $fr ? ($so['item_count'] != 1 ? 'articles' : 'article') : ($so['item_count'] != 1 ? 'items' : 'item') ?></td>
-        <td class="amount">$<?= number_format($so['total_amount'], 2) ?></td>
+        <td class="amount"><?= acct_money($so['total_amount'], acct_is_fr()) ?></td>
         <td>
           <?php
             $statusLabels = $fr ? [
@@ -161,7 +161,7 @@
           <span class="badge badge-<?= htmlspecialchars($s) ?>"><?= $statusLabels[$s] ?? ucfirst($s) ?></span>
         </td>
         <td style="color:#6b7280;font-size:12px;">
-          <?= $so['supplier_accepted_at'] ? date('M j, Y', strtotime($so['supplier_accepted_at'])) : '—' ?>
+          <?= $so['supplier_accepted_at'] ? acct_date($so['supplier_accepted_at'], acct_is_fr()) : '-' ?>
         </td>
         <td style="text-align:center;white-space:nowrap;">
           <a href="<?= url('supplier/orders/download-pdf?id=' . $so['id'] . '&type=po') ?>" target="_blank" title="Download PO" style="color:#6b7280;font-size:15px;margin-right:8px;text-decoration:none;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='#6b7280'"><i class="fas fa-file-alt"></i></a>

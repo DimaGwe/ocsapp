@@ -4,6 +4,14 @@
  * they were created with.
  * fr-CA: "37,92 $" and "28 sept. 2026"; en: "$37.92" and "Sep 28, 2026". No em dashes.
  */
+if (!function_exists('acct_is_fr')) {
+    /** Session language is French (fr-CA default), for views that format before \$fr exists. */
+    function acct_is_fr(): bool
+    {
+        return ($_SESSION['language'] ?? 'fr') === 'fr';
+    }
+}
+
 if (!function_exists('acct_money')) {
     function acct_money($amount, bool $fr): string
     {

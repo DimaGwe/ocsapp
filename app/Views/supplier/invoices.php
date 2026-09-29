@@ -37,15 +37,15 @@
 <div class="stats-row">
   <div class="stat-card">
     <div class="stat-label"><?= $fr ? 'Total facturé' : 'Total Invoiced' ?></div>
-    <div class="stat-value">$<?= number_format($stats['total_invoiced'] ?? 0, 2) ?></div>
+    <div class="stat-value"><?= acct_money($stats['total_invoiced'] ?? 0, acct_is_fr()) ?></div>
   </div>
   <div class="stat-card">
     <div class="stat-label"><?= $fr ? 'Total payé' : 'Total Paid' ?></div>
-    <div class="stat-value" style="color:#059669;">$<?= number_format($stats['total_paid'] ?? 0, 2) ?></div>
+    <div class="stat-value" style="color:#059669;"><?= acct_money($stats['total_paid'] ?? 0, acct_is_fr()) ?></div>
   </div>
   <div class="stat-card">
     <div class="stat-label"><?= $fr ? 'Solde en souffrance' : 'Outstanding Balance' ?></div>
-    <div class="stat-value" style="color:<?= ($stats['total_outstanding'] ?? 0) > 0 ? '#dc2626' : '#059669' ?>;">$<?= number_format($stats['total_outstanding'] ?? 0, 2) ?></div>
+    <div class="stat-value" style="color:<?= ($stats['total_outstanding'] ?? 0) > 0 ? '#dc2626' : '#059669' ?>;"><?= acct_money($stats['total_outstanding'] ?? 0, acct_is_fr()) ?></div>
     <div style="font-size:12px;color:var(--gray-400);margin-top:4px;"><?= $stats['unpaid_count'] ?? 0 ?> <?= $fr ? 'facture' . (($stats['unpaid_count'] ?? 0) != 1 ? 's' : '') . ' impayée' . (($stats['unpaid_count'] ?? 0) != 1 ? 's' : '') : 'unpaid invoice' . (($stats['unpaid_count'] ?? 0) != 1 ? 's' : '') ?></div>
   </div>
 </div>
@@ -78,13 +78,13 @@
       <?php foreach ($invoices as $inv): ?>
       <tr>
         <td><a href="<?= url('supplier/invoices/view?id=' . $inv['id']) ?>" style="color:var(--primary);font-weight:700;text-decoration:none;"><?= htmlspecialchars($inv['invoice_number']) ?></a></td>
-        <td style="color:var(--gray-400);"><?= htmlspecialchars($inv['po_number'] ?? '—') ?></td>
-        <td class="amount">$<?= number_format($inv['total_amount'], 2) ?></td>
-        <td class="amount" style="color:#059669;">$<?= number_format($inv['amount_paid'], 2) ?></td>
-        <td class="amount" style="color:<?= $inv['balance_due'] > 0 ? '#dc2626' : '#059669' ?>;">$<?= number_format($inv['balance_due'], 2) ?></td>
-        <td><span class="badge badge-<?= $inv['status'] ?>"><?= ucfirst($inv['status']) ?></span></td>
+        <td style="color:var(--gray-400);"><?= htmlspecialchars($inv['po_number'] ?? '-') ?></td>
+        <td class="amount"><?= acct_money($inv['total_amount'], acct_is_fr()) ?></td>
+        <td class="amount" style="color:#059669;"><?= acct_money($inv['amount_paid'], acct_is_fr()) ?></td>
+        <td class="amount" style="color:<?= $inv['balance_due'] > 0 ? '#dc2626' : '#059669' ?>;"><?= acct_money($inv['balance_due'], acct_is_fr()) ?></td>
+        <td><span class="badge badge-<?= $inv['status'] ?>"><?= htmlspecialchars([ 'draft' => $fr ? 'Brouillon' : 'Draft', 'sent' => $fr ? 'Envoyée' : 'Sent', 'paid' => $fr ? 'Payée' : 'Paid', 'partial' => $fr ? 'Partielle' : 'Partial', 'overdue' => $fr ? 'En retard' : 'Overdue', 'cancelled' => $fr ? 'Annulée' : 'Cancelled' ][$inv['status']] ?? ucfirst($inv['status'])) ?></span></td>
         <td style="<?= $inv['status'] === 'overdue' ? 'color:#dc2626;font-weight:600;' : '' ?>">
-          <?= date('M j, Y', strtotime($inv['due_date'])) ?>
+          <?= acct_date($inv['due_date'], acct_is_fr()) ?>
         </td>
         <td style="text-align:center;">
           <a href="<?= url('supplier/invoices/download-pdf?id=' . $inv['id']) ?>" title="Download PDF" style="color:#00b207; font-size:16px;">
@@ -113,13 +113,13 @@
     <div>
       <strong style="font-size:13px;"><?= htmlspecialchars($p['payment_number']) ?></strong>
       <div style="font-size:12px;color:var(--gray-400);margin-top:2px;">
-        <?= date('M j, Y', strtotime($p['payment_date'])) ?>
+        <?= acct_date($p['payment_date'], acct_is_fr()) ?>
         &middot; <?= $fr ? 'Facture :' : 'Invoice:' ?> <?= htmlspecialchars($p['invoice_number']) ?>
         <?php if ($p['reference_number']): ?> &middot; <?= $fr ? 'Réf :' : 'Ref:' ?> <?= htmlspecialchars($p['reference_number']) ?><?php endif; ?>
       </div>
     </div>
     <div style="text-align:right;">
-      <div class="amount" style="color:#059669;">$<?= number_format($p['amount_applied'], 2) ?></div>
+      <div class="amount" style="color:#059669;"><?= acct_money($p['amount_applied'], acct_is_fr()) ?></div>
       <span class="method-badge"><?= ucfirst(str_replace('_', ' ', $p['payment_method'])) ?></span>
     </div>
   </div>

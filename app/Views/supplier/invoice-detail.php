@@ -68,7 +68,7 @@
 <div class="page-header">
   <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
     <h1 class="page-title"><?= htmlspecialchars($invoice['invoice_number']) ?></h1>
-    <span class="badge badge-<?= $invoice['status'] ?>"><?= ucfirst($invoice['status']) ?></span>
+    <span class="badge badge-<?= $invoice['status'] ?>"><?= htmlspecialchars([ 'draft' => $fr ? 'Brouillon' : 'Draft', 'sent' => $fr ? 'Envoyée' : 'Sent', 'paid' => $fr ? 'Payée' : 'Paid', 'partial' => $fr ? 'Partielle' : 'Partial', 'overdue' => $fr ? 'En retard' : 'Overdue', 'cancelled' => $fr ? 'Annulée' : 'Cancelled' ][$invoice['status']] ?? ucfirst($invoice['status'])) ?></span>
   </div>
   <a href="<?= url('supplier/invoices/download-pdf?id=' . $invoice['id']) ?>" class="btn-pdf">
     <i class="fas fa-file-pdf"></i> <?= $fr ? 'Télécharger PDF' : 'Download PDF' ?>
@@ -88,23 +88,23 @@
         </div>
         <div class="info-item">
           <label><?= $fr ? 'Bon de commande' : 'Purchase Order' ?></label>
-          <div class="value"><?= htmlspecialchars($invoice['po_number'] ?? '—') ?></div>
+          <div class="value"><?= htmlspecialchars($invoice['po_number'] ?? '-') ?></div>
         </div>
         <div class="info-item">
           <label><?= $fr ? 'Date d\'émission' : 'Issue Date' ?></label>
-          <div class="value"><?= date('M j, Y', strtotime($invoice['issue_date'])) ?></div>
+          <div class="value"><?= acct_date($invoice['issue_date'], acct_is_fr()) ?></div>
         </div>
         <div class="info-item">
           <label><?= $fr ? 'Date d\'échéance' : 'Due Date' ?></label>
           <div class="value" style="<?= $invoice['status'] === 'overdue' ? 'color:#dc2626;font-weight:700;' : '' ?>">
-            <?= date('M j, Y', strtotime($invoice['due_date'])) ?>
+            <?= acct_date($invoice['due_date'], acct_is_fr()) ?>
             <?php if ($invoice['status'] === 'overdue'): ?> <span style="font-size:11px;color:#dc2626;">(<?= $fr ? 'en retard' : 'overdue' ?>)</span><?php endif; ?>
           </div>
         </div>
         <?php if ($invoice['paid_at']): ?>
         <div class="info-item">
           <label><?= $fr ? 'Payé le' : 'Paid On' ?></label>
-          <div class="value" style="color:#059669;"><?= date('M j, Y g:i A', strtotime($invoice['paid_at'])) ?></div>
+          <div class="value" style="color:#059669;"><?= acct_datetime($invoice['paid_at'], acct_is_fr()) ?></div>
         </div>
         <?php endif; ?>
       </div>
@@ -130,10 +130,10 @@
           <tr>
             <td style="color:var(--gray-400);"><?= $lineNum++ ?></td>
             <td><?= htmlspecialchars($item['product_name'] ?? 'Product') ?></td>
-            <td style="color:var(--gray-400);font-size:13px;"><?= htmlspecialchars($item['sku'] ?? '—') ?></td>
+            <td style="color:var(--gray-400);font-size:13px;"><?= htmlspecialchars($item['sku'] ?? '-') ?></td>
             <td style="text-align:center;"><?= $item['quantity_ordered'] ?></td>
-            <td class="amount" style="text-align:right;">$<?= number_format($item['unit_cost'], 2) ?></td>
-            <td class="amount" style="text-align:right;">$<?= number_format($item['total_cost'] ?? $item['quantity_ordered'] * $item['unit_cost'], 2) ?></td>
+            <td class="amount" style="text-align:right;"><?= acct_money($item['unit_cost'], acct_is_fr()) ?></td>
+            <td class="amount" style="text-align:right;"><?= acct_money($item['total_cost'] ?? $item['quantity_ordered'] * $item['unit_cost'], acct_is_fr()) ?></td>
           </tr>
           <?php endforeach; ?>
         </tbody>
@@ -141,20 +141,20 @@
 
       <!-- Tax Breakdown -->
       <table class="totals-table" style="width:55%;margin-left:auto;">
-        <tr><td><?= $fr ? 'Sous-total' : 'Subtotal' ?></td><td class="amount" style="text-align:right;">$<?= number_format($invoice['subtotal'], 2) ?></td></tr>
+        <tr><td><?= $fr ? 'Sous-total' : 'Subtotal' ?></td><td class="amount" style="text-align:right;"><?= acct_money($invoice['subtotal'], acct_is_fr()) ?></td></tr>
         <?php if ($invoice['shipping'] > 0): ?>
-        <tr><td><?= $fr ? 'Livraison' : 'Shipping' ?></td><td class="amount" style="text-align:right;">$<?= number_format($invoice['shipping'], 2) ?></td></tr>
+        <tr><td><?= $fr ? 'Livraison' : 'Shipping' ?></td><td class="amount" style="text-align:right;"><?= acct_money($invoice['shipping'], acct_is_fr()) ?></td></tr>
         <?php endif; ?>
-        <tr><td>TPS (5%)</td><td class="amount" style="text-align:right;">$<?= number_format($invoice['tax_gst'], 2) ?></td></tr>
-        <tr><td>TVQ (9.975%)</td><td class="amount" style="text-align:right;">$<?= number_format($invoice['tax_qst'], 2) ?></td></tr>
-        <tr style="border-top:1px solid var(--gray-200);"><td style="font-weight:600;"><?= $fr ? 'Total brut' : 'Gross Total' ?></td><td class="amount" style="text-align:right;font-weight:600;">$<?= number_format($invoice['total_amount'], 2) ?></td></tr>
+        <tr><td>TPS (5%)</td><td class="amount" style="text-align:right;"><?= acct_money($invoice['tax_gst'], acct_is_fr()) ?></td></tr>
+        <tr><td>TVQ (9.975%)</td><td class="amount" style="text-align:right;"><?= acct_money($invoice['tax_qst'], acct_is_fr()) ?></td></tr>
+        <tr style="border-top:1px solid var(--gray-200);"><td style="font-weight:600;"><?= $fr ? 'Total brut' : 'Gross Total' ?></td><td class="amount" style="text-align:right;font-weight:600;"><?= acct_money($invoice['total_amount'], acct_is_fr()) ?></td></tr>
         <?php if ($invoice['commission_amount'] > 0): ?>
-        <tr><td><?= $fr ? 'Commission de la plateforme' : 'Platform Commission' ?> (<?= number_format($invoice['commission_rate'], 2) ?>%)</td><td class="amount" style="text-align:right;color:#dc2626;">-$<?= number_format($invoice['commission_amount'], 2) ?></td></tr>
+        <tr><td><?= $fr ? 'Commission de la plateforme' : 'Platform Commission' ?> (<?= number_format($invoice['commission_rate'], 2) ?>%)</td><td class="amount" style="text-align:right;color:#dc2626;">-<?= acct_money($invoice['commission_amount'], acct_is_fr()) ?></td></tr>
         <?php endif; ?>
         <?php if (($invoice['processing_fee_amount'] ?? 0) > 0): ?>
-        <tr><td><?= $fr ? 'Frais de traitement des paiements' : 'Payment Processing Fee' ?> (2.9% + 0,30 $)</td><td class="amount" style="text-align:right;color:#dc2626;">-$<?= number_format($invoice['processing_fee_amount'], 2) ?></td></tr>
+        <tr><td><?= $fr ? 'Frais de traitement des paiements' : 'Payment Processing Fee' ?> (2.9% + 0,30 $)</td><td class="amount" style="text-align:right;color:#dc2626;">-<?= acct_money($invoice['processing_fee_amount'], acct_is_fr()) ?></td></tr>
         <?php endif; ?>
-        <tr><td style="font-weight:700;"><?= $fr ? 'Montant net à payer' : 'Net Payable' ?></td><td class="amount" style="text-align:right;font-weight:700;color:var(--primary);">$<?= number_format($invoice['net_payable'], 2) ?></td></tr>
+        <tr><td style="font-weight:700;"><?= $fr ? 'Montant net à payer' : 'Net Payable' ?></td><td class="amount" style="text-align:right;font-weight:700;color:var(--primary);"><?= acct_money($invoice['net_payable'], acct_is_fr()) ?></td></tr>
       </table>
     </div>
     <?php endif; ?>
@@ -166,11 +166,11 @@
     <div class="balance-box <?= $invoice['balance_due'] > 0.01 ? 'has-balance' : '' ?>">
       <div class="balance-label"><?= $invoice['balance_due'] > 0.01 ? ($fr ? 'Solde dû' : 'Balance Due') : ($fr ? 'Entièrement payé' : 'Fully Paid') ?></div>
       <div class="balance-amount" style="color:<?= $invoice['balance_due'] > 0.01 ? '#dc2626' : '#059669' ?>;">
-        $<?= number_format($invoice['balance_due'], 2) ?>
+        <?= acct_money($invoice['balance_due'], acct_is_fr()) ?>
       </div>
       <?php if ($invoice['amount_paid'] > 0 && $invoice['balance_due'] > 0.01): ?>
         <div style="font-size:12px;color:var(--gray-400);margin-top:6px;">
-          $<?= number_format($invoice['amount_paid'], 2) ?> <?= $fr ? 'payé sur' : 'paid of' ?> $<?= number_format($invoice['net_payable'], 2) ?>
+          <?= acct_money($invoice['amount_paid'], acct_is_fr()) ?> <?= $fr ? 'payé sur' : 'paid of' ?> <?= acct_money($invoice['net_payable'], acct_is_fr()) ?>
         </div>
         <div style="margin-top:8px;background:var(--gray-200);border-radius:4px;height:6px;overflow:hidden;">
           <div style="height:100%;background:#059669;border-radius:4px;width:<?= min(100, round(($invoice['amount_paid'] / max(0.01, $invoice['net_payable'])) * 100)) ?>%;"></div>
@@ -185,9 +185,9 @@
         <div class="timeline">
           <?php foreach ($payments as $p): ?>
           <div class="timeline-item">
-            <div class="tl-amount">$<?= number_format($p['amount_applied'], 2) ?></div>
+            <div class="tl-amount"><?= acct_money($p['amount_applied'], acct_is_fr()) ?></div>
             <div class="tl-meta">
-              <?= date('M j, Y', strtotime($p['payment_date'])) ?>
+              <?= acct_date($p['payment_date'], acct_is_fr()) ?>
               &middot; <?= htmlspecialchars($p['payment_number']) ?>
               <?php if (!empty($p['reference_number'])): ?>
                 &middot; <?= $fr ? 'Réf :' : 'Ref:' ?> <?= htmlspecialchars($p['reference_number']) ?>

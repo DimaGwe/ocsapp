@@ -1797,7 +1797,7 @@ class SupplierProductController {
                 'invoice' => $invoice,
                 'items' => $items,
                 'payments' => $payments,
-                'pageTitle' => 'Invoice ' . $invoice['invoice_number'],
+                'pageTitle' => lang_pick('Facture ', 'Invoice ') . $invoice['invoice_number'],
             ]);
 
         } catch (\PDOException $e) {

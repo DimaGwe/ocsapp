@@ -272,7 +272,7 @@ require dirname(__DIR__) . '/layout-header.php';
         </div>
 
         <div class="product-price">
-          $<?= number_format($product['unit_price'], 2) ?>
+          <?= acct_money($product['unit_price'], acct_is_fr()) ?>
           <span style="font-size: 14px; color: var(--gray-600); font-weight: normal;">/ <?= htmlspecialchars($product['unit']) ?></span>
         </div>
 

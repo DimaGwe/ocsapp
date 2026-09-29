@@ -298,7 +298,7 @@ require dirname(__DIR__) . '/layout-header.php';
       </div>
       <canvas id="cameraCanvas" style="display:none;"></canvas>
 
-      <p class="form-hint"><?= $fr ? 'Choisissez un fichier ou prenez une photo (JPG, PNG, GIF, WebP — Max 5 Mo)' : 'Choose a file or take a photo with your camera (JPG, PNG, GIF, WebP — Max 5MB)' ?></p>
+      <p class="form-hint"><?= $fr ? 'Choisissez un fichier ou prenez une photo (JPG, PNG, GIF, WebP. Max 5 Mo)' : 'Choose a file or take a photo with your camera (JPG, PNG, GIF, WebP. Max 5MB)' ?></p>
 
       <div id="imagePreviewContainer" class="image-preview-container">
         <img id="imagePreview" src="" alt="Image preview" class="image-preview">
