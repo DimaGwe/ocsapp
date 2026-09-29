@@ -335,6 +335,21 @@ class CheckoutController
             $fulfillmentByShop[$sid] = ($requested === 'pickup' && $shopAllowsPickup) ? 'pickup' : 'delivery';
         }
 
+        // A delivery shop-group needs a drop-off address. Without one the order was created
+        // anyway (no driver could deliver it, and zone pricing fell back to the flat fee).
+        if (!$selectedAddress && in_array('delivery', $fulfillmentByShop, true)) {
+            $this->db->rollBack();
+            $fr = ($_SESSION['language'] ?? 'fr') === 'fr';
+            jsonResponse([
+                'success' => false,
+                'message' => $fr
+                    ? 'Veuillez ajouter une adresse de livraison avant de passer votre commande.'
+                    : 'Please add a delivery address before placing your order.',
+                'address_url' => url('account/addresses'),
+            ]);
+            return;
+        }
+
         // Oversize Surcharge (Sec 2.1/2.1a) hard cap: an order whose total weight exceeds
         // 40kg cannot go through standard checkout at all - reject before creating any
         // orders and route the buyer to contact us for custom freight, rather than silently
@@ -420,13 +435,14 @@ class CheckoutController
 
         $createdOrders = [];
 
-        // Founding Buyer Program (Sec 12.1/12.2): claimed once for this whole
+        // Founding Buyer Program (Sec 12.1/12.2): checked once for this whole
         // checkout (not once per shop-order) - "your first delivery Order"
         // waives the base Delivery Fee on every shop-order this checkout
         // creates, same "N sub-orders share one Order-level concept" model
-        // already used for the Additional-Stop Fee above.
+        // already used for the Additional-Stop Fee above. The slot itself is
+        // only claimed once payment is confirmed (FoundingBuyerHelper::grantForPaidOrders).
         require_once __DIR__ . '/../Helpers/FoundingBuyerHelper.php';
-        $foundingClaim = \App\Helpers\FoundingBuyerHelper::claimSlotIfEligible($userId);
+        $foundingEligible = \App\Helpers\FoundingBuyerHelper::isEligibleAtCheckout($userId);
 
         foreach ($itemsByShop as $shopId => $items) {
             $orderNumber = $this->generateOrderNumber();
@@ -459,7 +475,7 @@ class CheckoutController
                 // so it can be matched against a normalized driver zone rather than free-text city
                 // comparison (which a real sample showed can mismatch on typos/formatting alone).
                 $orderZoneCode = $zoneFeeResult['zone_code'];
-                if ($foundingClaim['eligible'] && $deliveryFee > 0) {
+                if ($foundingEligible && $deliveryFee > 0) {
                     // Sec 12.3: waives the base Delivery Fee only - Oversize/
                     // Additional-Stop/Long-Distance surcharges still apply.
                     $foundingBuyerWaived = $deliveryFee;
@@ -635,12 +651,6 @@ class CheckoutController
         }
 
         $this->db->commit();
-
-        // Founders' Wall: first eligible order made them a Founding Buyer; confirm their display
-        // choice + change link. Sent once (re-reported slots on later checkouts are ignored).
-        if (!empty($foundingClaim['eligible']) && !empty($foundingClaim['founding_buyer_number'])) {
-            \App\Helpers\FoundersWallHelper::onFoundingGrantedForUser((int) $userId, 'buyer', (int) $foundingClaim['founding_buyer_number']);
-        }
 
         // Store pending order IDs in session for payment verification
         $orderIds = array_column($createdOrders, 'order_id');

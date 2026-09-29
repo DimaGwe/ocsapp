@@ -80,19 +80,28 @@ class FoundersWallHelper
     /** "Marie-Ève L." for individuals; the business name for business roles (falls back to the person). */
     public static function displayName(string $role, ?string $firstName, ?string $lastName, ?string $businessName = null): string
     {
-        $businessName = trim((string) $businessName);
+        $businessName = self::plain($businessName);
         if (in_array($role, self::BUSINESS_ROLES, true) && $businessName !== '') {
             return $businessName;
         }
-        $first = trim((string) $firstName);
-        $last  = trim((string) $lastName);
+        $first = self::plain($firstName);
+        $last  = self::plain($lastName);
         return trim($first . ($last !== '' ? ' ' . mb_strtoupper(mb_substr($last, 0, 1)) . '.' : ''));
+    }
+
+    /**
+     * Waitlist fields are stored sanitize()d (HTML-escaped), so "L'Île" sits in the DB as "L&#039;Île".
+     * Decode to plain text here; every output (wall, toast, email) escapes it once itself.
+     */
+    private static function plain(?string $value): string
+    {
+        return trim(html_entity_decode((string) $value, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
     }
 
     /** City shown on the wall: the first part of what the person typed ("Laval, QC" -> "Laval"). */
     public static function displayCity(?string $cityRegion): string
     {
-        $city = trim(explode(',', (string) $cityRegion)[0]);
+        $city = trim(explode(',', self::plain($cityRegion))[0]);
         return mb_substr($city, 0, 40);
     }
 

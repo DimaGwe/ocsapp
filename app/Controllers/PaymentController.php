@@ -535,6 +535,12 @@ class PaymentController
 
             $this->db->commit();
 
+            // Founding Buyer status is earned on payment: claims the slot for a paid order
+            // that carries the first-order delivery waiver (idempotent, never throws).
+            if ($updatedCount > 0) {
+                \App\Helpers\FoundingBuyerHelper::grantForPaidOrders($orderIds);
+            }
+
             // Send order confirmation emails + admin bell notifications
             // Only fires when rows were actually updated (prevents duplicate on webhook + redirect)
             if ($updatedCount > 0) {

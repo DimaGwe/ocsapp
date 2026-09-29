@@ -490,6 +490,9 @@ class AdminOrdersController {
 
             $this->db->commit();
 
+            // Founding Buyer status is earned on payment (idempotent, never throws)
+            \App\Helpers\FoundingBuyerHelper::grantForPaidOrders([(int) $orderId]);
+
             // Send payment confirmation email to buyer
             try {
                 \App\Helpers\EmailHelper::sendOrderStatusUpdate($order, $order['status'], 'confirmed');
