@@ -2,6 +2,7 @@
 /**
  * Beta Notice Component
  * Shows modal on first visit + persistent banner
+ * Set $betaModalOnly = true before including to skip the banner (page has its own bar).
  */
 
 // Get translations
@@ -12,7 +13,9 @@ $t = getTranslations($currentLang);
 <!-- Beta Notice CSS -->
 <link rel="stylesheet" href="<?= asset('css/beta-notice.css') ?>">
 
-<?php if (!empty($useMarcheHeader)): ?>
+<?php if (!empty($betaModalOnly)): ?>
+<?php /* Page draws its own beta bar (e.g. public/landing.php eco-beta): modal only */ ?>
+<?php elseif (!empty($useMarcheHeader)): ?>
 <!-- Marché Central beta bar (opt-in via $useMarcheHeader, staging redesign 2026-09-05) -->
 <div class="mc-beta">
     <span class="mc-beta-badge"><?= $currentLang === 'fr' ? 'Bêta' : 'Beta' ?></span>
@@ -66,7 +69,7 @@ $t = getTranslations($currentLang);
             <div class="beta-modal-notice">
                 <h3 class="beta-modal-notice-title">
                     <span>⚠️</span>
-                    <?= $currentLang === 'fr' ? 'Important Avis' : 'Important Notice' ?>
+                    <?= $currentLang === 'fr' ? 'Avis important' : 'Important Notice' ?>
                 </h3>
                 <p class="beta-modal-notice-text">
                     <?= $currentLang === 'fr'

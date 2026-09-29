@@ -873,6 +873,7 @@ $fr = ($currentLang === 'fr');
       });
     })();
   </script>
+<?php $betaModalOnly = true; require BASE_PATH . '/app/Views/components/beta-notice.php'; ?>
 <?php require BASE_PATH . '/app/Views/components/cookie-banner.php'; ?>
 </body>
 </html>
