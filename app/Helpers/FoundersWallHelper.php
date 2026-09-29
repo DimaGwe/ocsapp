@@ -106,57 +106,60 @@ class FoundersWallHelper
     }
 
     /**
-     * Real founders' wall: founding status granted AND consent = yes on the waitlist row with the
-     * same email. Newest first. Same shape as the sample data: name, city, role, daysAgo, number.
+     * Founders' wall: EVERY founder whose status was granted, newest first. Named (first name + last
+     * initial or business name, city) only when the waitlist row with the same email has consent = yes;
+     * everyone else is an anonymous entry carrying only role + number (nothing that identifies them,
+     * so no consent is needed), which keeps the wall in step with the spot counters.
+     * Shape: name, city, role, daysAgo, number, anonymous. Anonymous rows have name = city = ''.
      */
-    public static function founders(int $limit = 60): array
+    public static function founders(int $limit = 300): array
     {
         $sql = "
             SELECT * FROM (
                 SELECT 'buyer' AS role, u.founding_buyer_number AS number, u.founding_buyer_granted_at AS granted_at,
-                       NULL AS account_business, w.first_name, w.last_name, w.business_name, w.city_region
-                FROM users u JOIN waitlist w ON w.email = u.email AND w.wall_consent = 1
+                       NULL AS account_business, w.first_name, w.last_name, w.business_name, w.city_region, w.id AS wid
+                FROM users u LEFT JOIN waitlist w ON w.email = u.email AND w.wall_consent = 1
                 WHERE u.founding_buyer = 1
               UNION ALL
                 SELECT 'driver', u.founding_driver_number, u.founding_driver_granted_at,
-                       NULL, w.first_name, w.last_name, w.business_name, w.city_region
-                FROM users u JOIN waitlist w ON w.email = u.email AND w.wall_consent = 1
+                       NULL, w.first_name, w.last_name, w.business_name, w.city_region, w.id
+                FROM users u LEFT JOIN waitlist w ON w.email = u.email AND w.wall_consent = 1
                 WHERE u.founding_driver = 1
               UNION ALL
                 SELECT 'seller', s.founding_partner_number, s.founding_partner_granted_at,
-                       s.name, w.first_name, w.last_name, w.business_name, w.city_region
+                       s.name, w.first_name, w.last_name, w.business_name, w.city_region, w.id
                 FROM shops s JOIN users u ON u.id = s.seller_id
-                JOIN waitlist w ON w.email = u.email AND w.wall_consent = 1
+                LEFT JOIN waitlist w ON w.email = u.email AND w.wall_consent = 1
                 WHERE s.founding_partner = 1
               UNION ALL
                 SELECT 'supplier', sp.founding_partner_number, sp.founding_partner_granted_at,
-                       sp.company_name, w.first_name, w.last_name, w.business_name, w.city_region
-                FROM suppliers sp JOIN waitlist w ON w.email = sp.email AND w.wall_consent = 1
+                       sp.company_name, w.first_name, w.last_name, w.business_name, w.city_region, w.id
+                FROM suppliers sp LEFT JOIN waitlist w ON w.email = sp.email AND w.wall_consent = 1
                 WHERE sp.founding_partner = 1
               UNION ALL
                 SELECT 'business', bp.founding_partner_number, bp.founding_partner_granted_at,
-                       bp.company_name, w.first_name, w.last_name, w.business_name, w.city_region
+                       bp.company_name, w.first_name, w.last_name, w.business_name, w.city_region, w.id
                 FROM business_profiles bp JOIN users u ON u.id = bp.user_id
-                JOIN waitlist w ON w.email = u.email AND w.wall_consent = 1
+                LEFT JOIN waitlist w ON w.email = u.email AND w.wall_consent = 1
                 WHERE bp.founding_partner = 1
             ) f
-            ORDER BY f.granted_at DESC
+            ORDER BY f.granted_at DESC, f.number DESC
             LIMIT " . max(1, (int) $limit);
 
         $today = new \DateTimeImmutable('today');
         $out = [];
         foreach (self::db()->query($sql)->fetchAll(\PDO::FETCH_ASSOC) as $r) {
-            $name = self::displayName($r['role'], $r['first_name'], $r['last_name'], $r['account_business'] ?: $r['business_name']);
-            if ($name === '') {
-                continue;
-            }
+            // Consent = a matching waitlist row (the join only matches consented rows). The account's
+            // own business name is only used for consented founders too.
+            $name = $r['wid'] ? self::displayName($r['role'], $r['first_name'], $r['last_name'], $r['account_business'] ?: $r['business_name']) : '';
             $granted = $r['granted_at'] ? new \DateTimeImmutable(substr($r['granted_at'], 0, 10)) : $today;
             $out[] = [
-                'name'    => $name,
-                'city'    => self::displayCity($r['city_region']),
-                'role'    => $r['role'],
-                'daysAgo' => max(0, (int) $granted->diff($today)->days),
-                'number'  => (int) $r['number'],
+                'name'      => $name,
+                'city'      => $name !== '' ? self::displayCity($r['city_region']) : '',
+                'role'      => $r['role'],
+                'daysAgo'   => max(0, (int) $granted->diff($today)->days),
+                'number'    => (int) $r['number'],
+                'anonymous' => $name === '',
             ];
         }
         return $out;

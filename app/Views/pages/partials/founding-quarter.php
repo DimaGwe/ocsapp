@@ -3,8 +3,8 @@
  * Founding Quarter sections for pages/founding.php. Renders one piece per include:
  * $fqSection = 'band' (countdown + total spots) | 'wall' (Founders' Wall) | 'scripts' (toast + JS).
  * Needs: $fr, $programs, $quarter ['founders' => FoundersWallHelper::founders(), 'end' => ISO date or null].
- * The countdown only renders with a real end date (setting founding_quarter_end); the wall only lists
- * founders who consented. Styles: css/pages/founding-quarter.css (fq- classes). No em dashes. FR is fr-CA.
+ * The countdown only renders with a real end date (setting founding_quarter_end); the wall lists every
+ * granted founder, named only with consent, otherwise anonymous (role + number, no city, no date). Styles: css/pages/founding-quarter.css (fq- classes). No em dashes. FR is fr-CA.
  */
 $fqRoles = [
     'buyer'    => [['Acheteur fondateur', 'Founding Buyer'],       ['Acheteurs', 'Buyers']],
@@ -79,8 +79,8 @@ $fqEndLabel = !$fqEnd ? '' : ($fr
         <div class="fd-eyebrow"><?= $fr ? 'LE MUR DES FONDATEURS' : "THE FOUNDERS' WALL" ?></div>
         <h2><?= $fr ? 'Ils ont déjà réservé leur place.' : 'They already claimed their spot.' ?></h2>
         <p><?= $fr
-          ? "Les membres fondateurs qui ont accepté d'être affichés. Les particuliers apparaissent avec leur prénom et l'initiale de leur nom."
-          : 'Founding members who agreed to be shown. Individuals appear with their first name and last initial.' ?></p>
+          ? "Chaque place réservée apparaît ici. Les particuliers qui ont accepté d'être affichés apparaissent avec leur prénom et l'initiale de leur nom. Les autres restent anonymes."
+          : 'Every claimed spot appears here. Individuals who agreed to be shown appear with their first name and last initial. Everyone else stays anonymous.' ?></p>
       </div>
       <div class="fq-filters" aria-label="<?= $fr ? 'Filtrer par rôle' : 'Filter by role' ?>">
         <button type="button" class="fq-chip active" data-filter="all"><?= $fr ? 'Tous' : 'All' ?> <em><?= count($fqFounders) ?></em></button>
@@ -94,10 +94,20 @@ $fqEndLabel = !$fqEnd ? '' : ($fr
       <div class="fq-wall-empty">
         <i class="fa-solid fa-seedling"></i>
         <div><strong><?= $fr ? 'Le mur vous attend.' : 'The wall is waiting for you.' ?></strong>
-          <?= $fr ? "Les premiers membres fondateurs qui acceptent d'être affichés apparaîtront ici." : 'The first founding members who agree to be shown will appear here.' ?></div>
+          <?= $fr ? 'Les premières places fondatrices réservées apparaîtront ici.' : 'The first claimed founding spots will appear here.' ?></div>
       </div>
       <?php endif; ?>
       <?php foreach ($fqFounders as $f): ?>
+      <?php if ($f['anonymous']): ?>
+      <!-- No name, city or date: nothing that could identify someone who did not consent -->
+      <div class="fq-founder fq-anon fq-r-<?= $f['role'] ?>" data-role="<?= $f['role'] ?>">
+        <div class="fq-avatar"><i class="fa-solid fa-user-secret"></i></div>
+        <div class="fq-founder-body">
+          <div class="fq-founder-name"><?= $fr ? 'Fondateur anonyme' : 'Anonymous founder' ?></div>
+          <div class="fq-founder-role"><?= htmlspecialchars($fqT($fqRoles[$f['role']][0])) ?> <b>#<?= (int) $f['number'] ?></b></div>
+        </div>
+      </div>
+      <?php continue; endif; ?>
       <div class="fq-founder fq-r-<?= $f['role'] ?><?= $f['daysAgo'] === 0 ? ' fq-new' : '' ?>" data-role="<?= $f['role'] ?>">
         <div class="fq-avatar"><?= htmlspecialchars($fqInitials($f['name'])) ?></div>
         <div class="fq-founder-body">
@@ -175,7 +185,7 @@ $fqEndLabel = !$fqEnd ? '' : ($fr
       'name' => $f['name'], 'initials' => $fqInitials($f['name']),
       'text' => ($fr ? 'de ' . $f['city'] . ' a rejoint le programme ' : 'from ' . $f['city'] . ' joined as a ') . $fqT($fqRoles[$f['role']][0]),
       'when' => $fqAgo($f['daysAgo']),
-  ], array_slice($fqFounders, 0, 6)), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS) ?>;
+  ], array_slice(array_values(array_filter($fqFounders, fn($f) => !$f['anonymous'])), 0, 6)), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS) ?>;
   var toast = document.getElementById('fqToast'), i = 0;
   if (toast && recent.length && !reduce) {
     var show = function () {

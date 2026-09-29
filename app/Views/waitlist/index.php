@@ -456,8 +456,11 @@ $rolePlural = [
               ? "Le Mur des fondateurs est une section publique de la page Programmes fondateurs d'OCSAPP, visible par tous les visiteurs du site."
               : "The Founders' Wall is a public section of OCSAPP's Founding programs page, visible to every visitor of the site." ?></li>
             <li><?= $fr
-              ? "Votre nom n'y apparaît que si vous devenez réellement membre fondateur (statut accordé à l'approbation de votre compte ou à votre première commande admissible) et que vous avez coché cette case."
-              : 'Your name only appears if you actually become a founding member (status granted when your account is approved or at your first eligible order) and you ticked this box.' ?></li>
+              ? "Votre nom n'y apparaît que si vous devenez réellement membre fondateur (statut accordé à l'approbation de votre compte ou au paiement de votre première commande admissible) et que vous avez coché cette case."
+              : 'Your name only appears if you actually become a founding member (status granted when your account is approved or when your first eligible order is paid) and you ticked this box.' ?></li>
+            <li><?= $fr
+              ? "Si vous ne cochez pas cette case, votre place apparaît quand même sur le mur, de façon anonyme : seulement votre programme fondateur et votre numéro, sans votre nom ni votre ville."
+              : "If you don't tick this box, your spot still appears on the wall, anonymously: only your founding program and number, without your name or city." ?></li>
             <li><?= $fr
               ? "Ce qui est affiché : votre prénom et l'initiale de votre nom (ou le nom de votre entreprise pour les vendeurs, fournisseurs et entreprises), votre ville, votre programme fondateur et votre numéro de fondateur. Jamais votre courriel ni votre téléphone."
               : 'What is shown: your first name and last initial (or your business name for sellers, suppliers and businesses), your city, your founding program and your founder number. Never your email or phone.' ?></li>

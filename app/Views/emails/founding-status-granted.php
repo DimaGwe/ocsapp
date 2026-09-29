@@ -54,7 +54,7 @@ $boxStyle    = 'width:100%;background:#f9fafb;border:1.5px dashed #e5e7eb;border
                   <?php if ($wallShown): ?>
                     Lors de votre inscription, vous avez accepté d'apparaître sur le Mur des fondateurs sous le nom <strong><?= $as ?></strong>. Vous pouvez modifier ou retirer ce choix en tout temps.
                   <?php else: ?>
-                    Lors de votre inscription, vous avez choisi de ne pas apparaître sur le Mur des fondateurs. Votre nom ne sera pas affiché. Si vous changez d'avis, vous pouvez l'activer en tout temps.
+                    Lors de votre inscription, vous avez choisi de ne pas afficher votre nom sur le Mur des fondateurs. Votre place y apparaît de façon anonyme, sous la forme <strong><?= $progFr ?> n° <?= $num ?></strong>, sans votre nom ni votre ville. Si vous changez d'avis, vous pouvez afficher votre nom en tout temps.
                   <?php endif; ?>
                 </td>
               </tr>
@@ -99,7 +99,7 @@ $boxStyle    = 'width:100%;background:#f9fafb;border:1.5px dashed #e5e7eb;border
                   <?php if ($wallShown): ?>
                     When you signed up, you agreed to appear on the Founders' Wall as <strong><?= $as ?></strong>. You can change or withdraw this choice at any time.
                   <?php else: ?>
-                    When you signed up, you chose not to appear on the Founders' Wall. Your name will not be shown. If you change your mind, you can turn it on at any time.
+                    When you signed up, you chose not to show your name on the Founders' Wall. Your spot appears there anonymously, as <strong><?= $progEn ?> #<?= $num ?></strong>, without your name or city. If you change your mind, you can show your name at any time.
                   <?php endif; ?>
                 </td>
               </tr>

@@ -81,7 +81,7 @@ if ($row) {
         <i class="fa-solid <?= $on ? 'fa-eye' : 'fa-eye-slash' ?>"></i>
         <span><?= $on
           ? ($fr ? 'Votre nom est affiché sur le Mur des fondateurs dès que votre statut fondateur est confirmé.' : 'Your name is shown on the Founders\' Wall once your founding status is confirmed.')
-          : ($fr ? "Votre nom n'est pas affiché sur le Mur des fondateurs." : "Your name is not shown on the Founders' Wall.") ?></span>
+          : ($fr ? "Votre nom n'est pas affiché sur le Mur des fondateurs. Votre place y apparaît de façon anonyme (programme et numéro seulement)." : "Your name is not shown on the Founders' Wall. Your spot appears there anonymously (program and number only).") ?></span>
       </div>
 
       <?php if ($role !== 'partner'): ?>
@@ -99,8 +99,8 @@ if ($row) {
             <span><strong><?= htmlspecialchars($wallTitle) ?></strong> <?= htmlspecialchars($wallBody) ?></span></label>
           <label><input type="radio" name="wall_consent" value="no" <?= !$on ? 'checked' : '' ?>>
             <span><strong><?= $fr ? 'Ne pas afficher mon nom.' : "Don't show my name." ?></strong> <?= $fr
-              ? 'Votre nom est retiré du mur immédiatement. Vos avantages fondateurs ne changent pas.'
-              : 'Your name is removed from the wall immediately. Your founding perks do not change.' ?></span></label>
+              ? 'Votre nom et votre ville sont retirés du mur immédiatement. Votre place reste affichée de façon anonyme (programme et numéro seulement). Vos avantages fondateurs ne changent pas.'
+              : 'Your name and city are removed from the wall immediately. Your spot stays on it anonymously (program and number only). Your founding perks do not change.' ?></span></label>
         </div>
         <button type="submit"><?= $fr ? 'Enregistrer mon choix' : 'Save my choice' ?></button>
       </form>

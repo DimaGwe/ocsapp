@@ -65,6 +65,10 @@
 .fq-new-tag { position: absolute; top: 10px; right: 10px; background: #ecfdf0; color: #15803d; border-radius: 999px; font-size: 10px; font-weight: 700; padding: 2px 8px; text-transform: uppercase; letter-spacing: .5px; }
 .fd-main .fq-you { border-style: dashed; border-color: #b7cdb9; background: #f6faf6; text-decoration: none; }
 .fq-you .fq-avatar { background: #fff; color: var(--fd-g); border: 2px dashed #9dc9a0; }
+/* Anonymous founder (no consent to show the name): muted card, role colour kept on the number only */
+.fq-anon { background: #fafbfa; }
+.fq-anon .fq-avatar, .fq-r-seller.fq-anon .fq-avatar, .fq-r-supplier.fq-anon .fq-avatar, .fq-r-driver.fq-anon .fq-avatar, .fq-r-business.fq-anon .fq-avatar { background: #e5e9e6; color: #6b766d; font-size: 17px; }
+.fq-anon .fq-founder-name { color: #6b766d; font-weight: 500; }
 .fq-wall-empty { grid-column: 1 / -1; display: flex; gap: 14px; align-items: center; border: 1px dashed #b7cdb9; background: #f6faf6; border-radius: 14px; padding: 18px 20px; font-size: 14px; color: #465348; }
 .fq-wall-empty i { font-size: 22px; color: var(--fd-g); }
 .fq-wall-empty strong { display: block; color: var(--fd-ink); font-family: Poppins, sans-serif; }
