@@ -259,7 +259,7 @@ $accountDashboardUrl = accountUrl(); // Uses new helper function
 <script src="<?= asset('js/location-modal.js') ?>"></script>
 
 <!-- Load Beta Notice CSS -->
-<link rel="stylesheet" href="<?= asset('css/beta-notice.css') ?>">
+<link rel="stylesheet" href="<?= asset('css/beta-notice.css') ?>?v=20260929">
 
 <!-- Mobile Bottom Navigation - FIXED: Now role-aware -->
 <nav class="mobile-bottom-nav" aria-label="Mobile navigation">

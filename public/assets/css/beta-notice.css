@@ -85,254 +85,279 @@
 
 /* ===================================
    BETA MODAL (First Visit)
+   Ecosystem theme (matches public/landing.php tokens), 2026-09-29
    =================================== */
 .beta-modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(4px);
+  inset: 0;
+  background: rgba(10, 46, 20, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10000;
-  padding: 20px;
-  animation: fadeIn 0.3s ease;
+  padding: 16px;
+  animation: betaFadeIn 0.25s ease;
+  transition: opacity 0.3s ease;
 }
 
-@keyframes fadeIn {
+@keyframes betaFadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-.beta-modal {
-  background: #fff;
-  border-radius: 16px;
-  max-width: 550px;
-  width: 100%;
-  max-height: 90vh;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-  overflow: hidden;
-  animation: slideUp 0.3s ease;
-  display: flex;
-  flex-direction: column;
+@keyframes betaSlideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.beta-modal {
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  background: #fff;
+  color: #17181A;
+  border-radius: 22px;
+  max-width: 520px;
+  width: 100%;
+  max-height: 90vh;
+  box-shadow: 0 30px 80px rgba(10, 46, 20, 0.35);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: betaSlideUp 0.3s ease;
+  text-align: left;
 }
 
 .beta-modal-header {
-  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
-  padding: 30px;
-  text-align: center;
+  position: relative;
+  background:
+    radial-gradient(circle at 85% 0%, rgba(0, 178, 7, 0.35), transparent 55%),
+    linear-gradient(145deg, #0B2F16 0%, #0F4020 100%);
   color: #fff;
+  padding: 30px 32px 26px;
   flex-shrink: 0;
 }
 
-.beta-modal-icon {
-  font-size: 64px;
-  margin-bottom: 12px;
-  animation: bounce 1s ease infinite;
-}
-
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+.beta-modal-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #7CF081;
+  border: 1px solid rgba(124, 240, 129, 0.45);
+  background: rgba(0, 178, 7, 0.12);
+  border-radius: 999px;
+  padding: 4px 12px;
+  margin-bottom: 14px;
 }
 
 .beta-modal-title {
-  margin: 0;
-  font-size: 28px;
+  font-family: 'Poppins', 'Segoe UI', sans-serif;
+  font-size: 26px;
   font-weight: 700;
   line-height: 1.2;
+  letter-spacing: -0.01em;
+  margin: 0 0 8px;
+  color: #fff;
 }
 
 .beta-modal-subtitle {
-  margin: 8px 0 0;
-  font-size: 16px;
-  opacity: 0.95;
-  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.55;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
 }
 
 .beta-modal-body {
-  padding: 35px 30px;
+  padding: 24px 32px 8px;
   overflow-y: auto;
   flex: 1;
-  max-height: calc(90vh - 200px);
 }
 
-/* Custom scrollbar for beta modal body */
-.beta-modal-body::-webkit-scrollbar {
-  width: 8px;
-}
-
-.beta-modal-body::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.beta-modal-body::-webkit-scrollbar-thumb {
-  background: #00b207;
-  border-radius: 4px;
-}
-
-.beta-modal-body::-webkit-scrollbar-thumb:hover {
-  background: #009206;
-}
+.beta-modal-body::-webkit-scrollbar { width: 6px; }
+.beta-modal-body::-webkit-scrollbar-track { background: transparent; }
+.beta-modal-body::-webkit-scrollbar-thumb { background: #D5DBD6; border-radius: 3px; }
 
 .beta-modal-notice {
-  background: #fff3cd;
-  border-left: 4px solid #ff9800;
-  padding: 16px 20px;
-  border-radius: 8px;
-  margin-bottom: 24px;
+  display: flex;
+  gap: 14px;
+  background: #FFF8EB;
+  border: 1px solid #F6E0B5;
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 22px;
+}
+
+.beta-modal-notice-icon {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #FDEBC8;
+  color: #B7791F;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .beta-modal-notice-title {
-  margin: 0 0 8px;
-  font-size: 18px;
-  font-weight: 700;
-  color: #1f2937;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  font-family: 'Poppins', 'Segoe UI', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 4px;
+  color: #17181A;
 }
 
 .beta-modal-notice-text {
+  font-size: 14px;
+  line-height: 1.55;
   margin: 0;
-  font-size: 15px;
-  color: #4b5563;
-  line-height: 1.6;
+  color: #4A524D;
+}
+
+.beta-modal-list-title {
+  font-family: 'Poppins', 'Segoe UI', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #66706A;
+  margin: 0 0 12px;
 }
 
 .beta-modal-list {
-  margin: 20px 0;
-  padding-left: 24px;
+  list-style: none;
+  margin: 0 0 22px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .beta-modal-list li {
-  margin-bottom: 12px;
-  font-size: 15px;
-  color: #4b5563;
-  line-height: 1.6;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #4A524D;
 }
 
 .beta-modal-list li strong {
-  color: #1f2937;
+  color: #17181A;
   font-weight: 600;
 }
 
-.beta-modal-info {
-  background: #e8f5e9;
-  border-left: 4px solid #00b207;
-  padding: 16px 20px;
-  border-radius: 8px;
-  margin-bottom: 24px;
+.beta-modal-li-icon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #E8F7E9;
+  color: #00B207;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: -1px;
 }
 
-.beta-modal-info p {
-  margin: 0;
+.beta-modal-li-icon.is-stop {
+  background: #FDECEC;
+  color: #D14343;
+}
+
+.beta-modal-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #F2F5F2;
+  border: 1px solid #E5E7E4;
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 18px;
   font-size: 14px;
-  color: #1f2937;
-  line-height: 1.6;
+  line-height: 1.5;
+  color: #4A524D;
+}
+
+.beta-modal-info strong {
+  font-family: 'Poppins', 'Segoe UI', sans-serif;
+  font-weight: 600;
+  color: #17181A;
+}
+
+.beta-modal-info a {
+  color: #00B207;
+  font-weight: 600;
+  text-decoration: none;
+  margin-top: 4px;
+}
+
+.beta-modal-info a:hover { text-decoration: underline; }
+
+.beta-modal-contact {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: #66706A;
+  text-align: center;
+}
+
+.beta-modal-contact a {
+  color: #00B207;
+  font-weight: 600;
+  text-decoration: none;
 }
 
 .beta-modal-footer {
-  padding: 20px 30px 30px;
-  flex-shrink: 0;
+  padding: 16px 32px 22px;
+  border-top: 1px solid #E5E7E4;
   background: #fff;
-  border-top: 1px solid #f3f4f6;
+  flex-shrink: 0;
+  text-align: center;
 }
 
 .beta-modal-button {
   width: 100%;
-  padding: 16px 32px;
-  background: linear-gradient(135deg, #00b207 0%, #009206 100%);
+  font-family: 'Poppins', 'Segoe UI', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
   color: #fff;
-  border: none;
-  border-radius: 12px;
-  font-size: 18px;
-  font-weight: 700;
+  background: #00B207;
+  border: 0;
+  border-radius: 999px;
+  padding: 14px 24px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 16px rgba(0, 178, 7, 0.3);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  box-shadow: 0 12px 28px rgba(0, 178, 7, 0.22);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
 .beta-modal-button:hover {
-  background: linear-gradient(135deg, #009206 0%, #007a05 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 178, 7, 0.4);
+  background: #009A06;
+  transform: translateY(-1px);
+  box-shadow: 0 16px 34px rgba(0, 178, 7, 0.28);
 }
 
-.beta-modal-button:active {
-  transform: translateY(0);
+.beta-modal-button:active { transform: translateY(0); }
+
+.beta-modal-button:focus-visible {
+  outline: 3px solid rgba(0, 178, 7, 0.35);
+  outline-offset: 3px;
 }
 
 .beta-modal-disclaimer {
-  text-align: center;
-  margin-top: 16px;
+  margin: 10px 0 0;
   font-size: 12px;
-  color: #9ca3af;
+  color: #919994;
 }
 
-/* Mobile responsiveness */
-@media (max-width: 768px) {
-  .beta-modal {
-    margin: 10px;
-    max-height: 95vh;
-  }
-
-  .beta-modal-header {
-    padding: 20px 15px;
-  }
-
-  .beta-modal-icon {
-    font-size: 48px;
-  }
-
-  .beta-modal-title {
-    font-size: 22px;
-  }
-
-  .beta-modal-subtitle {
-    font-size: 13px;
-  }
-
-  .beta-modal-body {
-    padding: 20px 15px;
-    max-height: calc(95vh - 180px);
-  }
-
-  .beta-modal-footer {
-    padding: 15px 15px 20px;
-  }
-
-  .beta-modal-button {
-    font-size: 15px;
-    padding: 12px 24px;
-  }
-
-  .beta-modal-notice,
-  .beta-modal-info {
-    padding: 12px 16px;
-  }
-
-  .beta-modal-list li {
-    font-size: 14px;
-    margin-bottom: 10px;
-  }
+@media (max-width: 600px) {
+  .beta-modal { max-height: 94vh; border-radius: 18px; }
+  .beta-modal-header { padding: 24px 20px 20px; }
+  .beta-modal-title { font-size: 22px; }
+  .beta-modal-body { padding: 20px 20px 6px; }
+  .beta-modal-footer { padding: 14px 20px 18px; }
+  .beta-modal-notice, .beta-modal-info { padding: 14px; }
 }
 
 /* Hide modal by default */

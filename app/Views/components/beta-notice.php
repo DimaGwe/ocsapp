@@ -11,7 +11,8 @@ $t = getTranslations($currentLang);
 ?>
 
 <!-- Beta Notice CSS -->
-<link rel="stylesheet" href="<?= asset('css/beta-notice.css') ?>">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap">
+<link rel="stylesheet" href="<?= asset('css/beta-notice.css') ?>?v=20260929">
 
 <?php if (!empty($betaModalOnly)): ?>
 <?php /* Page draws its own beta bar (e.g. public/landing.php eco-beta): modal only */ ?>
@@ -45,109 +46,64 @@ $t = getTranslations($currentLang);
 </div>
 <?php endif; ?>
 
-<!-- First Visit Modal -->
+<!-- First Visit Modal (ecosystem theme, 2026-09-29) -->
+<?php $bmFr = ($currentLang === 'fr'); ?>
 <div id="betaModalOverlay" class="beta-modal-overlay hidden">
-    <div class="beta-modal">
+    <div class="beta-modal" role="dialog" aria-modal="true" aria-labelledby="betaModalTitle">
         <div class="beta-modal-header">
-            <div class="beta-modal-icon">🚧</div>
-            <h2 class="beta-modal-title">
-                <?= $currentLang === 'fr'
-                    ? 'Bienvenue sur OCSAPP'
-                    : 'Welcome to OCSAPP'
-                ?>
-            </h2>
-            <p class="beta-modal-subtitle">
-                <?= $currentLang === 'fr'
-                    ? 'Version Bêta - Avant de continuer'
-                    : 'Beta Version - Before You Continue'
-                ?>
-            </p>
+            <span class="beta-modal-badge"><?= $bmFr ? 'Bêta' : 'Beta' ?></span>
+            <h2 class="beta-modal-title" id="betaModalTitle"><?= $bmFr ? 'Bienvenue sur OCSAPP' : 'Welcome to OCSAPP' ?></h2>
+            <p class="beta-modal-subtitle"><?= $bmFr
+                ? 'La plateforme est en version bêta. Voici ce qu’il faut savoir avant de continuer.'
+                : 'The platform is in beta. Here is what to know before you continue.' ?></p>
         </div>
 
         <div class="beta-modal-body">
-            <!-- Warning Notice -->
             <div class="beta-modal-notice">
-                <h3 class="beta-modal-notice-title">
-                    <span>⚠️</span>
-                    <?= $currentLang === 'fr' ? 'Avis important' : 'Important Notice' ?>
-                </h3>
-                <p class="beta-modal-notice-text">
-                    <?= $currentLang === 'fr'
-                        ? 'Ce site est actuellement en <strong>phase de test bêta</strong>. Certaines fonctionnalités peuvent ne pas fonctionner correctement et ne sont pas encore prêtes pour une utilisation publique.'
-                        : 'This website is currently in <strong>beta testing phase</strong>. Some features may not work correctly and are not yet ready for public use.'
-                    ?>
-                </p>
+                <span class="beta-modal-notice-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </span>
+                <div>
+                    <h3 class="beta-modal-notice-title"><?= $bmFr ? 'Avis important' : 'Important notice' ?></h3>
+                    <p class="beta-modal-notice-text"><?= $bmFr
+                        ? 'Le site est en <strong>phase de test bêta</strong>. Certaines fonctionnalités peuvent ne pas fonctionner correctement et ne sont pas encore prêtes pour une utilisation publique.'
+                        : 'The site is in its <strong>beta testing phase</strong>. Some features may not work correctly and are not yet ready for public use.' ?></p>
+                </div>
             </div>
 
-            <!-- What This Means -->
-            <h4 style="margin: 0 0 12px; font-size: 16px; font-weight: 700; color: #1f2937;">
-                <?= $currentLang === 'fr' ? 'Ce que cela signifie :' : 'What This Means:' ?>
-            </h4>
+            <h4 class="beta-modal-list-title"><?= $bmFr ? 'Ce que cela signifie' : 'What this means' ?></h4>
             <ul class="beta-modal-list">
                 <li>
-                    <strong><?= $currentLang === 'fr' ? 'Ne faites PAS d\'achats réels' : 'DO NOT make real purchases' ?></strong> -
-                    <?= $currentLang === 'fr'
-                        ? 'Le traitement des paiements est en cours de test'
-                        : 'Payment processing is being tested'
-                    ?>
+                    <span class="beta-modal-li-icon is-stop" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></span>
+                    <span><strong><?= $bmFr ? 'Aucun achat réel pour l’instant.' : 'No real purchases for now.' ?></strong> <?= $bmFr ? 'Le traitement des paiements est en cours de test.' : 'Payment processing is being tested.' ?></span>
                 </li>
                 <li>
-                    <strong><?= $currentLang === 'fr' ? 'Fonctionnalités en test' : 'Features are being tested' ?></strong> -
-                    <?= $currentLang === 'fr'
-                        ? 'Vous pouvez rencontrer des bugs ou des problèmes'
-                        : 'You may encounter bugs or issues'
-                    ?>
+                    <span class="beta-modal-li-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9l-3.8 3.8z"/></svg></span>
+                    <span><strong><?= $bmFr ? 'Fonctionnalités en test.' : 'Features in testing.' ?></strong> <?= $bmFr ? 'Vous pourriez rencontrer des bogues.' : 'You may run into bugs.' ?></span>
                 </li>
                 <li>
-                    <strong><?= $currentLang === 'fr' ? 'Explorez librement' : 'Browse freely' ?></strong> -
-                    <?= $currentLang === 'fr'
-                        ? 'N\'hésitez pas à explorer et à tester les fonctionnalités'
-                        : 'Feel free to explore and test features'
-                    ?>
+                    <span class="beta-modal-li-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <span><strong><?= $bmFr ? 'Explorez librement.' : 'Explore freely.' ?></strong> <?= $bmFr ? 'Naviguez et essayez les fonctionnalités.' : 'Browse around and try the features.' ?></span>
                 </li>
             </ul>
 
-            <!-- Launch Info -->
             <div class="beta-modal-info">
-                <p>
-                    <strong>
-                        <?= $currentLang === 'fr'
-                            ? '🚀 Lancement officiel bientôt!'
-                            : '🚀 Official Launch Coming Soon!'
-                        ?>
-                    </strong><br>
-                    <?= $currentLang === 'fr'
-                        ? 'Nous travaillons dur pour vous offrir la meilleure expérience d\'achat. Merci de votre patience!'
-                        : 'We\'re working hard to bring you the best shopping experience. Thank you for your patience!'
-                    ?>
-                </p>
+                <strong><?= $bmFr ? 'Lancement officiel bientôt' : 'Official launch coming soon' ?></strong>
+                <span><?= $bmFr
+                    ? 'Vous voulez en faire partie dès le départ? Devenez fondateur.'
+                    : 'Want to be part of it from day one? Become a founder.' ?></span>
+                <a href="<?= url('founding') ?>"><?= $bmFr ? 'Programmes fondateurs' : 'Founding programs' ?> &rarr;</a>
             </div>
 
-            <!-- Report Issues -->
-            <p style="margin: 0; font-size: 14px; color: #6b7280; text-align: center;">
-                <?= $currentLang === 'fr'
-                    ? 'Des problèmes? Contactez-nous :'
-                    : 'Found an issue? Contact us:'
-                ?>
-                <a href="mailto:info@ocsapp.ca" style="color: #00b207; font-weight: 600; text-decoration: none;">
-                    info@ocsapp.ca
-                </a>
-            </p>
+            <p class="beta-modal-contact"><?= $bmFr ? 'Un problème? Écrivez-nous :' : 'Found an issue? Write to us:' ?>
+                <a href="mailto:info@ocsapp.ca">info@ocsapp.ca</a></p>
         </div>
 
         <div class="beta-modal-footer">
-            <button id="betaAcknowledgeBtn" class="beta-modal-button">
-                <?= $currentLang === 'fr'
-                    ? '✓ Je Comprends, Continuer'
-                    : '✓ I Understand, Continue'
-                ?>
-            </button>
-            <p class="beta-modal-disclaimer">
-                <?= $currentLang === 'fr'
-                    ? 'En cliquant, vous reconnaissez que ce site est en version bêta'
-                    : 'By clicking, you acknowledge this site is in beta version'
-                ?>
-            </p>
+            <button type="button" id="betaAcknowledgeBtn" class="beta-modal-button"><?= $bmFr ? 'J’ai compris, continuer' : 'I understand, continue' ?></button>
+            <p class="beta-modal-disclaimer"><?= $bmFr
+                ? 'En cliquant, vous reconnaissez que le site est en version bêta.'
+                : 'By clicking, you acknowledge that the site is in beta.' ?></p>
         </div>
     </div>
 </div>
