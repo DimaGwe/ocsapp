@@ -220,7 +220,9 @@ class DriverApiController
         );
         $driver->execute([$userId]);
         $driverRow = $driver->fetch(\PDO::FETCH_ASSOC);
-        $zone = $driverRow['city'] ?? null;
+        // orders.delivery_zone holds the normalized zone code (WI/LAV/MTL, set at checkout), so the
+        // driver's free-text city is normalized the same way. The stored city is sanitize()d (HTML-escaped).
+        $zone = resolveZoneCode(html_entity_decode((string) ($driverRow['city'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
 
         // Active order for this driver (out_for_delivery = driver has been assigned and is en route)
         $activeStmt = $this->db->prepare(
@@ -234,15 +236,19 @@ class DriverApiController
         $activeStmt->execute([$userId]);
         $active = $activeStmt->fetch(\PDO::FETCH_ASSOC);
 
-        // Orders that are ready for pickup and unassigned (or pre-assigned to this driver)
-        $zoneClause = $zone ? "AND o.delivery_zone = :zone" : "";
+        // Orders that are ready for pickup and unassigned (or pre-assigned to this driver).
+        // A zoned driver also sees orders with no zone (older orders, unrecognized city) so they are
+        // not stranded; a driver whose city maps to no zone sees every zone. Self-pickup orders
+        // (buyer collects at the shop) never go to a driver.
+        $zoneClause = $zone ? "AND (o.delivery_zone = :zone OR o.delivery_zone IS NULL)" : "";
         $pending = $this->db->prepare(
             "SELECT o.*, s.name AS merchant_name, s.address AS merchant_address,
                     s.latitude AS merchant_lat, s.longitude AS merchant_lng,
                     30 AS accept_deadline_seconds
              FROM orders o
              JOIN shops s ON s.id = o.shop_id
-             WHERE o.status = 'ready' AND (o.driver_id IS NULL OR o.driver_id = :uid) $zoneClause
+             WHERE o.status = 'ready' AND (o.driver_id IS NULL OR o.driver_id = :uid)
+               AND o.fulfillment_type <> 'pickup' $zoneClause
              ORDER BY o.created_at ASC
              LIMIT 20"
         );
@@ -371,8 +377,9 @@ class DriverApiController
             $stmt = $this->db->prepare(
                 "SELECT id, delivery_fee, distance_km, driver_payout, additional_stop_fee,
                         oversize_base_surcharge, oversize_increment_surcharge,
-                        long_distance_base_surcharge, long_distance_increment_surcharge FROM orders
-                 WHERE id = ? AND status = 'ready'
+                        long_distance_base_surcharge, long_distance_increment_surcharge,
+                        founding_buyer_delivery_waived FROM orders
+                 WHERE id = ? AND status = 'ready' AND fulfillment_type <> 'pickup'
                  AND (driver_id IS NULL OR driver_id = ?) FOR UPDATE"
             );
             $stmt->execute([$id, $userId]);
@@ -385,8 +392,10 @@ class DriverApiController
             // Calculate payout if not already set by admin
             $payout = (float)($order['driver_payout'] ?? 0);
             if ($payout <= 0) {
+                // A Founding Buyer waiver zeroes the buyer's delivery_fee; the platform absorbs it,
+                // so the driver is still paid on the full base fee.
                 $payout = $this->calculatePayout(
-                    (float)($order['delivery_fee'] ?? 0),
+                    (float)($order['delivery_fee'] ?? 0) + (float)($order['founding_buyer_delivery_waived'] ?? 0),
                     (float)($order['additional_stop_fee'] ?? 0),
                     (float)($order['oversize_base_surcharge'] ?? 0) + (float)($order['oversize_increment_surcharge'] ?? 0),
                     (float)($order['long_distance_base_surcharge'] ?? 0) + (float)($order['long_distance_increment_surcharge'] ?? 0)
@@ -777,7 +786,15 @@ class DriverApiController
             'deliveries_today' => (int)$s['cnt_today'],
             'deliveries_week'  => (int)$s['cnt_week'],
             'deliveries_month' => (int)$s['cnt_month'],
-            'history'          => $history->fetchAll(\PDO::FETCH_ASSOC),
+            // DECIMAL columns come back from PDO as strings ("12.50"); the app reads them as numbers
+            'history'          => array_map(function (array $h): array {
+                foreach (['payout', 'total_earning', 'platform_commission', 'base_fee', 'additional_stop_fee',
+                          'oversize_surcharge', 'long_distance_surcharge', 'tip'] as $k) {
+                    $h[$k] = (float) ($h[$k] ?? 0);
+                }
+                $h['is_distribution'] = (int) $h['is_distribution'];
+                return $h;
+            }, $history->fetchAll(\PDO::FETCH_ASSOC)),
         ]);
     }
 
@@ -2345,7 +2362,7 @@ class DriverApiController
     {
         $stmt = $this->db->prepare(
             "SELECT u.id, u.first_name, u.last_name, u.email, u.phone,
-                    u.avatar as photo_url,
+                    u.avatar as photo_url, u.founding_driver, u.founding_driver_number,
                     (SELECT COUNT(*) FROM driver_certificates WHERE driver_id = u.id) as cert_count,
                     COALESCE(da.bgcheck_status, 'not_requested') as bgcheck_status,
                     COALESCE(da.city, '') as zone,
@@ -2391,7 +2408,12 @@ class DriverApiController
             'email'            => $row['email'],
             'phone'            => $row['phone'] ?? '',
             'status'           => $onlineStatus,
-            'zone'             => $row['zone'] ?: null,
+            'zone'             => $row['zone'] !== '' ? html_entity_decode($row['zone'], ENT_QUOTES | ENT_HTML5, 'UTF-8') : null,
+            // Normalized zone the job board filters on (WI/LAV/MTL), null = sees every zone
+            'zone_code'        => resolveZoneCode(html_entity_decode((string) $row['zone'], ENT_QUOTES | ENT_HTML5, 'UTF-8')),
+            // Founding Driver program (granted at admin approval); the app can show the badge
+            'founding_driver'        => (int) ($row['founding_driver'] ?? 0) === 1,
+            'founding_driver_number' => !empty($row['founding_driver_number']) ? (int) $row['founding_driver_number'] : null,
             'photo_url'        => $row['photo_url'] ? $this->fullAvatarUrl($row['photo_url']) : null,
             'rating'           => $rating,
             'total_deliveries' => (int)$row['total_deliveries'],
@@ -2421,11 +2443,14 @@ class DriverApiController
         require_once __DIR__ . '/../../Helpers/PayoutHelper.php';
         $lockedPayout = (float)($row['driver_payout'] ?? 0);
         $breakdown = \App\Helpers\PayoutHelper::calculateDriverPayout(
-            (float)($row['delivery_fee'] ?? 0),
+            // Founding Buyer waiver: the platform absorbs it, the driver's base stays the full fee
+            (float)($row['delivery_fee'] ?? 0) + (float)($row['founding_buyer_delivery_waived'] ?? 0),
             (float)($row['additional_stop_fee'] ?? 0),
             (float)($row['oversize_base_surcharge'] ?? 0) + (float)($row['oversize_increment_surcharge'] ?? 0),
             (float)($row['long_distance_base_surcharge'] ?? 0) + (float)($row['long_distance_increment_surcharge'] ?? 0)
         );
+
+        $customer = $this->customerFromOrder($row);
 
         return [
             'id'                      => (int)$row['id'],
@@ -2434,10 +2459,13 @@ class DriverApiController
             'merchant_address'        => $row['merchant_address'] ?? '',
             'merchant_lat'            => (float)($row['merchant_lat'] ?? 0),
             'merchant_lng'            => (float)($row['merchant_lng'] ?? 0),
-            'customer_name'           => $row['customer_name'] ?? '',
-            'customer_address'        => $row['delivery_address'] ?? '',
-            'customer_lat'            => (float)($row['delivery_lat'] ?? 0),
-            'customer_lng'            => (float)($row['delivery_lng'] ?? 0),
+            'customer_name'           => $customer['name'],
+            'customer_address'        => $customer['address'],
+            'customer_phone'          => $customer['phone'],
+            'customer_lat'            => $customer['lat'],
+            'customer_lng'            => $customer['lng'],
+            'fulfillment_type'        => $row['fulfillment_type'] ?? 'delivery',
+            'delivery_zone'           => $row['delivery_zone'] ?? null,
             'driver_name'             => $row['driver_name'] ?? '',
             'driver_license'          => $row['driver_license'] ?? '',
             'distance_km'             => (float)($row['distance_km'] ?? 0),
@@ -2453,11 +2481,46 @@ class DriverApiController
                 'gross_pay'           => $breakdown['gross_pay'],
             ],
             'status'                  => $row['driver_status'] ?: $row['status'],
-            'notes'                   => $row['delivery_notes'] ?? null,
+            // Checkout saves the buyer's notes in orders.notes; delivery_notes is the older column
+            'notes'                   => ($row['delivery_notes'] ?? '') !== '' ? $row['delivery_notes'] : (($row['notes'] ?? '') !== '' ? html_entity_decode($row['notes'], ENT_QUOTES | ENT_HTML5, 'UTF-8') : null),
             'created_at'              => $row['created_at'] ?? '',
             'accept_deadline_seconds' => isset($row['accept_deadline_seconds'])
                                          ? (int)$row['accept_deadline_seconds'] : null,
         ];
+    }
+
+    /**
+     * Customer name / one-line address / phone / coordinates for the driver app. Checkout stores
+     * orders.delivery_address as the JSON of the buyer's `addresses` row (HTML-escaped fields), and
+     * never fills orders.delivery_lat/lng, so the app used to show the raw JSON and no route map.
+     * Plain-text addresses (older or admin-entered orders) pass through unchanged.
+     */
+    private function customerFromOrder(array $row): array
+    {
+        $plain = fn($v) => trim(html_entity_decode((string) ($v ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        $raw   = (string) ($row['delivery_address'] ?? '');
+        $addr  = json_decode($raw, true);
+        $out   = [
+            'name'    => $plain($row['customer_name'] ?? ''),
+            'address' => is_array($addr) ? '' : $plain($raw),
+            'phone'   => '',
+            'lat'     => (float) ($row['delivery_lat'] ?? 0),
+            'lng'     => (float) ($row['delivery_lng'] ?? 0),
+        ];
+        if (is_array($addr) && ($addr['type'] ?? '') !== 'pickup') {
+            $street = trim($plain($addr['address_line_1'] ?? $addr['street'] ?? '') . ' ' . $plain($addr['address_line_2'] ?? ''));
+            $region = trim($plain($addr['state'] ?? $addr['province'] ?? '') . ' ' . $plain($addr['postal_code'] ?? ''));
+            $out['address'] = implode(', ', array_filter([$street, $plain($addr['city'] ?? ''), $region], fn($p) => $p !== ''));
+            $out['phone']   = $plain($addr['phone'] ?? '');
+            if ($out['name'] === '') {
+                $out['name'] = $plain($addr['name'] ?? '');
+            }
+            if ($out['lat'] == 0 && !empty($addr['latitude']) && !empty($addr['longitude'])) {
+                $out['lat'] = (float) $addr['latitude'];
+                $out['lng'] = (float) $addr['longitude'];
+            }
+        }
+        return $out;
     }
 
     // -------------------------------------------------------------------------
@@ -2815,9 +2878,12 @@ class DriverApiController
 
         if (!$token) $this->error('Unauthorized', 401);
 
+        // Re-check the account on every request: a suspended or rejected driver's token stops
+        // working immediately instead of when it expires.
         $stmt = $this->db->prepare(
-            "SELECT user_id FROM driver_api_tokens
-             WHERE token = ? AND (expires_at IS NULL OR expires_at > NOW())
+            "SELECT t.user_id FROM driver_api_tokens t
+             JOIN users u ON u.id = t.user_id AND u.status NOT IN ('suspended', 'rejected')
+             WHERE t.token = ? AND (t.expires_at IS NULL OR t.expires_at > NOW())
              LIMIT 1"
         );
         $stmt->execute([$token]);

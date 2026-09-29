@@ -332,16 +332,19 @@ class OrderController
             foreach ($items as $item) {
                 if ($item['shop_inventory_id']) {
                     // Restore stock to shop_inventory
+                    // Distinct placeholders: a repeated :quantity fails with native prepares (HY093),
+                    // which rolled back the whole buyer cancellation
                     $stmt = $this->db->prepare("
                         UPDATE shop_inventory
-                        SET stock_quantity = stock_quantity + :quantity,
-                            sold_quantity = sold_quantity - :quantity,
+                        SET stock_quantity = stock_quantity + :qty_back,
+                            sold_quantity = sold_quantity - :qty_sold,
                             updated_at = NOW()
                         WHERE id = :shop_inventory_id
                     ");
 
                     $stmt->execute([
-                        'quantity' => $item['quantity'],
+                        'qty_back' => $item['quantity'],
+                        'qty_sold' => $item['quantity'],
                         'shop_inventory_id' => $item['shop_inventory_id']
                     ]);
 
@@ -798,8 +801,9 @@ class OrderController
             }
             
             if (!empty($search)) {
-                $where .= " AND (o.order_number LIKE :search OR u.first_name LIKE :search OR u.last_name LIKE :search)";
-                $params['search'] = "%$search%";
+                // Distinct placeholders: a named parameter can't repeat with native prepares (HY093)
+                $where .= " AND (o.order_number LIKE :search_no OR u.first_name LIKE :search_first OR u.last_name LIKE :search_last)";
+                $params['search_no'] = $params['search_first'] = $params['search_last'] = "%$search%";
             }
 
             if ($stalled) {

@@ -1412,7 +1412,7 @@ class AdminDeliveryController {
                 $orderId,
                 $driverId,
                 $order['shop_id'],
-                $order['delivery_fee'] ?? 50.00,
+                (float) ($order['delivery_fee'] ?? 50.00) + (float)($order['founding_buyer_delivery_waived'] ?? 0), // waiver absorbed by the platform, not the driver
                 post('delivery_address'),
                 post('customer_phone')
             ]);
@@ -2228,14 +2228,15 @@ class AdminDeliveryController {
                 $oStmt = $this->db->prepare(
                     "SELECT delivery_fee, distance_km, driver_payout, additional_stop_fee,
                             oversize_base_surcharge, oversize_increment_surcharge,
-                            long_distance_base_surcharge, long_distance_increment_surcharge FROM orders WHERE id = ? LIMIT 1"
+                            long_distance_base_surcharge, long_distance_increment_surcharge,
+                            founding_buyer_delivery_waived FROM orders WHERE id = ? LIMIT 1"
                 );
                 $oStmt->execute([$delivery['order_id']]);
                 $oRow = $oStmt->fetch(\PDO::FETCH_ASSOC);
                 if ($oRow && (float)($oRow['driver_payout'] ?? 0) <= 0) {
                     require_once __DIR__ . '/../Helpers/PayoutHelper.php';
                     $payout = \App\Helpers\PayoutHelper::calculateDriverPayout(
-                        (float)($oRow['delivery_fee'] ?? 0),
+                        (float)($oRow['delivery_fee'] ?? 0) + (float)($oRow['founding_buyer_delivery_waived'] ?? 0), // waiver absorbed by the platform
                         (float)($oRow['additional_stop_fee'] ?? 0),
                         (float)($oRow['oversize_base_surcharge'] ?? 0) + (float)($oRow['oversize_increment_surcharge'] ?? 0),
                         (float)($oRow['long_distance_base_surcharge'] ?? 0) + (float)($oRow['long_distance_increment_surcharge'] ?? 0)

@@ -606,7 +606,8 @@ class AdminOrdersController {
             // Prepare delivery addresses
             $deliveryAddress = $order['delivery_address'] ?? $order['address'] ?? '';
             $customerPhone = $order['phone'] ?? $order['customer_phone'] ?? '';
-            $deliveryFee = $order['delivery_fee'] ?? 50.00;
+            // Driver's fee basis: a Founding Buyer waiver zeroes the buyer's delivery_fee, the platform absorbs it
+            $deliveryFee = (float) ($order['delivery_fee'] ?? 50.00) + (float)($order['founding_buyer_delivery_waived'] ?? 0);
 
             // Create delivery assignment (with or without driver)
             if ($driver) {
