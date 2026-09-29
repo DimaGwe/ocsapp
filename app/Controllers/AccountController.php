@@ -693,7 +693,7 @@ class AccountController
         view('buyer/account/settings', [
             'user' => $user,
             'preferences' => $preferences,
-            'cartCount' => getCartCount()
+            // (was 'cartCount' => getCartCount(): undefined function, fatal; the header loads the cart count itself)
         ]);
         
     } catch (\PDOException $e) {

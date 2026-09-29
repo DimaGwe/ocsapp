@@ -32,7 +32,7 @@ require __DIR__ . '/partials/account-top.php';
                                 <article class="acct-card acct-wish">
                                     <div class="acct-wish-img">
                                         <?php if (!empty($item['image_path'])): ?>
-                                            <img src="<?= asset('uploads/' . htmlspecialchars($item['image_path'])) ?>" alt="<?= htmlspecialchars($item['name'] ?? '') ?>" loading="lazy">
+                                            <img src="<?= htmlspecialchars(url(ltrim($item['image_path'], '/'))) ?>" alt="<?= htmlspecialchars($item['name'] ?? '') ?>" loading="lazy">
                                         <?php else: ?>
                                             <i class="fas fa-image"></i>
                                         <?php endif; ?>

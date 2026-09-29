@@ -125,7 +125,7 @@ require __DIR__ . '/partials/account-top.php';
                                 <?php $qty = (int) $item['quantity']; $price = (float) $item['price']; ?>
                                 <div class="acct-item">
                                     <?php if (!empty($item['image_path'])): ?>
-                                        <img src="<?= asset('uploads/' . htmlspecialchars($item['image_path'])) ?>" alt="" class="acct-item-img" loading="lazy">
+                                        <img src="<?= htmlspecialchars(url(ltrim($item['image_path'], '/'))) ?>" alt="" class="acct-item-img" loading="lazy">
                                     <?php else: ?>
                                         <div class="acct-item-img acct-item-noimg"><i class="fas fa-image"></i></div>
                                     <?php endif; ?>
