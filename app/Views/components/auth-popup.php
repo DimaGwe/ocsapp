@@ -65,7 +65,12 @@ if (!function_exists('isLoggedIn') || !isLoggedIn()):
 
     <!-- Footer -->
     <div class="auth-popup-footer">
-      <p>By continuing, you agree to our <a href="<?= url('terms') ?>">Terms of Service</a> and <a href="<?= url('privacy') ?>">Privacy Policy</a></p>
+      <?php $apFr = ($_SESSION['language'] ?? 'fr') === 'fr'; ?>
+      <p><?= $apFr
+        ? "En continuant, vous confirmez avoir au moins 18 ans (l'âge de la majorité au Québec) ou le consentement de votre parent ou tuteur, et vous acceptez nos"
+        : "By continuing, you confirm that you are at least 18 years old (the age of majority in Québec) or have your parent's or guardian's consent, and you agree to our" ?>
+        <a href="<?= url('terms') ?>"><?= $apFr ? "Conditions d'utilisation" : 'Terms of Service' ?></a>
+        <?= $apFr ? 'et notre' : 'and' ?> <a href="<?= url('privacy') ?>"><?= $apFr ? 'Politique de confidentialité' : 'Privacy Policy' ?></a></p>
     </div>
   </div>
 </div>

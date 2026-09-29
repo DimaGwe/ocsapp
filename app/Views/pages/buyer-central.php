@@ -415,6 +415,12 @@ $fr = ($currentLang === 'fr');
           ? "Oui, entièrement gratuit. La création d'un compte acheteur OCSAPP ne coûte rien. Vous ne payez que les produits que vous achetez, plus les frais de livraison affichés au moment de la commande."
           : "Yes, entirely free. Creating an OCSAPP buyer account costs nothing. You only pay for the products you buy, plus the delivery fee shown at checkout." ?></p>
       </div>
+      <div class="faq-item new">
+        <h4><?= $fr ? "Y a-t-il un âge minimum pour magasiner sur OCSAPP ?" : "Is there a minimum age to shop on OCSAPP?" ?></h4>
+        <p><?= $fr
+          ? "Oui. Pour créer un compte acheteur, vous devez avoir au moins 18 ans (l'âge de la majorité au Québec) ou avoir le consentement de votre parent ou tuteur, comme le prévoient nos Conditions d'utilisation. Pour un mineur de moins de 14 ans, le consentement à la collecte de ses renseignements personnels doit être donné par le parent ou le tuteur. Si vous croyez qu'un mineur a créé un compte sans ce consentement, écrivez-nous à privacy@ocsapp.ca."
+          : "Yes. To create a buyer account, you must be at least 18 years old (the age of majority in Québec) or have your parent's or guardian's consent, as set out in our Terms of Service. For a minor under 14, consent to the collection of their personal information must be given by a parent or guardian. If you believe a minor has created an account without that consent, contact us at privacy@ocsapp.ca." ?></p>
+      </div>
       <div class="faq-item">
         <h4><?= $fr ? "Dans quelles zones livrez-vous ?" : "What zones do you deliver to?" ?></h4>
         <p><?= $fr

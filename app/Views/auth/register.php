@@ -294,8 +294,11 @@ $hero = $heroConfig[$urlRole] ?? $heroConfig['default'];
           <div class="checkbox-wrapper">
             <input type="checkbox" id="terms" name="terms" class="form-checkbox" required>
             <label for="terms" class="checkbox-label">
-              <?= $t['agree_to'] ?> <a href="<?= url('terms') ?>"><?= $t['terms'] ?></a>
-              <?= $t['and'] ?> <a href="<?= url('privacy') ?>"><?= $t['privacy'] ?></a>
+              <?= $fr
+                ? "J'ai au moins 18 ans (l'âge de la majorité au Québec) ou j'ai le consentement de mon parent ou tuteur, et j'accepte les"
+                : "I am at least 18 years old (the age of majority in Québec) or have my parent's or guardian's consent, and I agree to the" ?>
+              <a href="<?= url('terms') ?>"><?= $t['terms'] ?></a>
+              <?= $fr ? 'et la' : $t['and'] ?> <a href="<?= url('privacy') ?>"><?= $t['privacy'] ?></a>
             </label>
           </div>
 
