@@ -32,7 +32,7 @@ class SearchController {
                 LEFT JOIN users u ON p.seller_id = u.id
                 LEFT JOIN shops s ON u.id = s.seller_id
                 WHERE (p.name LIKE ? OR p.description LIKE ? OR p.short_description LIKE ?)
-                AND p.status = 'active'
+                AND p.status = 'active' AND (p.age_restricted = 0 OR @hp_member = 0)
                 AND p.stock_quantity > 0
                 ORDER BY p.name
                 LIMIT 50
@@ -49,7 +49,7 @@ class SearchController {
                        0 as average_rating
                 FROM shops s
                 LEFT JOIN users u ON s.seller_id = u.id
-                LEFT JOIN products p ON u.id = p.seller_id AND p.status = 'active'
+                LEFT JOIN products p ON u.id = p.seller_id AND p.status = 'active' AND (p.age_restricted = 0 OR @hp_member = 0)
                 WHERE (s.name LIKE ? OR s.description LIKE ?)
                 AND s.is_active = 1
                 AND s.is_approved = 1

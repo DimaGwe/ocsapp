@@ -16,8 +16,9 @@ $delivery = $delivery ?? null;
 $ratingDriverId = $ratingDriverId ?? null;
 $driverName = $driverName ?? null;
 $driverRating = $driverRating ?? null;
+$guardianView = !empty($guardianView); // Home Profile guardian: read-only view of a member's order
 $user = user() ?? [];
-$accountActive = 'orders';
+$accountActive = $guardianView ? 'home' : 'orders';
 
 $orderNo  = (string) ($order['order_number'] ?? $order['id'] ?? '');
 $status   = (string) ($order['status'] ?? '');
@@ -104,14 +105,14 @@ require __DIR__ . '/partials/account-top.php';
                             <?php endif; ?>
                         </div>
 
-                        <?php if (in_array($status, ['pending', 'processing'], true)): ?>
+                        <?php if (!$guardianView && in_array($status, ['pending', 'processing'], true)): ?>
                             <form class="acct-od-actions" method="POST" action="<?= url('account/orders/cancel') ?>" onsubmit="return confirm(<?= htmlspecialchars(json_encode($fr ? 'Annuler cette commande ?' : 'Cancel this order?')) ?>);">
                                 <?= csrfField() ?>
                                 <input type="hidden" name="order_id" value="<?= (int) $order['id'] ?>">
                                 <button type="submit" class="acct-btn acct-btn-danger"><i class="fas fa-xmark"></i> <?= $fr ? 'Annuler la commande' : 'Cancel order' ?></button>
                             </form>
                         <?php endif; ?>
-                        <?php if ($status === 'delivered'): ?>
+                        <?php if (!$guardianView && $status === 'delivered'): ?>
                             <div class="acct-od-actions">
                                 <a href="<?= url('account/orders/claim?order_id=' . (int) $order['id']) ?>" class="acct-btn acct-btn-ghost"><i class="fas fa-rotate-left"></i> <?= $fr ? 'Demander un retour ou faire une réclamation' : 'Request a return or file a claim' ?></a>
                             </div>

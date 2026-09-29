@@ -418,8 +418,14 @@ $fr = ($currentLang === 'fr');
       <div class="faq-item new">
         <h4><?= $fr ? "Y a-t-il un âge minimum pour magasiner sur OCSAPP ?" : "Is there a minimum age to shop on OCSAPP?" ?></h4>
         <p><?= $fr
-          ? "Oui. Pour créer un compte acheteur, vous devez avoir au moins 18 ans (l'âge de la majorité au Québec) ou avoir le consentement de votre parent ou tuteur, comme le prévoient nos Conditions d'utilisation. Pour un mineur de moins de 14 ans, le consentement à la collecte de ses renseignements personnels doit être donné par le parent ou le tuteur. Si vous croyez qu'un mineur a créé un compte sans ce consentement, écrivez-nous à privacy@ocsapp.ca."
-          : "Yes. To create a buyer account, you must be at least 18 years old (the age of majority in Québec) or have your parent's or guardian's consent, as set out in our Terms of Service. For a minor under 14, consent to the collection of their personal information must be given by a parent or guardian. If you believe a minor has created an account without that consent, contact us at privacy@ocsapp.ca." ?></p>
+          ? "Oui. Pour créer votre propre compte acheteur, vous devez avoir au moins 18 ans, l'âge de la majorité au Québec. Les jeunes de 13 à 17 ans peuvent magasiner seulement comme membres du Profil Maison d'un parent ou tuteur. OCSAPP n'est pas offert aux moins de 13 ans. Si vous croyez qu'un mineur a créé un compte autrement, écrivez-nous à privacy@ocsapp.ca."
+          : "Yes. To create your own buyer account, you must be at least 18 years old, the age of majority in Québec. Teens aged 13 to 17 can shop only as members of a parent's or guardian's Home Profile. OCSAPP is not available to children under 13. If you believe a minor has created an account any other way, contact us at privacy@ocsapp.ca." ?></p>
+      </div>
+      <div class="faq-item new">
+        <h4><?= $fr ? "Qu'est-ce que le Profil Maison ?" : "What is a Home Profile?" ?></h4>
+        <p><?= $fr
+          ? "Le Profil Maison étend votre compte à vos jeunes de 13 à 17 ans. Vous les invitez depuis la section Profil Maison de votre compte, et leurs commandes sont payées avec votre carte enregistrée. Vous recevez un courriel à chaque commande et pouvez en suivre la livraison, et les produits réservés aux 18 ans et plus sont bloqués sur leur compte. Vous pouvez retirer un membre en tout temps."
+          : "A Home Profile extends your account to your kids aged 13 to 17. You invite them from the Home Profile section of your account, and their orders are paid with your saved card. You get an email for every order and can track its delivery, and products for ages 18+ are blocked on their account. You can remove a member at any time." ?></p>
       </div>
       <div class="faq-item">
         <h4><?= $fr ? "Dans quelles zones livrez-vous ?" : "What zones do you deliver to?" ?></h4>

@@ -42,7 +42,7 @@ class DealsController {
                 WHERE p.is_on_sale = 1
                   AND p.sale_price IS NOT NULL
                   AND p.sale_price > 0
-                  AND p.status = 'active'
+                  AND p.status = 'active' AND (p.age_restricted = 0 OR @hp_member = 0)
                 ORDER BY p.sale_percentage DESC, p.created_at DESC
             ");
             $saleProducts = $stmt->fetchAll(\PDO::FETCH_ASSOC);

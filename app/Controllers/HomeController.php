@@ -204,7 +204,7 @@ class HomeController {
                 LEFT JOIN orders o ON oi.order_id = o.id
                     AND o.status IN ('delivered', 'confirmed', 'preparing', 'ready')
                     AND o.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-                WHERE p.status = 'active'
+                WHERE p.status = 'active' AND (p.age_restricted = 0 OR @hp_member = 0)
                   AND si.status = 'active'
                 GROUP BY p.id, si.stock_quantity
                 HAVING total_sold > 0
@@ -261,7 +261,7 @@ class HomeController {
                 LEFT JOIN product_categories pc ON p.id = pc.product_id AND pc.is_primary = 1
                 LEFT JOIN categories c ON pc.category_id = c.id
                 WHERE p.show_on_home = 1
-                  AND p.status = 'active'
+                  AND p.status = 'active' AND (p.age_restricted = 0 OR @hp_member = 0)
                   AND si.status = 'active'
                 ORDER BY p.sort_order DESC, p.created_at DESC
                 LIMIT 24
@@ -313,7 +313,7 @@ class HomeController {
                 LEFT JOIN shop_inventory si ON p.id = si.product_id
                 WHERE p.is_on_sale = 1
                   AND p.sale_price IS NOT NULL
-                  AND p.status = 'active'
+                  AND p.status = 'active' AND (p.age_restricted = 0 OR @hp_member = 0)
                 ORDER BY p.sale_percentage DESC
                 LIMIT 8
             ");
@@ -338,7 +338,7 @@ class HomeController {
                     COUNT(DISTINCT p.id) as product_count,
                     MIN(p.base_price) as min_price
                 FROM shops s
-                INNER JOIN products p ON p.seller_id = s.seller_id AND p.status = 'active'
+                INNER JOIN products p ON p.seller_id = s.seller_id AND p.status = 'active' AND (p.age_restricted = 0 OR @hp_member = 0)
                 WHERE s.is_active = 1 AND s.is_approved = 1
                 GROUP BY s.id
                 HAVING product_count > 0
@@ -361,7 +361,7 @@ class HomeController {
                         LIMIT 1) as sample_image
                 FROM categories c
                 LEFT JOIN product_categories pc ON c.id = pc.category_id
-                LEFT JOIN products p ON pc.product_id = p.id AND p.status = 'active'
+                LEFT JOIN products p ON pc.product_id = p.id AND p.status = 'active' AND (p.age_restricted = 0 OR @hp_member = 0)
                 WHERE c.is_active = 1
                   AND c.parent_id IS NULL
                 GROUP BY c.id
@@ -558,7 +558,7 @@ if (function_exists('isLoggedIn') && isLoggedIn()) {
             LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
             LEFT JOIN brands b ON p.brand_id = b.id
             WHERE pv.user_id = ?
-              AND p.status = 'active'
+              AND p.status = 'active' AND (p.age_restricted = 0 OR @hp_member = 0)
             ORDER BY pv.viewed_at DESC
             LIMIT 8
         ");
@@ -756,7 +756,7 @@ view('buyer.home', [
                 LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
                 LEFT JOIN product_categories pc ON p.id = pc.product_id AND pc.is_primary = 1
                 LEFT JOIN categories c ON pc.category_id = c.id
-                WHERE p.status = 'active'
+                WHERE p.status = 'active' AND (p.age_restricted = 0 OR @hp_member = 0)
                   AND si.status = 'active'
                 GROUP BY p.id
                 ORDER BY p.created_at DESC
@@ -787,7 +787,7 @@ view('buyer.home', [
                 LEFT JOIN product_categories pc ON p.id = pc.product_id AND pc.is_primary = 1
                 LEFT JOIN categories c ON pc.category_id = c.id
                 WHERE p.show_on_home = 1
-                  AND p.status = 'active'
+                  AND p.status = 'active' AND (p.age_restricted = 0 OR @hp_member = 0)
                   AND si.status = 'active'
                 ORDER BY p.sort_order DESC, p.created_at DESC
                 LIMIT 12
@@ -813,7 +813,7 @@ view('buyer.home', [
                         LIMIT 1) as sample_image
                 FROM categories c
                 LEFT JOIN product_categories pc ON c.id = pc.category_id
-                LEFT JOIN products p ON pc.product_id = p.id AND p.status = 'active'
+                LEFT JOIN products p ON pc.product_id = p.id AND p.status = 'active' AND (p.age_restricted = 0 OR @hp_member = 0)
                 WHERE c.is_active = 1
                   AND c.parent_id IS NULL
                 GROUP BY c.id
@@ -901,7 +901,7 @@ view('buyer.home', [
                 INNER JOIN shop_inventory si ON p.id = si.product_id
                 INNER JOIN shops s ON si.shop_id = s.id AND s.is_active = 1 AND s.is_approved = 1
                 WHERE p.show_on_home = 1
-                  AND p.status = 'active'
+                  AND p.status = 'active' AND (p.age_restricted = 0 OR @hp_member = 0)
                   AND si.status = 'active'
             ");
             $total = $stmt->fetch()['count'];
@@ -925,7 +925,7 @@ view('buyer.home', [
                 LEFT JOIN product_categories pc ON p.id = pc.product_id AND pc.is_primary = 1
                 LEFT JOIN categories c ON pc.category_id = c.id
                 WHERE p.show_on_home = 1
-                  AND p.status = 'active'
+                  AND p.status = 'active' AND (p.age_restricted = 0 OR @hp_member = 0)
                   AND si.status = 'active'
                 ORDER BY p.sort_order DESC, p.created_at DESC
                 LIMIT {$perPage} OFFSET {$offset}
@@ -1024,7 +1024,7 @@ view('buyer.home', [
             $joins = "FROM products p
                 INNER JOIN shop_inventory si ON si.product_id = p.id AND si.status = 'active'
                 INNER JOIN shops s ON s.id = si.shop_id AND s.is_active = 1 AND s.is_approved = 1";
-            $baseWhere = "WHERE p.status = 'active' {$loc['sql']}";
+            $baseWhere = "WHERE p.status = 'active' AND (p.age_restricted = 0 OR @hp_member = 0) {$loc['sql']}";
             $scope = "{$joins} {$baseWhere}";
             $scopeParams = $loc['params'];
 
@@ -1174,7 +1174,7 @@ view('buyer.home', [
                 LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
                 LEFT JOIN brands b ON p.brand_id = b.id
                 WHERE pc.category_id = ?
-                  AND p.status = 'active'
+                  AND p.status = 'active' AND (p.age_restricted = 0 OR @hp_member = 0)
                 ORDER BY p.name
             ");
             $stmt->execute([$category['id']]);
@@ -1537,7 +1537,7 @@ view('buyer.home', [
                 LEFT JOIN categories c ON pc.category_id = c.id
                 WHERE si.shop_id = ?
                 AND si.status = 'active'
-                AND p.status = 'active'
+                AND p.status = 'active' AND (p.age_restricted = 0 OR @hp_member = 0)
                 ORDER BY p.name
             ");
             $stmt->execute([$shop['id']]);
@@ -1823,7 +1823,7 @@ view('buyer.home', [
                 LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
                 LEFT JOIN brands b ON p.brand_id = b.id
                 WHERE (p.name LIKE ? OR p.description LIKE ? OR p.sku LIKE ?)
-                  AND p.status = 'active'
+                  AND p.status = 'active' AND (p.age_restricted = 0 OR @hp_member = 0)
                 ORDER BY p.name
                 LIMIT {$perPage} OFFSET {$offset}
             ");
@@ -1834,7 +1834,7 @@ view('buyer.home', [
                 SELECT COUNT(*) as count
                 FROM products p
                 WHERE (p.name LIKE ? OR p.description LIKE ? OR p.sku LIKE ?)
-                  AND p.status = 'active'
+                  AND p.status = 'active' AND (p.age_restricted = 0 OR @hp_member = 0)
             ");
             $stmt->execute([$searchTerm, $searchTerm, $searchTerm]);
             $total = $stmt->fetch()['count'];
@@ -1873,7 +1873,7 @@ view('buyer.home', [
                 LEFT JOIN brands b ON p.brand_id = b.id
                 WHERE p.is_on_sale = 1
                   AND p.sale_price IS NOT NULL
-                  AND p.status = 'active'
+                  AND p.status = 'active' AND (p.age_restricted = 0 OR @hp_member = 0)
                 ORDER BY p.sale_percentage DESC
             ");
             $saleProducts = $stmt->fetchAll();

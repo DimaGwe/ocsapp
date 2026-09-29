@@ -31,6 +31,8 @@ require __DIR__ . '/../layout-header.php';
       <label><?= $fr ? 'Poids par unité (kg)' : 'Weight per unit (kg)' ?> *<input type="number" name="weight" min="0.01" step="0.01" placeholder="2" required>
         <small><?= $fr ? 'Sert au calcul des frais de livraison surdimensionnée.' : 'Used to calculate oversize delivery fees.' ?></small></label>
     </div>
+    <label class="sp-check"><input type="checkbox" name="age_restricted" value="1"> <?= $fr ? 'Réservé aux 18 ans et plus' : 'Age-restricted (18+)' ?>
+      <small><?= $fr ? "Cochez si la loi interdit la vente de ce produit aux mineurs. Il sera masqué et bloqué pour les comptes du Profil Maison (13 à 17 ans)." : 'Check if the law prohibits selling this product to minors. It will be hidden and blocked for Home Profile accounts (ages 13 to 17).' ?></small></label>
     <?php require __DIR__ . '/partials/photo-picker.php'; ?>
     <div><button type="submit" class="sp-btn sp-btn-primary"><i class="fa-solid fa-plus"></i> <?= $fr ? "Créer et ajouter à l'inventaire" : 'Create and add to inventory' ?></button></div>
   </form>

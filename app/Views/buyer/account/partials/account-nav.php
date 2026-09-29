@@ -1,7 +1,7 @@
 <?php
 /**
  * Buyer account sidebar (user card + navigation), shared by /account and its sub-pages.
- * Needs: account-helpers.php loaded, $fr (bool), $user (array: first_name, last_name, email), $accountActive (dashboard|orders|addresses|wishlist|settings).
+ * Needs: account-helpers.php loaded, $fr (bool), $user (array: first_name, last_name, email), $accountActive (dashboard|orders|addresses|wishlist|home|settings).
  * Optional: $founding (array with founding_buyer, founding_buyer_number) for the founder badge.
  */
 $accountActive = $accountActive ?? 'dashboard';
@@ -13,6 +13,7 @@ $acctLinks = [
     'orders'    => ['account/orders',    'fa-box',            'Mes commandes',   'My orders'],
     'addresses' => ['account/addresses', 'fa-location-dot',   'Mes adresses',    'Addresses'],
     'wishlist'  => ['account/wishlist',  'fa-heart',          'Liste de souhaits', 'Wishlist'],
+    'home'      => ['account/home',      'fa-house-user',     'Profil Maison',   'Home Profile'],
     'settings'  => ['account/settings',  'fa-gear',           'Paramètres',      'Settings'],
 ];
 ?>

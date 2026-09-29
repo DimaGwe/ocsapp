@@ -83,6 +83,13 @@ class CartController {
             return;
         }
         
+        // Restricted items: Home Profile members (13 to 17) can't add 18+ products
+        require_once __DIR__ . '/../Helpers/HomeProfileHelper.php';
+        if (\App\Helpers\HomeProfileHelper::currentIsMember() && \App\Helpers\HomeProfileHelper::restrictedAmong([$productId])) {
+            jsonResponse(['success' => false, 'message' => \App\Helpers\HomeProfileHelper::restrictedMessage(($_SESSION['language'] ?? 'fr') === 'fr')]);
+            return;
+        }
+        
         try {
             $db = \Database::getConnection();
             

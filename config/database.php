@@ -36,6 +36,21 @@ class Database {
                 $sign = $offsetSec >= 0 ? '+' : '-';
                 $tzOffset = sprintf('%s%02d:%02d', $sign, abs((int)($offsetSec / 3600)), abs(($offsetSec % 3600) / 60));
                 self::$connection->exec("SET time_zone = '{$tzOffset}'");
+
+                // Home Profile: @hp_member = 1 when the logged-in user is a teen member, so buyer
+                // listing queries can hide 18+ products (AND (p.age_restricted = 0 OR @hp_member = 0)).
+                // Not a persistent connection, so the flag never leaks between requests.
+                $hpMember = 0;
+                if (!empty($_SESSION['user']['id'])) {
+                    try {
+                        $hpStmt = self::$connection->prepare("SELECT account_type FROM users WHERE id = ?");
+                        $hpStmt->execute([(int) $_SESSION['user']['id']]);
+                        $hpMember = $hpStmt->fetchColumn() === 'home_member' ? 1 : 0;
+                    } catch (PDOException $e) {
+                        $hpMember = 0; // column not migrated yet
+                    }
+                }
+                self::$connection->exec("SET @hp_member = " . $hpMember);
             } catch (PDOException $e) {
                 error_log("Database connection failed: " . $e->getMessage());
                 throw new Exception("Database connection failed");

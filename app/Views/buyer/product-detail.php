@@ -1076,8 +1076,17 @@ if (empty($productImages) && !empty($product['image'])) {
             </div>
             
             <!-- Action Buttons -->
+            <?php if (!empty($memberRestricted)): ?>
+                <div style="background:#fef2f2;border-left:4px solid #dc2626;padding:12px 16px;border-radius:6px;margin-top:12px;color:#991b1b;font-weight:600;font-size:0.95rem;">
+                    <?= $fr ? "Ce produit est réservé aux 18 ans et plus et n'est pas offert aux comptes du Profil Maison." : 'This product is for ages 18+ and is not available on Home Profile accounts.' ?>
+                </div>
+            <?php endif; ?>
             <div class="action-buttons">
-                <?php if ($availableStock <= 0): ?>
+                <?php if (!empty($memberRestricted)): ?>
+                    <button class="btn btn-secondary" disabled style="cursor: not-allowed;">
+                        <span>18+</span>
+                    </button>
+                <?php elseif ($availableStock <= 0): ?>
                     <button class="btn btn-secondary" disabled style="cursor: not-allowed;">
                         <span>❌</span>
                         <span><?= $t['out_of_stock'] ?? 'Out of Stock' ?></span>

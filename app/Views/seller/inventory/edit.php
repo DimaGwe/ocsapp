@@ -26,6 +26,8 @@ require __DIR__ . '/../layout-header.php';
     <?php if (($item['product_type'] ?? '') === 'seller'): ?>
       <label><?= $fr ? 'Poids par unité (kg)' : 'Weight per unit (kg)' ?> *<input type="number" name="weight" min="0.01" step="0.01" value="<?= htmlspecialchars($item['product_weight'] ?? '') ?>" required>
         <small><?= $fr ? 'Sert au calcul des frais de livraison surdimensionnée.' : 'Used to calculate oversize delivery fees.' ?></small></label>
+    <label class="sp-check"><input type="checkbox" name="age_restricted" value="1"<?= !empty($item['age_restricted']) ? ' checked' : '' ?>> <?= $fr ? 'Réservé aux 18 ans et plus' : 'Age-restricted (18+)' ?>
+      <small><?= $fr ? "Cochez si la loi interdit la vente de ce produit aux mineurs. Il sera masqué et bloqué pour les comptes du Profil Maison (13 à 17 ans)." : 'Check if the law prohibits selling this product to minors. It will be hidden and blocked for Home Profile accounts (ages 13 to 17).' ?></small></label>
     <?php endif; ?>
     <label><?= $fr ? 'Statut' : 'Status' ?>
       <select name="status">

@@ -208,7 +208,7 @@ class InventoryController
         $inventoryId = intval($_GET['id'] ?? 0);
         $stmt = $this->db->prepare("
             SELECT si.*, p.name AS product_name, p.sku, p.weight AS product_weight,
-                   p.product_type, p.seller_id AS product_seller_id
+                   p.product_type, p.seller_id AS product_seller_id, p.age_restricted
             FROM shop_inventory si
             JOIN products p ON si.product_id = p.id
             WHERE si.id = ? AND si.shop_id = ?
@@ -289,6 +289,17 @@ class InventoryController
                         ['data' => ['inventory_id' => $inventoryId, 'weight' => $weight]]
                     );
                 }
+            }
+
+            // Age restriction (18+): sellers set it on their own products only, like weight
+            if (post('weight') !== null && post('weight') !== '') {
+                $this->db->prepare("
+                    UPDATE products p
+                    JOIN shop_inventory si ON si.product_id = p.id
+                    SET p.age_restricted = ?, p.updated_at = NOW()
+                    WHERE si.id = ? AND si.shop_id = ?
+                      AND p.product_type = 'seller' AND p.seller_id = ?
+                ")->execute([post('age_restricted', '') === '1' ? 1 : 0, $inventoryId, $shop['id'], userId()]);
             }
 
             setFlash('success', lang_pick('Inventaire mis à jour.', 'Inventory updated.'));
@@ -412,6 +423,7 @@ class InventoryController
         $stock       = intval(post('stock_quantity', 0));
         $sku         = sanitize(post('sku', ''));
         $weight      = floatval(post('weight', 0));
+        $ageRestricted = post('age_restricted', '') === '1' ? 1 : 0; // 18+: hidden and blocked for Home Profile members
 
         if (empty($name) || $price <= 0 || $categoryId <= 0) {
             setFlash('error', lang_pick('Le nom du produit, la catégorie et le prix sont requis.', 'Product name, category, and price are required.'));
@@ -433,10 +445,10 @@ class InventoryController
 
             // Create product — categories live in product_categories join table
             $stmt = $this->db->prepare("
-                INSERT INTO products (name, slug, description, sku, weight, base_price, product_type, seller_id, status, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, 'seller', ?, 'active', NOW(), NOW())
+                INSERT INTO products (name, slug, description, sku, weight, base_price, product_type, seller_id, status, age_restricted, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, 'seller', ?, 'active', ?, NOW(), NOW())
             ");
-            $stmt->execute([$name, $slug, $description, $sku ?: null, $weight, $price, userId()]);
+            $stmt->execute([$name, $slug, $description, $sku ?: null, $weight, $price, userId(), $ageRestricted]);
             $productId = $this->db->lastInsertId();
 
             // Implausible-weight flag: notify admin for manual review, never block the seller

@@ -295,12 +295,17 @@ $hero = $heroConfig[$urlRole] ?? $heroConfig['default'];
             <input type="checkbox" id="terms" name="terms" class="form-checkbox" required>
             <label for="terms" class="checkbox-label">
               <?= $fr
-                ? "J'ai au moins 18 ans (l'âge de la majorité au Québec) ou j'ai le consentement de mon parent ou tuteur, et j'accepte les"
-                : "I am at least 18 years old (the age of majority in Québec) or have my parent's or guardian's consent, and I agree to the" ?>
+                ? "J'ai au moins 18 ans (l'âge de la majorité au Québec) et j'accepte les"
+                : "I am at least 18 years old (the age of majority in Québec) and I agree to the" ?>
               <a href="<?= url('terms') ?>"><?= $t['terms'] ?></a>
               <?= $fr ? 'et la' : $t['and'] ?> <a href="<?= url('privacy') ?>"><?= $t['privacy'] ?></a>
             </label>
           </div>
+          <p class="checkbox-label" style="margin:-6px 0 14px 26px;">
+            <?= $fr
+              ? "Vous avez de 13 à 17 ans ? Demandez à votre parent ou tuteur de vous ajouter à son Profil Maison."
+              : 'Aged 13 to 17? Ask your parent or guardian to add you to their Home Profile.' ?>
+          </p>
 
           <!-- Seller agreement (conditional) -->
           <div class="checkbox-wrapper" id="sellerAgreementSection" style="display:none;">

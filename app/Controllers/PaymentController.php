@@ -98,6 +98,29 @@ class PaymentController
                 return;
             }
 
+            // Home Profile member: charge the guardian's saved card off-session, then run the
+            // same completePayment() path as any paid order (confirmations, delivery, supervision).
+            require_once __DIR__ . '/../Helpers/HomeProfileHelper.php';
+            if (\App\Helpers\HomeProfileHelper::isMember((int)userId())) {
+                $fr = ($_SESSION['language'] ?? 'fr') === 'fr';
+                $orderIdList = array_column($orders, 'id');
+                $charge = \App\Helpers\HomeProfileHelper::chargeGuardian((int)userId(), $chargeAmount, 'OCSAPP Home Profile order ' . $orderNumbers, $orderIdList);
+                if (!$charge['success']) {
+                    logger('Home Profile guardian charge failed for orders [' . implode(',', $orderIdList) . ']: ' . ($charge['error'] ?? ''), 'warning');
+                    echo json_encode(['error' => $fr
+                        ? "Le paiement sur la carte de votre parent ou tuteur a été refusé. Demandez-lui de vérifier sa carte dans son Profil Maison."
+                        : "The payment on your parent's or guardian's card was declined. Ask them to check their card in their Home Profile."]);
+                    return;
+                }
+                $this->completePayment($orderIdList, 'stripe', $charge['payment_intent_id']);
+                unset($_SESSION['pending_order_ids'], $_SESSION['use_store_credit'], $_SESSION['cart']);
+                echo json_encode([
+                    'redirect' => url('checkout/success?order=' . ($orders[0]['order_number'] ?? '') . '&paid=1'),
+                    'gateway' => 'home_profile',
+                ]);
+                return;
+            }
+
             switch ($paymentMethod) {
                 case 'card':
                     $this->createStripeSession($orders, $chargeAmount, $orderNumbers);

@@ -174,6 +174,16 @@ return [
     'POST /account/become-seller' => ['AccountController', 'submitSellerApplication'],
 
     // Dashboard (LAST)
+    // Home Profile (teen accounts under a parent or guardian)
+    'GET /account/home' => ['HomeProfileController', 'index'],
+    'POST /account/home/invite' => ['HomeProfileController', 'invite'],
+    'POST /account/home/remove' => ['HomeProfileController', 'remove'],
+    'POST /account/home/card/intent' => ['HomeProfileController', 'cardIntent'],
+    'POST /account/home/card/save' => ['HomeProfileController', 'cardSave'],
+    'GET /account/home/order' => ['OrderController', 'orderDetail'],
+    'GET /home-profile/join' => ['HomeProfileController', 'joinForm'],
+    'POST /home-profile/join' => ['HomeProfileController', 'join'],
+
     'GET /account/dashboard' => ['AccountController', 'index'],
     'GET /account' => ['AccountController', 'index'],
 

@@ -217,6 +217,13 @@ class CheckoutController
             'longDistanceSurcharge' => round($longDistanceTotalSurcharge, 2),
             'hardCapExceededShops' => $hardCapExceededShops,
             'storeCreditBalance' => \App\Helpers\StoreCreditHelper::getBalance(userId()),
+            // Home Profile member: paid with the guardian's saved card (no payment choice)
+            'homeGuardian' => (function () {
+                require_once __DIR__ . '/../Helpers/HomeProfileHelper.php';
+                return \App\Helpers\HomeProfileHelper::isMember((int) userId())
+                    ? (\App\Helpers\HomeProfileHelper::guardianFor((int) userId()) ?: ['card_last4' => null])
+                    : null;
+            })(),
         ]);
     }
     
@@ -281,6 +288,30 @@ class CheckoutController
         return;
     }
 
+    // Home Profile members (teens 13 to 17): orders are charged to the guardian's saved card,
+    // so no other payment method applies, and checkout needs an active guardian with a card.
+    require_once __DIR__ . '/../Helpers/HomeProfileHelper.php';
+    $isHomeMember = \App\Helpers\HomeProfileHelper::isMember((int)$userId);
+    $homeGuardianId = null;
+    if ($isHomeMember) {
+        $fr = ($_SESSION['language'] ?? 'fr') === 'fr';
+        $guardianLink = \App\Helpers\HomeProfileHelper::guardianFor((int)$userId);
+        if (!$guardianLink || $guardianLink['guardian_status'] !== 'active') {
+            jsonResponse(['success' => false, 'message' => $fr
+                ? "Votre compte ne fait plus partie d'un Profil Maison actif."
+                : 'Your account is no longer part of an active Home Profile.']);
+            return;
+        }
+        if (empty($guardianLink['stripe_payment_method_id'])) {
+            jsonResponse(['success' => false, 'message' => $fr
+                ? "Votre parent ou tuteur doit ajouter une carte à votre Profil Maison avant que vous puissiez commander."
+                : 'Your parent or guardian needs to add a card to your Home Profile before you can order.']);
+            return;
+        }
+        $homeGuardianId = (int)$guardianLink['guardian_user_id'];
+        $paymentMethod = 'card';
+    }
+
     logger("Checkout - Payment: {$paymentMethod}, Address: {$addressId}, Date: {$deliveryDate}", 'info');
 
     // Determine if this is a gateway payment (requires redirect)
@@ -297,6 +328,13 @@ class CheckoutController
         if (empty($cartItems)) {
             $this->db->rollBack();
             jsonResponse(['success' => false, 'message' => 'No valid items in cart.']);
+            return;
+        }
+
+        // Restricted items: 18+ products can't be ordered from a Home Profile account.
+        if ($isHomeMember && \App\Helpers\HomeProfileHelper::restrictedAmong(array_column($cartItems, 'product_id'))) {
+            $this->db->rollBack();
+            jsonResponse(['success' => false, 'message' => \App\Helpers\HomeProfileHelper::restrictedMessage(($_SESSION['language'] ?? 'fr') === 'fr')]);
             return;
         }
 
@@ -518,7 +556,7 @@ class CheckoutController
                     payment_method, payment_status,
                     delivery_date, delivery_time,
                     delivery_address, delivery_zone,
-                    notes, status,
+                    notes, status, guardian_user_id,
                     created_at, updated_at
                 ) VALUES (
                     :user_id, :shop_id, :order_number, :checkout_session_id,
@@ -530,7 +568,7 @@ class CheckoutController
                     :payment_method, :payment_status,
                     :delivery_date, :delivery_time,
                     :delivery_address, :delivery_zone,
-                    :notes, 'pending',
+                    :notes, 'pending', :guardian_user_id,
                     NOW(), NOW()
                 )
             ";
@@ -563,7 +601,8 @@ class CheckoutController
                 'delivery_time' => $deliveryTime,
                 'delivery_address' => $orderDeliveryAddress,
                 'delivery_zone' => $orderZoneCode,
-                'notes' => $notes
+                'notes' => $notes,
+                'guardian_user_id' => $homeGuardianId
             ];
 
             $stmt = $this->db->prepare($orderSQL);

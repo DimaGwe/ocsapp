@@ -448,6 +448,25 @@ $total = $subtotal + $deliveryFee + $additionalStopFee + $oversizeSurcharge + $l
                         <?= $t['checkout_payment_method'] ?? 'Payment Method' ?>
                     </h2>
 
+                    <?php if (!empty($homeGuardian)): ?>
+                    <?php $hpFr = $currentLang === 'fr'; ?>
+                    <!-- Home Profile member: charged to the guardian's saved card -->
+                    <div class="payment-methods">
+                        <label class="payment-option selected" data-method="card">
+                            <input type="radio" name="payment_method" value="card" checked>
+                            <div class="payment-radio"></div>
+                            <div class="payment-icon card"><i class="fas fa-house-user"></i></div>
+                            <div class="payment-info">
+                                <h4><?= $hpFr ? 'Profil Maison' : 'Home Profile' ?></h4>
+                                <p><?php if (!empty($homeGuardian['card_last4'])): ?>
+                                    <?= $hpFr ? 'Payé avec la carte de votre parent ou tuteur' : "Paid with your parent's or guardian's card" ?> (•••• <?= htmlspecialchars($homeGuardian['card_last4']) ?>)
+                                <?php else: ?>
+                                    <?= $hpFr ? 'Votre parent ou tuteur doit ajouter une carte à son Profil Maison.' : 'Your parent or guardian needs to add a card to their Home Profile.' ?>
+                                <?php endif; ?></p>
+                            </div>
+                        </label>
+                    </div>
+                    <?php else: ?>
                     <div class="payment-methods">
                         <!-- Credit/Debit Card -->
                         <label class="payment-option selected" data-method="card">
@@ -488,6 +507,7 @@ $total = $subtotal + $deliveryFee + $additionalStopFee + $oversizeSurcharge + $l
                             </div>
                         </label>
                     </div>
+                    <?php endif; ?>
                 </div>
 
                 <?php if (($storeCreditBalance ?? 0) > 0): ?>

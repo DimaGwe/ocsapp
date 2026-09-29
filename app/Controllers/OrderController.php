@@ -139,10 +139,10 @@ class OrderController
                 s.address as shop_address
             FROM orders o
             LEFT JOIN shops s ON o.shop_id = s.id
-            WHERE o.id = :id AND o.user_id = :user_id
+            WHERE o.id = :id AND (o.user_id = :user_id OR o.guardian_user_id = :guardian_id)
         ");
         
-        $stmt->execute(['id' => $orderId, 'user_id' => $userId]);
+        $stmt->execute(['id' => $orderId, 'user_id' => $userId, 'guardian_id' => $userId]);
         $order = $stmt->fetch(\PDO::FETCH_ASSOC);
         
         if (!$order) {
@@ -236,7 +236,14 @@ class OrderController
             }
         }
 
+        // Home Profile: a guardian can view (not act on) a member's order and its tracking
+        $guardianView = (int) $order['user_id'] !== (int) $userId;
+        if ($guardianView) {
+            $ratingDriverId = null;
+        }
+
         view('buyer/account/order-detail', [
+            'guardianView' => $guardianView,
             'order' => $order,
             'items' => $items,
             'statusHistory' => $statusHistory,

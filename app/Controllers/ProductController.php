@@ -115,7 +115,7 @@ class ProductController {
                                (SELECT image_path FROM product_images WHERE product_id = p.id AND is_primary = TRUE LIMIT 1) as image
                         FROM products p
                         INNER JOIN product_categories pc ON p.id = pc.product_id
-                        WHERE pc.category_id = ? AND p.id != ? AND p.status = 'active'
+                        WHERE pc.category_id = ? AND p.id != ? AND p.status = 'active' AND (p.age_restricted = 0 OR @hp_member = 0)
                         ORDER BY RAND()
                         LIMIT 4
                     ");
@@ -211,7 +211,12 @@ class ProductController {
                 'reviews' => $reviews,
                 'category' => $primaryCategory,
                 'discount' => $discount,
-                'cartCount' => $cartCount
+                'cartCount' => $cartCount,
+                // Home Profile: 18+ products stay viewable but can't be bought by members
+                'memberRestricted' => !empty($product['age_restricted']) && (function () {
+                    require_once __DIR__ . '/../Helpers/HomeProfileHelper.php';
+                    return \App\Helpers\HomeProfileHelper::currentIsMember();
+                })(),
             ]);
 
         } catch (\PDOException $e) {

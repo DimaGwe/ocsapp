@@ -69,7 +69,7 @@ class PublicCategoryController {
                 LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
                 LEFT JOIN brands b ON p.brand_id = b.id
                 WHERE pc.category_id = ?
-                  AND p.status = 'active'
+                  AND p.status = 'active' AND (p.age_restricted = 0 OR @hp_member = 0)
                 ORDER BY p.created_at DESC
             ");
             $stmt->execute([$category['id']]);

@@ -279,6 +279,7 @@ class EmailHelper
      */
     public static function sendOrderConfirmation(array $order, array $items = []): bool
     {
+        self::superviseHomeProfile($order, 'placed');
         $config = self::loadConfig();
 
         if (!$config['notifications']['order_confirmation']['enabled']) {
@@ -319,6 +320,7 @@ class EmailHelper
      */
     public static function sendOrderStatusUpdate(array $order, string $oldStatus, string $newStatus): bool
     {
+        self::superviseHomeProfile(array_merge($order, ['status' => $newStatus]), 'status');
         $config = self::loadConfig();
 
         if (!$config['notifications']['order_status_update']['enabled']) {
@@ -356,6 +358,7 @@ class EmailHelper
      */
     public static function sendOrderCancelled(array $order, string $reason = ''): bool
     {
+        self::superviseHomeProfile($order, 'cancelled');
         $config = self::loadConfig();
 
         if (!$config['notifications']['order_cancelled']['enabled']) {
@@ -532,6 +535,15 @@ class EmailHelper
     /**
      * Send raw HTML email (alias for send with no extra options)
      */
+    /**
+     * Home Profile supervision: a member's order emails also go to their guardian.
+     */
+    private static function superviseHomeProfile(array $order, string $event): void
+    {
+        require_once __DIR__ . '/HomeProfileHelper.php';
+        \App\Helpers\HomeProfileHelper::notifyGuardianOfOrder($order, $event);
+    }
+
     public static function sendRaw(string $to, string $subject, string $body): bool
     {
         return self::send($to, $subject, $body);
