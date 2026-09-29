@@ -1,161 +1,162 @@
 <?php
+/**
+ * Buyer account dashboard (/account)
+ * Updated 2026-09-28: moved onto the mc-header/mc-footer ecosystem standard (same chrome as /cart,
+ * /shops, /product) and made bilingual EN/FR (was hardcoded English). Sidebar, formatting helpers and
+ * styles are shared with the account sub-pages: partials/account-nav.php, partials/account-helpers.php,
+ * css/pages/account.css. Data from AccountController::index() is unchanged.
+ */
 $currentLang = $_SESSION['language'] ?? 'fr';
-$t = getTranslations($currentLang);
+$fr = ($currentLang === 'fr');
 $user = $user ?? [];
 $stats = $stats ?? ['total_orders'=>0,'pending_orders'=>0,'completed_orders'=>0,'total_spent'=>0,'store_credit_balance'=>0];
 $recentOrders = $recentOrders ?? [];
 $cartCount = $cartCount ?? 0;
 $founding = $founding ?? ['referral_code' => '', 'founding_buyer' => 0, 'founding_buyer_number' => null];
 $referralLink = !empty($founding['referral_code']) ? rtrim(env('APP_URL', 'https://ocsapp.ca'), '/') . '/register?ref=' . $founding['referral_code'] : '';
-$pageTitle = $pageTitle ?? 'My Account';
+$accountActive = 'dashboard';
+require __DIR__ . '/partials/account-helpers.php';
+
+$firstName = trim((string) ($user['first_name'] ?? ''));
+$statCards = [
+    ['fa-receipt',        (string) (int) $stats['total_orders'],     $fr ? 'Commandes' : 'Total orders'],
+    ['fa-hourglass-half', (string) (int) $stats['pending_orders'],   $fr ? 'En attente' : 'Pending'],
+    ['fa-circle-check',   (string) (int) $stats['completed_orders'], $fr ? 'Terminées' : 'Completed'],
+    ['fa-wallet',         acct_money($stats['total_spent'], $fr),    $fr ? 'Total dépensé' : 'Total spent'],
+    ['fa-gift',           acct_money($stats['store_credit_balance'] ?? 0, $fr), $fr ? 'Crédit en magasin' : 'Store credit'],
+];
 ?>
 <!DOCTYPE html>
 <html lang="<?= htmlspecialchars($currentLang) ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($pageTitle) ?> - OCS Marketplace</title>
+    <title><?= $fr ? 'Mon compte' : 'My account' ?> | OCSAPP</title>
+    <meta name="robots" content="noindex">
+    <?= csrfMeta() ?>
+    <link rel="icon" type="image/png" href="<?= asset('images/logo.png') ?>">
+    <meta name="theme-color" content="#00b207">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="<?= asset('css/global.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/components/header.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/components/footer.css') ?>">
-    <link rel="stylesheet" href="<?= asset('css/global.css') ?>">
-    <style>
-        body { font-family: 'Poppins', sans-serif; background: #f5f5f5; color: #333; }
-        .account-layout { display: flex; max-width: 1200px; margin: 40px auto; gap: 24px; padding: 0 16px; }
-        .account-sidebar { width: 240px; flex-shrink: 0; }
-        .account-main { flex: 1; min-width: 0; }
-        .sidebar-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
-        .sidebar-user { text-align: center; padding-bottom: 16px; border-bottom: 1px solid #f0f0f0; margin-bottom: 12px; }
-        .sidebar-avatar { width: 64px; height: 64px; border-radius: 50%; background: #00b207; color: #fff; font-size: 24px; font-weight: 600; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; }
-        .sidebar-name { font-weight: 600; font-size: 15px; }
-        .sidebar-email { font-size: 12px; color: #888; }
-        .sidebar-nav a { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; text-decoration: none; color: #555; font-size: 14px; font-weight: 500; transition: all .2s; }
-        .sidebar-nav a:hover, .sidebar-nav a.active { background: #e8f5e9; color: #00b207; }
-        .sidebar-nav a i { width: 18px; text-align: center; }
-        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
-        .stat-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
-        .stat-value { font-size: 28px; font-weight: 700; color: #00b207; }
-        .stat-label { font-size: 13px; color: #888; margin-top: 4px; }
-        .section-card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
-        .section-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
-        .section-title a { font-size: 13px; color: #00b207; text-decoration: none; font-weight: 500; }
-        .order-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
-        .order-row:last-child { border-bottom: none; }
-        .order-id { font-weight: 600; font-size: 14px; }
-        .order-meta { font-size: 12px; color: #888; margin-top: 2px; }
-        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-        .badge-pending { background: #fff3e0; color: #e65100; }
-        .badge-completed, .badge-delivered { background: #e8f5e9; color: #2e7d32; }
-        .badge-cancelled { background: #fce4ec; color: #c62828; }
-        .badge-processing { background: #e3f2fd; color: #1565c0; }
-        .empty-state { text-align: center; padding: 40px; color: #888; }
-        .empty-state i { font-size: 48px; color: #ddd; display: block; margin-bottom: 16px; }
-        @media (max-width: 768px) { .account-layout { flex-direction: column; } .account-sidebar { width: 100%; } }
-    </style>
+    <link rel="stylesheet" href="<?= asset('css/pages/account.css') ?>">
 </head>
 <body>
-<?php include __DIR__ . '/../../components/header.php'; ?>
+    <?php $useMarcheHeader = true; ?>
+    <?php include __DIR__ . '/../../components/header.php'; ?>
 
-<div class="account-layout">
-    <!-- Sidebar -->
-    <aside class="account-sidebar">
-        <div class="sidebar-card">
-            <div class="sidebar-user">
-                <div class="sidebar-avatar"><?= strtoupper(substr($user['first_name'] ?? 'U', 0, 1)) ?></div>
-                <div class="sidebar-name"><?= htmlspecialchars(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '')) ?></div>
-                <div class="sidebar-email"><?= htmlspecialchars($user['email'] ?? '') ?></div>
-            </div>
-            <nav class="sidebar-nav">
-                <a href="<?= url('account') ?>" class="active"><i class="fas fa-home"></i> Dashboard</a>
-                <a href="<?= url('account/orders') ?>"><i class="fas fa-box"></i> My Orders</a>
-                <a href="<?= url('account/addresses') ?>"><i class="fas fa-map-marker-alt"></i> Addresses</a>
-                <a href="<?= url('account/wishlist') ?>"><i class="fas fa-heart"></i> Wishlist</a>
-                <a href="<?= url('account/settings') ?>"><i class="fas fa-cog"></i> Settings</a>
-                <a href="<?= url('logout') ?>" style="color:#c62828;border-top:1px solid #f0f0f0;margin-top:8px;padding-top:18px;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    <div class="mc-shell" id="main-content" tabindex="-1">
+        <div class="mc-wrap">
+            <nav class="mc-breadcrumb" aria-label="<?= $fr ? "Fil d'Ariane" : 'Breadcrumb' ?>">
+                <a href="<?= url('marketplace-central') ?>"><i class="fas fa-store"></i><span><?= $fr ? 'Marché Central' : 'Marketplace Central' ?></span></a>
+                <span class="mc-sep">/</span>
+                <span aria-current="page"><i class="fas fa-user"></i> <?= $fr ? 'Mon compte' : 'My account' ?></span>
             </nav>
-        </div>
-    </aside>
 
-    <!-- Main -->
-    <main class="account-main">
-        <?php if ($flash = getFlash('success')): ?>
-            <div data-auto-dismiss style="background:#e8f5e9;color:#2e7d32;padding:12px 16px;border-radius:8px;margin-bottom:16px;transition:opacity 0.6s ease;"><?= htmlspecialchars($flash) ?></div>
-        <?php endif; ?>
-        <?php if ($flash = getFlash('error')): ?>
-            <div style="background:#fce4ec;color:#c62828;padding:12px 16px;border-radius:8px;margin-bottom:16px;"><?= htmlspecialchars($flash) ?></div>
-        <?php endif; ?>
-
-        <!-- Stats -->
-        <div class="stat-grid">
-            <div class="stat-card">
-                <div class="stat-value"><?= (int)$stats['total_orders'] ?></div>
-                <div class="stat-label">Total Orders</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value"><?= (int)$stats['pending_orders'] ?></div>
-                <div class="stat-label">Pending</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value"><?= (int)$stats['completed_orders'] ?></div>
-                <div class="stat-label">Completed</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">$<?= number_format((float)$stats['total_spent'], 2) ?></div>
-                <div class="stat-label">Total Spent</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">$<?= number_format((float)($stats['store_credit_balance'] ?? 0), 2) ?></div>
-                <div class="stat-label">Store Credit</div>
-            </div>
-        </div>
-
-        <!-- Founding Buyer Program (Sec 12) -->
-        <div class="section-card" style="margin-bottom:24px;">
-            <div class="section-title">
-                <?= !empty($founding['founding_buyer']) ? '🌟 Founding Buyer' : 'Refer a Friend, Earn $5' ?>
-            </div>
-            <?php if (!empty($founding['founding_buyer'])): ?>
-                <p style="color:#555; font-size:14px; margin-bottom:12px;">You're Founding Buyer #<?= (int)$founding['founding_buyer_number'] ?> - your first delivery Order's Delivery Fee was on us.</p>
-            <?php endif; ?>
-            <p style="color:#555; font-size:14px; margin-bottom:12px;">Share your link - when a friend signs up and their first Order is delivered, you both get a $5 credit toward a future Delivery Fee. No limit on how many friends you refer.</p>
-            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-                <input type="text" readonly value="<?= htmlspecialchars($referralLink) ?>" id="referralLinkInput" style="flex:1; min-width:220px; padding:10px; border:1px solid #d1d5db; border-radius:6px; font-size:13px; background:#f9fafb;">
-                <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('referralLinkInput').value); this.textContent='Copied!'; setTimeout(() => this.textContent='Copy Link', 1500);" style="background:#00b207; color:#fff; border:none; padding:10px 18px; border-radius:6px; font-weight:600; cursor:pointer; font-size:13px;">Copy Link</button>
-            </div>
-        </div>
-
-        <!-- Recent Orders -->
-        <div class="section-card">
-            <div class="section-title">
-                Recent Orders
-                <a href="<?= url('account/orders') ?>">View all &rarr;</a>
-            </div>
-            <?php if (empty($recentOrders)): ?>
-                <div class="empty-state">
-                    <i class="fas fa-shopping-bag"></i>
-                    <p>No orders yet. <a href="<?= url('/') ?>" style="color:#00b207;">Start shopping!</a></p>
+            <div class="acct-head">
+                <div>
+                    <h1><?= $firstName !== '' ? ($fr ? 'Bonjour, ' : 'Hi, ') . htmlspecialchars($firstName) : ($fr ? 'Mon compte' : 'My account') ?></h1>
+                    <p><?= $fr ? 'Suivez vos commandes et gérez vos adresses et vos préférences.' : 'Track your orders and manage your addresses and preferences.' ?></p>
                 </div>
-            <?php else: ?>
-                <?php foreach ($recentOrders as $order): ?>
-                    <div class="order-row">
-                        <div>
-                            <div class="order-id">Order #<?= htmlspecialchars($order['order_number'] ?? $order['id']) ?></div>
-                            <div class="order-meta"><?= date('M j, Y', strtotime($order['created_at'])) ?> &middot; <?= (int)($order['item_count'] ?? 0) ?> item(s)</div>
-                        </div>
-                        <div style="display:flex;align-items:center;gap:12px;">
-                            <span class="badge badge-<?= htmlspecialchars($order['status']) ?>"><?= ucfirst($order['status']) ?></span>
-                            <span style="font-weight:600;font-size:14px;">$<?= number_format((float)$order['total'], 2) ?></span>
-                            <a href="<?= url('account/orders/detail') ?>?id=<?= (int)$order['id'] ?>" style="color:#00b207;font-size:13px;">View</a>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </div>
-    </main>
-</div>
+                <a href="<?= url('marketplace-central') ?>" class="acct-btn acct-btn-primary"><i class="fas fa-bag-shopping"></i> <?= $fr ? 'Magasiner' : 'Shop now' ?></a>
+            </div>
 
-<?php include __DIR__ . '/../../components/footer.php'; ?>
+            <div class="acct-layout">
+                <?php require __DIR__ . '/partials/account-nav.php'; ?>
+
+                <main class="acct-main">
+                    <?php if ($flash = getFlash('success')): ?>
+                        <div class="acct-flash acct-flash-ok" data-auto-dismiss><?= htmlspecialchars($flash) ?></div>
+                    <?php endif; ?>
+                    <?php if ($flash = getFlash('error')): ?>
+                        <div class="acct-flash acct-flash-err"><?= htmlspecialchars($flash) ?></div>
+                    <?php endif; ?>
+
+                    <div class="acct-stats">
+                        <?php foreach ($statCards as [$icon, $value, $label]): ?>
+                            <div class="acct-card acct-stat">
+                                <i class="fas <?= $icon ?>"></i>
+                                <strong><?= htmlspecialchars($value) ?></strong>
+                                <span><?= $label ?></span>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <!-- Founding Buyer Program + referrals (Buyer Terms Sec 12) -->
+                    <section class="acct-card acct-refer<?= !empty($founding['founding_buyer']) ? ' is-founder' : '' ?>">
+                        <?php if (!empty($founding['founding_buyer'])): ?>
+                            <div class="acct-refer-badge"><i class="fa-solid fa-star"></i> <?= $fr ? 'Acheteur fondateur n° ' : 'Founding Buyer #' ?><?= (int) $founding['founding_buyer_number'] ?></div>
+                            <p class="acct-muted"><?= $fr
+                                ? 'Merci de faire partie de nos premiers acheteurs : les frais de livraison de votre première commande livrée vous ont été offerts.'
+                                : "Thank you for being one of our first buyers: your first delivery Order's Delivery Fee was on us." ?></p>
+                        <?php endif; ?>
+                        <h2><?= $fr ? 'Parrainez un ami, recevez 5 $' : 'Refer a friend, earn $5' ?></h2>
+                        <p class="acct-muted"><?= $fr
+                            ? "Partagez votre lien. Lorsqu'un ami s'inscrit et que sa première commande est livrée, vous recevez chacun un crédit de 5 $ applicable à de futurs frais de livraison. Aucune limite au nombre d'amis parrainés."
+                            : 'Share your link. When a friend signs up and their first Order is delivered, you both get a $5 credit toward a future Delivery Fee. No limit on how many friends you refer.' ?></p>
+                        <div class="acct-copy">
+                            <input type="text" readonly value="<?= htmlspecialchars($referralLink) ?>" id="referralLinkInput" aria-label="<?= $fr ? 'Votre lien de parrainage' : 'Your referral link' ?>">
+                            <button type="button" class="acct-btn acct-btn-primary" id="referralCopyBtn"><i class="fas fa-copy"></i> <span><?= $fr ? 'Copier le lien' : 'Copy link' ?></span></button>
+                        </div>
+                    </section>
+
+                    <section class="acct-card acct-orders">
+                        <div class="acct-section-head">
+                            <h2><?= $fr ? 'Commandes récentes' : 'Recent orders' ?></h2>
+                            <a href="<?= url('account/orders') ?>"><?= $fr ? 'Tout voir' : 'View all' ?> <i class="fas fa-arrow-right"></i></a>
+                        </div>
+                        <?php if (empty($recentOrders)): ?>
+                            <div class="acct-empty">
+                                <i class="fas fa-bag-shopping"></i>
+                                <p><?= $fr ? "Vous n'avez pas encore de commande." : 'No orders yet.' ?></p>
+                                <a href="<?= url('marketplace-central') ?>" class="acct-btn acct-btn-primary"><?= $fr ? 'Commencer à magasiner' : 'Start shopping' ?></a>
+                            </div>
+                        <?php else: ?>
+                            <?php foreach ($recentOrders as $order): ?>
+                                <?php $items = (int) ($order['item_count'] ?? 0); ?>
+                                <a class="acct-order" href="<?= url('account/orders/detail') ?>?id=<?= (int) $order['id'] ?>">
+                                    <div class="acct-order-main">
+                                        <strong><?= $fr ? 'Commande ' : 'Order ' ?>#<?= htmlspecialchars($order['order_number'] ?? $order['id']) ?></strong>
+                                        <span><?= acct_date($order['created_at'], $fr) ?> · <?= $items ?> <?= $fr ? ($items > 1 ? 'articles' : 'article') : ($items === 1 ? 'item' : 'items') ?></span>
+                                    </div>
+                                    <span class="acct-badge acct-badge-<?= htmlspecialchars($order['status']) ?>"><?= htmlspecialchars(acct_status((string) $order['status'], $fr)) ?></span>
+                                    <span class="acct-order-total"><?= acct_money($order['total'], $fr) ?></span>
+                                    <i class="fas fa-chevron-right acct-order-go"></i>
+                                </a>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </section>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <?php require __DIR__ . '/../../pages/partials/eco-page-footer.php'; ?>
+
+    <script>
+    // Success flashes fade out (the old components/footer.php did this; the mc-footer partial does not)
+    document.querySelectorAll('[data-auto-dismiss]').forEach(function (el) {
+        setTimeout(function () {
+            el.style.opacity = '0';
+            setTimeout(function () { el.style.display = 'none'; }, 600);
+        }, 4000);
+    });
+    (function () {
+        var btn = document.getElementById('referralCopyBtn');
+        if (!btn) return;
+        var label = btn.querySelector('span');
+        var copied = <?= json_encode($fr ? 'Lien copié !' : 'Copied!') ?>, orig = label.textContent;
+        btn.addEventListener('click', function () {
+            var input = document.getElementById('referralLinkInput');
+            var done = function () { label.textContent = copied; setTimeout(function () { label.textContent = orig; }, 1500); };
+            if (navigator.clipboard) { navigator.clipboard.writeText(input.value).then(done); }
+            else { input.select(); document.execCommand('copy'); done(); }
+        });
+    })();
+    </script>
 </body>
 </html>
