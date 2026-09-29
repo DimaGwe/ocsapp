@@ -23,6 +23,22 @@ if (!function_exists('acct_money')) {
         return date('j', $ts) . ' ' . $months[(int) date('n', $ts) - 1] . ' ' . date('Y', $ts);
     }
 
+    /** "28 sept. 2026 à 21 h 01" / "Sep 28, 2026 at 9:01 PM" */
+    function acct_datetime($date, bool $fr): string
+    {
+        $ts = strtotime((string) $date);
+        if (!$ts) {
+            return '';
+        }
+        return acct_date($date, $fr) . ($fr ? ' à ' . date('G', $ts) . ' h ' . date('i', $ts) : ' at ' . date('g:i A', $ts));
+    }
+
+    /** Address fields are stored sanitize()d (HTML-escaped): decode to plain text; output escapes once. */
+    function acct_plain_row($row): array
+    {
+        return is_array($row) ? array_map(fn($v) => is_string($v) ? html_entity_decode($v, ENT_QUOTES | ENT_HTML5, 'UTF-8') : $v, $row) : [];
+    }
+
     /** Order status label; unknown values fall back to a readable version of the raw value. */
     function acct_status(string $status, bool $fr): string
     {

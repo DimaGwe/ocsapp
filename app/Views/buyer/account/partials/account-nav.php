@@ -1,12 +1,13 @@
 <?php
 /**
  * Buyer account sidebar (user card + navigation), shared by /account and its sub-pages.
- * Needs: $fr (bool), $user (array: first_name, last_name, email), $accountActive (dashboard|orders|addresses|wishlist|settings).
+ * Needs: account-helpers.php loaded, $fr (bool), $user (array: first_name, last_name, email), $accountActive (dashboard|orders|addresses|wishlist|settings).
  * Optional: $founding (array with founding_buyer, founding_buyer_number) for the founder badge.
  */
 $accountActive = $accountActive ?? 'dashboard';
-$acctFirst = trim((string) ($user['first_name'] ?? ''));
-$acctName  = trim($acctFirst . ' ' . ($user['last_name'] ?? ''));
+$acctU = acct_plain_row($user ?? []); // names are stored HTML-escaped
+$acctFirst = trim((string) ($acctU['first_name'] ?? ''));
+$acctName  = trim($acctFirst . ' ' . ($acctU['last_name'] ?? ''));
 $acctLinks = [
     'dashboard' => ['account',           'fa-gauge-high',     'Tableau de bord', 'Dashboard'],
     'orders'    => ['account/orders',    'fa-box',            'Mes commandes',   'My orders'],
@@ -19,7 +20,7 @@ $acctLinks = [
   <div class="acct-card acct-user">
     <div class="acct-avatar"><?= htmlspecialchars(mb_strtoupper(mb_substr($acctFirst !== '' ? $acctFirst : 'U', 0, 1))) ?></div>
     <div class="acct-user-name"><?= htmlspecialchars($acctName !== '' ? $acctName : ($fr ? 'Mon compte' : 'My account')) ?></div>
-    <div class="acct-user-email"><?= htmlspecialchars($user['email'] ?? '') ?></div>
+    <div class="acct-user-email"><?= htmlspecialchars($acctU['email'] ?? '') ?></div>
     <?php if (!empty($founding['founding_buyer'])): ?>
       <a class="acct-founder-pill" href="<?= url('founding') ?>"><i class="fa-solid fa-star"></i>
         <?= $fr ? 'Acheteur fondateur n° ' : 'Founding Buyer #' ?><?= (int) $founding['founding_buyer_number'] ?></a>

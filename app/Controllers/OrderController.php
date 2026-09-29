@@ -51,8 +51,10 @@ class OrderController
             }
             
             if (!empty($search)) {
-                $where .= " AND (o.order_number LIKE :search OR s.name LIKE :search)";
-                $params['search'] = "%$search%";
+                // Two placeholders: a named parameter can't repeat with native prepares (HY093)
+                $where .= " AND (o.order_number LIKE :search_no OR s.name LIKE :search_shop)";
+                $params['search_no'] = "%$search%";
+                $params['search_shop'] = "%$search%";
             }
             
             // Get total count
@@ -101,7 +103,7 @@ class OrderController
             
         } catch (\PDOException $e) {
             logger("Error fetching orders: " . $e->getMessage(), 'error');
-            setFlash('error', 'Failed to load orders');
+            setFlash('error', ($_SESSION['language'] ?? 'fr') === 'fr' ? 'Impossible de charger vos commandes.' : 'Failed to load orders');
             view('buyer/account/orders', ['orders' => []]);
         }
     }

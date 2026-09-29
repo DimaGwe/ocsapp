@@ -685,7 +685,7 @@ class AccountController
         if (!$preferences) {
             $preferences = [
                 'email_orders' => 1,
-                'email_promotions' => 1,
+                'email_promotions' => 0, // marketing: off until the buyer opts in (CASL)
                 'email_newsletter' => 0
             ];
         }
@@ -698,7 +698,7 @@ class AccountController
         
     } catch (\PDOException $e) {
         logger("Settings page error: " . $e->getMessage(), 'error');
-        setFlash('error', 'Error loading settings');
+        setFlash('error', $this->msg('Erreur lors du chargement des paramètres.', 'Error loading settings'));
         redirect(url('account'));
     }
 }
@@ -706,18 +706,24 @@ class AccountController
 /**
  * Update user password
  */
+/** Bilingual flash text for the account settings actions (session language, fr-CA default). */
+private function msg(string $fr, string $en): string
+{
+    return ($_SESSION['language'] ?? 'fr') === 'fr' ? $fr : $en;
+}
+
 public function updatePassword(): void
 {
     error_log("=== UPDATE PASSWORD CALLED ===");
     
     if (!isPost()) {
-        setFlash('error', 'Invalid request method');
+        setFlash('error', $this->msg('Méthode de requête invalide.', 'Invalid request method'));
         redirect(url('account/settings'));
         return;
     }
     
     if (!isLoggedIn()) {
-        setFlash('error', 'Please log in');
+        setFlash('error', $this->msg('Veuillez vous connecter.', 'Please log in'));
         redirect(url('login'));
         return;
     }
@@ -726,7 +732,7 @@ public function updatePassword(): void
     $token = post(env('CSRF_TOKEN_NAME', '_csrf_token'), '');
     if (!verifyCsrfToken($token)) {
         error_log("CSRF verification failed");
-        setFlash('error', 'Invalid security token. Please try again.');
+        setFlash('error', $this->msg('Jeton de sécurité invalide. Veuillez réessayer.', 'Invalid security token. Please try again.'));
         redirect(url('account/settings'));
         return;
     }
@@ -742,31 +748,31 @@ public function updatePassword(): void
     
     // Validation
     if (empty($currentPassword)) {
-        setFlash('error', 'Current password is required');
+        setFlash('error', $this->msg('Le mot de passe actuel est requis.', 'Current password is required'));
         redirect(url('account/settings'));
         return;
     }
     
     if (empty($newPassword)) {
-        setFlash('error', 'New password is required');
+        setFlash('error', $this->msg('Le nouveau mot de passe est requis.', 'New password is required'));
         redirect(url('account/settings'));
         return;
     }
     
     if (strlen($newPassword) < 8) {
-        setFlash('error', 'New password must be at least 8 characters');
+        setFlash('error', $this->msg('Le nouveau mot de passe doit contenir au moins 8 caractères.', 'New password must be at least 8 characters'));
         redirect(url('account/settings'));
         return;
     }
     
     if (strlen($newPassword) > 72) {
-        setFlash('error', 'New password must be less than 72 characters');
+        setFlash('error', $this->msg('Le nouveau mot de passe doit contenir moins de 72 caractères.', 'New password must be less than 72 characters'));
         redirect(url('account/settings'));
         return;
     }
     
     if ($newPassword !== $confirmPassword) {
-        setFlash('error', 'New passwords do not match');
+        setFlash('error', $this->msg('Les nouveaux mots de passe ne correspondent pas.', 'New passwords do not match'));
         redirect(url('account/settings'));
         return;
     }
@@ -781,7 +787,7 @@ public function updatePassword(): void
         
         if (!$user) {
             error_log("User not found: $userId");
-            setFlash('error', 'User not found');
+            setFlash('error', $this->msg('Utilisateur introuvable.', 'User not found'));
             redirect(url('account/settings'));
             return;
         }
@@ -791,14 +797,14 @@ public function updatePassword(): void
         error_log("Current password verified: " . ($passwordVerified ? 'YES' : 'NO'));
         
         if (!$passwordVerified) {
-            setFlash('error', 'Current password is incorrect');
+            setFlash('error', $this->msg('Le mot de passe actuel est incorrect.', 'Current password is incorrect'));
             redirect(url('account/settings'));
             return;
         }
         
         // Check if new password is same as current
         if (password_verify($newPassword, $user['password'])) {
-            setFlash('error', 'New password must be different from current password');
+            setFlash('error', $this->msg("Le nouveau mot de passe doit être différent de l'actuel.", 'New password must be different from current password'));
             redirect(url('account/settings'));
             return;
         }
@@ -816,18 +822,18 @@ public function updatePassword(): void
         
         if ($result && $stmt->rowCount() > 0) {
             error_log("Password updated successfully for user $userId");
-            setFlash('success', 'Password updated successfully!');
+            setFlash('success', $this->msg('Mot de passe mis à jour.', 'Password updated successfully!'));
         } else {
             error_log("Password update failed - no rows affected");
-            setFlash('error', 'Failed to update password');
+            setFlash('error', $this->msg("Le mot de passe n'a pas pu être mis à jour.", 'Failed to update password'));
         }
         
     } catch (\PDOException $e) {
         error_log("PDO Error in updatePassword: " . $e->getMessage());
-        setFlash('error', 'Database error: ' . $e->getMessage());
+        setFlash('error', $this->msg('Une erreur est survenue. Veuillez réessayer.', 'Something went wrong. Please try again.'));
     } catch (\Exception $e) {
         error_log("General Error in updatePassword: " . $e->getMessage());
-        setFlash('error', 'Error updating password: ' . $e->getMessage());
+        setFlash('error', $this->msg('Une erreur est survenue. Veuillez réessayer.', 'Something went wrong. Please try again.'));
     }
     
     redirect(url('account/settings'));
@@ -841,13 +847,13 @@ public function updateNotifications(): void
     error_log("=== UPDATE NOTIFICATIONS CALLED ===");
     
     if (!isPost()) {
-        setFlash('error', 'Invalid request method');
+        setFlash('error', $this->msg('Méthode de requête invalide.', 'Invalid request method'));
         redirect(url('account/settings'));
         return;
     }
     
     if (!isLoggedIn()) {
-        setFlash('error', 'Please log in');
+        setFlash('error', $this->msg('Veuillez vous connecter.', 'Please log in'));
         redirect(url('login'));
         return;
     }
@@ -856,7 +862,7 @@ public function updateNotifications(): void
     $token = post(env('CSRF_TOKEN_NAME', '_csrf_token'), '');
     if (!verifyCsrfToken($token)) {
         error_log("CSRF verification failed");
-        setFlash('error', 'Invalid security token. Please try again.');
+        setFlash('error', $this->msg('Jeton de sécurité invalide. Veuillez réessayer.', 'Invalid security token. Please try again.'));
         redirect(url('account/settings'));
         return;
     }
@@ -921,18 +927,18 @@ public function updateNotifications(): void
         
         if ($result) {
             error_log("Notification preferences updated for user $userId");
-            setFlash('success', 'Notification preferences saved!');
+            setFlash('success', $this->msg('Préférences de notification enregistrées.', 'Notification preferences saved!'));
         } else {
             error_log("Preferences update failed");
-            setFlash('error', 'Failed to save preferences');
+            setFlash('error', $this->msg("Les préférences n'ont pas pu être enregistrées.", 'Failed to save preferences'));
         }
         
     } catch (\PDOException $e) {
         error_log("PDO Error in updateNotifications: " . $e->getMessage());
-        setFlash('error', 'Database error: ' . $e->getMessage());
+        setFlash('error', $this->msg('Une erreur est survenue. Veuillez réessayer.', 'Something went wrong. Please try again.'));
     } catch (\Exception $e) {
         error_log("General Error in updateNotifications: " . $e->getMessage());
-        setFlash('error', 'Error saving preferences: ' . $e->getMessage());
+        setFlash('error', $this->msg('Une erreur est survenue. Veuillez réessayer.', 'Something went wrong. Please try again.'));
     }
     
     redirect(url('account/settings'));
@@ -976,13 +982,13 @@ public function updateProfile(): void
     error_log("=== UPDATE PROFILE CALLED ===");
     
     if (!isPost()) {
-        setFlash('error', 'Invalid request method');
+        setFlash('error', $this->msg('Méthode de requête invalide.', 'Invalid request method'));
         redirect(url('account/settings'));
         return;
     }
     
     if (!isLoggedIn()) {
-        setFlash('error', 'Please log in');
+        setFlash('error', $this->msg('Veuillez vous connecter.', 'Please log in'));
         redirect(url('login'));
         return;
     }
@@ -991,7 +997,7 @@ public function updateProfile(): void
     $token = post(env('CSRF_TOKEN_NAME', '_csrf_token'), '');
     if (!verifyCsrfToken($token)) {
         error_log("CSRF verification failed");
-        setFlash('error', 'Invalid security token. Please try again.');
+        setFlash('error', $this->msg('Jeton de sécurité invalide. Veuillez réessayer.', 'Invalid security token. Please try again.'));
         redirect(url('account/settings'));
         return;
     }
@@ -1008,31 +1014,31 @@ public function updateProfile(): void
     
     // Validation
     if (empty($firstName)) {
-        setFlash('error', 'First name is required');
+        setFlash('error', $this->msg('Le prénom est requis.', 'First name is required'));
         redirect(url('account/settings'));
         return;
     }
     
     if (strlen($firstName) < 2 || strlen($firstName) > 50) {
-        setFlash('error', 'First name must be between 2 and 50 characters');
+        setFlash('error', $this->msg('Le prénom doit contenir entre 2 et 50 caractères.', 'First name must be between 2 and 50 characters'));
         redirect(url('account/settings'));
         return;
     }
     
     if (empty($lastName)) {
-        setFlash('error', 'Last name is required');
+        setFlash('error', $this->msg('Le nom est requis.', 'Last name is required'));
         redirect(url('account/settings'));
         return;
     }
     
     if (strlen($lastName) < 2 || strlen($lastName) > 50) {
-        setFlash('error', 'Last name must be between 2 and 50 characters');
+        setFlash('error', $this->msg('Le nom doit contenir entre 2 et 50 caractères.', 'Last name must be between 2 and 50 characters'));
         redirect(url('account/settings'));
         return;
     }
     
     if (!empty($phone) && !preg_match('/^[\d\s\-\+\(\)]+$/', $phone)) {
-        setFlash('error', 'Invalid phone number format');
+        setFlash('error', $this->msg('Format de numéro de téléphone invalide.', 'Invalid phone number format'));
         redirect(url('account/settings'));
         return;
     }
@@ -1045,7 +1051,7 @@ public function updateProfile(): void
         $stmt->execute([$userId]);
         if (!$stmt->fetch()) {
             error_log("User not found: $userId");
-            setFlash('error', 'User not found');
+            setFlash('error', $this->msg('Utilisateur introuvable.', 'User not found'));
             redirect(url('account/settings'));
             return;
         }
@@ -1076,19 +1082,19 @@ public function updateProfile(): void
             $_SESSION['user']['phone'] = $phone;
             
             error_log("Profile updated successfully for user $userId");
-            setFlash('success', 'Profile updated successfully!');
+            setFlash('success', $this->msg('Profil mis à jour.', 'Profile updated successfully!'));
         } else {
             error_log("Update failed - no rows affected");
-            setFlash('error', 'No changes were made to your profile');
+            setFlash('error', $this->msg("Aucune modification n'a été apportée à votre profil.", 'No changes were made to your profile'));
         }
         
     } catch (\PDOException $e) {
         error_log("PDO Error in updateProfile: " . $e->getMessage());
         error_log("SQL State: " . $e->getCode());
-        setFlash('error', 'Database error: ' . $e->getMessage());
+        setFlash('error', $this->msg('Une erreur est survenue. Veuillez réessayer.', 'Something went wrong. Please try again.'));
     } catch (\Exception $e) {
         error_log("General Error in updateProfile: " . $e->getMessage());
-        setFlash('error', 'Error updating profile: ' . $e->getMessage());
+        setFlash('error', $this->msg('Une erreur est survenue. Veuillez réessayer.', 'Something went wrong. Please try again.'));
     }
     
     redirect(url('account/settings'));

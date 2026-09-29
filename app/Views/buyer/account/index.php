@@ -25,57 +25,12 @@ $statCards = [
     ['fa-wallet',         acct_money($stats['total_spent'], $fr),    $fr ? 'Total dépensé' : 'Total spent'],
     ['fa-gift',           acct_money($stats['store_credit_balance'] ?? 0, $fr), $fr ? 'Crédit en magasin' : 'Store credit'],
 ];
+$acctTitle   = $fr ? 'Mon compte' : 'My account';
+$acctHeading = $firstName !== '' ? ($fr ? 'Bonjour, ' : 'Hi, ') . $firstName : $acctTitle;
+$acctSub     = $fr ? 'Suivez vos commandes et gérez vos adresses et vos préférences.' : 'Track your orders and manage your addresses and preferences.';
+$acctAction  = '<a href="' . url('marketplace-central') . '" class="acct-btn acct-btn-primary"><i class="fas fa-bag-shopping"></i> ' . ($fr ? 'Magasiner' : 'Shop now') . '</a>';
+require __DIR__ . '/partials/account-top.php';
 ?>
-<!DOCTYPE html>
-<html lang="<?= htmlspecialchars($currentLang) ?>">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $fr ? 'Mon compte' : 'My account' ?> | OCSAPP</title>
-    <meta name="robots" content="noindex">
-    <?= csrfMeta() ?>
-    <link rel="icon" type="image/png" href="<?= asset('images/logo.png') ?>">
-    <meta name="theme-color" content="#00b207">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link rel="stylesheet" href="<?= asset('css/global.css') ?>">
-    <link rel="stylesheet" href="<?= asset('css/components/header.css') ?>">
-    <link rel="stylesheet" href="<?= asset('css/components/footer.css') ?>">
-    <link rel="stylesheet" href="<?= asset('css/pages/account.css') ?>">
-</head>
-<body>
-    <?php $useMarcheHeader = true; ?>
-    <?php include __DIR__ . '/../../components/header.php'; ?>
-
-    <div class="mc-shell" id="main-content" tabindex="-1">
-        <div class="mc-wrap">
-            <nav class="mc-breadcrumb" aria-label="<?= $fr ? "Fil d'Ariane" : 'Breadcrumb' ?>">
-                <a href="<?= url('marketplace-central') ?>"><i class="fas fa-store"></i><span><?= $fr ? 'Marché Central' : 'Marketplace Central' ?></span></a>
-                <span class="mc-sep">/</span>
-                <span aria-current="page"><i class="fas fa-user"></i> <?= $fr ? 'Mon compte' : 'My account' ?></span>
-            </nav>
-
-            <div class="acct-head">
-                <div>
-                    <h1><?= $firstName !== '' ? ($fr ? 'Bonjour, ' : 'Hi, ') . htmlspecialchars($firstName) : ($fr ? 'Mon compte' : 'My account') ?></h1>
-                    <p><?= $fr ? 'Suivez vos commandes et gérez vos adresses et vos préférences.' : 'Track your orders and manage your addresses and preferences.' ?></p>
-                </div>
-                <a href="<?= url('marketplace-central') ?>" class="acct-btn acct-btn-primary"><i class="fas fa-bag-shopping"></i> <?= $fr ? 'Magasiner' : 'Shop now' ?></a>
-            </div>
-
-            <div class="acct-layout">
-                <?php require __DIR__ . '/partials/account-nav.php'; ?>
-
-                <main class="acct-main">
-                    <?php if ($flash = getFlash('success')): ?>
-                        <div class="acct-flash acct-flash-ok" data-auto-dismiss><?= htmlspecialchars($flash) ?></div>
-                    <?php endif; ?>
-                    <?php if ($flash = getFlash('error')): ?>
-                        <div class="acct-flash acct-flash-err"><?= htmlspecialchars($flash) ?></div>
-                    <?php endif; ?>
-
                     <div class="acct-stats">
                         <?php foreach ($statCards as [$icon, $value, $label]): ?>
                             <div class="acct-card acct-stat">
@@ -130,21 +85,8 @@ $statCards = [
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </section>
-                </main>
-            </div>
-        </div>
-    </div>
-
-    <?php require __DIR__ . '/../../pages/partials/eco-page-footer.php'; ?>
-
+<?php require __DIR__ . '/partials/account-bottom.php'; ?>
     <script>
-    // Success flashes fade out (the old components/footer.php did this; the mc-footer partial does not)
-    document.querySelectorAll('[data-auto-dismiss]').forEach(function (el) {
-        setTimeout(function () {
-            el.style.opacity = '0';
-            setTimeout(function () { el.style.display = 'none'; }, 600);
-        }, 4000);
-    });
     (function () {
         var btn = document.getElementById('referralCopyBtn');
         if (!btn) return;
