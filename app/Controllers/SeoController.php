@@ -16,6 +16,7 @@ class SeoController
             ''                 => ['daily',   '1.0'],
             'marketplace-central' => ['daily', '0.9'],
             'shops'            => ['daily',   '0.9'],
+            'products'         => ['daily',   '0.9'],
             'categories'       => ['weekly',  '0.8'],
             'deals'            => ['daily',   '0.8'],
             'best-sellers'     => ['weekly',  '0.7'],

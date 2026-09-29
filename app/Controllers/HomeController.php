@@ -984,6 +984,137 @@ view('buyer.home', [
     /**
      * Categories listing page
      */
+    /**
+     * All products (Marché Central): /products (EN) <-> /produits (FR).
+     * Every active product from active, approved shops within the visitor's
+     * delivery radius, with search, shop, category, stock and sort filters.
+     * Target of "Voir plus de produits" on /marche-central.
+     */
+    public function products(): void {
+        $perPage = 24;
+        $page = max(1, (int) get('page', 1));
+        $filters = [
+            'q'        => trim(mb_substr((string) get('q', ''), 0, 100)),
+            'shop'     => preg_replace('/[^a-z0-9\-]/', '', strtolower((string) get('shop', ''))),
+            'category' => preg_replace('/[^a-z0-9\-]/', '', strtolower((string) get('category', ''))),
+            'stock'    => get('stock', '') === '1',
+            'sort'     => (string) get('sort', 'recommended'),
+        ];
+        $sorts = [
+            'recommended' => 'p.is_featured DESC, p.sort_order DESC, p.created_at DESC',
+            'newest'      => 'p.created_at DESC',
+            'price_asc'   => 'p.base_price ASC, p.name ASC',
+            'price_desc'  => 'p.base_price DESC, p.name ASC',
+            'name'        => 'p.name ASC',
+        ];
+        if (!isset($sorts[$filters['sort']])) {
+            $filters['sort'] = 'recommended';
+        }
+
+        $data = [
+            'products' => [], 'total' => 0, 'page' => $page, 'perPage' => $perPage,
+            'filters' => $filters, 'shopOptions' => [], 'categoryOptions' => [],
+        ];
+
+        try {
+            $db = \Database::getConnection();
+            $loc = $this->getLocationFilterClause();
+
+            // Base scope shared by the list and the filter options
+            $joins = "FROM products p
+                INNER JOIN shop_inventory si ON si.product_id = p.id AND si.status = 'active'
+                INNER JOIN shops s ON s.id = si.shop_id AND s.is_active = 1 AND s.is_approved = 1";
+            $baseWhere = "WHERE p.status = 'active' {$loc['sql']}";
+            $scope = "{$joins} {$baseWhere}";
+            $scopeParams = $loc['params'];
+
+            // Filter options (within the visitor's area, before the other filters)
+            $stmt = $db->prepare("SELECT s.slug, s.name, COUNT(DISTINCT p.id) AS n {$scope}
+                GROUP BY s.id, s.slug, s.name ORDER BY s.name");
+            $stmt->execute($scopeParams);
+            $data['shopOptions'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            $stmt = $db->prepare("SELECT c.slug, c.name, COUNT(DISTINCT p.id) AS n {$joins}
+                INNER JOIN product_categories pco ON pco.product_id = p.id
+                INNER JOIN categories c ON c.id = pco.category_id AND c.is_active = 1
+                {$baseWhere}
+                GROUP BY c.id, c.slug, c.name ORDER BY c.name");
+            $stmt->execute($scopeParams);
+            $data['categoryOptions'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            // Active filters
+            $where = '';
+            $params = $scopeParams;
+            if ($filters['q'] !== '') {
+                $where .= ' AND (p.name LIKE ? OR p.short_description LIKE ? OR s.name LIKE ?)';
+                $like = '%' . $filters['q'] . '%';
+                array_push($params, $like, $like, $like);
+            }
+            if ($filters['shop'] !== '') {
+                $where .= ' AND s.slug = ?';
+                $params[] = $filters['shop'];
+            }
+            if ($filters['category'] !== '') {
+                $where .= ' AND EXISTS (SELECT 1 FROM product_categories pcf
+                    INNER JOIN categories cf ON cf.id = pcf.category_id
+                    WHERE pcf.product_id = p.id AND cf.slug = ?)';
+                $params[] = $filters['category'];
+            }
+            if ($filters['stock']) {
+                $where .= ' AND si.stock_quantity > 0';
+            }
+
+            $stmt = $db->prepare("SELECT COUNT(DISTINCT p.id) {$scope} {$where}");
+            $stmt->execute($params);
+            $data['total'] = (int) $stmt->fetchColumn();
+
+            // Out-of-range page (old link, filters narrowed): go to the last page
+            $lastPage = max(1, (int) ceil($data['total'] / $perPage));
+            if ($page > $lastPage) {
+                $query = array_diff_key($_GET, ['page' => 1, 'lang' => 1]);
+                if ($lastPage > 1) {
+                    $query['page'] = $lastPage;
+                }
+                header('Location: ' . url('products') . ($query ? '?' . http_build_query($query) : ''), true, 302);
+                exit;
+            }
+
+            $offset = ($page - 1) * $perPage;
+            $stmt = $db->prepare("
+                SELECT p.id, p.name, p.slug, p.is_featured, p.created_at,
+                       p.base_price AS price, p.compare_at_price,
+                       (SELECT pi.image_path FROM product_images pi
+                         WHERE pi.product_id = p.id ORDER BY pi.is_primary DESC, pi.id ASC LIMIT 1) AS image,
+                       (SELECT c.name FROM product_categories pc
+                         INNER JOIN categories c ON c.id = pc.category_id
+                         WHERE pc.product_id = p.id ORDER BY pc.is_primary DESC LIMIT 1) AS category_name,
+                       SUM(si.stock_quantity) AS stock_quantity,
+                       MIN(s.name) AS shop_name,
+                       MIN(s.slug) AS shop_slug,
+                       COUNT(DISTINCT s.id) AS shop_count
+                {$scope} {$where}
+                GROUP BY p.id
+                ORDER BY {$sorts[$filters['sort']]}
+                LIMIT {$perPage} OFFSET {$offset}
+            ");
+            $stmt->execute($params);
+            $products = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            foreach ($products as &$product) {
+                $product['image'] = $this->normalizeImagePath($product['image']);
+                $product['discount_percentage'] = (!empty($product['compare_at_price']) && $product['compare_at_price'] > $product['price'])
+                    ? round((($product['compare_at_price'] - $product['price']) / $product['compare_at_price']) * 100)
+                    : 0;
+            }
+            unset($product);
+            $data['products'] = $products;
+        } catch (\PDOException $e) {
+            logger('All products page error: ' . $e->getMessage(), 'error');
+        }
+
+        view('buyer.products', $data);
+    }
+
     public function categories(): void {
         try {
             $db = \Database::getConnection();

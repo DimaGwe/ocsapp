@@ -207,6 +207,7 @@ function localized_paths(): array {
         $map = [
             'home'                => '',                 // main page: EN /home, FR = the root
             'marketplace-central' => 'marche-central',
+            'products'            => 'produits',     // all products (Marché Central)
             'buyer-central'    => 'acheteur-central',
             'seller-central'   => 'vendeur-central',
             'supplier-central' => 'fournisseur-central',

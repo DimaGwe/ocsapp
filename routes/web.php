@@ -43,6 +43,8 @@ return [
     'GET /categories' => ['PublicCategoryController', 'index'],
     'GET /category/{slug}' => ['PublicCategoryController', 'show'],
     'GET /best-sellers' => ['HomeController', 'bestSellers'],
+    'GET /products' => ['HomeController', 'products'],
+    'GET /produits' => ['HomeController', 'products'],
     'GET /deals' => ['DealsController', 'index'],
 
     // Shops

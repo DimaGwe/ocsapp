@@ -214,7 +214,7 @@ $cartCount = $cartCount ?? 0;
     <section class="mc-section mc-section-soft" id="mc-produits">
       <div class="mc-section-head">
         <div><span class="mc-eyebrow"><?= $fr ? 'Produits à découvrir' : 'Products to discover' ?></span><h2><?= $fr ? 'Une vitrine locale qui évolue avec votre secteur.' : 'A local showcase that evolves with your area.' ?></h2><p><?= $fr ? "Les produits affichés proviennent des commerces et vendeurs actifs dans l'écosystème OCSAPP." : 'Products shown come from active shops and sellers in the OCSAPP ecosystem.' ?></p></div>
-        <a class="mc-see-all" href="<?= url('best-sellers') ?>"><?= $fr ? 'Voir plus de produits' : 'See more products' ?> →</a>
+        <a class="mc-see-all" href="<?= url('products') ?>"><?= $fr ? 'Voir plus de produits' : 'See more products' ?> →</a>
       </div>
       <?php $discoverProducts = array_slice($mostSellingProducts, 0, 8); ?>
       <?php if (!empty($discoverProducts)): ?>
