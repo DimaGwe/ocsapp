@@ -78,9 +78,11 @@ body.driver-central-page {
 .hero-proof-row { max-width: 780px; margin: 0 auto; display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
 .hero-proof-row.cols-4 { max-width: 920px; grid-template-columns: repeat(4,1fr); }
 .hero-proof-item {
+  position: relative; overflow: hidden;
   background: rgba(255,255,255,.82); border: 1px solid rgba(var(--green-rgb),.16); border-radius: 16px;
   padding: 17px 16px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 2px;
 }
+.hero-proof-item::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--green); opacity: .9; }
 .hero-proof-item strong { color: var(--green); font-family: 'Poppins','Segoe UI',sans-serif; font-size: 20px; line-height: 1.2; }
 .hero-proof-item span { color: var(--text-grey); font-size: 12.5px; }
 
@@ -268,7 +270,8 @@ body.lang-fr .faq-item.new h4::after { content: "Nouveau"; }
 /* Support */
 .support { padding: 0 0 78px; }
 .support-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; max-width: 900px; margin: 0 auto; }
-.support-card { text-align: center; border: 1px solid var(--border); border-radius: 16px; padding: 26px 20px; box-shadow: var(--shadow-sm); }
+.support-card { position: relative; overflow: hidden; text-align: center; border: 1px solid var(--border); border-radius: 16px; padding: 26px 20px; box-shadow: var(--shadow-sm); }
+.support-card::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--green); opacity: .9; }
 .support-card h4 { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--green); margin-bottom: 10px; }
 .support-card .support-main { font-family: 'Poppins','Segoe UI',sans-serif; font-weight: 700; font-size: 16px; color: var(--text-dark); margin-bottom: 4px; }
 .support-card p { font-size: 12.5px; color: var(--text-grey-light); }
