@@ -30,7 +30,7 @@ $fr = ($currentLang === 'fr');
   <link rel="stylesheet" href="<?= asset('css/components/eco-header.css') ?>">
   <link rel="stylesheet" href="<?= asset('css/components/footer.css') ?>">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-  <link rel="stylesheet" href="<?= asset('css/pages/seller-central.css') ?>">
+  <link rel="stylesheet" href="<?= asset('css/pages/seller-central.css') ?>?v=<?= @filemtime(BASE_PATH . '/public/assets/css/pages/seller-central.css') ?>">
 </head>
 <body class="seller-central-page<?= $fr ? ' lang-fr' : '' ?>">
 <div class="eco-beta">
@@ -452,75 +452,75 @@ $fr = ($currentLang === 'fr');
       <p><?= $fr ? "Tout ce que vous devez savoir avant d'ouvrir votre boutique." : "Everything you need to know before opening your shop." ?></p>
     </div>
     <div class="faq-list">
-      <div class="faq-item">
-        <h4><?= $fr ? "Combien ça coûte d'ouvrir une boutique sur OCSAPP ?" : "How much does it cost to open a shop on OCSAPP?" ?></h4>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Combien ça coûte d'ouvrir une boutique sur OCSAPP ?" : "How much does it cost to open a shop on OCSAPP?" ?></h4></summary>
         <p><?= $fr
           ? "Rien. Le forfait Essential est entièrement gratuit. Vous payez seulement lorsque vous vendez - OCSAPP prélève une petite commission par vente complétée. Les forfaits payants (Experience à 39 $/mois, Prestige à 89 $/mois) offrent des produits illimités, un taux de commission réduit et des outils supplémentaires."
           : "Nothing. The Essential plan is entirely free. You only pay when you sell - OCSAPP takes a small commission on each completed sale. Paid plans (Experience at $39/month, Prestige at $89/month) offer unlimited products, a reduced commission rate, and additional tools." ?></p>
-      </div>
-      <div class="faq-item">
-        <h4><?= $fr ? "Combien de temps dure l'approbation ?" : "How long does approval take?" ?></h4>
+      </details>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Combien de temps dure l'approbation ?" : "How long does approval take?" ?></h4></summary>
         <p><?= $fr
           ? "La plupart des candidatures sont examinées dans un délai de 2 à 5 jours ouvrables. Vous serez notifié par courriel. Si vous n'avez pas eu de nouvelles après 5 jours, contactez sellers@ocsapp.ca avec votre courriel d'inscription."
           : "Most applications are reviewed within 2–5 business days. You'll be notified by email. If you haven't heard back after 5 days, contact sellers@ocsapp.ca with the email you registered with." ?></p>
-      </div>
-      <div class="faq-item">
-        <h4><?= $fr ? "Comment fonctionne la livraison ? Est-ce que j'envoie les commandes moi-même ?" : "How does delivery work? Do I ship orders myself?" ?></h4>
+      </details>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Comment fonctionne la livraison ? Est-ce que j'envoie les commandes moi-même ?" : "How does delivery work? Do I ship orders myself?" ?></h4></summary>
         <p><?= $fr
           ? "Non - vous n'expédiez pas les commandes vous-même. Le réseau de livreurs ODA d'OCSAPP gère 100 % des livraisons. Lorsqu'une commande est prête, un livreur ODA est envoyé pour la ramasser chez vous et la livrer directement au client."
           : "No - you never ship orders yourself. OCSAPP's ODA driver network handles 100% of deliveries. When an order is ready, an ODA driver is dispatched to pick it up from your shop and deliver it directly to the customer." ?></p>
-      </div>
-      <div class="faq-item">
-        <h4><?= $fr ? "Comment et quand suis-je payé ?" : "How and when do I get paid?" ?></h4>
+      </details>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Comment et quand suis-je payé ?" : "How and when do I get paid?" ?></h4></summary>
         <p><?= $fr
           ? "OCSAPP effectue les versements chaque semaine, tous les lundis, par dépôt direct dans votre compte bancaire, pour les commandes complétées durant la période précédente. Les montants inférieurs à 25 $ sont reportés à la semaine suivante plutôt que versés séparément. Chaque versement est accompagné d'un relevé détaillé, avec la commission et les frais de traitement indiqués comme deux lignes distinctes."
           : "OCSAPP processes payouts weekly, every Monday, by direct deposit to your bank account, for orders completed in the preceding period. Amounts under $25 roll over to the following week rather than being paid separately. Every payout comes with a detailed statement, with commission and processing fees shown as two separate line items." ?></p>
-      </div>
-      <div class="faq-item">
-        <h4><?= $fr ? "Combien de produits puis-je lister ?" : "How many products can I list?" ?></h4>
+      </details>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Combien de produits puis-je lister ?" : "How many products can I list?" ?></h4></summary>
         <p><?= $fr
           ? "Sur le forfait Essential, vous pouvez lister jusqu'à 30 produits actifs à la fois. Les forfaits Experience et plus offrent des listes de produits illimitées. Contactez sellers@ocsapp.ca pour discuter d'une mise à niveau."
           : "On the Essential plan, you can list up to 30 active products at a time. Experience and higher plans offer unlimited product listings. Contact sellers@ocsapp.ca to discuss upgrading." ?></p>
-      </div>
-      <div class="faq-item">
-        <h4><?= $fr ? "Puis-je changer de forfait plus tard ?" : "Can I change plans later?" ?></h4>
+      </details>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Puis-je changer de forfait plus tard ?" : "Can I change plans later?" ?></h4></summary>
         <p><?= $fr
           ? "Oui - vous pouvez passer à niveau à tout moment. Contactez sellers@ocsapp.ca ou votre gestionnaire de compte. Les changements prennent effet dans un délai d'un jour ouvrable. Tous les forfaits payants sont au mois, sans engagement à long terme."
           : "Yes - you can upgrade at any time. Contact sellers@ocsapp.ca or your account manager. Changes take effect within one business day. All paid plans are month-to-month, with no long-term commitment." ?></p>
-      </div>
-      <div class="faq-item new">
-        <h4><?= $fr ? "Qu'est-ce que le champ « poids » et pourquoi dois-je le remplir ?" : "What's the \"weight\" field, and why is it required?" ?></h4>
+      </details>
+      <details class="faq-item new">
+        <summary><h4><?= $fr ? "Qu'est-ce que le champ « poids » et pourquoi dois-je le remplir ?" : "What's the \"weight\" field, and why is it required?" ?></h4></summary>
         <p><?= $fr
           ? "Le poids est un champ obligatoire sur chaque fiche produit - pas un détail facultatif. OCSAPP additionne le poids déclaré pour chaque article du panier d'un acheteur, à la caisse, pour déterminer si un supplément pour commande volumineuse s'applique. L'acheteur n'estime jamais lui-même le poids : votre valeur déclarée est la seule donnée utilisée pour ce calcul. Si un livreur constate à la cueillette un écart important avec le poids déclaré, OCSAPP peut ajuster le supplément rétroactivement à partir d'une preuve photo ou de balayage."
           : "Weight is a mandatory field on every product listing - not an optional detail. OCSAPP sums the weight you declare across every item in a buyer's cart, at checkout, to determine whether an oversize order surcharge applies. Buyers never estimate weight themselves: your declared figure is the only data used for that calculation. If a driver's inspection at pickup shows a material discrepancy with the declared weight, OCSAPP may adjust the surcharge retroactively based on photo or scan evidence." ?></p>
-      </div>
-      <div class="faq-item new">
-        <h4><?= $fr ? "Que se passe-t-il si un acheteur retourne un article ou demande un remboursement ?" : "What happens if a buyer returns an item or requests a refund?" ?></h4>
+      </details>
+      <details class="faq-item new">
+        <summary><h4><?= $fr ? "Que se passe-t-il si un acheteur retourne un article ou demande un remboursement ?" : "What happens if a buyer returns an item or requests a refund?" ?></h4></summary>
         <p><?= $fr
           ? "Les retours sont gérés par la Politique de retours et remboursements d'OCSAPP. Si le système détermine, à partir d'une preuve photo et de balayage, qu'un retour est lié à une erreur ou un défaut présent au moment où vous avez remis la commande au livreur, les frais de logistique inverse et la valeur de l'article remboursé sont déduits de votre prochain versement. Vous n'êtes jamais facturé pour un problème survenu après la prise en charge par le livreur, ni pour un simple changement d'avis de l'acheteur - et vous disposez de 5 jours ouvrables pour contester une déduction directement depuis votre tableau de bord."
           : "Returns are governed by OCSAPP's Returns &amp; Refund Policy. If the system determines, from photo and scan evidence, that a return is linked to an error or defect present when you handed the order to the driver, the reverse-logistics fee and the refunded item's value are deducted from your next payout. You're never charged for an issue that occurred after the driver took custody, or for a simple change of mind by the buyer - and you have 5 business days to dispute a deduction directly from your dashboard." ?></p>
-      </div>
-      <div class="faq-item new">
-        <h4><?= $fr ? "Les suppléments pour commande volumineuse ou multi-boutiques affectent-ils ma commission ?" : "Do the oversize or multi-shop surcharges affect my commission?" ?></h4>
+      </details>
+      <details class="faq-item new">
+        <summary><h4><?= $fr ? "Les suppléments pour commande volumineuse ou multi-boutiques affectent-ils ma commission ?" : "Do the oversize or multi-shop surcharges affect my commission?" ?></h4></summary>
         <p><?= $fr
           ? "Non. Le supplément pour commande volumineuse, les frais d'arrêt additionnel et le supplément longue distance sont payés par l'acheteur et servent uniquement à financer la livraison. Aucun des trois ne change le pourcentage de commission de votre forfait."
           : "No. The oversize order surcharge, the additional-stop fee, and the long-distance surcharge are all paid by the buyer and go entirely toward funding delivery. None of the three changes your plan's commission percentage." ?></p>
-      </div>
-      <div class="faq-item new">
-        <h4><?= $fr ? "Comment sont résolus les différends avec OCSAPP ?" : "How are disputes with OCSAPP resolved?" ?></h4>
+      </details>
+      <details class="faq-item new">
+        <summary><h4><?= $fr ? "Comment sont résolus les différends avec OCSAPP ?" : "How are disputes with OCSAPP resolved?" ?></h4></summary>
         <p><?= $fr
           ? "OCSAPP et vous tenterez d'abord de résoudre tout différend par la négociation de bonne foi. Si le différend n'est pas résolu dans les 30 jours, il peut être soumis aux tribunaux du district judiciaire de Montréal, Québec, à la compétence exclusive desquels vous et OCSAPP vous soumettez. OCSAPP n'exige aucun arbitrage obligatoire dans votre entente."
           : "OCSAPP and you will first attempt to resolve any dispute through good-faith negotiation. If unresolved within 30 days, it may be submitted to the courts of the judicial district of Montréal, Québec, to whose exclusive jurisdiction you and OCSAPP submit. OCSAPP does not require mandatory arbitration in your agreement." ?></p>
-      </div>
-      <div class="faq-item new">
-        <h4><?= $fr ? "Y a-t-il des exigences d'étiquetage en français pour mes produits ?" : "Are there French labelling requirements for my products?" ?></h4>
+      </details>
+      <details class="faq-item new">
+        <summary><h4><?= $fr ? "Y a-t-il des exigences d'étiquetage en français pour mes produits ?" : "Are there French labelling requirements for my products?" ?></h4></summary>
         <p><?= $fr
           ? "Depuis le 1er juin 2025, les termes génériques ou descriptifs associés à une marque de commerce - par exemple un nom de saveur ou un ingrédient - doivent apparaître en français sur le produit lui-même, même si la marque elle-même peut demeurer dans une autre langue. Une période de transition s'applique jusqu'au 1er juin 2027 pour les produits fabriqués avant le 1er juin 2025. Vous êtes responsable de la conformité de l'emballage de vos produits avant de les lister sur la Plateforme."
           : "Since June 1, 2025, generic or descriptive terms tied to a trademark - like a flavour name or an ingredient - must appear in French on the product itself, even if the trademark itself can stay in another language. A transition period runs until June 1, 2027 for products manufactured before June 1, 2025. You're responsible for your product packaging being compliant before listing it on the Platform." ?></p>
-      </div>
-      <div class="faq-item new">
+      </details>
+      <details class="faq-item new">
 <?php if ($fr): ?>
-        <h4>Quels permis s'appliquent à la catégorie de ma boutique ?</h4>
+        <summary><h4>Quels permis s'appliquent à la catégorie de ma boutique ?</h4></summary>
         <p>En plus des exigences qui s'appliquent à toutes les boutiques, chaque catégorie a ses propres règles. Ce résumé est un guide et non un avis juridique : vérifiez auprès de l'organisme émetteur ou d'un professionnel pour votre situation.</p>
         <p style="margin-top:10px;"><strong>Restauration :</strong> permis de restauration du MAPAQ avant de préparer ou de servir des aliments; formation en hygiène et salubrité alimentaires du MAPAQ pour les gestionnaires et les manipulateurs d'aliments; permis de la Régie des alcools, des courses et des jeux (RACJ) si vous servez de l'alcool; licence d'exécution publique d'Entandem si vous diffusez de la musique; règlements municipaux sur les séparateurs de graisse et les eaux usées.</p>
         <p style="margin-top:10px;"><strong>Épicerie :</strong> permis de vente au détail du MAPAQ; entente de détaillant avec Loto-Québec pour vendre des billets de loterie; balances homologuées et inspectées selon les règles de Mesures Canada si vous vendez au poids.</p>
@@ -535,7 +535,7 @@ $fr = ($currentLang === 'fr');
         <p style="margin-top:10px;"><strong>Saveurs du monde :</strong> licence pour la salubrité des aliments au Canada (SAC) de l'ACIA si vous importez des aliments; compte d'importateur et déclarations auprès de l'ASFC; étiquetage alimentaire conforme aux règles fédérales et québécoises; permis du MAPAQ selon votre activité (vente au détail ou restauration).</p>
         <p style="margin-top:10px;">Détenir un permis ne permet pas à lui seul de vendre un produit sur OCSAPP : les articles interdits et restreints prévus à votre entente vendeur s'appliquent toujours.</p>
 <?php else: ?>
-        <h4>What permits apply to my shop's category?</h4>
+        <summary><h4>What permits apply to my shop's category?</h4></summary>
         <p>On top of the requirements that apply to every shop, each category has its own rules. This summary is a guide, not legal advice: check with the issuing body or a professional for your situation.</p>
         <p style="margin-top:10px;"><strong>Food &amp; Dining:</strong> a MAPAQ restaurant permit before any food is prepared or served; MAPAQ food hygiene and safety training for managers and food handlers; a permit from the Régie des alcools, des courses et des jeux (RACJ) if you serve alcohol; a public performance licence from Entandem if you play music; municipal grease trap and wastewater bylaws.</p>
         <p style="margin-top:10px;"><strong>Grocery:</strong> a MAPAQ retail food permit; a Loto-Québec retailer agreement to sell lottery tickets; scales approved and inspected under Measurement Canada rules if you sell by weight.</p>
@@ -550,31 +550,31 @@ $fr = ($currentLang === 'fr');
         <p style="margin-top:10px;"><strong>World Flavors:</strong> a Safe Food for Canadians (SFC) licence from the CFIA if you import food; a CBSA import account and declarations; food labelling that meets federal and Quebec rules; the MAPAQ permit that matches your activity (retail or restaurant).</p>
         <p style="margin-top:10px;">Holding a permit does not by itself allow a product to be sold on OCSAPP: the prohibited and restricted items in your Seller Agreement still apply.</p>
 <?php endif; ?>
-      </div>
-      <div class="faq-item new">
+      </details>
+      <details class="faq-item new">
 <?php if ($fr): ?>
-        <h4>OCSAPP vérifie-t-il mes permis ?</h4>
+        <summary><h4>OCSAPP vérifie-t-il mes permis ?</h4></summary>
         <p>Notre équipe examine votre NEQ et les documents d'immatriculation que vous téléversez avant d'approuver votre boutique. Vos permis de catégorie et votre assurance sont votre responsabilité selon l'entente vendeur : vous confirmez les détenir en signant l'entente, et vous vous engagez à en transmettre une copie à OCSAPP sur demande et à chaque renouvellement.</p>
 <?php else: ?>
-        <h4>Does OCSAPP check my permits?</h4>
+        <summary><h4>Does OCSAPP check my permits?</h4></summary>
         <p>Our team reviews your NEQ and any registration documents you upload before approving your shop. Your category permits and insurance are your responsibility under the Seller Agreement: you confirm you hold them when you sign it, and you agree to send OCSAPP a copy on request and at each renewal.</p>
 <?php endif; ?>
-      </div>
-      <div class="faq-item new">
+      </details>
+      <details class="faq-item new">
 <?php if ($fr): ?>
-        <h4>Ai-je besoin d'une assurance responsabilité civile ?</h4>
+        <summary><h4>Ai-je besoin d'une assurance responsabilité civile ?</h4></summary>
         <p>Oui. La loi québécoise n'impose pas d'assurance générale à la plupart des commerces, mais votre entente vendeur l'exige : une assurance responsabilité civile générale d'au moins 1 000 000 $, incluant la responsabilité produits pour les aliments et les produits de consommation. En pratique, plusieurs propriétaires commerciaux, franchiseurs et municipalités de l'Ouest-de-l'Île demandent de 2 M$ à 5 M$ : vérifiez votre bail avant de choisir votre couverture.</p>
 <?php else: ?>
-        <h4>Do I need liability insurance?</h4>
+        <summary><h4>Do I need liability insurance?</h4></summary>
         <p>Yes. Quebec law doesn't impose a general insurance requirement on most shops, but your Seller Agreement does: at least $1,000,000 in commercial general liability coverage, including product liability for food or consumable products. In practice, many West Island landlords, franchisors and municipalities ask for $2M to $5M, so check your lease before choosing your coverage.</p>
 <?php endif; ?>
-      </div>
-      <div class="faq-item new">
-        <h4><?= $fr ? "Comment fonctionne le programme Partenaire Fondateur ?" : "How does the Founding Partner Program work?" ?></h4>
+      </details>
+      <details class="faq-item new">
+        <summary><h4><?= $fr ? "Comment fonctionne le programme Partenaire Fondateur ?" : "How does the Founding Partner Program work?" ?></h4></summary>
         <p><?= $fr
           ? "Les 20 premières boutiques approuvées sur OCSAPP obtiennent automatiquement le statut de Partenaire Fondateur - aucune candidature séparée requise. Vous obtenez le taux Experience (12 %/6 %) verrouillé 12 mois sans frais mensuel, vos 5 premières livraisons sans commission, et un insigne permanent. Votre position dans la cohorte est confirmée à l'approbation de votre boutique et visible sur votre tableau de bord."
           : "The first 20 approved shops on OCSAPP automatically get Founding Partner status - no separate application needed. You get the Experience rate (12%/6%) locked for 12 months at no monthly fee, your first 5 deliveries commission-free, and a permanent badge. Your cohort position is confirmed when your shop is approved and shown on your dashboard." ?></p>
-      </div>
+      </details>
     </div>
   </div>
 </section>

@@ -31,7 +31,7 @@ $fr = ($currentLang === 'fr');
   <link rel="stylesheet" href="<?= asset('css/components/eco-header.css') ?>">
   <link rel="stylesheet" href="<?= asset('css/components/footer.css') ?>">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-  <link rel="stylesheet" href="<?= asset('css/pages/buyer-central.css') ?>">
+  <link rel="stylesheet" href="<?= asset('css/pages/buyer-central.css') ?>?v=<?= @filemtime(BASE_PATH . '/public/assets/css/pages/buyer-central.css') ?>">
 </head>
 <body class="buyer-central-page<?= $fr ? ' lang-fr' : '' ?>">
 <div class="eco-beta">
@@ -409,81 +409,81 @@ $fr = ($currentLang === 'fr');
       <p><?= $fr ? "Tout ce que vous devez savoir avant de passer votre première commande." : "Everything you need to know before placing your first order." ?></p>
     </div>
     <div class="faq-list">
-      <div class="faq-item">
-        <h4><?= $fr ? "Est-ce que c'est gratuit de créer un compte acheteur ?" : "Is it free to create a buyer account?" ?></h4>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Est-ce que c'est gratuit de créer un compte acheteur ?" : "Is it free to create a buyer account?" ?></h4></summary>
         <p><?= $fr
           ? "Oui, entièrement gratuit. La création d'un compte acheteur OCSAPP ne coûte rien. Vous ne payez que les produits que vous achetez, plus les frais de livraison affichés au moment de la commande."
           : "Yes, entirely free. Creating an OCSAPP buyer account costs nothing. You only pay for the products you buy, plus the delivery fee shown at checkout." ?></p>
-      </div>
-      <div class="faq-item new">
-        <h4><?= $fr ? "Y a-t-il un âge minimum pour magasiner sur OCSAPP ?" : "Is there a minimum age to shop on OCSAPP?" ?></h4>
+      </details>
+      <details class="faq-item new">
+        <summary><h4><?= $fr ? "Y a-t-il un âge minimum pour magasiner sur OCSAPP ?" : "Is there a minimum age to shop on OCSAPP?" ?></h4></summary>
         <p><?= $fr
           ? "Oui. Pour créer votre propre compte acheteur, vous devez avoir au moins 18 ans, l'âge de la majorité au Québec. Les jeunes de 13 à 17 ans peuvent magasiner seulement comme membres du Profil Maison d'un parent ou tuteur. OCSAPP n'est pas offert aux moins de 13 ans. Si vous croyez qu'un mineur a créé un compte autrement, écrivez-nous à privacy@ocsapp.ca."
           : "Yes. To create your own buyer account, you must be at least 18 years old, the age of majority in Québec. Teens aged 13 to 17 can shop only as members of a parent's or guardian's Home Profile. OCSAPP is not available to children under 13. If you believe a minor has created an account any other way, contact us at privacy@ocsapp.ca." ?></p>
-      </div>
-      <div class="faq-item new">
-        <h4><?= $fr ? "Qu'est-ce que le Profil Maison ?" : "What is a Home Profile?" ?></h4>
+      </details>
+      <details class="faq-item new">
+        <summary><h4><?= $fr ? "Qu'est-ce que le Profil Maison ?" : "What is a Home Profile?" ?></h4></summary>
         <p><?= $fr
           ? "Le Profil Maison étend votre compte à vos jeunes de 13 à 17 ans. Vous les invitez depuis la section Profil Maison de votre compte, et leurs commandes sont payées avec votre carte enregistrée. Vous recevez un courriel à chaque commande et pouvez en suivre la livraison, et les produits réservés aux 18 ans et plus sont bloqués sur leur compte. Vous pouvez retirer un membre en tout temps."
           : "A Home Profile extends your account to your kids aged 13 to 17. You invite them from the Home Profile section of your account, and their orders are paid with your saved card. You get an email for every order and can track its delivery, and products for ages 18+ are blocked on their account. You can remove a member at any time." ?></p>
-      </div>
-      <div class="faq-item">
-        <h4><?= $fr ? "Dans quelles zones livrez-vous ?" : "What zones do you deliver to?" ?></h4>
+      </details>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Dans quelles zones livrez-vous ?" : "What zones do you deliver to?" ?></h4></summary>
         <p><?= $fr
           ? "OCSAPP livre actuellement dans le West Island. Laval et le centre-ville de Montréal sont publiés et s'activeront au fur et à mesure de notre expansion. Les zones de livraison disponibles s'affichent automatiquement lors de la saisie de votre adresse."
           : "OCSAPP currently delivers in the West Island. Laval and downtown Montreal are published and will activate as we expand. Available delivery zones show automatically when you enter your address." ?></p>
-      </div>
-      <div class="faq-item">
-        <h4><?= $fr ? "Comment puis-je suivre ma commande ?" : "How can I track my order?" ?></h4>
+      </details>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Comment puis-je suivre ma commande ?" : "How can I track my order?" ?></h4></summary>
         <p><?= $fr
           ? "Dès qu'un livreur ODA prend en charge votre commande, vous recevez un lien de suivi en temps réel. Vous pouvez suivre la progression sur une carte directement depuis votre téléphone ou votre navigateur."
           : "As soon as an ODA driver takes your order, you receive a real-time tracking link. You can follow progress on a map right from your phone or browser." ?></p>
-      </div>
-      <div class="faq-item">
-        <h4><?= $fr ? "Puis-je programmer une livraison à l'avance ?" : "Can I schedule a delivery in advance?" ?></h4>
+      </details>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Puis-je programmer une livraison à l'avance ?" : "Can I schedule a delivery in advance?" ?></h4></summary>
         <p><?= $fr
           ? "Oui. Lors du passage en caisse, vous pouvez choisir une livraison immédiate ou sélectionner un créneau programmé - ce soir, demain ou plus tard dans la semaine, selon la disponibilité."
           : "Yes. At checkout, you can choose immediate delivery or select a scheduled window - tonight, tomorrow, or later in the week, depending on availability." ?></p>
-      </div>
-      <div class="faq-item">
-        <h4><?= $fr ? "Puis-je annuler ma commande ?" : "Can I cancel my order?" ?></h4>
+      </details>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Puis-je annuler ma commande ?" : "Can I cancel my order?" ?></h4></summary>
         <p><?= $fr
           ? "Oui, tant qu'elle est au statut « Commande passée » ou « En traitement ». Une fois votre commande marquée « Prête pour ramassage » ou « En livraison », l'annulation pourrait ne plus être possible - contactez notre support immédiatement et nous ferons de notre mieux pour vous aider."
           : "Yes, as long as it's in \"Order Placed\" or \"Processing\" status. Once your order is marked \"Ready for Pickup\" or \"Out for Delivery,\" cancellation may no longer be possible - contact support immediately and we'll do our best to help." ?></p>
-      </div>
-      <div class="faq-item">
-        <h4><?= $fr ? "Que faire si un article de ma commande est manquant ou incorrect ?" : "What if an item in my order is missing or incorrect?" ?></h4>
+      </details>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Que faire si un article de ma commande est manquant ou incorrect ?" : "What if an item in my order is missing or incorrect?" ?></h4></summary>
         <p><?= $fr
           ? "Contactez notre équipe de support à info@ocsapp.ca ou par téléphone au 514-746-3789 (Lun–Dim, 7h–23h) dans les 14 jours suivant la livraison. Nous traitons toutes les réclamations rapidement. Incluez votre numéro de commande pour un traitement plus rapide."
           : "Contact our support team at info@ocsapp.ca or by phone at 514-746-3789 (Mon–Sun, 7am–11pm) within 14 days of delivery. We handle all claims quickly. Include your order number for faster processing." ?></p>
-      </div>
-      <div class="faq-item">
-        <h4><?= $fr ? "Quels modes de paiement acceptez-vous ?" : "What payment methods do you accept?" ?></h4>
+      </details>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Quels modes de paiement acceptez-vous ?" : "What payment methods do you accept?" ?></h4></summary>
         <p><?= $fr
           ? "OCSAPP accepte les cartes de crédit (Visa, Mastercard), les cartes de débit et PayPal. Tous les paiements sont traités de façon sécurisée via Stripe. Vos informations de paiement ne sont jamais stockées en clair sur nos serveurs."
           : "OCSAPP accepts credit cards (Visa, Mastercard), debit cards, and PayPal. All payments are processed securely through Stripe. Your payment information is never stored in plain text on our servers." ?></p>
-      </div>
-      <div class="faq-item new">
-        <h4><?= $fr ? "Comment fonctionnent les retours et remboursements ?" : "How do returns and refunds work?" ?></h4>
+      </details>
+      <details class="faq-item new">
+        <summary><h4><?= $fr ? "Comment fonctionnent les retours et remboursements ?" : "How do returns and refunds work?" ?></h4></summary>
         <p><?= $fr
           ? "Les retours sont couverts par la Politique de retours et remboursements d'OCSAPP. Si votre réclamation est admissible, OCSAPP utilise une preuve photo et de balayage - prise à la fois lors de la préparation par le vendeur et lors de la livraison - pour déterminer automatiquement si un problème est survenu avant la cueillette ou pendant le transport, et résout le dossier en conséquence (remplacement, crédit ou remboursement). Vous pouvez soumettre une réclamation directement depuis votre compte ou en contactant le support."
           : "Returns are covered by OCSAPP's Returns &amp; Refund Policy. If your claim is eligible, OCSAPP uses photo and scan evidence - captured both when the seller prepares your order and at delivery - to automatically determine whether an issue occurred before pickup or in transit, and resolves it accordingly (replacement, credit, or refund). You can submit a claim directly from your account or by contacting support." ?></p>
-      </div>
-      <div class="faq-item new">
+      </details>
+      <details class="faq-item new">
 <?php if ($fr): ?>
-        <h4>Les boutiques sur OCSAPP sont-elles de vraies entreprises ?</h4>
+        <summary><h4>Les boutiques sur OCSAPP sont-elles de vraies entreprises ?</h4></summary>
         <p>Oui. Chaque vendeur fournit son numéro d'entreprise du Québec (NEQ), et notre équipe examine chaque candidature avant qu'une boutique puisse vendre. Les vendeurs s'engagent aussi à détenir les permis qu'exige leur catégorie (par exemple un permis du MAPAQ pour les entreprises alimentaires) et à maintenir une assurance responsabilité civile.</p>
 <?php else: ?>
-        <h4>Are the shops on OCSAPP legitimate businesses?</h4>
+        <summary><h4>Are the shops on OCSAPP legitimate businesses?</h4></summary>
         <p>Yes. Every seller provides its Quebec enterprise number (NEQ), and our team reviews each application before a shop can sell. Sellers also agree to hold the permits their category requires (for example a MAPAQ permit for food businesses) and to carry liability insurance.</p>
 <?php endif; ?>
-      </div>
-      <div class="faq-item new">
-        <h4><?= $fr ? "Les suppléments affectent-ils le prix affiché par le vendeur ?" : "Do surcharges affect the seller's listed price?" ?></h4>
+      </details>
+      <details class="faq-item new">
+        <summary><h4><?= $fr ? "Les suppléments affectent-ils le prix affiché par le vendeur ?" : "Do surcharges affect the seller's listed price?" ?></h4></summary>
         <p><?= $fr
           ? "Non. Le supplément pour commande volumineuse, les frais d'arrêt additionnel et le supplément longue distance s'ajoutent uniquement au frais de livraison - jamais au prix du produit lui-même, qui reste toujours le prix exact affiché par le vendeur."
           : "No. The oversize order surcharge, additional-stop fee, and long-distance surcharge are added only to the delivery fee - never to the product price itself, which always stays the seller's exact listed price." ?></p>
-      </div>
+      </details>
     </div>
   </div>
 </section>

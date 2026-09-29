@@ -32,7 +32,7 @@ $fr = ($currentLang === 'fr');
   <link rel="stylesheet" href="<?= asset('css/components/eco-header.css') ?>">
   <link rel="stylesheet" href="<?= asset('css/components/footer.css') ?>">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-  <link rel="stylesheet" href="<?= asset('css/pages/driver-central.css') ?>">
+  <link rel="stylesheet" href="<?= asset('css/pages/driver-central.css') ?>?v=<?= @filemtime(BASE_PATH . '/public/assets/css/pages/driver-central.css') ?>">
 </head>
 <body class="driver-central-page<?= $fr ? ' lang-fr' : '' ?>">
 <div class="eco-beta">
@@ -455,74 +455,74 @@ $fr = ($currentLang === 'fr');
       <p><?= $fr ? "Tout ce que vous devez savoir avant de postuler." : "Everything you need to know before applying." ?></p>
     </div>
     <div class="faq-list">
-      <div class="faq-item">
-        <h4><?= $fr ? "Comment et quand suis-je payé ?" : "How and when do I get paid?" ?></h4>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Comment et quand suis-je payé ?" : "How and when do I get paid?" ?></h4></summary>
         <p><?= $fr ? "Vos gains sont versés chaque semaine, par dépôt direct, pour les courses complétées durant la période du lundi au dimanche précédent - versés le lundi suivant. Un relevé détaillé est disponible dans l'application, indiquant chaque course, sa zone et le tarif appliqué." : "Your earnings are paid weekly by direct deposit, for jobs completed during the preceding Monday-to-Sunday period - paid out the following Monday. A detailed statement is available in the app, showing each job, its zone, and the rate applied." ?></p>
-      </div>
-      <div class="faq-item">
-        <h4><?= $fr ? "Que faire si je remarque une erreur sur mon versement ?" : "What if I notice an error in my payout?" ?></h4>
+      </details>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Que faire si je remarque une erreur sur mon versement ?" : "What if I notice an error in my payout?" ?></h4></summary>
         <p><?= $fr ? "Signalez tout écart dans les 30 jours suivant la date du versement en question. Passé ce délai, le versement est considéré comme accepté, sauf erreur manifeste." : "Report any discrepancy within 30 days of the payout date in question. After that, the payout is considered accepted absent manifest error." ?></p>
-      </div>
-      <div class="faq-item">
-        <h4><?= $fr ? "Suis-je obligé d'accepter un nombre minimum de courses ?" : "Am I required to accept a minimum number of jobs?" ?></h4>
+      </details>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Suis-je obligé d'accepter un nombre minimum de courses ?" : "Am I required to accept a minimum number of jobs?" ?></h4></summary>
         <p><?= $fr ? "Non. OCSAPP ne garantit ni un nombre minimum de courses, ni des gains minimums, ni un équivalent horaire garanti. Vous acceptez ou refusez chaque course librement - rien ne vous oblige à un minimum d'heures ou de courses." : "No. OCSAPP doesn't guarantee a minimum number of jobs, minimum earnings, or a guaranteed hourly equivalent. You accept or decline each job freely - nothing obligates you to a minimum number of hours or deliveries." ?></p>
-      </div>
-      <div class="faq-item">
-        <h4><?= $fr ? "Pourquoi dois-je prendre une photo à la cueillette et à la livraison ?" : "Why do I need to take a photo at pickup and delivery?" ?></h4>
+      </details>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Pourquoi dois-je prendre une photo à la cueillette et à la livraison ?" : "Why do I need to take a photo at pickup and delivery?" ?></h4></summary>
         <p><?= $fr ? "Sur chaque commande, pas seulement les retours, une photo ou un balayage à la cueillette confirme l'état du colis avant que vous partiez - et une preuve de livraison confirme qu'il vous a quitté en bon état. Si un problème est signalé plus tard, ce sont ces deux preuves qui déterminent où l'incident s'est produit : avant votre garde (responsabilité du vendeur ou du fournisseur) ou pendant le transport. Sans votre photo de cueillette, une réclamation n'a aucune base de comparaison - cette étape vous protège autant qu'elle protège le client. Omettre ou falsifier cette étape est considéré comme un manquement sérieux." : "On every order, not just returns, a photo or scan at pickup confirms the package's condition before you leave - and proof of delivery confirms it left your custody in good condition. If an issue is reported later, these two pieces of evidence determine where the problem happened: before your custody (seller or supplier responsibility) or in transit. Without your pickup photo, a claim has no baseline to compare against - this step protects you as much as it protects the customer. Omitting or falsifying this step is treated as a serious breach." ?></p>
-      </div>
-      <div class="faq-item">
-        <h4><?= $fr ? "Qu'est-ce qu'une livraison inversée (un retour) ?" : "What's a reverse-logistics job (a return)?" ?></h4>
+      </details>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Qu'est-ce qu'une livraison inversée (un retour) ?" : "What's a reverse-logistics job (a return)?" ?></h4></summary>
         <p><?= $fr ? "C'est une course distincte dispatchée pour un retour, un échange ou une collecte liée à la Politique de retours et remboursements d'OCSAPP. Elle est offerte de la même façon qu'une course standard - vous pouvez l'accepter ou la refuser librement - et elle paie davantage qu'une livraison standard dans la même zone, puisqu'une collecte de retour prend généralement plus de temps qu'une livraison groupée." : "It's a distinct job dispatched for a return, exchange, or pickup connected to OCSAPP's Returns & Refund Policy. It's offered the same way as a standard job - you can accept or decline freely - and it pays more than a standard delivery in the same zone, since a return pickup generally takes longer than a batched delivery." ?></p>
-      </div>
-      <div class="faq-item">
-        <h4><?= $fr ? "Les suppléments changent-ils mon partage de 70 % ?" : "Do surcharges change my 70% split?" ?></h4>
+      </details>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Les suppléments changent-ils mon partage de 70 % ?" : "Do surcharges change my 70% split?" ?></h4></summary>
         <p><?= $fr ? "Non. Le partage 70/30 s'applique de façon identique au tarif de base et à tout supplément applicable (commande volumineuse, arrêt additionnel, longue distance). Ce sont des gains additionnels calculés sur le même principe, jamais une exception à votre taux." : "No. The 70/30 split applies identically to the base rate and to any applicable surcharge (oversize, additional-stop, long-distance). These are additional earnings calculated the same way, never an exception to your rate." ?></p>
-      </div>
-      <div class="faq-item">
-        <h4><?= $fr ? "Existe-t-il un système de paliers ou de priorité ?" : "Is there a priority tier or status system?" ?></h4>
+      </details>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Existe-t-il un système de paliers ou de priorité ?" : "Is there a priority tier or status system?" ?></h4></summary>
         <p><?= $fr
           ? "Pas encore, mais c'est prévu. OCSAPP prévoit offrir un système de paliers non monétaire, basé sur votre volume de livraisons complétées et votre évaluation, donnant aux livreurs de palier supérieur un accès prioritaire aux courses disponibles. Ce statut s'acquerrait uniquement par la performance, ne s'achèterait jamais, et ne changerait ni votre partage de 70 % ni le tarif de base. En attendant son lancement, tous les livreurs ont un accès égal, au premier arrivé, aux courses de leur zone choisie."
           : "Not yet, but it's planned. OCSAPP intends to offer a non-monetary tier system based on your completed-delivery volume and rating, giving higher-tier drivers priority access to available jobs. This status would be earned through performance alone, never purchased, and wouldn't change your 70% split or base rate. Until it launches, every driver has equal, first-come access to jobs in their chosen zone." ?></p>
-      </div>
-      <div class="faq-item">
-        <h4><?= $fr ? "Puis-je travailler dans plus d'une zone ?" : "Can I work in more than one zone?" ?></h4>
+      </details>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Puis-je travailler dans plus d'une zone ?" : "Can I work in more than one zone?" ?></h4></summary>
         <p><?= $fr ? "Vous indiquez la zone où vous souhaitez travailler, et vous pouvez la modifier à tout moment depuis votre tableau de bord - ce n'est jamais une zone que vous impose OCSAPP. Les courses qui vous sont offertes correspondent à la zone que vous avez choisie, pour garder vos trajets courts plutôt que de vous voir proposer des courses à travers un vaste bassin métropolitain. Si une mission inter-zones est un jour proposée, elle est présentée comme une mission distincte et entièrement facultative - vous demeurez libre de l'accepter ou de la refuser, exactement comme pour toute autre course, sans aucune conséquence." : "You tell us which zone you want to work in, and you can change it anytime from your dashboard - it's never a zone OCSAPP imposes on you. The jobs offered to you match the zone you've chosen, to keep your trips short rather than offering you jobs across a wide metropolitan pool. If a cross-zone assignment is ever offered, it comes as a distinct, entirely optional assignment - you remain free to accept or decline it, exactly like any other job, without any consequence." ?></p>
-      </div>
-      <div class="faq-item">
-        <h4><?= $fr ? "Puis-je livrer pour d'autres plateformes en même temps ?" : "Can I deliver for other platforms at the same time?" ?></h4>
+      </details>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Puis-je livrer pour d'autres plateformes en même temps ?" : "Can I deliver for other platforms at the same time?" ?></h4></summary>
         <p><?= $fr ? "Oui. Votre entente avec OCSAPP est non exclusive - vous pouvez offrir vos services à toute autre personne ou entreprise, y compris des concurrents, et vous n'êtes jamais tenu d'accepter un minimum de courses." : "Yes. Your agreement with OCSAPP is non-exclusive - you can offer your services to any other person or business, including competitors, and you're never required to accept a minimum number of jobs." ?></p>
-      </div>
-      <div class="faq-item new">
+      </details>
+      <details class="faq-item new">
 <?php if ($fr): ?>
-        <h4>Ai-je besoin d'un permis spécial ou d'une inscription à la CTQ ?</h4>
+        <summary><h4>Ai-je besoin d'un permis spécial ou d'une inscription à la CTQ ?</h4></summary>
         <p>Pour la plupart des livraisons OCSAPP, non. Un permis de classe 5 couvre les voitures, les VUS et les fourgonnettes. Si vous livrez avec un véhicule lourd (4 500 kg ou plus), il vous faut la classe de permis de la SAAQ correspondante et une inscription au Registre des propriétaires et des exploitants de véhicules lourds de la Commission des transports du Québec (CTQ).</p>
         <p style="margin-top:10px;">Peu importe votre véhicule, votre assurance automobile doit couvrir l'usage commercial ou la livraison, comme le prévoit votre entente de livreur.</p>
 <?php else: ?>
-        <h4>Do I need a special licence or a CTQ registration?</h4>
+        <summary><h4>Do I need a special licence or a CTQ registration?</h4></summary>
         <p>For most OCSAPP deliveries, no. A class 5 licence covers cars, SUVs and vans. If you deliver with a heavy vehicle (4,500 kg or more), you need the matching SAAQ licence class and a registration in the Commission des transports du Québec (CTQ) register of heavy vehicle owners and operators.</p>
         <p style="margin-top:10px;">Whatever you drive, your auto insurance must cover commercial or delivery use, as your Driver Agreement requires.</p>
 <?php endif; ?>
-      </div>
-      <div class="faq-item new">
+      </details>
+      <details class="faq-item new">
 <?php if ($fr): ?>
-        <h4>Suis-je un employé ? Qu'en est-il des impôts et de la CNESST ?</h4>
+        <summary><h4>Suis-je un employé ? Qu'en est-il des impôts et de la CNESST ?</h4></summary>
         <p>Non. Selon votre entente de livreur, vous êtes un travailleur autonome : vous choisissez quand et où vous travaillez, vous utilisez votre propre véhicule et vous pouvez livrer pour d'autres plateformes.</p>
         <p style="margin-top:10px;">Vous produisez donc vos propres déclarations de revenus, et vous devez vous inscrire à la TPS et à la TVQ auprès de Revenu Québec lorsque vos revenus taxables dépassent 30 000 $ sur quatre trimestres civils consécutifs.</p>
         <p style="margin-top:10px;">Les travailleurs autonomes ne sont pas couverts automatiquement par la CNESST. Vous pouvez vous inscrire à la protection personnelle offerte par la CNESST si vous voulez être protégé en cas d'accident du travail.</p>
 <?php else: ?>
-        <h4>Am I an employee? What about taxes and the CNESST?</h4>
+        <summary><h4>Am I an employee? What about taxes and the CNESST?</h4></summary>
         <p>No. Under your Driver Agreement you work as an independent contractor: you choose when and where you work, use your own vehicle, and can deliver for other platforms.</p>
         <p style="margin-top:10px;">That means you file your own income taxes, and you must register for GST/QST with Revenu Québec once your taxable revenue passes $30,000 over four consecutive calendar quarters.</p>
         <p style="margin-top:10px;">Independent workers aren't automatically covered by the CNESST. You can sign up for the CNESST's personal protection if you want coverage in case of a work accident.</p>
 <?php endif; ?>
-      </div>
-      <div class="faq-item new">
-        <h4><?= $fr ? "Comment fonctionne le programme Partenaire Fondateur ?" : "How does the Founding Partner Program work?" ?></h4>
+      </details>
+      <details class="faq-item new">
+        <summary><h4><?= $fr ? "Comment fonctionne le programme Partenaire Fondateur ?" : "How does the Founding Partner Program work?" ?></h4></summary>
         <p><?= $fr
           ? "Les 50 premiers livreurs approuvés sur OCSAPP obtiennent automatiquement le statut de Livreur Fondateur - aucune candidature séparée requise. Vous obtenez un insigne permanent sur votre profil. La prime d'étape, la prime de parrainage et l'accès prioritaire décrits dans nos documents du programme sont prévus mais pas encore actifs - ils seront annoncés séparément une fois lancés."
           : "The first 50 approved drivers on OCSAPP automatically get Founding Driver status - no separate application needed. You get a permanent badge on your profile. The milestone bonus, referral bonus, and priority access described in our program materials are planned but not yet active - they'll be announced separately once they launch." ?></p>
-      </div>
+      </details>
     </div>
   </div>
 </section>

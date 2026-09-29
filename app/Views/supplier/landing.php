@@ -32,7 +32,7 @@ $fr = ($currentLang === 'fr');
   <link rel="stylesheet" href="<?= asset('css/components/eco-header.css') ?>">
   <link rel="stylesheet" href="<?= asset('css/components/footer.css') ?>">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-  <link rel="stylesheet" href="<?= asset('css/pages/supplier-central.css') ?>">
+  <link rel="stylesheet" href="<?= asset('css/pages/supplier-central.css') ?>?v=<?= @filemtime(BASE_PATH . '/public/assets/css/pages/supplier-central.css') ?>">
 </head>
 <body class="supplier-central-page<?= $fr ? ' lang-fr' : '' ?>">
 <div class="eco-beta">
@@ -432,57 +432,57 @@ $fr = ($currentLang === 'fr');
       <p><?= $fr ? "Tout ce que vous devez savoir avant de postuler." : "Everything you need to know before applying." ?></p>
     </div>
     <div class="faq-list">
-      <div class="faq-item">
-        <h4><?= $fr ? "Puis-je utiliser un courriel différent de celui avec lequel j'ai été invité ?" : "Can I use a different email than the one I was invited with?" ?></h4>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Puis-je utiliser un courriel différent de celui avec lequel j'ai été invité ?" : "Can I use a different email than the one I was invited with?" ?></h4></summary>
         <p><?= $fr ? "Oui. Si vous avez reçu une invitation directe, vous pouvez vous inscrire avec n'importe quel courriel. L'adresse enregistrée devient votre identifiant de connexion et l'endroit où toutes les notifications du portail sont envoyées." : "Yes. If you received a direct invitation, you can register with any email. The registered address becomes your login and where all portal notifications are sent." ?></p>
-      </div>
-      <div class="faq-item">
-        <h4><?= $fr ? "Combien de temps dure le processus d'approbation ?" : "How long does the approval process take?" ?></h4>
+      </details>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Combien de temps dure le processus d'approbation ?" : "How long does the approval process take?" ?></h4></summary>
         <p><?= $fr ? "La plupart des candidatures sont examinées dans un délai de 1 à 3 jours ouvrables. Vous serez informé par courriel. Si vous n'avez pas eu de nouvelles après 3 jours ouvrables, contactez suppliers@ocsapp.ca avec votre numéro de référence." : "Most applications are reviewed within 1–3 business days. You'll be notified by email. If you haven't heard back after 3 business days, contact suppliers@ocsapp.ca with your reference number." ?></p>
-      </div>
-      <div class="faq-item">
-        <h4><?= $fr ? "Puis-je me connecter au portail avant d'être approuvé ?" : "Can I log in to the portal before I'm approved?" ?></h4>
+      </details>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Puis-je me connecter au portail avant d'être approuvé ?" : "Can I log in to the portal before I'm approved?" ?></h4></summary>
         <p><?= $fr ? "Oui - immédiatement après avoir soumis votre candidature. L'accès est limité pendant l'examen : vous pouvez explorer le portail, mais vous ne pouvez pas lister de produits ni recevoir de bons de commande tant que votre compte n'est pas pleinement activé." : "Yes - immediately after submitting your application. Access is limited during review: you can explore the portal, but you cannot list products or receive purchase orders until your account is fully activated." ?></p>
-      </div>
-      <div class="faq-item">
-        <h4><?= $fr ? "Qu'est-ce qu'un code fournisseur et pourquoi en ai-je besoin ?" : "What's a supplier code and why do I need one?" ?></h4>
+      </details>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Qu'est-ce qu'un code fournisseur et pourquoi en ai-je besoin ?" : "What's a supplier code and why do I need one?" ?></h4></summary>
         <p><?= $fr ? "Votre code fournisseur (format : SUP-XXXXXXXX) est votre identifiant unique sur le réseau OCSAPP. Il apparaît dans votre courriel de confirmation et sur votre tableau de bord. Incluez-le toujours lorsque vous contactez notre équipe d'assistance." : "Your supplier code (format: SUP-XXXXXXXX) is your unique identifier on the OCSAPP network. It appears in your confirmation email and on your dashboard. Always include it when contacting our support team." ?></p>
-      </div>
-      <div class="faq-item">
-        <h4><?= $fr ? "Comment et quand suis-je payé ?" : "How and when do I get paid?" ?></h4>
+      </details>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Comment et quand suis-je payé ?" : "How and when do I get paid?" ?></h4></summary>
         <p><?= $fr ? "Les modalités de paiement sont convenues lors de l'intégration. OCSAPP traite les paiements selon des termes nets convenus (généralement net-30) après confirmation de l'exécution du bon de commande. Les frais de traitement des paiements (2,9 % + 0,30 $ CAD) sont déduits séparément de votre commission, jamais facturés à l'acheteur. Les factures et le statut des paiements sont visibles dans le portail sous Comptes clients." : "Payment terms are agreed during onboarding. OCSAPP processes payments on agreed net terms (typically net-30) after purchase order fulfillment is confirmed. Payment processing fees (2.9% + \$0.30 CAD) are deducted separately from your commission, never charged to the buyer. Invoices and payment status are visible in the portal under Accounts Receivable." ?></p>
-      </div>
-      <div class="faq-item">
-        <h4><?= $fr ? "Puis-je changer de forfait à tout moment ?" : "Can I change plans at any time?" ?></h4>
+      </details>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Puis-je changer de forfait à tout moment ?" : "Can I change plans at any time?" ?></h4></summary>
         <p><?= $fr ? "Oui. Contactez suppliers@ocsapp.ca ou votre gestionnaire de compte. Les changements prennent effet dans un délai d'un jour ouvrable. Tous les forfaits sont mensuels, sans engagement à long terme." : "Yes. Contact suppliers@ocsapp.ca or your account manager. Changes take effect within one business day. All plans are month-to-month, with no long-term commitment." ?></p>
-      </div>
-      <div class="faq-item new">
-        <h4><?= $fr ? "Qu'est-ce que le champ « poids » et pourquoi dois-je le remplir ?" : "What's the \"weight\" field, and why is it required?" ?></h4>
+      </details>
+      <details class="faq-item new">
+        <summary><h4><?= $fr ? "Qu'est-ce que le champ « poids » et pourquoi dois-je le remplir ?" : "What's the \"weight\" field, and why is it required?" ?></h4></summary>
         <p><?= $fr ? "Le poids est un champ obligatoire sur chaque fiche produit - pas un détail facultatif. OCSAPP additionne le poids que vous déclarez, avec celui des autres fournisseurs consolidés dans une même demande d'Approvisionnement, pour déterminer si un supplément pour commande volumineuse s'applique au client d'affaires. Vous ne voyez jamais ce supplément sur votre propre paiement - il est entièrement financé par le client d'affaires. Si un livreur constate à la cueillette un écart important avec le poids déclaré, OCSAPP peut ajuster le supplément rétroactivement à partir d'une preuve photo ou de balayage." : "Weight is a mandatory field on every product listing - not an optional detail. OCSAPP sums the weight you declare, together with other suppliers consolidated into the same Approvisionnement request, to determine whether an oversize order surcharge applies to the business client. You never see this surcharge on your own payout - it is entirely funded by the business client. If a driver's inspection at pickup shows a material discrepancy with the declared weight, OCSAPP may adjust the surcharge retroactively based on photo or scan evidence." ?></p>
-      </div>
-      <div class="faq-item new">
-        <h4><?= $fr ? "Combien de temps ai-je pour confirmer un bon de commande ?" : "How long do I have to confirm a purchase order?" ?></h4>
+      </details>
+      <details class="faq-item new">
+        <summary><h4><?= $fr ? "Combien de temps ai-je pour confirmer un bon de commande ?" : "How long do I have to confirm a purchase order?" ?></h4></summary>
         <p><?= $fr ? "Vous devez confirmer ou signaler un problème avec un bon de commande dans les 24 heures suivant sa réception. Ne confirmez pas un bon de commande que vous ne comptez pas exécuter intégralement - une exécution partielle doit être communiquée à OCSAPP avant la confirmation. Une fois confirmée, la commande doit être remise au réseau ODA dans le délai indiqué sur votre fiche produit." : "You must confirm or flag an issue with a purchase order within 24 hours of receipt. Don't confirm a purchase order you don't intend to fulfill in full - partial fulfillment must be communicated to OCSAPP before confirmation. Once confirmed, the order must be handed off to the ODA network within the lead time stated on your product listing." ?></p>
-      </div>
-      <div class="faq-item new">
-        <h4><?= $fr ? "Que se passe-t-il si un client signale un problème avec un bon de commande ?" : "What happens if a client reports an issue with a purchase order?" ?></h4>
+      </details>
+      <details class="faq-item new">
+        <summary><h4><?= $fr ? "Que se passe-t-il si un client signale un problème avec un bon de commande ?" : "What happens if a client reports an issue with a purchase order?" ?></h4></summary>
         <p><?= $fr ? "Les réclamations (manquant, dommage, défaut, exécution incorrecte) sont gérées par la Politique de retours et remboursements d'OCSAPP, Volet B. Le client d'affaires dispose de 48 heures après la livraison pour signaler un problème. Si le système détermine, à partir d'une preuve photo et de balayage, que le problème est survenu avant la cueillette (de votre responsabilité), le montant réclamé et les frais de logistique inverse applicables sont déduits de votre prochain paiement. Vous n'êtes jamais facturé pour un problème survenu après la prise en charge par le livreur - et vous disposez de 5 jours ouvrables pour contester une déduction directement depuis le portail." : "Claims (shortage, damage, defect, incorrect fulfillment) are governed by OCSAPP's Returns &amp; Refund Policy, Track B. The business client has 48 hours after delivery to report an issue. If the system determines, from photo and scan evidence, that the issue occurred before pickup (your responsibility), the claimed value and any applicable reverse-logistics fee are deducted from your next payout. You're never charged for an issue that occurred after the driver took custody - and you have 5 business days to dispute a deduction directly from the portal." ?></p>
-      </div>
-      <div class="faq-item new">
-        <h4><?= $fr ? "Comment sont résolus les différends avec OCSAPP ?" : "How are disputes with OCSAPP resolved?" ?></h4>
+      </details>
+      <details class="faq-item new">
+        <summary><h4><?= $fr ? "Comment sont résolus les différends avec OCSAPP ?" : "How are disputes with OCSAPP resolved?" ?></h4></summary>
         <p><?= $fr
           ? "OCSAPP et vous tenterez d'abord de résoudre tout différend par la négociation de bonne foi. Si le différend n'est pas résolu dans les 30 jours, il peut être soumis aux tribunaux du district judiciaire de Montréal, Québec, à la compétence exclusive desquels vous et OCSAPP vous soumettez. OCSAPP n'exige aucun arbitrage obligatoire dans votre entente."
           : "OCSAPP and you will first attempt to resolve any dispute through good-faith negotiation. If unresolved within 30 days, it may be submitted to the courts of the judicial district of Montréal, Québec, to whose exclusive jurisdiction you and OCSAPP submit. OCSAPP does not require mandatory arbitration in your agreement." ?></p>
-      </div>
-      <div class="faq-item new">
-        <h4><?= $fr ? "Y a-t-il des exigences d'étiquetage en français pour mes produits ?" : "Are there French labelling requirements for my products?" ?></h4>
+      </details>
+      <details class="faq-item new">
+        <summary><h4><?= $fr ? "Y a-t-il des exigences d'étiquetage en français pour mes produits ?" : "Are there French labelling requirements for my products?" ?></h4></summary>
         <p><?= $fr
           ? "Depuis le 1er juin 2025, les termes génériques ou descriptifs associés à une marque de commerce - par exemple un nom de saveur ou un ingrédient - doivent apparaître en français sur le produit lui-même, même si la marque elle-même peut demeurer dans une autre langue. Une période de transition s'applique jusqu'au 1er juin 2027 pour les produits fabriqués avant le 1er juin 2025. Cette exigence concerne particulièrement les produits alimentaires, les boissons, et les soins personnels. Vous êtes responsable de la conformité de l'emballage de vos produits avant de les lister sur la Plateforme."
           : "Since June 1, 2025, generic or descriptive terms tied to a trademark - like a flavour name or an ingredient - must appear in French on the product itself, even if the trademark itself can stay in another language. A transition period runs until June 1, 2027 for products manufactured before June 1, 2025. This requirement is especially relevant for food, beverage, and personal care products. You're responsible for your product packaging being compliant before listing it on the Platform." ?></p>
-      </div>
-      <div class="faq-item new">
+      </details>
+      <details class="faq-item new">
 <?php if ($fr): ?>
-        <h4>Quels permis et licences un fournisseur doit-il détenir ?</h4>
+        <summary><h4>Quels permis et licences un fournisseur doit-il détenir ?</h4></summary>
         <p>En plus de votre NEQ, de vos inscriptions à la TPS et à la TVQ et de votre assurance, selon votre activité :</p>
         <p style="margin-top:10px;"><strong>Aliments importés ou vendus hors Québec :</strong> licence pour la salubrité des aliments au Canada (SAC) de l'ACIA et registres de traçabilité (une étape en amont, une étape en aval) selon le Règlement sur la salubrité des aliments au Canada.</p>
         <p style="margin-top:10px;"><strong>Aliments manipulés au Québec :</strong> le permis du MAPAQ qui correspond à votre activité (par exemple vente en gros, entreposage ou transformation).</p>
@@ -490,7 +490,7 @@ $fr = ($currentLang === 'fr');
         <p style="margin-top:10px;"><strong>Importation :</strong> un compte d'importateur auprès de l'Agence des services frontaliers du Canada (ASFC) et le respect des tarifs et déclarations.</p>
         <p style="margin-top:10px;">Ce résumé est un guide et non un avis juridique. Détenir les permis qui s'appliquent à vos produits est votre responsabilité.</p>
 <?php else: ?>
-        <h4>What permits and licences do suppliers need?</h4>
+        <summary><h4>What permits and licences do suppliers need?</h4></summary>
         <p>Besides your NEQ, GST/QST registration and insurance, depending on your activity:</p>
         <p style="margin-top:10px;"><strong>Food imported or sold outside Quebec:</strong> a Safe Food for Canadians (SFC) licence from the CFIA and traceability records (one step back, one step forward) under the Safe Food for Canadians Regulations.</p>
         <p style="margin-top:10px;"><strong>Food handled in Quebec:</strong> the MAPAQ permit that matches your activity (for example wholesale, warehousing or processing).</p>
@@ -498,13 +498,13 @@ $fr = ($currentLang === 'fr');
         <p style="margin-top:10px;"><strong>Imports:</strong> a Canada Border Services Agency (CBSA) import account and compliance with tariffs and declarations.</p>
         <p style="margin-top:10px;">This summary is a guide, not legal advice. Holding the permits that apply to your products is your responsibility.</p>
 <?php endif; ?>
-      </div>
-      <div class="faq-item new">
-        <h4><?= $fr ? "Comment fonctionne le programme Partenaire Fondateur ?" : "How does the Founding Partner Program work?" ?></h4>
+      </details>
+      <details class="faq-item new">
+        <summary><h4><?= $fr ? "Comment fonctionne le programme Partenaire Fondateur ?" : "How does the Founding Partner Program work?" ?></h4></summary>
         <p><?= $fr
           ? "Les 15 premiers fournisseurs activés sur OCSAPP obtiennent automatiquement le statut de Partenaire Fondateur - aucune candidature séparée requise. Vous obtenez le taux Prestige (5 %) verrouillé 6 mois sans frais mensuel, et un insigne permanent. Votre position dans la cohorte est confirmée à l'activation de votre compte et visible sur votre tableau de bord."
           : "The first 15 activated suppliers on OCSAPP automatically get Founding Partner status - no separate application needed. You get the Prestige rate (5%) locked for 6 months at no monthly fee, and a permanent badge. Your cohort position is confirmed when your account is activated and shown on your dashboard." ?></p>
-      </div>
+      </details>
     </div>
   </div>
 </section>

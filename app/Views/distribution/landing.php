@@ -32,7 +32,7 @@ $fr = ($currentLang === 'fr');
   <link rel="stylesheet" href="<?= asset('css/components/eco-header.css') ?>">
   <link rel="stylesheet" href="<?= asset('css/components/footer.css') ?>">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-  <link rel="stylesheet" href="<?= asset('css/pages/distribution-landing.css') ?>">
+  <link rel="stylesheet" href="<?= asset('css/pages/distribution-landing.css') ?>?v=<?= @filemtime(BASE_PATH . '/public/assets/css/pages/distribution-landing.css') ?>">
 </head>
 <body class="distribution-landing-page<?= $fr ? ' lang-fr' : '' ?>">
 <div class="eco-beta">
@@ -531,71 +531,71 @@ $fr = ($currentLang === 'fr');
       <p><?= $fr ? "Tout ce que vous devez savoir." : "Everything you need to know." ?></p>
     </div>
     <div class="faq-list">
-      <div class="faq-item">
-        <h4><?= $fr ? "Comment puis-je inscrire mon entreprise ?" : "How do I register my business?" ?></h4>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Comment puis-je inscrire mon entreprise ?" : "How do I register my business?" ?></h4></summary>
         <p><?= $fr ? "Cliquez sur « Inscrire votre entreprise », complétez la vérification NEQ et votre compte est activé une fois approuvé." : "Click \"Register Your Business,\" complete NEQ verification, and your account is activated once approved." ?></p>
-      </div>
-      <div class="faq-item">
-        <h4><?= $fr ? "Comment fonctionne l'approvisionnement ?" : "How does procurement work?" ?></h4>
+      </details>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Comment fonctionne l'approvisionnement ?" : "How does procurement work?" ?></h4></summary>
         <p><?= $fr ? "Soumettez une demande listant les produits et quantités dont vous avez besoin. OCSAPP s'approvisionne auprès de vos fournisseurs, consolide la commande et confirme les prix avant l'expédition." : "Submit a request listing the products and quantities you need. OCSAPP sources from your suppliers, consolidates the order, and confirms pricing before shipment." ?></p>
-      </div>
-      <div class="faq-item">
-        <h4><?= $fr ? "Puis-je configurer des livraisons récurrentes ?" : "Can I set up recurring deliveries?" ?></h4>
+      </details>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Puis-je configurer des livraisons récurrentes ?" : "Can I set up recurring deliveries?" ?></h4></summary>
         <p><?= $fr ? "Oui, avec le forfait Distribution Pro ou supérieur - configurez une route récurrente pour automatiser votre réapprovisionnement selon le calendrier de votre choix. Mettez en pause, reprenez ou annulez à tout moment depuis votre tableau de bord." : "Yes, with the Distribution Pro tier or above - set up a recurring route to automate your restocking on your chosen schedule. Pause, resume, or cancel anytime from your dashboard." ?></p>
-      </div>
-      <div class="faq-item">
-        <h4><?= $fr ? "Combien ça coûte ?" : "How much does it cost?" ?></h4>
+      </details>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Combien ça coûte ?" : "How much does it cost?" ?></h4></summary>
         <p><?= $fr ? "Approvisionnement est gratuit (1 % de frais, aucun abonnement mensuel) - nous nous approvisionnons auprès de nos fournisseurs pour vous. Distribution est un service séparé pour vos propres produits, avec des forfaits Débutant, Pro et Enterprise. Utilisez l'un, l'autre, ou les deux. Aucune majoration cachée sur les produits." : "Procurement is free (1% fee, no monthly subscription) - we source from our suppliers for you. Distribution is a separate service for your own products, with Starter, Pro, and Enterprise tiers. Use one, the other, or both. No hidden markup on products." ?></p>
-      </div>
-      <div class="faq-item">
-        <h4><?= $fr ? "Puis-je suivre mon expédition en temps réel ?" : "Can I track my shipment in real time?" ?></h4>
+      </details>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Puis-je suivre mon expédition en temps réel ?" : "Can I track my shipment in real time?" ?></h4></summary>
         <p><?= $fr ? "Oui. Chaque expédition est suivie par GPS de la collecte à la livraison, avec des mises à jour en direct dans votre tableau de bord." : "Yes. Every shipment is tracked by GPS from pickup to delivery, with live updates in your dashboard." ?></p>
-      </div>
-      <div class="faq-item">
-        <h4><?= $fr ? "Comment fonctionne le paiement ?" : "How does payment work?" ?></h4>
+      </details>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Comment fonctionne le paiement ?" : "How does payment work?" ?></h4></summary>
         <p><?= $fr ? "Payez par carte, PayPal, virement (EFT), ou sur termes nets (net-30) une fois admissible - voir la section Modalités de paiement ci-dessus pour les conditions exactes. Vous recevez un bon de commande, un bon de livraison et une facture pour chaque transaction." : "Pay by card, PayPal, EFT, or net-30 terms once eligible - see the Payment &amp; Credit Terms section above for exact conditions. You receive a purchase order, bill of lading, and invoice for every transaction." ?></p>
-      </div>
-      <div class="faq-item">
-        <h4><?= $fr ? "Que se passe-t-il si un fournisseur ne peut pas fournir un article ?" : "What happens if a supplier can't fulfill an item?" ?></h4>
+      </details>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Que se passe-t-il si un fournisseur ne peut pas fournir un article ?" : "What happens if a supplier can't fulfill an item?" ?></h4></summary>
         <p><?= $fr ? "Nous vous contactons immédiatement pour approuver un substitut ou ajuster la commande avant l'expédition. Vous avez toujours le dernier mot." : "We contact you immediately to approve a substitute or adjust the order before shipment. You always have the final say." ?></p>
-      </div>
-      <div class="faq-item">
-        <h4><?= $fr ? "Quelles zones sont desservies ?" : "What zones are served?" ?></h4>
+      </details>
+      <details class="faq-item">
+        <summary><h4><?= $fr ? "Quelles zones sont desservies ?" : "What zones are served?" ?></h4></summary>
         <p><?= $fr ? "Nous desservons actuellement l'Ouest-de-l'Île, avec une expansion prévue à Laval et au Grand Montréal. Contactez-nous pour vérifier la disponibilité dans votre région." : "We currently serve the West Island, with expansion planned to Laval and Greater Montreal. Contact us to check availability in your area." ?></p>
-      </div>
-      <div class="faq-item new">
-        <h4><?= $fr ? "Y a-t-il une quantité minimale de commande ?" : "Is there a minimum order size?" ?></h4>
+      </details>
+      <details class="faq-item new">
+        <summary><h4><?= $fr ? "Y a-t-il une quantité minimale de commande ?" : "Is there a minimum order size?" ?></h4></summary>
         <p><?= $fr ? "Les quantités minimales de commande (QMC) sont fixées par chaque fournisseur individuellement et varient selon le produit - elles sont clairement affichées dans le catalogue avant que vous commandiez. Il n'y a aucun minimum imposé par la plateforme elle-même." : "Minimum order quantities (MOQs) are set by individual suppliers and vary by product - they're clearly displayed in the catalog before you order. There's no platform-level minimum." ?></p>
-      </div>
-      <div class="faq-item new">
-        <h4><?= $fr ? "Puis-je négocier les prix directement avec les fournisseurs ?" : "Can I negotiate pricing directly with suppliers?" ?></h4>
+      </details>
+      <details class="faq-item new">
+        <summary><h4><?= $fr ? "Puis-je négocier les prix directement avec les fournisseurs ?" : "Can I negotiate pricing directly with suppliers?" ?></h4></summary>
         <p><?= $fr ? "Oui. Pour les commandes importantes ou récurrentes, vous pouvez demander des prix personnalisés directement auprès des fournisseurs via la messagerie du portail. OCSAPP peut aussi faciliter des négociations de prix contractuels pour les comptes à volume élevé - contactez info@ocsapp.ca." : "Yes. For large or recurring orders, you can request custom quotes directly from suppliers through the portal's messaging feature. OCSAPP can also facilitate contract pricing negotiations for high-volume accounts - contact info@ocsapp.ca." ?></p>
-      </div>
-      <div class="faq-item new">
-        <h4><?= $fr ? "Puis-je ajouter plusieurs membres de mon équipe ?" : "Can I add multiple team members?" ?></h4>
+      </details>
+      <details class="faq-item new">
+        <summary><h4><?= $fr ? "Puis-je ajouter plusieurs membres de mon équipe ?" : "Can I add multiple team members?" ?></h4></summary>
         <p><?= $fr ? "Oui. Les comptes entreprise prennent en charge l'accès d'équipe avec des permissions basées sur les rôles - ajoutez du personnel d'approvisionnement, des contacts finance et des équipes de réception avec les niveaux d'accès appropriés. Contactez info@ocsapp.ca ou votre gestionnaire de compte pour ajouter des membres." : "Yes. Business accounts support team access with role-based permissions - add procurement staff, finance contacts, and receiving teams with appropriate access levels. Contact info@ocsapp.ca or your account manager to add team members." ?></p>
-      </div>
-      <div class="faq-item new">
-        <h4><?= $fr ? "Les suppléments affectent-ils mes frais de base ?" : "Do surcharges affect my base fees?" ?></h4>
+      </details>
+      <details class="faq-item new">
+        <summary><h4><?= $fr ? "Les suppléments affectent-ils mes frais de base ?" : "Do surcharges affect my base fees?" ?></h4></summary>
         <p><?= $fr ? "Non - ils s'ajoutent aux frais standards uniquement lorsqu'une commande dépasse un seuil (poids, distance, ou nombre d'arrêts), et sont toujours affichés avant que vous confirmiez. Ils ne changent jamais votre taux de frais d'approvisionnement ou de distribution." : "No - they're added on top of standard fees only when an order exceeds a threshold (weight, distance, or stop count), and are always disclosed before you confirm. They never change your procurement or distribution fee rate." ?></p>
-      </div>
-      <div class="faq-item new">
-        <h4><?= $fr ? "Que se passe-t-il si un de mes clients signale un problème avec une expédition Distribution ?" : "What happens if one of my customers reports an issue with a Distribution shipment?" ?></h4>
+      </details>
+      <details class="faq-item new">
+        <summary><h4><?= $fr ? "Que se passe-t-il si un de mes clients signale un problème avec une expédition Distribution ?" : "What happens if one of my customers reports an issue with a Distribution shipment?" ?></h4></summary>
         <p><?= $fr ? "Le même système automatisé de preuve photo et de balayage détermine si le problème est survenu avant la cueillette (votre produit ou emballage) ou en transit. S'il est déterminé que la faute vous revient, un débit dynamique - les frais de logistique inverse plus la valeur réclamée - est appliqué à votre prochain versement ou facture. Vous n'êtes jamais facturé pour un problème survenu en transit, que OCSAPP absorbe directement. Vous disposez de 5 jours ouvrables pour contester, avec droit à une explication et à une révision humaine de toute décision automatisée." : "The same automated photo-and-scan evidence system determines whether the issue occurred before pickup (your product or packaging) or in transit. If it's determined to be your fault, a Dynamic Chargeback - the reverse-logistics fee plus the claimed value - is applied to your next payout or invoice. You're never charged for an issue that occurred in transit, which OCSAPP absorbs directly. You have 5 business days to dispute, with the right to an explanation and a human review of any automated decision." ?></p>
-      </div>
-      <div class="faq-item new">
-        <h4><?= $fr ? "Ai-je besoin d'une assurance ?" : "Do I need insurance?" ?></h4>
+      </details>
+      <details class="faq-item new">
+        <summary><h4><?= $fr ? "Ai-je besoin d'une assurance ?" : "Do I need insurance?" ?></h4></summary>
         <p><?= $fr ? "Seulement si vous utilisez Distribution. Les exigences varient selon votre forfait (1 000 000 $ minimum pour Débutant, jusqu'à 5 000 000 $ pour Enterprise selon le volume) - voir la section Assurance ci-dessus. Les comptes Approvisionnement seul n'ont aucune exigence d'assurance." : "Only if you use Distribution. Requirements vary by tier (\$1,000,000 minimum for Starter, up to \$5,000,000 for Enterprise depending on volume) - see the Insurance section above. Procurement-only accounts have no insurance requirement." ?></p>
-      </div>
-      <div class="faq-item new">
-        <h4><?= $fr ? "Comment sont résolus les différends avec OCSAPP ?" : "How are disputes with OCSAPP resolved?" ?></h4>
+      </details>
+      <details class="faq-item new">
+        <summary><h4><?= $fr ? "Comment sont résolus les différends avec OCSAPP ?" : "How are disputes with OCSAPP resolved?" ?></h4></summary>
         <p><?= $fr
           ? "OCSAPP et votre entreprise tenterez d'abord de résoudre tout différend par la négociation de bonne foi. Si le différend n'est pas résolu dans les 30 jours, il peut être soumis aux tribunaux du district judiciaire de Montréal, Québec, à la compétence exclusive desquels vous et OCSAPP vous soumettez. OCSAPP n'exige aucun arbitrage obligatoire dans votre entente."
           : "OCSAPP and your business will first attempt to resolve any dispute through good-faith negotiation. If unresolved within 30 days, it may be submitted to the courts of the judicial district of Montréal, Québec, to whose exclusive jurisdiction you and OCSAPP submit. OCSAPP does not require mandatory arbitration in your agreement." ?></p>
-      </div>
-      <div class="faq-item new">
+      </details>
+      <details class="faq-item new">
 <?php if ($fr): ?>
-        <h4>Quelles exigences légales s'appliquent à mon entreprise ?</h4>
+        <summary><h4>Quelles exigences légales s'appliquent à mon entreprise ?</h4></summary>
         <p>Chaque compte entreprise doit avoir un NEQ, être inscrit à la TPS et à la TVQ (sauf exception pour les petits fournisseurs), respecter la Charte de la langue française (loi 96) dans son affichage et ses communications, et détenir le certificat d'occupation qu'exige sa ville ou son arrondissement pour ses locaux. Selon votre taille et votre activité, vous êtes aussi responsable de :</p>
         <p style="margin-top:10px;"><strong>Registre des entreprises :</strong> tenir votre immatriculation à jour, y compris la déclaration des bénéficiaires ultimes.</p>
         <p style="margin-top:10px;"><strong>CNESST :</strong> vous inscrire comme employeur si vous avez des employés, et respecter les règles de santé et de sécurité du travail.</p>
@@ -604,7 +604,7 @@ $fr = ($currentLang === 'fr');
         <p style="margin-top:10px;"><strong>Zonage :</strong> exercer vos activités dans une zone qui les permet, avec les certificats qu'exige votre municipalité.</p>
         <p style="margin-top:10px;">Ce résumé est un guide et non un avis juridique.</p>
 <?php else: ?>
-        <h4>What legal requirements apply to my business?</h4>
+        <summary><h4>What legal requirements apply to my business?</h4></summary>
         <p>Every business account needs a NEQ, GST/QST registration (unless it qualifies as a small supplier), compliance with the Charter of the French Language (Bill 96) in its signage and communications, and the certificate of occupancy (certificat d'occupation) its city or borough requires for its premises. Depending on your size and activity, you're also responsible for:</p>
         <p style="margin-top:10px;"><strong>Enterprise register:</strong> keeping your registration up to date, including the declaration of ultimate beneficiaries.</p>
         <p style="margin-top:10px;"><strong>CNESST:</strong> registering as an employer if you have employees, and following workplace health and safety rules.</p>
@@ -613,13 +613,13 @@ $fr = ($currentLang === 'fr');
         <p style="margin-top:10px;"><strong>Zoning:</strong> operating in a zone that permits your activity, with the certificates your municipality requires.</p>
         <p style="margin-top:10px;">This summary is a guide, not legal advice.</p>
 <?php endif; ?>
-      </div>
-      <div class="faq-item new">
-        <h4><?= $fr ? "Comment fonctionne le programme Partenaire Fondateur ?" : "How does the Founding Partner Program work?" ?></h4>
+      </details>
+      <details class="faq-item new">
+        <summary><h4><?= $fr ? "Comment fonctionne le programme Partenaire Fondateur ?" : "How does the Founding Partner Program work?" ?></h4></summary>
         <p><?= $fr
           ? "Les 5 premiers comptes entreprise approuvés sur OCSAPP obtiennent automatiquement le statut de Partenaire Fondateur - aucune candidature séparée requise. Vous obtenez le taux Distribution Débutant (5 %) verrouillé 6 mois sans frais mensuel et un gestionnaire de compte dédié. L'exemption des frais d'Approvisionnement décrite dans nos documents du programme est prévue mais pas encore active - elle sera annoncée séparément une fois lancée."
           : "The first 5 approved business accounts on OCSAPP automatically get Founding Partner status - no separate application needed. You get the Distribution Starter rate (5%) locked for 6 months at no monthly fee and a dedicated account manager. The Procurement fee waiver described in our program materials is planned but not yet active - it'll be announced separately once it launches." ?></p>
-      </div>
+      </details>
     </div>
   </div>
 </section>
