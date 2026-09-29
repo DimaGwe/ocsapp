@@ -468,7 +468,7 @@ PROMPT;
         $token = $_SERVER['HTTP_X_CSRF_TOKEN']
             ?? ($_POST[$name] ?? ($_POST['_csrf_token'] ?? ''));
         if (!verifyCsrfToken((string)$token)) {
-            http_response_code(419);
+            http_response_code(403); // not 419: Apache served it as a 500
             $this->out(['success' => false, 'error' => 'Session expired. Refresh the page and try again.']);
         }
     }

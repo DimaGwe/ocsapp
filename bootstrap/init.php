@@ -195,14 +195,20 @@ if (!function_exists('verifyCsrf')) {
             return;
         }
 
-        http_response_code(419);
+        // 403, not 419: Apache has no 419 and served it as a 500 "Internal Server Error"
+        http_response_code(403);
+        $fr = ($_SESSION['language'] ?? 'fr') === 'fr';
         $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) || !empty($_SERVER['HTTP_X_CSRF_TOKEN'])
             || stripos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false;
         if ($isAjax) {
             header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'error' => 'Your session expired. Please reload the page and try again.']);
+            echo json_encode(['success' => false, 'error' => $fr
+                ? 'Votre session a expiré. Veuillez recharger la page et réessayer.'
+                : 'Your session expired. Please reload the page and try again.'], JSON_UNESCAPED_UNICODE);
         } else {
-            echo 'Your session expired. Please go back, reload the page and try again.';
+            echo $fr
+                ? 'Votre session a expiré. Revenez en arrière, rechargez la page et réessayez.'
+                : 'Your session expired. Please go back, reload the page and try again.';
         }
         exit;
     }
