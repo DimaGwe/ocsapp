@@ -29,6 +29,77 @@ class InventoryController
         return $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
     }
 
+    /** Photos a seller may attach to one of their own products. */
+    private const MAX_PRODUCT_PHOTOS = 6;
+
+    /** $_FILES['images'] (multiple input) as a list of single-file arrays, empty slots skipped. */
+    private function uploadedImages(): array
+    {
+        $f = $_FILES['images'] ?? null;
+        if (!$f || !is_array($f['name'] ?? null)) {
+            return [];
+        }
+        $out = [];
+        foreach ($f['name'] as $i => $name) {
+            if (($f['error'][$i] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+                continue;
+            }
+            $out[] = ['name' => $name, 'type' => $f['type'][$i] ?? '', 'tmp_name' => $f['tmp_name'][$i] ?? '',
+                      'error' => $f['error'][$i], 'size' => $f['size'][$i] ?? 0];
+        }
+        return $out;
+    }
+
+    /**
+     * Upload photos for a product (ImageUploadHelper: extension + finfo MIME + real image checks,
+     * 5 MB max) into public/uploads/products and attach them in product_images. The first photo of a
+     * product with no main photo becomes the main one. Returns [added count, bilingual error lines].
+     */
+    private function saveProductImages(int $productId, array $files, string $altText): array
+    {
+        if (!$files) {
+            return [0, []];
+        }
+        $stmt = $this->db->prepare("SELECT COUNT(*), COALESCE(MAX(is_primary), 0), COALESCE(MAX(sort_order), 0) FROM product_images WHERE product_id = ?");
+        $stmt->execute([$productId]);
+        [$count, $hasPrimary, $sort] = array_map('intval', $stmt->fetch(\PDO::FETCH_NUM));
+
+        $uploader = new \App\Helpers\ImageUploadHelper('uploads/products');
+        $insert = $this->db->prepare("
+            INSERT INTO product_images (product_id, image_path, alt_text, is_primary, sort_order, created_at)
+            VALUES (?, ?, ?, ?, ?, NOW())
+        ");
+        $added = 0;
+        $errors = [];
+        foreach ($files as $file) {
+            if ($count + $added >= self::MAX_PRODUCT_PHOTOS) {
+                $errors[] = lang_pick('Maximum de ' . self::MAX_PRODUCT_PHOTOS . ' photos par produit.', 'Maximum ' . self::MAX_PRODUCT_PHOTOS . ' photos per product.');
+                break;
+            }
+            $result = $uploader->upload($file);
+            if (empty($result['success'])) {
+                $errors[] = basename((string) $file['name']) . ' : ' . lang_pick('fichier refusé (JPG, PNG, WebP ou GIF, 5 Mo max).', 'file rejected (JPG, PNG, WebP or GIF, 5 MB max).');
+                continue;
+            }
+            $primary = (!$hasPrimary && $added === 0) ? 1 : 0;
+            $insert->execute([$productId, $result['path'], mb_substr($altText, 0, 255), $primary, ++$sort]);
+            $added++;
+        }
+        return [$added, $errors];
+    }
+
+    /** Product id of this inventory item if the product is the seller's own (not a catalogue product), else 0. */
+    private function ownedProductId(int $inventoryId, int $shopId): int
+    {
+        $stmt = $this->db->prepare("
+            SELECT p.id FROM products p
+            JOIN shop_inventory si ON si.product_id = p.id
+            WHERE si.id = ? AND si.shop_id = ? AND p.product_type = 'seller' AND p.seller_id = ?
+        ");
+        $stmt->execute([$inventoryId, $shopId, userId()]);
+        return (int) $stmt->fetchColumn();
+    }
+
     /**
      * GET /seller/inventory — list inventory items for this seller's shop
      */
@@ -151,7 +222,16 @@ class InventoryController
             return;
         }
 
-        view('seller/inventory/edit', ['shop' => $shop, 'item' => $item]);
+        $images = [];
+        $canEditPhotos = ($item['product_type'] ?? '') === 'seller' && (int) ($item['product_seller_id'] ?? 0) === (int) userId();
+        if ($canEditPhotos) {
+            $stmt = $this->db->prepare("SELECT id, image_path, is_primary FROM product_images WHERE product_id = ? ORDER BY is_primary DESC, sort_order, id");
+            $stmt->execute([$item['product_id']]);
+            $images = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        }
+
+        view('seller/inventory/edit', ['shop' => $shop, 'item' => $item, 'images' => $images,
+                                       'canEditPhotos' => $canEditPhotos, 'maxPhotos' => self::MAX_PRODUCT_PHOTOS]);
     }
 
     /**
@@ -212,6 +292,43 @@ class InventoryController
             }
 
             setFlash('success', lang_pick('Inventaire mis à jour.', 'Inventory updated.'));
+
+            // Photos: only on the seller's own products (never on catalogue products)
+            $ownedId = $this->ownedProductId($inventoryId, (int) $shop['id']);
+            if ($ownedId) {
+                $remove = array_filter(array_map('intval', (array) ($_POST['remove_images'] ?? [])));
+                if ($remove) {
+                    $in = implode(',', array_fill(0, count($remove), '?'));
+                    $stmt = $this->db->prepare("SELECT id, image_path FROM product_images WHERE product_id = ? AND id IN ($in)");
+                    $stmt->execute(array_merge([$ownedId], $remove));
+                    $uploader = new \App\Helpers\ImageUploadHelper('uploads/products');
+                    foreach ($stmt->fetchAll(\PDO::FETCH_ASSOC) as $img) {
+                        // Only files this feature stores; shared demo assets are left alone
+                        if (str_starts_with((string) $img['image_path'], 'uploads/products/')) {
+                            $uploader->delete($img['image_path']);
+                        }
+                        $this->db->prepare("DELETE FROM product_images WHERE id = ? AND product_id = ?")->execute([$img['id'], $ownedId]);
+                    }
+                }
+                $primary = intval(post('primary_image', 0));
+                if ($primary && !in_array($primary, $remove, true)) {
+                    $this->db->prepare("UPDATE product_images SET is_primary = (id = ?) WHERE product_id = ?
+                                        AND EXISTS (SELECT 1 FROM (SELECT id FROM product_images WHERE id = ? AND product_id = ?) x)")
+                             ->execute([$primary, $ownedId, $primary, $ownedId]);
+                }
+                [, $imgErrors] = $this->saveProductImages($ownedId, $this->uploadedImages(), html_entity_decode((string) ($this->db->query("SELECT name FROM products WHERE id = " . (int) $ownedId)->fetchColumn() ?: ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+                // Always keep exactly one main photo when the product has photos
+                $this->db->prepare("
+                    UPDATE product_images SET is_primary = 1
+                    WHERE product_id = ? AND NOT EXISTS (SELECT 1 FROM (SELECT id FROM product_images WHERE product_id = ? AND is_primary = 1) x)
+                    ORDER BY sort_order, id LIMIT 1
+                ")->execute([$ownedId, $ownedId]);
+                if ($imgErrors) {
+                    setFlash('info', implode(' ', $imgErrors));
+                }
+                redirect(url('seller/inventory/edit?id=' . $inventoryId));
+                return;
+            }
         } catch (\PDOException $e) {
             logger("InventoryController::update() failed: " . $e->getMessage(), 'error');
             setFlash('error', lang_pick('La mise à jour a échoué. Veuillez réessayer.', 'Update failed. Please try again.'));
@@ -349,6 +466,12 @@ class InventoryController
 
             $this->db->commit();
             setFlash('success', lang_pick('Produit créé et ajouté à votre inventaire.', 'Product created and added to your inventory.'));
+
+            // Photos after the commit: a rejected file never loses the product itself
+            [, $imgErrors] = $this->saveProductImages((int) $productId, $this->uploadedImages(), html_entity_decode($name, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+            if ($imgErrors) {
+                setFlash('info', implode(' ', $imgErrors));
+            }
         } catch (\PDOException $e) {
             $this->db->rollBack();
             logger("InventoryController::storeProduct() failed: " . $e->getMessage(), 'error');

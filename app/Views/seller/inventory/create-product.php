@@ -2,7 +2,7 @@
 /**
  * Create a new product and add it to the seller's inventory (/seller/inventory/create-product)
  * Updated 2026-09-28: seller-portal.css kit, bilingual EN/FR. Same form fields.
- * NOTE: no product photo upload exists yet (InventoryController::storeProduct handles no files).
+ * Photos (up to 6, first one = main) added 2026-09-28, saved by InventoryController::saveProductImages().
  */
 $shop       = $shop ?? null;
 $categories = $categories ?? [];
@@ -13,7 +13,7 @@ require __DIR__ . '/../layout-header.php';
   <div class="sp-card-head"><h2><?= $fr ? 'Créer un produit' : 'Create a product' ?></h2>
     <a href="<?= url('seller/inventory') ?>"><i class="fa-solid fa-arrow-left"></i> <?= $fr ? 'Inventaire' : 'Inventory' ?></a></div>
   <p class="sp-muted" style="margin:-6px 0 18px"><?= $fr ? 'Le produit est ajouté automatiquement à votre inventaire.' : 'The product is added to your inventory automatically.' ?></p>
-  <form class="sp-form" method="POST" action="<?= url('seller/inventory/store-product') ?>">
+  <form class="sp-form" method="POST" action="<?= url('seller/inventory/store-product') ?>" enctype="multipart/form-data">
     <input type="hidden" name="<?= htmlspecialchars(env('CSRF_TOKEN_NAME', '_csrf_token')) ?>" value="<?= generateCsrfToken() ?>">
     <label><?= $fr ? 'Nom du produit' : 'Product name' ?> *<input type="text" name="name" required maxlength="200" placeholder="<?= $fr ? 'ex. Lait biologique 2 L' : 'e.g. Organic whole milk 2L' ?>"></label>
     <label><?= $fr ? 'Catégorie' : 'Category' ?> *
@@ -31,6 +31,7 @@ require __DIR__ . '/../layout-header.php';
       <label><?= $fr ? 'Poids par unité (kg)' : 'Weight per unit (kg)' ?> *<input type="number" name="weight" min="0.01" step="0.01" placeholder="2" required>
         <small><?= $fr ? 'Sert au calcul des frais de livraison surdimensionnée.' : 'Used to calculate oversize delivery fees.' ?></small></label>
     </div>
+    <?php require __DIR__ . '/partials/photo-picker.php'; ?>
     <div><button type="submit" class="sp-btn sp-btn-primary"><i class="fa-solid fa-plus"></i> <?= $fr ? "Créer et ajouter à l'inventaire" : 'Create and add to inventory' ?></button></div>
   </form>
 </section>

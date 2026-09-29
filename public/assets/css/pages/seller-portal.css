@@ -207,3 +207,17 @@ body.sp-body{margin:0;background:var(--sp-bg);color:var(--sp-text);font-family:'
 .sp-chat-form textarea{flex:1;resize:none;max-height:140px;padding:11px 12px;border:1px solid var(--sp-border);border-radius:12px;font:14px Inter,sans-serif}
 .sp-chat-form textarea:focus{outline:2px solid rgba(0,178,7,.25);border-color:var(--sp-green)}
 @media (max-width:900px){.sp-chat{height:calc(100vh - 150px)}.sp-msg{max-width:90%}}
+
+/* ===== Product photos ===== */
+.sp-photo-drop{position:relative;display:grid;place-items:center;gap:4px;min-height:120px;padding:16px;border:1.5px dashed var(--sp-border);border-radius:14px;background:#FAFBFA;text-align:center;cursor:pointer;font-weight:400}
+.sp-photo-drop:hover{border-color:var(--sp-green)}
+.sp-photo-drop > i{font-size:26px;color:var(--sp-green)}
+.sp-photo-drop input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.sp-photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px;margin-top:10px}
+.sp-photo-grid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;border:1px solid var(--sp-border)}
+.sp-photo{position:relative;border:1px solid var(--sp-border);border-radius:12px;overflow:hidden;background:#fff}
+.sp-photo img{display:block;width:100%;aspect-ratio:1;object-fit:cover;border:0;border-radius:0}
+.sp-photo.is-main{border-color:var(--sp-green);box-shadow:0 0 0 2px rgba(0,178,7,.2)}
+.sp-photo-tools{display:grid;gap:4px;padding:8px;font-size:12px}
+.sp-photo-tools label{display:flex;align-items:center;gap:6px;font-weight:500;cursor:pointer}
+.sp-photo-main{position:absolute;top:6px;left:6px}
