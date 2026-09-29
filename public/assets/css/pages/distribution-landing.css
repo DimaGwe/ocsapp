@@ -175,7 +175,8 @@ body.distribution-landing-page {
 .trust h3 { font-size: 26px; letter-spacing: -.02em; margin-bottom: 12px; text-align: center; }
 .trust > .wrap > p { color: var(--text-grey); font-size: 15.5px; max-width: 680px; margin: 0 auto; text-align: center; line-height: 1.75; }
 .trust-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 18px; margin-top: 32px; }
-.trust-card { border: 1px solid var(--border); border-radius: 16px; padding: 24px; box-shadow: var(--shadow-sm); background: #fff; }
+.trust-card { position: relative; overflow: hidden; border: 1px solid var(--border); border-radius: 16px; padding: 24px; box-shadow: var(--shadow-sm); background: #fff; }
+.trust-card::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--green); opacity: .9; }
 .trust-card h4 { font-size: 15.5px; margin-bottom: 8px; color: var(--text-dark); }
 .trust-card p { font-size: 13.5px; color: var(--text-grey); margin: 0; line-height: 1.65; }
 
