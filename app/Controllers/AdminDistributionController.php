@@ -1909,14 +1909,12 @@ class AdminDistributionController
             // 10. Notify driver via portal + delivery_notifications table
             $driverName = trim(($bestDriver['first_name'] ?? '') . ' ' . ($bestDriver['last_name'] ?? ''));
             $stopCount  = count($orderedStops);
-            $db->prepare("
-                INSERT INTO driver_delivery_notifications
-                (driver_id, message, type, sent_by, created_at)
-                VALUES (?, ?, 'urgent', 0, NOW())
-            ")->execute([
-                $driverId,
+            \App\Helpers\NotificationHelper::addDriverNotification(
+                (int) $driverId,
                 "New delivery assignment: {$stopCount} pickup stop(s) → {$dr['company_name']}. Request #{$dr['request_number']}.",
-            ]);
+                'urgent', 0,
+                "Nouvelle livraison assignée : {$stopCount} arrêt(s) de ramassage → {$dr['company_name']}. Demande n° {$dr['request_number']}."
+            );
 
             // 11. Admin bell — driver assigned
             \App\Helpers\NotificationHelper::add(

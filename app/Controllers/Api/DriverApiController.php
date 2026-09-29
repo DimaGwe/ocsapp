@@ -26,7 +26,7 @@ class DriverApiController
         }
 
         $stmt = $this->db->prepare(
-            "SELECT id, first_name, last_name, email, phone, password, role, status
+            "SELECT id, first_name, last_name, email, phone, password, role, status, force_password_reset
              FROM users
              WHERE email = ?
              LIMIT 1"
@@ -46,6 +46,20 @@ class DriverApiController
         // Driver accounts must be active (approved by admin)
         if (in_array($user['role'], ['delivery', 'driver']) && $user['status'] !== 'active') {
             $this->error('Your application is pending approval. You will receive an email once your account is activated.', 403);
+        }
+
+        // Newly approved drivers get a temporary password and must set their own first. The web
+        // portal enforces it (DeliveryController::showChangePassword); the app login used to skip it.
+        // No token until they do: the app shows this message, the driver sets it on the website.
+        if (in_array($user['role'], ['delivery', 'driver']) && (int) ($user['force_password_reset'] ?? 0) === 1) {
+            $fr = str_starts_with(strtolower($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? ''), 'fr') || ($body['lang'] ?? '') === 'fr';
+            $this->json([
+                'error' => $fr
+                    ? 'Veuillez d\'abord choisir votre propre mot de passe sur ocsapp.ca (connexion livreur), puis revenez vous connecter ici.'
+                    : 'Please set your own password first on ocsapp.ca (driver login), then log in here again.',
+                'code'  => 'password_reset_required',
+                'url'   => url('delivery/change-password'),
+            ], 403);
         }
 
         $token = $this->generateToken($user['id']);
@@ -1426,7 +1440,10 @@ class DriverApiController
                     $newDriver['user_id'],
                     'New Pickup Assigned',
                     "You have been assigned PO #{$po['po_number']} for pickup.",
-                    ['type' => 'pickup', 'pickup_id' => $id]
+                    // po_id: the key the other pickup pushes use (pickup_id kept for older builds)
+                    ['type' => 'pickup', 'po_id' => $id, 'pickup_id' => $id],
+                    'Nouveau ramassage assigné',
+                    "Le bon de commande n° {$po['po_number']} vous a été assigné pour ramassage."
                 );
             } catch (\Exception $e) { /* non-fatal */ }
         } else {
@@ -2134,8 +2151,21 @@ class DriverApiController
      *
      * Usage: DriverApiController::sendPush($db, $driverId, 'New Order', 'You have a delivery nearby!', ['order_id' => 123]);
      */
-    public static function sendPush(\PDO $db, int $driverId, string $title, string $body, array $data = []): void
+    public static function sendPush(\PDO $db, int $driverId, string $title, string $body, array $data = [],
+                                    ?string $titleFr = null, ?string $bodyFr = null): void
     {
+        // Bilingual (Quebec): no per-driver language preference is stored and the app is not
+        // localized yet, so a push with French text shows FR first, then EN. The separate texts
+        // travel in `data` so a localized app can show just one.
+        if ($titleFr !== null || $bodyFr !== null) {
+            $data += ['title_en' => $title, 'body_en' => $body, 'title_fr' => $titleFr ?? $title, 'body_fr' => $bodyFr ?? $body];
+            if ($titleFr !== null && $titleFr !== $title) {
+                $title = $titleFr . ' / ' . $title;
+            }
+            if ($bodyFr !== null && $bodyFr !== $body) {
+                $body = $bodyFr . "\n" . $body;
+            }
+        }
         $stmt = $db->prepare("SELECT fcm_token FROM driver_api_tokens WHERE user_id = ? AND fcm_token IS NOT NULL LIMIT 1");
         $stmt->execute([$driverId]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);

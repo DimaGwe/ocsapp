@@ -580,8 +580,10 @@ class PurchaseOrderController {
                     $db,
                     $driverId,
                     '📦 Supplier Pickup Assigned',
-                    "PO #{$po['po_number']} — Pick up from {$po['supplier_name']}." . ($pickupAddr ? " $pickupAddr" : ''),
-                    ['type' => 'pickup', 'po_id' => (string)$poId]
+                    "PO #{$po['po_number']}: pick up from {$po['supplier_name']}." . ($pickupAddr ? " $pickupAddr" : ''),
+                    ['type' => 'pickup', 'po_id' => (string)$poId],
+                    '📦 Ramassage fournisseur assigné',
+                    "Bon de commande n° {$po['po_number']} : ramassage chez {$po['supplier_name']}." . ($pickupAddr ? " $pickupAddr" : '')
                 );
             } catch (\Exception $e) {
                 error_log('Driver FCM push error: ' . $e->getMessage());
@@ -768,14 +770,16 @@ class PurchaseOrderController {
             )->execute([$driverId, $poId, $message, $type, $sentBy]);
 
             // Send push notification
-            $pushTitle = match($type) {
-                'urgent'  => 'Urgent — PO #' . $po['po_number'],
-                'warning' => 'PO #' . $po['po_number'],
-                default   => 'PO #' . $po['po_number'],
+            // Title bilingual; the body is the admin's own message, sent as typed
+            [$pushTitle, $pushTitleFr] = match($type) {
+                'urgent'  => ['Urgent: PO #' . $po['po_number'], 'Urgent : bon de commande n° ' . $po['po_number']],
+                'warning' => ['PO #' . $po['po_number'], 'Bon de commande n° ' . $po['po_number']],
+                default   => ['PO #' . $po['po_number'], 'Bon de commande n° ' . $po['po_number']],
             };
             \App\Controllers\Api\DriverApiController::sendPush(
                 $db, $driverId, $pushTitle, $message,
-                ['type' => $type, 'po_id' => (string)$poId]
+                ['type' => $type, 'po_id' => (string)$poId],
+                $pushTitleFr
             );
 
             logger("Admin notified driver #{$driverId} for PO #{$po['po_number']}: [{$type}] {$message}", 'info');

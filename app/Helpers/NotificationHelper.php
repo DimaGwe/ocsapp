@@ -1001,16 +1001,21 @@ class NotificationHelper
     public static function addDriverNotification(
         int $driverId,
         string $message,
-        string $type = 'normal',
-        int $sentBy = 0
+        string $type = 'info',
+        int $sentBy = 0,
+        ?string $messageFr = null
     ): int|false {
+        // The column is enum(info|warning|urgent); anything else used to be stored as ''
+        if (!in_array($type, ['info', 'warning', 'urgent'], true)) {
+            $type = 'info';
+        }
         try {
             $db = \Database::getConnection();
             $stmt = $db->prepare("
-                INSERT INTO driver_delivery_notifications (driver_id, message, type, sent_by, created_at)
-                VALUES (?, ?, ?, ?, NOW())
+                INSERT INTO driver_delivery_notifications (driver_id, message, message_fr, type, sent_by, created_at)
+                VALUES (?, ?, ?, ?, ?, NOW())
             ");
-            $stmt->execute([$driverId, $message, $type, $sentBy]);
+            $stmt->execute([$driverId, $message, $messageFr, $type, $sentBy]);
             return (int) $db->lastInsertId();
         } catch (\PDOException $e) {
             error_log("NotificationHelper::addDriverNotification error: " . $e->getMessage());

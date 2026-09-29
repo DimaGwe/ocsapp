@@ -484,13 +484,12 @@ class AdminDeliveryController {
             // Driver bell + email (approved drivers with portal accounts)
             if ($app['user_id']) {
                 try {
-                    $this->db->prepare("
-                        INSERT INTO driver_delivery_notifications (driver_id, message, type, sent_by, created_at)
-                        VALUES (?, ?, 'normal', 0, NOW())
-                    ")->execute([
-                        $app['user_id'],
-                        'New message from OCSAPP — log in to read and reply.',
-                    ]);
+                    \App\Helpers\NotificationHelper::addDriverNotification(
+                        (int) $app['user_id'],
+                        'New message from OCSAPP. Log in to read and reply.',
+                        'info', 0,
+                        "Nouveau message d'OCSAPP. Connectez-vous pour le lire et y répondre."
+                    );
                 } catch (\Exception $e) { /* non-critical */ }
                 try {
                     \App\Helpers\EmailHelper::sendRaw(
@@ -667,7 +666,8 @@ class AdminDeliveryController {
                     \App\Helpers\NotificationHelper::addDriverNotification(
                         (int)$finalUserId,
                         "Welcome as Founding Driver Partner #{$foundingResult['founding_driver_number']}! Your permanent badge is now active on your profile.",
-                        'founding_partner'
+                        'info', 0,
+                        "Bienvenue, Livreur partenaire fondateur n° {$foundingResult['founding_driver_number']} ! Votre insigne permanent est maintenant actif sur votre profil."
                     );
                     // Founders' Wall: confirm their display choice + change link (sent once)
                     \App\Helpers\FoundersWallHelper::onFoundingGrantedForUser((int) $finalUserId, 'driver', (int) $foundingResult['founding_driver_number']);
@@ -2307,8 +2307,10 @@ class AdminDeliveryController {
                     $this->db,
                     $driverId,
                     '🛵 New Delivery Assigned',
-                    "Order #{$orderNum} — Pick up from " . ($info['shop_name'] ?? 'merchant') . '.',
-                    ['type' => 'delivery', 'delivery_id' => (string)$deliveryId]
+                    "Order #{$orderNum}: pick up from " . ($info['shop_name'] ?? 'the merchant') . '.',
+                    ['type' => 'delivery', 'delivery_id' => (string)$deliveryId],
+                    '🛵 Nouvelle livraison assignée',
+                    "Commande n° {$orderNum} : ramassage chez " . ($info['shop_name'] ?? 'le commerçant') . '.'
                 );
             } catch (\Exception $fcmErr) {
                 error_log('Driver FCM push error: ' . $fcmErr->getMessage());
@@ -3153,13 +3155,12 @@ public function requestComplianceDocs(): void
         $portalUrl = url('delivery/compliance');
 
         // Driver bell
-        $this->db->prepare("
-            INSERT INTO driver_delivery_notifications (driver_id, message, type, sent_by, created_at)
-            VALUES (?, ?, 'normal', 0, NOW())
-        ")->execute([
+        \App\Helpers\NotificationHelper::addDriverNotification(
             $driverId,
             'Action required: please log in and upload your compliance documents to complete your driver profile.',
-        ]);
+            'warning', 0,
+            'Action requise : connectez-vous et téléversez vos documents de conformité pour compléter votre profil de livreur.'
+        );
 
         // Driver email
         \App\Helpers\EmailHelper::sendRaw(

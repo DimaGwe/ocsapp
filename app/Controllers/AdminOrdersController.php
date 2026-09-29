@@ -360,17 +360,19 @@ class AdminOrdersController {
         )->execute([$driverId, $orderId, $message, $type, $adminId]);
 
         // Push notification — fires immediately to driver's device
-        $pushTitle = match($type) {
-            'urgent'  => '🚨 Urgent — Order #' . $order['order_number'],
-            'warning' => '⚠️ Order #' . $order['order_number'],
-            default   => 'Order #' . $order['order_number'],
+        // Title bilingual; the body is the admin's own message, sent as typed
+        [$pushTitle, $pushTitleFr] = match($type) {
+            'urgent'  => ['🚨 Urgent: Order #' . $order['order_number'], '🚨 Urgent : commande n° ' . $order['order_number']],
+            'warning' => ['⚠️ Order #' . $order['order_number'], '⚠️ Commande n° ' . $order['order_number']],
+            default   => ['Order #' . $order['order_number'], 'Commande n° ' . $order['order_number']],
         };
         \App\Controllers\Api\DriverApiController::sendPush(
             $this->db,
             $driverId,
             $pushTitle,
             $message,
-            ['type' => $type, 'order_id' => (string)$orderId]
+            ['type' => $type, 'order_id' => (string)$orderId],
+            $pushTitleFr
         );
 
         echo json_encode(['success' => true]);
