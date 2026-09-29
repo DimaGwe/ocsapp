@@ -53,7 +53,7 @@ $translations = [
         'page_types' => [
             'terms' => 'Conditions de Service',
             'privacy' => 'Politique de Confidentialité',
-            'cookies' => 'Politique de Cookies',
+            'cookies' => 'Politique relative aux témoins',
             'refund' => 'Politique de Remboursement',
             'shipping' => 'Politique d\'Expédition',
         ],

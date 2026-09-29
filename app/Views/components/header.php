@@ -535,32 +535,4 @@ $accountDashboardUrl = accountUrl(); // Uses new helper function
 })();
 </script>
 
-<!-- Cookie Consent Banner -->
-<?php if (empty($_COOKIE['cookie_consent'])): ?>
-<?php
-$_cookieFr = ($currentLang === 'fr');
-$_cookieText   = $t['cookie_banner_prefix']    ?? ($_cookieFr ? 'Nous utilisons des témoins pour améliorer votre expérience et assurer le bon fonctionnement du site. En continuant à utiliser OCSAPP Marketplace, vous acceptez notre' : 'We use cookies to improve your experience and ensure the site works properly. By continuing to use OCSAPP Marketplace, you agree to our');
-$_cookieLink   = $t['cookie_policy_link_text'] ?? ($_cookieFr ? 'Politique des témoins' : 'Cookie Policy');
-$_cookieAccept = $t['cookie_accept']           ?? ($_cookieFr ? 'Accepter' : 'Accept');
-$_cookieDecline= $t['cookie_decline']          ?? ($_cookieFr ? 'Refuser'  : 'Decline');
-?>
-<div id="cookieBanner" style="position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#1a1a1a;color:#fff;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;box-shadow:0 -4px 16px rgba(0,0,0,.3);">
-    <p style="margin:0;font-size:14px;line-height:1.5;flex:1;min-width:200px;">
-        <?= $_cookieText ?> <a href="<?= url('cookies') ?>" style="color:#00b207;"><?= $_cookieLink ?></a>.
-    </p>
-    <div style="display:flex;gap:10px;flex-shrink:0;">
-        <button onclick="acceptCookies()" style="padding:10px 24px;background:#00b207;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;"><?= $_cookieAccept ?></button>
-        <button onclick="declineCookies()" style="padding:10px 16px;background:transparent;color:#aaa;border:1px solid #555;border-radius:8px;font-size:14px;cursor:pointer;"><?= $_cookieDecline ?></button>
-    </div>
-</div>
-<script>
-function acceptCookies() {
-    document.cookie = "cookie_consent=accepted; max-age=" + (365*24*3600) + "; path=/; SameSite=Lax";
-    document.getElementById('cookieBanner').style.display = 'none';
-}
-function declineCookies() {
-    document.cookie = "cookie_consent=declined; max-age=" + (365*24*3600) + "; path=/; SameSite=Lax";
-    document.getElementById('cookieBanner').style.display = 'none';
-}
-</script>
-<?php endif; ?>
+<?php require __DIR__ . '/cookie-banner.php'; ?>

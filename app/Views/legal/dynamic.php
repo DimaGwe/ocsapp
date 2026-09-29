@@ -618,7 +618,7 @@ $fr = ($currentLang === 'fr');
       <div class="mc-footer-legal">
         <a href="<?= url('privacy') ?>"><?= $fr ? 'Politique de confidentialité' : 'Privacy Policy' ?></a>
         <a href="<?= url('terms') ?>"><?= $fr ? "Conditions d'utilisation" : 'Terms of Service' ?></a>
-        <a href="<?= url('cookies') ?>"><?= $fr ? 'Politique de cookies' : 'Cookie Policy' ?></a>
+        <a href="<?= url('cookies') ?>"><?= $fr ? 'Politique relative aux témoins' : 'Cookie Policy' ?></a>
         <a href="<?= url('returns') ?>"><?= $fr ? 'Retours' : 'Returns' ?></a>
         <a href="<?= url('accessibility') ?>"><?= $fr ? 'Accessibilité' : 'Accessibility' ?></a>
       </div>
@@ -646,5 +646,6 @@ $fr = ($currentLang === 'fr');
   }
 })();
 </script>
+<?php require __DIR__ . '/../components/cookie-banner.php'; ?>
 </body>
 </html>
