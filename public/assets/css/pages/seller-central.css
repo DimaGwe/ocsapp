@@ -108,9 +108,11 @@ body.seller-central-page {
    as buyer-central.css / supplier-central.css, ported here since this page didn't
    use the component before. */
 .requirements-box {
+  position: relative; overflow: hidden;
   max-width: 900px; margin: 0 auto; background: #fff; border: 1px solid var(--border);
   border-radius: 18px; padding: 30px 34px; box-shadow: var(--shadow-sm);
 }
+.requirements-box::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--green); opacity: .9; }
 .requirements-box h4 { font-family: 'Poppins', 'Segoe UI', sans-serif; font-size: 16px; margin-bottom: 16px; }
 .requirements-box ul { list-style: none; display: grid; grid-template-columns: repeat(2,1fr); gap: 10px 24px; }
 .requirements-box li { font-size: 13.5px; color: var(--text-grey); padding-left: 22px; position: relative; line-height: 1.6; }

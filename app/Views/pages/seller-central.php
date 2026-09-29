@@ -418,7 +418,7 @@ $fr = ($currentLang === 'fr');
   <div class="wrap">
     <div class="section-eyebrow"><?= $fr ? "EXIGENCES LÉGALES" : "LEGAL REQUIREMENTS" ?></div>
     <h2><?= $fr ? "Vendre en toute légalité au Québec" : "Selling legally in Quebec" ?></h2>
-    <p style="max-width:760px;margin-bottom:22px;"><?= $fr
+    <p style="max-width:760px;margin:0 auto 22px;text-align:center;"><?= $fr
       ? "Chaque boutique sur OCSAPP doit respecter les exigences légales de base du Québec, peu importe ce qu'elle vend. Notre équipe examine votre NEQ avant d'approuver votre boutique. Les permis propres à votre catégorie demeurent votre responsabilité, et votre entente vendeur prévoit que vous en fournissiez une copie à OCSAPP sur demande et à chaque renouvellement."
       : "Every shop on OCSAPP must meet Quebec's baseline legal requirements, whatever it sells. Our team reviews your NEQ before approving your shop. The permits specific to your category remain your responsibility, and your Seller Agreement requires you to send OCSAPP a copy on request and at each renewal." ?></p>
     <div class="requirements-box">
