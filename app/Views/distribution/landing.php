@@ -482,9 +482,9 @@ $fr = ($currentLang === 'fr');
 <!-- OUR BUSINESSES -->
 <section class="card-section">
   <div class="wrap">
-    <div class="section-eyebrow"><?= $fr ? "NOS ENTREPRISES" : "OUR BUSINESSES" ?></div>
-    <h2><?= $fr ? "Des entreprises qui nous font confiance" : "Businesses that trust us" ?></h2>
-    <p class="section-lead"><?= $fr ? "De tous les secteurs, dans le West Island et en expansion." : "Across every sector, in the West Island and expanding." ?></p>
+    <div class="section-eyebrow"><?= $fr ? "POUR QUI" : "WHO IT'S FOR" ?></div>
+    <h2><?= $fr ? "Conçu pour les entreprises de tous les secteurs" : "Built for businesses in every sector" ?></h2>
+    <p class="section-lead"><?= $fr ? "En lancement dans l'Ouest-de-l'Île pendant notre bêta, avec d'autres zones à venir." : "Launching in the West Island during our beta, with more zones to follow." ?></p>
     <div class="category-chips">
       <span class="category-chip"><?= $fr ? "Restaurants" : "Restaurants" ?></span>
       <span class="category-chip"><?= $fr ? "Bureaux" : "Offices" ?></span>
@@ -651,7 +651,7 @@ $fr = ($currentLang === 'fr');
 <section class="cta-band">
   <div class="wrap">
     <h2><?= $fr ? "Prêt à simplifier votre distribution ?" : "Ready to simplify your distribution?" ?></h2>
-    <p><?= $fr ? "Rejoignez les entreprises québécoises qui font confiance à OCSAPP pour leur approvisionnement, leurs expéditions et leurs routes récurrentes." : "Join the Quebec businesses that trust OCSAPP for their procurement, shipments, and recurring routes." ?></p>
+    <p><?= $fr ? "Soyez parmi les premières entreprises québécoises à utiliser OCSAPP pour leur approvisionnement, leurs expéditions et leurs routes récurrentes." : "Be among the first Quebec businesses to use OCSAPP for procurement, shipments, and recurring routes." ?></p>
     <div class="cta-actions">
       <a class="btn" href="<?= url('distribution/register') ?>"><?= $fr ? "Créer un compte entreprise" : "Create a Business Account" ?></a>
       <a class="btn-secondary" href="<?= url('distribution/login') ?>"><?= $fr ? "Se connecter" : "Log In" ?></a>

@@ -138,7 +138,7 @@ $fr = ($currentLang === 'fr');
     <div class="why-grid">
       <article class="why-card">
         <div class="why-num">01</div>
-        <h3><?= $fr ? "Parcourez des milliers de produits" : "Browse thousands of products" ?></h3>
+        <h3><?= $fr ? "Parcourez les produits des commerces locaux" : "Browse products from local shops" ?></h3>
         <p><?= $fr
           ? "Explorez le Marché Central - l'épicerie, la mode, la maison et les boutiques locales de votre région, tout au même endroit. Trouvez de la nourriture fraîche, des articles ménagers, des vêtements et bien plus encore."
           : "Explore Marketplace Central - groceries, fashion, home goods, and local shops in your area, all in one place. Find fresh food, household items, clothing, and much more." ?></p>
