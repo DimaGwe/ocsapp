@@ -255,7 +255,7 @@ $fr = ($currentLang === 'fr');
       <article class="feature-card">
         <span class="feature-icon feature-icon-3d" aria-hidden="true"><svg viewBox="0 0 64 64"><defs><linearGradient id="bc4" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#25e72d"/><stop offset="1" stop-color="#08720c"/></linearGradient></defs><path d="M15 8h28l8 8v40H15z" fill="url(#bc4)"/><path d="M43 8v10h9" fill="#dffff0"/><path d="M22 27h22M22 35h17M22 43h20" stroke="#f4fff5" stroke-width="3" stroke-linecap="round"/></svg></span>
         <h3><?= $fr ? "Documents BC, BL &amp; facture" : "PO, BL &amp; invoice documents" ?></h3>
-        <p><?= $fr ? "Bons de commande, bons de livraison et factures générés automatiquement - prêts en PDF ou EDI pour vos dossiers." : "Purchase orders, bills of lading, and invoices generated automatically - ready in PDF or EDI for your records." ?></p>
+        <p><?= $fr ? "Bons de commande, bons de livraison et factures générés automatiquement - prêts en PDF pour vos dossiers (EDI offert dès qu'il sera disponible)." : "Purchase orders, bills of lading, and invoices generated automatically - ready in PDF for your records (EDI as it becomes available)." ?></p>
       </article>
       <article class="feature-card">
         <span class="feature-icon feature-icon-3d" aria-hidden="true"><svg viewBox="0 0 64 64"><defs><linearGradient id="bc5" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#20e528"/><stop offset="1" stop-color="#076d0a"/></linearGradient></defs><rect x="9" y="18" width="46" height="30" rx="7" fill="url(#bc5)"/><rect x="14" y="24" width="36" height="6" rx="3" fill="#f5fff5"/><path d="M24 36h12" stroke="#dffff0" stroke-width="3" stroke-linecap="round"/><path d="M42 37v-3a5 5 0 0 1 10 0v3" fill="none" stroke="#eaffeb" stroke-width="2.5"/><rect x="40" y="37" width="14" height="11" rx="3" fill="#effff0"/></svg></span>
@@ -269,8 +269,8 @@ $fr = ($currentLang === 'fr');
       </article>
       <article class="feature-card">
         <span class="feature-icon feature-icon-3d" aria-hidden="true"><svg viewBox="0 0 64 64"><defs><linearGradient id="bc7" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#28e830"/><stop offset="1" stop-color="#08710c"/></linearGradient></defs><circle cx="23" cy="22" r="8" fill="url(#bc7)"/><circle cx="43" cy="25" r="7" fill="#17c81f"/><path d="M9 51c1-10 7-16 14-16s14 6 15 16z" fill="url(#bc7)"/><path d="M35 50c1-8 5-13 10-13s10 5 11 13z" fill="#0a8f0f"/></svg></span>
-        <h3><?= $fr ? "Accès d'équipe" : "Team access" ?></h3>
-        <p><?= $fr ? "Ajoutez des membres de votre équipe avec des permissions basées sur leur rôle - séparez l'accès approvisionnement, finance et réception selon votre organisation." : "Add team members with role-based permissions - separate procurement, finance, and receiving access across your organization." ?></p>
+        <h3><?= $fr ? "Accès d'équipe (bientôt)" : "Team access (coming soon)" ?></h3>
+        <p><?= $fr ? "Bientôt : ajoutez des membres de votre équipe avec des permissions basées sur leur rôle, pour séparer l'accès approvisionnement, finance et réception." : "Coming soon: add team members with role-based permissions, to separate procurement, finance, and receiving access." ?></p>
       </article>
       <article class="feature-card">
         <span class="feature-icon feature-icon-3d" aria-hidden="true"><svg viewBox="0 0 64 64"><defs><linearGradient id="bc8" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#25e72d"/><stop offset="1" stop-color="#08760c"/></linearGradient></defs><path d="M12 49V31h8v18zm13 0V23h8v26zm13 0V14h8v35z" fill="url(#bc8)"/><path d="M9 53h45" stroke="#075d0a" stroke-width="4" stroke-linecap="round"/><path d="M15 22l12-7 9 5 14-10" fill="none" stroke="#00B207" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
@@ -300,7 +300,7 @@ $fr = ($currentLang === 'fr');
       </div>
       <div class="trust-card">
         <h4><?= $fr ? "Frais d'arrêt additionnel" : "Additional-stop fee" ?></h4>
-        <p><?= $fr ? "Approvisionnement : 4,00 $ / 4,50 $ / 5,00 $ par fournisseur au-delà des deux premiers. Distribution : même tarif, par emplacement de cueillette au-delà des deux premiers (forfait Pro et plus)." : "Procurement: \$4.00 / \$4.50 / \$5.00 per supplier beyond the first two. Distribution: same rate, per pickup location beyond the first two (Pro tier and above)." ?></p>
+        <p><?= $fr ? "Approvisionnement : 4,00 $ / 4,50 $ / 5,00 $ par fournisseur au-delà des deux premiers. Distribution : même tarif, par arrêt de livraison au-delà des deux premiers (tous les forfaits)." : "Procurement: \$4.00 / \$4.50 / \$5.00 per supplier beyond the first two. Distribution: same rate, per delivery stop beyond the first two (all tiers)." ?></p>
       </div>
       <div class="trust-card">
         <h4><?= $fr ? "Supplément longue distance" : "Long-distance surcharge" ?></h4>
@@ -365,7 +365,7 @@ $fr = ($currentLang === 'fr');
         <h3><?= $fr ? "Débutant" : "Starter" ?></h3>
         <p class="pricing-tagline"><?= $fr ? "Distribution pour vos propres produits" : "Distribution for your own products" ?></p>
         <div class="pricing-price">$49 <span>/ <?= $fr ? "mois" : "month" ?></span></div>
-        <p class="pricing-commission"><strong>5%</strong> <?= $fr ? "frais distribution (Ouest-de-l'Île)" : "distribution fee (West Island)" ?></p>
+        <p class="pricing-commission"><strong>5%</strong> <?= $fr ? "frais distribution" : "distribution fee" ?></p>
         <ul class="pricing-list">
           <li><?= $fr ? "Expéditions suivies par GPS" : "GPS-tracked shipments" ?></li>
           <li><?= $fr ? "Intégration livraison locale" : "Local delivery integration" ?></li>
@@ -378,7 +378,7 @@ $fr = ($currentLang === 'fr');
         <h3>Pro</h3>
         <p class="pricing-tagline"><?= $fr ? "Distribution pour PME en croissance" : "Distribution for growing SMEs" ?></p>
         <div class="pricing-price">$179 <span>/ <?= $fr ? "mois" : "month" ?></span></div>
-        <p class="pricing-commission"><strong>7%</strong> <?= $fr ? "frais distribution (Ouest-de-l'Île)" : "distribution fee (West Island)" ?></p>
+        <p class="pricing-commission"><strong>7%</strong> <?= $fr ? "frais distribution" : "distribution fee" ?></p>
         <ul class="pricing-list">
           <li><?= $fr ? "Tout ce que Débutant inclut" : "Everything in Starter" ?></li>
           <li><?= $fr ? "Routes de livraison récurrentes" : "Recurring delivery routes" ?></li>
@@ -405,8 +405,8 @@ $fr = ($currentLang === 'fr');
     </div>
     <div class="pricing-note">
       <p><strong><?= $fr ? "Remarque :" : "Note:" ?></strong> <?= $fr
-        ? "Vous pouvez utiliser Approvisionnement seul, Distribution seul, ou les deux ensemble sur le même compte entreprise. Une livraison forfaitaire de 19 $ (Ouest-de-l'Île), 21 $ (Laval) ou 24 $ (Grand Montréal), selon la zone, est incluse avec tous les forfaits Distribution. Le frais distribution ci-dessus est le taux de base (Ouest-de-l'Île), zone-ajusté selon le tableau ci-dessus."
-        : "You can use Procurement alone, Distribution alone, or both together on the same business account. A flat delivery fee of \$19 (West Island), \$21 (Laval), or \$24 (Greater Montreal), by zone, is included with every Distribution tier. The distribution fee above is the West Island base rate, zone-adjusted per the table above." ?></p>
+        ? "Vous pouvez utiliser Approvisionnement seul, Distribution seul, ou les deux ensemble sur le même compte entreprise. Une livraison forfaitaire de 19 $ (Ouest-de-l'Île), 21 $ (Laval) ou 24 $ (Grand Montréal), selon la zone, est incluse avec tous les forfaits Distribution. Le pourcentage des frais distribution est le même dans toutes les zones; seuls les frais de livraison et les suppléments varient selon la zone."
+        : "You can use Procurement alone, Distribution alone, or both together on the same business account. A flat delivery fee of \$19 (West Island), \$21 (Laval), or \$24 (Greater Montreal), by zone, is included with every Distribution tier. The distribution fee percentage is the same in every zone; only the delivery fee and surcharges vary by zone." ?></p>
       <p><strong><?= $fr ? "Frais de traitement des paiements :" : "Payment processing fee:" ?></strong> <?= $fr
         ? "2,9 % + 0,30 $ CAD, absorbés par le compte entreprise et déduits du montant net avant versement (Distribution) ou ajoutés à la facture (Approvisionnement) - toujours détaillés séparément, jamais facturés à vos propres clients."
         : "2.9% + \$0.30 CAD, absorbed by the business account and deducted from net proceeds before payout (Distribution) or added to the invoice (Procurement) - always itemized separately, never charged to your own customers." ?></p>
@@ -459,7 +459,7 @@ $fr = ($currentLang === 'fr');
       <article class="feature-card">
         <span class="feature-icon feature-icon-3d" aria-hidden="true"><svg viewBox="0 0 64 64"><defs><linearGradient id="bc16" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#22e42a"/><stop offset="1" stop-color="#076e0a"/></linearGradient></defs><circle cx="32" cy="32" r="22" fill="url(#bc16)"/><path d="M32 18v14l9 6" fill="none" stroke="#f5fff5" stroke-width="3.5" stroke-linecap="round"/><path d="M20 20l-4-2 1-4" fill="none" stroke="#dffff0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         <h3><?= $fr ? "Intérêt sur paiement en retard" : "Late payment interest" ?></h3>
-        <p><?= $fr ? "Une facture non payée à l'échéance porte intérêt à compter de sa date d'échéance jusqu'au paiement intégral. Le taux applicable est précisé dans votre Entente de compte Entreprise et sur votre facture." : "An invoice not paid by its due date accrues interest from the due date until paid in full. The applicable rate is stated in your Business Account Agreement and on your invoice." ?></p>
+        <p><?= $fr ? "Une facture non payée à l'échéance porte intérêt à compter de sa date d'échéance jusqu'au paiement intégral. Le taux est de 18 % par année (1,5 % par mois), comme indiqué dans votre Entente de compte Entreprise et sur votre facture." : "An invoice not paid by its due date accrues interest from the due date until paid in full. The rate is 18% per year (1.5% per month), as stated in your Business Account Agreement and on your invoice." ?></p>
       </article>
     </div>
   </div>
@@ -579,7 +579,7 @@ $fr = ($currentLang === 'fr');
       </details>
       <details class="faq-item new">
         <summary><h4><?= $fr ? "Puis-je ajouter plusieurs membres de mon équipe ?" : "Can I add multiple team members?" ?></h4></summary>
-        <p><?= $fr ? "Oui. Les comptes entreprise prennent en charge l'accès d'équipe avec des permissions basées sur les rôles - ajoutez du personnel d'approvisionnement, des contacts finance et des équipes de réception avec les niveaux d'accès appropriés. Contactez info@ocsapp.ca ou votre gestionnaire de compte pour ajouter des membres." : "Yes. Business accounts support team access with role-based permissions - add procurement staff, finance contacts, and receiving teams with appropriate access levels. Contact info@ocsapp.ca or your account manager to add team members." ?></p>
+        <p><?= $fr ? "Bientôt. L'accès d'équipe avec des permissions par rôle est en développement. Pour l'instant, chaque compte entreprise a une seule connexion; écrivez à info@ocsapp.ca si vous avez besoin d'aide d'ici là." : "Coming soon. Role-based team access is in development. For now, each business account has a single login; email info@ocsapp.ca if you need help in the meantime." ?></p>
       </details>
       <details class="faq-item new">
         <summary><h4><?= $fr ? "Les suppléments affectent-ils mes frais de base ?" : "Do surcharges affect my base fees?" ?></h4></summary>

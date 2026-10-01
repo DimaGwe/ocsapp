@@ -651,7 +651,8 @@ class DistributionDocumentController
         <p>2. Prices include procurement and handling services.</p>
         <p>3. Delivery times are estimates and may vary based on product availability.</p>
         <p>4. All sales are final once procurement has begun.</p>
-        <p>5. For questions or concerns, contact support@ocsapp.ca.</p>
+        <p>5. Invoices not paid by the due date bear interest at 18% per year (1.5% per month) from the due date until paid in full.</p>
+        <p>6. For questions or concerns, contact support@ocsapp.ca.</p>
     </div>
 
     <div class='footer'>
