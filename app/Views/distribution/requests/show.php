@@ -705,6 +705,12 @@ $drStages = $currentLang === 'fr' ? [
                                     <span><?= $t['service_fee'] ?> (<?= $summary['service_fee_percent'] ?>%)</span>
                                     <span>$<?= number_format($summary['service_fee'], 2) ?></span>
                                 </div>
+                                <?php if (($summary['procurement_fee_waived'] ?? 0) > 0): ?>
+                                <div class="fee-row" style="color:#059669;">
+                                    <span><?= (($_SESSION['language'] ?? 'fr') === 'fr') ? "Exemption Partenaire fondateur (frais d'approvisionnement)" : 'Founding Partner waiver (Procurement Fee)' ?></span>
+                                    <span>-$<?= number_format($summary['procurement_fee_waived'], 2) ?></span>
+                                </div>
+                                <?php endif; ?>
                                 <?php if ($summary['handling_fee'] > 0): ?>
                                 <div class="fee-row">
                                     <span><?= $t['handling'] ?> (<?= number_format($summary['total_weight_kg'], 1) ?> kg &times; $0.20/kg)</span>

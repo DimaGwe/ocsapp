@@ -491,6 +491,9 @@ require __DIR__ . '/../layout-header.php';
         };
 
         const PROCUREMENT_FEE_RATE = 0.01;
+        // Founding Business waiver (Agreement Sec. 7.9): volume still free of the Procurement Fee
+        const FOUNDING_WAIVER_REMAINING = <?php require_once BASE_PATH . '/app/Helpers/FoundingBusinessHelper.php'; echo json_encode(\App\Helpers\FoundingBusinessHelper::procurementWaiverRemaining((int)($_SESSION['business']['id'] ?? 0), (int)($request['id'] ?? 0) ?: null)); ?>;
+        const FOUNDING_WAIVER_LABEL = <?= json_encode((($_SESSION['language'] ?? 'fr') === 'fr') ? 'Exemption fondateur' : 'Founding waiver') ?>;
         const GST_RATE = 0.05;
         const QST_RATE = 0.09975;
 
@@ -647,13 +650,15 @@ require __DIR__ . '/../layout-header.php';
                 deliveryInputGroup.style.display = 'flex';
                 const distance = parseFloat(document.getElementById('deliveryDistance').value) || 0;
 
-                const serviceFee = catalogTotal * PROCUREMENT_FEE_RATE;
+                const waivedVolume = Math.min(catalogTotal, FOUNDING_WAIVER_REMAINING);
+                const serviceFee = (catalogTotal - waivedVolume) * PROCUREMENT_FEE_RATE;
                 const deliveryFee = calculateDeliveryFee(distance, tier);
 
                 feeBreakdown.style.display = 'block';
                 document.getElementById('itemsTotal').textContent = '$' + catalogTotal.toFixed(2) + (shoppingCount > 0 ? '+' : '');
                 document.getElementById('serviceFeePercent').textContent = (PROCUREMENT_FEE_RATE * 100).toFixed(0);
-                document.getElementById('serviceFeeAmount').textContent = '$' + serviceFee.toFixed(2);
+                document.getElementById('serviceFeeAmount').textContent = '$' + serviceFee.toFixed(2)
+                    + (waivedVolume > 0 ? ' (' + FOUNDING_WAIVER_LABEL + ': -$' + (waivedVolume * PROCUREMENT_FEE_RATE).toFixed(2) + ')' : '');
 
                 if (distance <= tierConfig.freeDeliveryKm) {
                     document.getElementById('deliveryInfo').textContent = `Free ≤${tierConfig.freeDeliveryKm}km`;

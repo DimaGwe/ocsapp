@@ -27,6 +27,8 @@ class FoundingBusinessHelper
     const TOTAL_SLOTS = 5;
     const LOCK_MONTHS = 6;
     const LOCKED_RATE = 5.00;
+    /** Sec 7.9: Procurement Fee waived on the first $10,000 of Approvisionnement volume, once. */
+    const PROCUREMENT_WAIVER_VOLUME = 10000.00;
 
     private static function db(): \PDO
     {
@@ -86,6 +88,38 @@ class FoundingBusinessHelper
             if ($startedTransaction && $db->inTransaction()) $db->rollBack();
             error_log('FoundingBusinessHelper::claimSlotIfEligible error: ' . $e->getMessage());
             return ['eligible' => false, 'founding_partner_number' => null];
+        }
+    }
+
+    /**
+     * Approvisionnement volume a Founding Business can still order with the
+     * Procurement Fee waived (Sec 7.9). Unlike the Distribution rate lock this
+     * is not time-limited: it runs until $10,000 of volume has been covered.
+     * Every non-cancelled request counts, drafts included, so two open drafts
+     * can never both claim the same allowance.
+     */
+    public static function procurementWaiverRemaining(int $businessId, ?int $excludeRequestId = null): float
+    {
+        $db = self::db();
+        try {
+            $stmt = $db->prepare("SELECT founding_partner FROM business_profiles WHERE id = ? LIMIT 1");
+            $stmt->execute([$businessId]);
+            if ((int)$stmt->fetchColumn() !== 1) {
+                return 0.0;
+            }
+            $sql = "SELECT COALESCE(SUM(founding_waived_volume), 0) FROM distribution_requests
+                    WHERE business_profile_id = ? AND status NOT IN ('cancelled', 'expired')";
+            $params = [$businessId];
+            if ($excludeRequestId) {
+                $sql .= " AND id <> ?";
+                $params[] = $excludeRequestId;
+            }
+            $used = $db->prepare($sql);
+            $used->execute($params);
+            return max(0.0, round(self::PROCUREMENT_WAIVER_VOLUME - (float)$used->fetchColumn(), 2));
+        } catch (\Exception $e) {
+            error_log('FoundingBusinessHelper::procurementWaiverRemaining error: ' . $e->getMessage());
+            return 0.0;
         }
     }
 

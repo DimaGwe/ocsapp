@@ -102,15 +102,19 @@ class DistributionRequestController
      * @param float $tipAmount Optional tip amount (pre-tax, calculated on items subtotal)
      * @param ?string $zoneCode Zone resolved from the request's delivery city (Sec. 7.4-7.8)
      * @param int $stopCount Number of distinct suppliers consolidated into this request
+     * @param float $waiverRemaining Founding Business volume still fee-free (Sec. 7.9), 0 for everyone else
      */
-    private function calculateSummary(float $itemsTotal, float $deliveryDistance, float $totalWeightKg = 0, float $tipAmount = 0, ?string $zoneCode = null, int $stopCount = 0): array
+    private function calculateSummary(float $itemsTotal, float $deliveryDistance, float $totalWeightKg = 0, float $tipAmount = 0, ?string $zoneCode = null, int $stopCount = 0, float $waiverRemaining = 0.0): array
     {
         require_once BASE_PATH . '/app/Helpers/functions.php';
 
         $tier = $this->getTier($itemsTotal);
         $tierConfig = self::PRICING_TIERS[$tier];
 
-        $procurementFee = $itemsTotal * self::PROCUREMENT_FEE_RATE;
+        // Founding Business waiver (Sec. 7.9): no Procurement Fee on the part of this
+        // request that still fits in the business's first $10,000 of volume.
+        $waivedVolume = round(min($itemsTotal, max(0.0, $waiverRemaining)), 2);
+        $procurementFee = ($itemsTotal - $waivedVolume) * self::PROCUREMENT_FEE_RATE;
         $deliveryFee = $this->calculateDeliveryFee($deliveryDistance, $tier);
 
         // Oversize/Long-Distance/Additional-Stop surcharges (Business Account Agreement
@@ -131,6 +135,8 @@ class DistributionRequestController
             'tier' => $tier,
             'items_total' => round($itemsTotal, 2),
             'service_fee' => round($procurementFee, 2), // column/key name kept for schema compat; now the flat 1% procurement fee (Sec. 6)
+            'founding_waived_volume' => $waivedVolume,
+            'procurement_fee_waived' => round($waivedVolume * self::PROCUREMENT_FEE_RATE, 2),
             'handling_fee' => 0.00, // no per-kg handling fee in the documented model — kept for schema compat
             'total_weight_kg' => round($totalWeightKg, 2),
             'delivery_fee' => round($deliveryFee, 2),
@@ -611,7 +617,9 @@ class DistributionRequestController
             $stopCount = $this->calculateStopCount($data['catalog_items'] ?? []);
 
             // Calculate full summary breakdown with weight, tip, zone, and stop count
-            $summary = $this->calculateSummary($itemsTotal, $data['delivery_distance'], $totalWeightKg, $tipAmount, $zoneCode, $stopCount);
+            require_once BASE_PATH . '/app/Helpers/FoundingBusinessHelper.php';
+            $waiverRemaining = \App\Helpers\FoundingBusinessHelper::procurementWaiverRemaining((int)$businessId);
+            $summary = $this->calculateSummary($itemsTotal, $data['delivery_distance'], $totalWeightKg, $tipAmount, $zoneCode, $stopCount, $waiverRemaining);
 
             if ($summary['hard_cap_exceeded']) {
                 $this->db->rollBack();
@@ -670,6 +678,10 @@ class DistributionRequestController
             ]);
 
             $requestId = $this->db->lastInsertId();
+
+            // Founding Business waiver (Sec. 7.9): record what this request used of the allowance
+            $this->db->prepare("UPDATE distribution_requests SET founding_waived_volume = ?, procurement_fee_waived = ? WHERE id = ?")
+                ->execute([$summary['founding_waived_volume'], $summary['procurement_fee_waived'], $requestId]);
 
             // Add catalog items (from supplier products)
             if (!empty($data['catalog_items'])) {
@@ -895,6 +907,7 @@ class DistributionRequestController
                 'items_total' => $request['items_total'] ?? $catalogTotal,
                 'service_fee' => $request['service_fee'] ?? ($catalogTotal * self::PROCUREMENT_FEE_RATE),
                 'service_fee_percent' => self::PROCUREMENT_FEE_RATE * 100,
+                'procurement_fee_waived' => (float)($request['procurement_fee_waived'] ?? 0),
                 'handling_fee' => $request['handling_fee'] ?? 0,
                 'total_weight_kg' => $request['total_weight_kg'] ?? 0,
                 'delivery_distance' => $request['delivery_distance'] ?? 0,
@@ -1177,7 +1190,9 @@ class DistributionRequestController
             $stopCount = $this->calculateStopCount($data['catalog_items'] ?? []);
 
             // Calculate full summary breakdown with weight, tip, zone, and stop count
-            $summary = $this->calculateSummary($itemsTotal, $data['delivery_distance'], $totalWeightKg, $tipAmount, $zoneCode, $stopCount);
+            require_once BASE_PATH . '/app/Helpers/FoundingBusinessHelper.php';
+            $waiverRemaining = \App\Helpers\FoundingBusinessHelper::procurementWaiverRemaining((int)$businessId, (int)$requestId);
+            $summary = $this->calculateSummary($itemsTotal, $data['delivery_distance'], $totalWeightKg, $tipAmount, $zoneCode, $stopCount, $waiverRemaining);
 
             if ($summary['hard_cap_exceeded']) {
                 $this->db->rollBack();
@@ -1247,6 +1262,9 @@ class DistributionRequestController
                 $summary['total_amount'],
                 $requestId
             ]);
+
+            $this->db->prepare("UPDATE distribution_requests SET founding_waived_volume = ?, procurement_fee_waived = ? WHERE id = ?")
+                ->execute([$summary['founding_waived_volume'], $summary['procurement_fee_waived'], $requestId]);
 
             // Delete existing items
             $this->db->prepare("DELETE FROM distribution_request_items WHERE distribution_request_id = ?")->execute([$requestId]);

@@ -1103,6 +1103,9 @@ unset($_createT);
 
         // Approvisionnement procurement fee: 1% flat, not tiered
         const PROCUREMENT_FEE_RATE = 0.01;
+        // Founding Business waiver (Agreement Sec. 7.9): volume still free of the Procurement Fee
+        const FOUNDING_WAIVER_REMAINING = <?php require_once BASE_PATH . '/app/Helpers/FoundingBusinessHelper.php'; echo json_encode(\App\Helpers\FoundingBusinessHelper::procurementWaiverRemaining((int)($_SESSION['business']['id'] ?? 0), null)); ?>;
+        const FOUNDING_WAIVER_LABEL = <?= json_encode((($_SESSION['language'] ?? 'fr') === 'fr') ? 'Exemption fondateur' : 'Founding waiver') ?>;
 
         // Oversize/Long-Distance/Additional-Stop surcharges (Business Account Agreement
         // Sec. 7.4-7.8) - mirrors resolveB2BZoneCode()/calculateB2BOversizeSurcharge()/
@@ -1297,14 +1300,16 @@ unset($_createT);
                 const distance = parseFloat(document.getElementById('deliveryDistance').value) || 0;
 
                 // Calculate fees
-                const serviceFee = catalogTotal * PROCUREMENT_FEE_RATE;
+                const waivedVolume = Math.min(catalogTotal, FOUNDING_WAIVER_REMAINING);
+                const serviceFee = (catalogTotal - waivedVolume) * PROCUREMENT_FEE_RATE;
                 const deliveryFee = calculateDeliveryFee(distance, tier);
 
                 // Update fee breakdown
                 feeBreakdown.style.display = 'block';
                 document.getElementById('itemsTotal').textContent = '$' + catalogTotal.toFixed(2) + (shoppingCount > 0 ? '+' : '');
                 document.getElementById('serviceFeePercent').textContent = (PROCUREMENT_FEE_RATE * 100).toFixed(0);
-                document.getElementById('serviceFeeAmount').textContent = '$' + serviceFee.toFixed(2);
+                document.getElementById('serviceFeeAmount').textContent = '$' + serviceFee.toFixed(2)
+                    + (waivedVolume > 0 ? ' (' + FOUNDING_WAIVER_LABEL + ': -$' + (waivedVolume * PROCUREMENT_FEE_RATE).toFixed(2) + ')' : '');
 
                 // Update delivery info
                 if (distance <= tierConfig.freeDeliveryKm) {
