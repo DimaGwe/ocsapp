@@ -886,20 +886,7 @@ class DistributionRouteController
      */
     private function canUseRecurringRoutes(int $businessId): bool
     {
-        \App\Helpers\FoundingBusinessHelper::applyLazyExpiryIfNeeded($businessId);
-
-        $stmt = $this->db->prepare("
-            SELECT bp.founding_partner, bp.founding_commission_rate_override, dp.code AS plan_code
-            FROM business_profiles bp
-            LEFT JOIN distribution_plans dp ON bp.distribution_plan_id = dp.id
-            WHERE bp.id = ? LIMIT 1
-        ");
-        $stmt->execute([$businessId]);
-        $biz = $stmt->fetch(\PDO::FETCH_ASSOC);
-        if (!$biz) return false;
-
-        return in_array($biz['plan_code'] ?? null, ['pro', 'enterprise'], true)
-            || \App\Helpers\FoundingBusinessHelper::isActive($biz);
+        return \App\Helpers\RecurringRouteHelper::canUseRecurringRoutes($businessId);
     }
 
     /**
