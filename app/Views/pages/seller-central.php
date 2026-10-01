@@ -519,6 +519,12 @@ $fr = ($currentLang === 'fr');
           : "Since June 1, 2025, generic or descriptive terms tied to a trademark - like a flavour name or an ingredient - must appear in French on the product itself, even if the trademark itself can stay in another language. A transition period runs until June 1, 2027 for products manufactured before June 1, 2025. You're responsible for your product packaging being compliant before listing it on the Platform." ?></p>
       </details>
       <details class="faq-item new">
+        <summary><h4><?= $fr ? "La nouvelle garantie légale de bon fonctionnement s'applique-t-elle à mes produits ?" : "Does the new legal warranty of good working order apply to my products?" ?></h4></summary>
+        <p><?= $fr
+          ? "À compter du 5 octobre 2026, la Loi sur la protection du consommateur accorde à certains biens neufs désignés par règlement (par exemple, certains électroménagers et appareils électroniques) une garantie légale de bon fonctionnement d'une durée minimale fixée par règlement, et cette durée doit être communiquée à l'acheteur. La plupart des produits alimentaires et du quotidien ne sont pas visés. Si vous vendez des biens couverts, écrivez à sellers@ocsapp.ca avant de les lister afin que l'information sur la garantie soit affichée à l'acheteur."
+          : "From October 5, 2026, Québec's Consumer Protection Act gives certain new goods designated by regulation (for example, some household appliances and electronic devices) a legal warranty of good working order for a minimum period set by regulation, and that period must be disclosed to the buyer. Most food and everyday products are not covered. If you sell covered goods, email sellers@ocsapp.ca before listing them so the warranty information can be shown to the buyer." ?></p>
+      </details>
+      <details class="faq-item new">
 <?php if ($fr): ?>
         <summary><h4>Quels permis s'appliquent à la catégorie de ma boutique ?</h4></summary>
         <p>En plus des exigences qui s'appliquent à toutes les boutiques, chaque catégorie a ses propres règles. Ce résumé est un guide et non un avis juridique : vérifiez auprès de l'organisme émetteur ou d'un professionnel pour votre situation.</p>
