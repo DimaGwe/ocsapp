@@ -1695,7 +1695,10 @@ class DriverApiController
                    COALESCE(dr.service_fee, 0)  AS service_fee,
                    COALESCE(dr.delivery_fee, 0) AS delivery_fee,
                    COALESCE(dr.handling_fee, 0) AS handling_fee,
-                   COALESCE(dr.tip_amount, 0)   AS tip_amount
+                   COALESCE(dr.tip_amount, 0)   AS tip_amount,
+                   COALESCE(dr.additional_stop_fee, 0)     AS additional_stop_fee,
+                   COALESCE(dr.oversize_surcharge, 0)      AS oversize_surcharge,
+                   COALESCE(dr.long_distance_surcharge, 0) AS long_distance_surcharge
             FROM delivery_assignments da
             JOIN distribution_requests dr ON dr.id = da.distribution_request_id
             JOIN business_profiles bp ON bp.id = dr.business_profile_id
@@ -1742,15 +1745,20 @@ class DriverApiController
             WHERE driver_id = ?
         ")->execute([$userId]);
 
-        // Record driver earnings for this distribution run
+        // Record driver earnings for this distribution run.
+        // Was a legacy fork (100% of delivery + handling fees less 20%, plus 5% of
+        // the service fee). Driver Agreement Sec 8.2/8.11 and Schedule B.4: the
+        // driver gets 70% of the Fournisseur Delivery Fee and its surcharges, via
+        // the same PayoutHelper as marketplace deliveries. Service and handling fees
+        // are OCSAPP fees, not driver pay. Tips pass through in full (Sec 8.8).
         try {
-            $serviceFeeShare = round((float)$da['service_fee'] * 0.05, 2);
-            $deliveryFee     = (float)$da['delivery_fee'];
-            $handlingFee     = (float)$da['handling_fee'];
-            $tip             = (float)$da['tip_amount'];
-            $commission      = round(($deliveryFee * 0.20) + ($handlingFee * 0.20), 2);
-            $totalEarning    = round($serviceFeeShare + $deliveryFee + $handlingFee + $tip, 2);
-            $netEarning      = round($totalEarning - $commission, 2);
+            require_once __DIR__ . '/../../Helpers/PayoutHelper.php';
+            $deliveryFee  = (float)$da['delivery_fee'];
+            $stopFee      = (float)$da['additional_stop_fee'];
+            $oversize     = (float)$da['oversize_surcharge'];
+            $longDistance = (float)$da['long_distance_surcharge'];
+            $tip          = (float)$da['tip_amount'];
+            $payout       = \App\Helpers\PayoutHelper::calculateDriverPayout($deliveryFee, $stopFee, $oversize, $longDistance);
 
             // Avoid duplicate earnings record if called twice
             $exists = $this->db->prepare("SELECT id FROM delivery_earnings WHERE delivery_id = ? AND driver_id = ? LIMIT 1");
@@ -1758,20 +1766,21 @@ class DriverApiController
             if (!$exists->fetch()) {
                 $this->db->prepare("
                     INSERT INTO delivery_earnings
-                    (driver_id, delivery_id, order_id, base_fee, distance_fee, bonus, tip,
-                     total_earning, platform_commission, net_earning,
+                    (driver_id, delivery_id, order_id, base_fee, additional_stop_fee, oversize_surcharge,
+                     long_distance_surcharge, distance_fee, tip, total_earning, platform_commission, net_earning,
                      payment_status, payout_method, notes, created_at, updated_at)
-                    VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending', ?, NOW(), NOW())
+                    VALUES (?, ?, NULL, ?, ?, ?, ?, 0.00, ?, ?, ?, ?, 'pending', 'pending', ?, NOW(), NOW())
                 ")->execute([
                     $userId,
                     $da['assignment_id'],
-                    $serviceFeeShare,   // base_fee     = 5% of service fee
-                    $deliveryFee,       // distance_fee = 100% delivery fee
-                    $handlingFee,       // bonus        = 100% handling fee
-                    $tip,               // tip (separate)
-                    $totalEarning,
-                    $commission,        // platform_commission = 20% delivery + 20% handling
-                    $netEarning,
+                    $deliveryFee,
+                    $stopFee,
+                    $oversize,
+                    $longDistance,
+                    $tip,
+                    round($payout['gross_pay'] + $tip, 2),
+                    $payout['platform_commission'],
+                    round($payout['driver_net_payout'] + $tip, 2),
                     "Distribution run #{$da['request_number']}" . ($tip > 0 ? " + tip \${$tip}" : ''),
                 ]);
             }
