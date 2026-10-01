@@ -298,6 +298,18 @@ class SupplierAuthController {
             // Link supplier account to application
             $db->prepare("UPDATE supplier_applications SET supplier_id = ? WHERE id = ?")->execute([$supplierId, $applicationId]);
 
+            // Referral (Supplier Agreement Sec 7.4.3): the referring supplier's code, if one
+            // was typed. An unknown code is ignored so it can never block an application.
+            $referralCode = strtoupper(trim(sanitize(post('referral_code', ''))));
+            if ($referralCode !== '') {
+                $refStmt = $db->prepare("SELECT id FROM suppliers WHERE supplier_code = ? AND id <> ? LIMIT 1");
+                $refStmt->execute([$referralCode, $supplierId]);
+                $referrerId = (int)$refStmt->fetchColumn();
+                if ($referrerId) {
+                    $db->prepare("UPDATE suppliers SET referred_by_supplier_id = ? WHERE id = ?")->execute([$referrerId, $supplierId]);
+                }
+            }
+
             $db->commit();
 
             // Clear old input on success

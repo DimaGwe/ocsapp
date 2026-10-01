@@ -263,6 +263,12 @@ class AdminPayablesController
 
             $invoiceId = (int)$db->lastInsertId();
 
+            // Founding Supplier bonuses (Supplier Agreement Sec 7.4.2-7.4.3) are paid
+            // with the next payout: evaluate, then add anything pending to this invoice.
+            \App\Helpers\FoundingSupplierHelper::evaluateBonuses((int)$po['supplier_id']);
+            $bonusAdded = \App\Helpers\FoundingSupplierHelper::applyPendingBonusesToInvoice((int)$po['supplier_id'], $invoiceId);
+            $netPayable = round($netPayable + $bonusAdded, 2);
+
             if (function_exists('auditLog')) {
                 auditLog('invoice_created', "Generated invoice {$invoiceNumber} for PO {$po['po_number']} — \${$total}", $invoiceId);
             }

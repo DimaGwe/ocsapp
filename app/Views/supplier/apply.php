@@ -384,6 +384,14 @@ $t = getTranslations($currentLang);
 
       <div class="form-row single">
         <div class="form-group">
+          <label><?= $fr ? 'Code de parrainage (facultatif)' : 'Referral code (optional)' ?></label>
+          <input type="text" name="referral_code" maxlength="20" autocomplete="off" placeholder="SUP-XXXXXXXX" value="<?= htmlspecialchars($old['referral_code'] ?? ($_GET['ref'] ?? '')) ?>">
+          <span class="hint"><?= $fr ? "Si un fournisseur OCSAPP vous a recommandé, inscrivez son code fournisseur." : 'If an OCSAPP supplier referred you, enter their supplier code.' ?></span>
+        </div>
+      </div>
+
+      <div class="form-row single">
+        <div class="form-group">
           <label><?= $fr ? 'Dénomination sociale' : 'Legal Name' ?> <span class="required">*</span></label>
           <input type="text" name="legal_name" required maxlength="255" placeholder="<?= $fr ? 'Dénomination sociale complète telle qu\'enregistrée' : 'Full legal name as registered' ?>" value="<?= htmlspecialchars($old['legal_name'] ?? '') ?>">
           <span class="hint"><?= $fr ? 'Doit être conforme à la Charte de la langue française' : 'Must comply with the Charter of the French Language' ?></span>

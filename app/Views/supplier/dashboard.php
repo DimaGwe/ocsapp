@@ -430,6 +430,23 @@ $_daysUrgent = $_daysLeft !== null && $_daysLeft <= 7;
                   🌟 <?= $currentLang === 'fr' ? 'Fondateur' : 'Founding' ?> #<?= (int)$supplier['founding_partner_number'] ?>
                 </div>
               <?php endif; ?>
+              <?php if (!empty($supplier['founding_partner_number'])):
+                  require_once BASE_PATH . '/app/Helpers/FoundingSupplierHelper.php';
+                  $fsp = \App\Helpers\FoundingSupplierHelper::perks((int)$supplier['id']);
+                  $fsFr = $currentLang === 'fr'; ?>
+                <div style="font-size:11px;color:#6b7280;margin-top:6px;line-height:1.5;">
+                  <?php if ($fsp['milestone_done']): ?>
+                    <?= $fsFr ? "Prime d'étape de " . number_format($fsp['milestone_bonus'], 0) . ' $ obtenue.' : 'Milestone bonus of $' . number_format($fsp['milestone_bonus'], 0) . ' earned.' ?>
+                  <?php elseif ($fsp['days_left'] > 0): ?>
+                    <?= $fsFr
+                        ? "Prime d'étape : " . number_format($fsp['milestone_bonus'], 0) . ' $ pour ' . (int)$fsp['milestone_target'] . ' bons de commande en 30 jours (' . (int)$fsp['milestone_count'] . '/' . (int)$fsp['milestone_target'] . ', ' . (int)$fsp['days_left'] . ' j restants).'
+                        : 'Milestone bonus: $' . number_format($fsp['milestone_bonus'], 0) . ' for ' . (int)$fsp['milestone_target'] . ' purchase orders in 30 days (' . (int)$fsp['milestone_count'] . '/' . (int)$fsp['milestone_target'] . ', ' . (int)$fsp['days_left'] . ' days left).' ?>
+                  <?php endif; ?>
+                  <br><?= $fsFr
+                      ? 'Parrainage : ' . number_format($fsp['referral_bonus'], 0) . ' $ pour vous et pour chaque fournisseur recommandé qui exécute ' . (int)$fsp['referral_pos'] . ' bons de commande en 30 jours. Votre code : '
+                      : 'Referral: $' . number_format($fsp['referral_bonus'], 0) . ' for you and for each supplier you refer who fulfills ' . (int)$fsp['referral_pos'] . ' purchase orders in 30 days. Your code: ' ?><strong><?= htmlspecialchars($fsp['referral_code']) ?></strong>
+                </div>
+              <?php endif; ?>
             </div>
             <div class="stat-icon" style="background:<?= $dashPkgColor ?>18;color:<?= $dashPkgColor ?>;">
               <i class="fas fa-star"></i>

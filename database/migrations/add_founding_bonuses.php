@@ -9,7 +9,8 @@
  * - driver_applications.referred_by_user_id: who referred this driver
  *   (referral code typed on the application).
  * - users.founding_kit_status: Founding Driver equipment kit tracking.
- * - suppliers.referral_code / referred_by_supplier_id: supplier referrals.
+ * - suppliers.referred_by_supplier_id: supplier referrals (the referral code a
+ *   supplier shares is its existing supplier_code).
  */
 
 require __DIR__ . '/../../bootstrap/init.php';
@@ -47,7 +48,6 @@ try {
         ['driver_applications', 'referred_by_user_id', "ADD COLUMN referred_by_user_id BIGINT UNSIGNED NULL"],
         ['users', 'founding_kit_status', "ADD COLUMN founding_kit_status ENUM('pending','shipped','delivered') NULL"],
         ['users', 'founding_kit_updated_at', "ADD COLUMN founding_kit_updated_at DATETIME NULL"],
-        ['suppliers', 'referral_code', "ADD COLUMN referral_code VARCHAR(20) NULL, ADD UNIQUE KEY uniq_supplier_referral_code (referral_code)"],
         ['suppliers', 'referred_by_supplier_id', "ADD COLUMN referred_by_supplier_id BIGINT UNSIGNED NULL"],
     ];
     foreach ($columns as [$table, $name, $ddl]) {

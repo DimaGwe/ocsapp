@@ -219,7 +219,13 @@ class FoundingDriverHelper
             require_once __DIR__ . '/ReferralHelper.php';
             $code = ReferralHelper::assignReferralCode($userId);
         }
-        $daysLeft = $since ? max(0, self::MILESTONE_DAYS - (int)floor((time() - strtotime($since)) / 86400)) : 0;
+        // Measured on the DB clock: timestamps are stored in DB time, PHP runs in America/Toronto
+        $daysLeft = 0;
+        if ($since) {
+            $dl = self::db()->prepare("SELECT GREATEST(0, ? - TIMESTAMPDIFF(DAY, ?, NOW()))");
+            $dl->execute([self::MILESTONE_DAYS, $since]);
+            $daysLeft = (int)$dl->fetchColumn();
+        }
         $refs = $db->prepare("SELECT COUNT(*) FROM founding_bonuses WHERE program = 'driver' AND bonus_type = 'referral_referrer' AND beneficiary_id = ?");
         $refs->execute([$userId]);
         return [
