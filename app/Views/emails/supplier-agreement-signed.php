@@ -16,7 +16,7 @@
             <img src="https://ocsapp.ca/assets/images/logo.png" alt="OCSAPP" style="max-width:160px;height:auto;margin-bottom:16px;display:block;margin-left:auto;margin-right:auto;">
             <div style="font-size:42px;margin-bottom:10px;">✅</div>
             <h1 style="margin:0;color:#fff;font-size:26px;font-weight:700;">Accord signé avec succès !</h1>
-            <p style="margin:8px 0 0;color:rgba(255,255,255,0.9);font-size:14px;">Accord de services fournisseur - OCSAPP Marketplace</p>
+            <p style="margin:8px 0 0;color:rgba(255,255,255,0.9);font-size:14px;">Entente de compte Fournisseur - OCSAPP</p>
         </td>
     </tr>
 
@@ -25,7 +25,7 @@
         <h2 style="margin:0 0 18px;color:#1f2937;font-size:20px;">Bonjour {{contact_person}},</h2>
 
         <p style="margin:0 0 20px;color:#4b5563;font-size:15px;line-height:1.7;">
-            Nous confirmons que <strong>{{company_name}}</strong> a signé l'Accord de services fournisseur OCSAPP Marketplace. Votre signature électronique a été enregistrée avec succès.
+            Nous confirmons que <strong>{{company_name}}</strong> a accepté l'Entente de compte Fournisseur d'OCSAPP. Votre signature électronique a été enregistrée avec succès.
         </p>
 
         <!-- Confirmation box FR -->
@@ -39,7 +39,7 @@
                 </tr>
                 <tr>
                     <td style="padding:8px 0;color:#374151;font-size:14px;font-weight:600;">Document :</td>
-                    <td style="padding:8px 0;color:#1f2937;font-size:14px;">Accord de services fournisseur (v{{version}})</td>
+                    <td style="padding:8px 0;color:#1f2937;font-size:14px;">Entente de compte Fournisseur (v{{version}})</td>
                 </tr>
                 <tr>
                     <td style="padding:8px 0;color:#374151;font-size:14px;font-weight:600;">Date de signature :</td>
@@ -80,7 +80,7 @@
             <img src="https://ocsapp.ca/assets/images/logo.png" alt="OCSAPP" style="max-width:160px;height:auto;margin-bottom:16px;display:block;margin-left:auto;margin-right:auto;">
             <div style="font-size:42px;margin-bottom:10px;">✅</div>
             <h1 style="margin:0;color:#fff;font-size:26px;font-weight:700;">Agreement Signed Successfully!</h1>
-            <p style="margin:8px 0 0;color:rgba(255,255,255,0.9);font-size:14px;">Supplier Service Agreement - OCSAPP Marketplace</p>
+            <p style="margin:8px 0 0;color:rgba(255,255,255,0.9);font-size:14px;">Supplier Account Agreement - OCSAPP</p>
         </td>
     </tr>
 
@@ -89,7 +89,7 @@
         <h2 style="margin:0 0 18px;color:#1f2937;font-size:20px;">Hi {{contact_person}},</h2>
 
         <p style="margin:0 0 20px;color:#4b5563;font-size:15px;line-height:1.7;">
-            This confirms that <strong>{{company_name}}</strong> has signed the OCSAPP Marketplace Supplier Service Agreement. Your electronic signature has been recorded successfully.
+            This confirms that <strong>{{company_name}}</strong> has accepted the OCSAPP Supplier Account Agreement. Your electronic signature has been recorded successfully.
         </p>
 
         <!-- Confirmation box EN -->
@@ -103,7 +103,7 @@
                 </tr>
                 <tr>
                     <td style="padding:8px 0;color:#374151;font-size:14px;font-weight:600;">Document:</td>
-                    <td style="padding:8px 0;color:#1f2937;font-size:14px;">Supplier Service Agreement (v{{version}})</td>
+                    <td style="padding:8px 0;color:#1f2937;font-size:14px;">Supplier Account Agreement (v{{version}})</td>
                 </tr>
                 <tr>
                     <td style="padding:8px 0;color:#374151;font-size:14px;font-weight:600;">Signed on:</td>

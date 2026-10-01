@@ -456,7 +456,7 @@ $fr = ($currentLang === 'fr');
       <input type="checkbox" name="seller_agreement" id="seller_agreement" required>
       <label for="seller_agreement">
         <?= $fr ? "J'ai lu et j'accepte l'" : 'I have read and agree to the' ?>
-        <a href="<?= url('seller-agreement') ?>" target="_blank"><?= $fr ? 'Entente vendeur' : 'Seller Agreement' ?></a>.
+        <a href="<?= url('seller-agreement') ?>" target="_blank"><?= $fr ? 'Entente de compte Vendeur' : 'Seller Account Agreement' ?></a>.
       </label>
     </div>
 

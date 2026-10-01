@@ -111,7 +111,7 @@
                                             📋 Important : Conditions générales vendeur
                                         </p>
                                         <p style="margin: 0; color: #4b5563; font-size: 14px; line-height: 1.6;">
-                                            En postulant comme vendeur, vous acceptez nos <a href="https://ocsapp.ca/terms/seller" style="color: #00b207; text-decoration: none; font-weight: 600;">Conditions de service vendeur</a>, nos <a href="https://ocsapp.ca/seller/policies" style="color: #00b207; text-decoration: none; font-weight: 600;">Politiques vendeur</a> et notre <a href="https://ocsapp.ca/privacy" style="color: #00b207; text-decoration: none; font-weight: 600;">Politique de confidentialité</a>.
+                                            En postulant comme vendeur, vous acceptez notre <a href="https://ocsapp.ca/entente-vendeur" style="color: #00b207; text-decoration: none; font-weight: 600;">Entente de compte Vendeur</a>, nos <a href="https://ocsapp.ca/conditions-utilisation" style="color: #00b207; text-decoration: none; font-weight: 600;">Conditions d'utilisation</a> et notre <a href="https://ocsapp.ca/privacy" style="color: #00b207; text-decoration: none; font-weight: 600;">Politique de confidentialité</a>.
                                         </p>
                                     </td>
                                 </tr>
@@ -234,7 +234,7 @@
                                             📋 Important: Seller Terms & Conditions
                                         </p>
                                         <p style="margin: 0; color: #4b5563; font-size: 14px; line-height: 1.6;">
-                                            By applying as a seller, you agree to our <a href="https://ocsapp.ca/terms/seller" style="color: #00b207; text-decoration: none; font-weight: 600;">Seller Terms of Service</a>, <a href="https://ocsapp.ca/seller/policies" style="color: #00b207; text-decoration: none; font-weight: 600;">Seller Policies</a>, and <a href="https://ocsapp.ca/privacy" style="color: #00b207; text-decoration: none; font-weight: 600;">Privacy Policy</a>. Please review these documents carefully.
+                                            By applying as a seller, you agree to our <a href="https://ocsapp.ca/seller-agreement" style="color: #00b207; text-decoration: none; font-weight: 600;">Seller Account Agreement</a>, <a href="https://ocsapp.ca/terms" style="color: #00b207; text-decoration: none; font-weight: 600;">Terms of Service</a>, and <a href="https://ocsapp.ca/privacy" style="color: #00b207; text-decoration: none; font-weight: 600;">Privacy Policy</a>. Please review these documents carefully.
                                         </p>
                                     </td>
                                 </tr>
@@ -262,7 +262,7 @@
                             <p style="margin: 0; color: #9ca3af; font-size: 12px;">
                                 <a href="https://ocsapp.ca/terms" style="color: #6b7280; text-decoration: none;">Terms</a> •
                                 <a href="https://ocsapp.ca/privacy" style="color: #6b7280; text-decoration: none;">Privacy</a> •
-                                <a href="https://ocsapp.ca/seller/policies" style="color: #6b7280; text-decoration: none;">Seller Policies</a>
+                                <a href="https://ocsapp.ca/seller-agreement" style="color: #6b7280; text-decoration: none;">Seller Account Agreement</a>
                             </p>
                         </td>
                     </tr>

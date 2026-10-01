@@ -86,10 +86,10 @@ $cdBadge = $cdFlagged > 0 ? '!' : ($cdDone < 5 ? (5 - $cdDone) : null);
       </div>
       <div>
         <h2 style="margin:0;font-size:18px;font-weight:700;color:#111827;">
-          <?= $fr ? 'Contrat de livreur' : 'Driver Agreement' ?>
+          <?= $fr ? 'Entente du livreur' : 'Driver Agreement' ?>
         </h2>
         <p style="margin:4px 0 0;font-size:13px;color:#6b7280;">
-          <?= $fr ? 'Contrat de sous-traitant indépendant OCSAPP' : 'OCSAPP Independent Contractor Agreement' ?>
+          <?= $fr ? "Entente de service d'entrepreneur indépendant - Livreur" : 'Driver Independent Contractor Service Agreement' ?>
         </p>
       </div>
     </div>

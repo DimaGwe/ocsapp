@@ -329,13 +329,13 @@ $_docLabelsFr = [
 
 <?php endif; ?>
 
-<!-- ── Supplier Service Agreement ── -->
+<!-- ── Supplier Account Agreement ── -->
 <div class="doc-card <?= $hasAgreed ? 'agreed' : 'provided' ?>" style="margin-top:16px;">
   <div class="doc-card-header">
     <div class="doc-card-title">
       <i class="fas fa-file-contract" style="color:#16a34a;font-size:28px;"></i>
       <div>
-        <div class="doc-name"><?= $fr ? 'Accord de services fournisseur' : 'Supplier Service Agreement' ?></div>
+        <div class="doc-name"><?= $fr ? 'Entente de compte Fournisseur' : 'Supplier Account Agreement' ?></div>
         <div class="doc-status">
           <?php if ($hasAgreed): ?>
             <span class="badge-approved"><i class="fas fa-check-circle"></i> <?= $fr ? 'Signé le' : 'Signed on' ?> <?= $agreedAt ?></span>
@@ -373,7 +373,7 @@ $_docLabelsFr = [
           <input type="checkbox" id="sup_agree_check" name="agreed" value="1" required
                  onchange="document.getElementById('sup_btn_confirm').disabled = !this.checked;">
           <label for="sup_agree_check">
-            J'ai lu et j'accepte l'Accord de services fournisseur d'OCSAPP / I have read and agree to the OCSAPP Supplier Service Agreement (v<?= $currentAgreementVersion ?>).
+            J'ai lu et j'accepte l'Entente de compte Fournisseur d'OCSAPP / I have read and agree to the OCSAPP Supplier Account Agreement (v<?= $currentAgreementVersion ?>).
           </label>
         </div>
         <button type="submit" id="sup_btn_confirm" class="btn-confirm" disabled>

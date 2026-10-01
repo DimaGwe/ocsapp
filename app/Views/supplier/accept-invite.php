@@ -163,7 +163,7 @@ $s = [
         'pw_fail_alert'   => 'Le mot de passe doit satisfaire toutes les exigences listées.',
         'pw_neq_alert'    => 'Le NEQ doit comporter exactement 10 chiffres.',
 
-        'terms_agree'     => 'J\'accepte les',
+        'terms_agree'     => 'J\'accepte l\'',
         'terms_link'      => 'Conditions d\'utilisation',
         'terms_and'       => 'et la',
         'privacy_link'    => 'Politique de confidentialité',
@@ -824,6 +824,7 @@ $oldProv = $_SESSION['_old_input']['registered_address_province'] ?? 'QC';
       <input type="checkbox" name="terms" id="terms" required>
       <label for="terms">
         <?= $inv['terms_agree'] ?>
+        <?php if (($_SESSION['language'] ?? 'fr') === 'fr'): ?><a href="<?= url('entente-fournisseur') ?>" target="_blank">Entente de compte Fournisseur</a>, les<?php else: ?><a href="<?= url('supplier-agreement') ?>" target="_blank">Supplier Account Agreement</a>, the<?php endif; ?>
         <a href="<?= url('terms') ?>" target="_blank"><?= $inv['terms_link'] ?></a>
         <?= $inv['terms_and'] ?>
         <a href="<?= url('privacy') ?>" target="_blank"><?= $inv['privacy_link'] ?></a>

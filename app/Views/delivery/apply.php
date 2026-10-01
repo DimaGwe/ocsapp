@@ -112,7 +112,7 @@ $at = [
         's5_desc'         => 'Détails optionnels qui aident notre équipe à évaluer votre candidature.',
         's6_title'        => 'Déclaration de vérification des antécédents',
         's6_desc'         => "Tous les livreurs doivent obtenir une vérification des antécédents judiciaires avant d'être actifs.",
-        's7_title'        => 'Statut de travailleur autonome',
+        's7_title'        => "Statut d'entrepreneur indépendant",
         's7_desc'         => 'Veuillez lire et reconnaître la façon dont les livreurs OCSAPP sont engagés.',
         // Fields
         'lbl_first'       => 'Prénom',
@@ -167,7 +167,7 @@ $at = [
         'cr_hint'         => "Ces informations sont confidentielles et examinées uniquement par le personnel d'OCSAPP. La divulgation ne vous disqualifie pas automatiquement.",
         'bgcheck_ack'     => "Je comprends qu'une vérification des antécédents judiciaires est requise avant que je puisse être actif en tant que livreur OCSAPP. Je m'engage à l'obtenir moi-même et à la télécharger via mon portail livreur après approbation de ma candidature.",
         'contractor_info' => "<strong><i class=\"fas fa-info-circle\"></i> Ce que cela signifie :</strong> Les livreurs OCSAPP sont engagés à titre de <strong>travailleurs autonomes</strong>, et non d'employés. Vous établissez votre propre horaire et disponibilité, utilisez votre propre véhicule et êtes responsable de vos propres impôts sur le revenu, de vos cotisations au RRQ/RPC et de votre assurance véhicule/responsabilité civile. OCSAPP ne retient aucun impôt à la source et n'offre aucun avantage social d'employé (paie de vacances, assurance-emploi, assurance collective, etc.).",
-        'contractor_ack'  => "Je comprends et j'accepte de poser ma candidature auprès d'OCSAPP à titre de travailleur autonome, et non d'employé, et d'être responsable de mes propres impôts, assurances et équipement.",
+        'contractor_ack'  => "Je comprends et j'accepte de poser ma candidature auprès d'OCSAPP à titre d'entrepreneur indépendant, et non d'employé, et d'être responsable de mes propres impôts, assurances et équipement.",
         'agreement_ack'   => "J'ai lu et j'accepte l'<a href=\"%s\" target=\"_blank\" rel=\"noopener\">Entente de service d'entrepreneur indépendant - Livreur</a>, les <a href=\"%s\" target=\"_blank\" rel=\"noopener\">Conditions générales d'utilisation</a> et la <a href=\"%s\" target=\"_blank\" rel=\"noopener\">Politique de confidentialité</a>.",
         'btn_submit'      => 'Soumettre la candidature',
         'already_driver'  => 'Déjà livreur ?',

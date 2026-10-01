@@ -310,9 +310,9 @@ $hero = $heroConfig[$urlRole] ?? $heroConfig['default'];
           <div class="checkbox-wrapper" id="sellerAgreementSection" style="display:none;">
             <input type="checkbox" id="seller_agreement" name="seller_agreement" class="form-checkbox">
             <label for="seller_agreement" class="checkbox-label">
-              <?= $fr ? "J'ai lu et j'accepte le" : 'I have read and agree to the' ?>
+              <?= $fr ? "J'ai lu et j'accepte l'" : 'I have read and agree to the' ?>
               <a href="<?= url('seller-agreement') ?>" target="_blank">
-                <?= $fr ? 'Contrat de vendeur' : 'Seller Agreement' ?>
+                <?= $fr ? 'Entente de compte Vendeur' : 'Seller Account Agreement' ?>
               </a>
             </label>
           </div>

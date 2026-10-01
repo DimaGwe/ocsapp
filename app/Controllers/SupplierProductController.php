@@ -2157,7 +2157,7 @@ class SupplierProductController {
     }
 
     /**
-     * Stream Supplier Service Agreement as PDF (from legal_content)
+     * Stream Supplier Account Agreement as PDF (from legal_content)
      */
     public function agreementPdf(): void
     {
@@ -2282,11 +2282,11 @@ class SupplierProductController {
                     $supplierId,
                     'agreement_signed',
                     'Agreement Signed',
-                    'Your Supplier Service Agreement has been recorded. Thank you!',
+                    'Your Supplier Account Agreement has been recorded. Thank you!',
                     url('supplier/documents'),
                     'file-contract',
-                    'Accord signé',
-                    'Votre Accord de services fournisseur a été enregistré. Merci !'
+                    'Entente signée',
+                    'Votre Entente de compte Fournisseur a été enregistrée. Merci !'
                 );
             }
 

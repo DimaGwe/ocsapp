@@ -85,6 +85,14 @@ class SupplierAuthController {
             }
         }
 
+        // The Supplier Account Agreement and Terms must be accepted (Agreement s. 23); the
+        // checkbox was only enforced by the browser's "required" attribute before.
+        if (post('terms', '') !== 'on') {
+            setFlash('error', lang_pick("Vous devez accepter l'Entente de compte Fournisseur et les Conditions d'utilisation.", 'You must accept the Supplier Account Agreement and the Terms of Service.'));
+            back();
+            return;
+        }
+
         // Validate email
         if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
             setFlash('error', lang_pick('Veuillez entrer une adresse courriel valide.', 'Please enter a valid email address.'));

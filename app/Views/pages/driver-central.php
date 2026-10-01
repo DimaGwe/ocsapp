@@ -516,7 +516,7 @@ $fr = ($currentLang === 'fr');
       <details class="faq-item new">
 <?php if ($fr): ?>
         <summary><h4>Suis-je un employé ? Qu'en est-il des impôts et de la CNESST ?</h4></summary>
-        <p>Non. Selon votre entente de livreur, vous êtes un travailleur autonome : vous choisissez quand et où vous travaillez, vous utilisez votre propre véhicule et vous pouvez livrer pour d'autres plateformes.</p>
+        <p>Non. Selon votre entente de livreur, vous êtes un entrepreneur indépendant : vous choisissez quand et où vous travaillez, vous utilisez votre propre véhicule et vous pouvez livrer pour d'autres plateformes.</p>
         <p style="margin-top:10px;">Vous produisez donc vos propres déclarations de revenus, et vous devez vous inscrire à la TPS et à la TVQ auprès de Revenu Québec lorsque vos revenus taxables dépassent 30 000 $ sur quatre trimestres civils consécutifs.</p>
         <p style="margin-top:10px;">Les travailleurs autonomes ne sont pas couverts automatiquement par la CNESST. Vous pouvez vous inscrire à la protection personnelle offerte par la CNESST si vous voulez être protégé en cas d'accident du travail.</p>
 <?php else: ?>

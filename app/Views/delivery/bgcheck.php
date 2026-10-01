@@ -319,7 +319,7 @@ $bgc = $bgColors[$bgStatus] ?? $bgColors['not_requested'];
     <div style="background:#fefce8; border:1px solid #fde68a; border-radius:10px; padding:14px 16px; margin-bottom:4px;">
       <label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer; font-size:13px; color:#374151; line-height:1.6;">
         <input type="checkbox" id="consentCheck" name="consent" required style="margin-top:3px; width:16px; height:16px; flex-shrink:0;">
-        <span><?php echo $fr ? 'Je confirme qu\'il s\'agit de ma vérification des antécédents criminels, que les informations sont exactes et non modifiées, et je consens à ce qu\'OCSAPP examine ce document à des fins d\'emploi.' : 'I confirm this is my criminal background check, the information is accurate and unaltered, and I consent to OCSAPP reviewing this document for employment purposes.'; ?></span>
+        <span><?php echo $fr ? 'Je confirme qu\'il s\'agit de ma vérification des antécédents criminels, que les informations sont exactes et non modifiées, et je consens à ce qu\'OCSAPP examine ce document pour évaluer ma candidature à titre d\'entrepreneur indépendant.' : 'I confirm this is my criminal background check, the information is accurate and unaltered, and I consent to OCSAPP reviewing this document to assess my application as an independent contractor.'; ?></span>
       </label>
     </div>
 

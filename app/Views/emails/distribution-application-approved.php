@@ -31,7 +31,7 @@
             <p style="margin:0 0 10px;color:#374151;font-size:14px;font-weight:700;">Prochaines &eacute;tapes :</p>
             <p style="margin:0 0 8px;color:#374151;font-size:14px;line-height:1.6;">
                 1. Connectez-vous &agrave; votre portail de distribution.<br>
-                2. Consultez et signez votre <strong>Accord de services de distribution</strong> (document attach&eacute;).<br>
+                2. Consultez et signez votre <strong>Entente de compte Entreprise</strong> (document attach&eacute;).<br>
                 3. T&eacute;l&eacute;versez vos documents de v&eacute;rification si ce n'est pas encore fait.<br>
                 4. Soumettez votre premi&egrave;re demande de distribution.
             </p>
@@ -39,7 +39,7 @@
         </table>
 
         <p style="margin:0 0 24px;color:#4b5563;font-size:14px;line-height:1.7;">
-            Veuillez trouver en pi&egrave;ce jointe votre <strong>Accord de services de distribution</strong> et votre <strong>Guide d'int&eacute;gration</strong>. Connectez-vous au portail pour signer l'accord et activer votre compte.
+            Veuillez trouver en pi&egrave;ce jointe votre <strong>Entente de compte Entreprise</strong> et votre <strong>Guide d'int&eacute;gration</strong>. Connectez-vous au portail pour accepter l'entente et activer votre compte.
         </p>
 
         <p style="text-align:center;margin:0 0 24px;">

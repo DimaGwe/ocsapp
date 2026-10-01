@@ -391,10 +391,18 @@ $flashType = getFlash('success') ? 'success' : 'error';
             <div class="checkbox-group">
                 <input type="checkbox" id="terms" name="agree_terms" required>
                 <label for="terms">
-                    I confirm that I am authorized to register this business on OCSAPP. I agree to the
-                    <a href="<?= url('terms') ?>" target="_blank">Seller Terms of Service</a> and
+                    <?php if ($currentLang === 'fr'): ?>
+                    Je confirme être autorisé à inscrire cette entreprise sur OCSAPP. J'ai lu et j'accepte l'<a href="<?= url('entente-vendeur') ?>" target="_blank">Entente de compte Vendeur</a>,
+                    les <a href="<?= url('conditions-utilisation') ?>" target="_blank">Conditions d'utilisation</a> et la
+                    <a href="<?= url('confidentialite') ?>" target="_blank">Politique de confidentialité</a>.
+                    Je comprends que ma demande sera examinée et que je serai avisé de la décision.
+                    <?php else: ?>
+                    I confirm that I am authorized to register this business on OCSAPP. I have read and agree to the
+                    <a href="<?= url('seller-agreement') ?>" target="_blank">Seller Account Agreement</a>, the
+                    <a href="<?= url('terms') ?>" target="_blank">Terms of Service</a> and the
                     <a href="<?= url('privacy') ?>" target="_blank">Privacy Policy</a>.
                     I understand that my application will be reviewed and I will be notified of the decision.
+                    <?php endif; ?>
                 </label>
             </div>
 

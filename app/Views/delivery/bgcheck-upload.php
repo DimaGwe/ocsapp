@@ -222,7 +222,7 @@ $fr = ($currentLang === 'fr');
           <div class="consent-box">
             <label class="consent-label">
               <input type="checkbox" name="consent" id="consentCheck" required>
-              <span><?php echo $fr ? 'Je confirme qu\'il s\'agit de ma vérification des antécédents criminels, que les informations sont exactes et non modifiées, et je consens à ce qu\'OCSAPP examine ce document à des fins d\'emploi.' : 'I confirm that this is my criminal background check, the information is accurate and unaltered, and I consent to OCSAPP reviewing this document for employment purposes.'; ?></span>
+              <span><?php echo $fr ? 'Je confirme qu\'il s\'agit de ma vérification des antécédents criminels, que les informations sont exactes et non modifiées, et je consens à ce qu\'OCSAPP examine ce document pour évaluer ma candidature à titre d\'entrepreneur indépendant.' : 'I confirm that this is my criminal background check, the information is accurate and unaltered, and I consent to OCSAPP reviewing this document to assess my application as an independent contractor.'; ?></span>
             </label>
           </div>
 
