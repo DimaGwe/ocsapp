@@ -151,7 +151,7 @@ class DistributionAuthController
             // Gate: active accounts that haven't signed the agreement go to documents first
             if ($user['business_status'] === 'active' && empty($user['agreement_agreed_at'])) {
                 $fr = ($_SESSION['language'] ?? 'fr') === 'fr';
-                setFlash('agreement_required', $fr ? 'Veuillez lire et signer votre Accord de services de distribution pour activer votre compte.' : 'Please review and sign your Distribution Service Agreement to activate your account.');
+                setFlash('agreement_required', $fr ? 'Veuillez lire et accepter votre Entente de compte Entreprise pour activer votre compte.' : 'Please review and accept your Business Account Agreement to activate your account.');
                 redirect('distribution/documents');
                 return;
             }
@@ -1833,7 +1833,7 @@ class DistributionAuthController
     }
 
     /**
-     * Stream bilingual Distribution Service Agreement as PDF (FR first, EN below)
+     * Stream bilingual Business Account Agreement as PDF (FR first, EN below)
      */
     public function agreementPdf(): void
     {
@@ -1881,7 +1881,7 @@ class DistributionAuthController
             $dompdf->loadHtml($html);
             $dompdf->setPaper('A4', 'portrait');
             $dompdf->render();
-            $dompdf->stream('Distribution-Service-Agreement.pdf', ['Attachment' => false]);
+            $dompdf->stream('Business-Account-Agreement.pdf', ['Attachment' => false]);
 
         } catch (\Exception $e) {
             error_log('Agreement PDF error: ' . $e->getMessage());
@@ -2195,14 +2195,14 @@ class DistributionAuthController
             <div class="hdr-inner">
                 <div class="hdr-logo">' . $logoImg . '</div>
                 <div class="hdr-name">OCS Marketplace</div>
-                <div class="hdr-right">Distribution Service Agreement<br><span style="font-size:8pt;opacity:0.8;">ocsapp.ca</span></div>
+                <div class="hdr-right">Business Account Agreement<br><span style="font-size:8pt;opacity:0.8;">ocsapp.ca</span></div>
             </div>
         </div>
 
         <div id="pdf-footer">
             <div class="ftr-inner">
                 <div class="ftr-left">Confidential &mdash; OCS Marketplace Inc. &mdash; ocsapp.ca</div>
-                <div class="ftr-right">Distribution Service Agreement</div>
+                <div class="ftr-right">Business Account Agreement</div>
             </div>
         </div>
 

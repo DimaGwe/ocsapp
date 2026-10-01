@@ -1330,7 +1330,7 @@ class AdminBusinessController
 
                 $tmpFile = tempnam(sys_get_temp_dir(), 'ocsapp_agreement_') . '.pdf';
                 file_put_contents($tmpFile, $dompdf->output());
-                $attachments[] = ['path' => $tmpFile, 'name' => 'Distribution-Service-Agreement.pdf', 'temp' => true];
+                $attachments[] = ['path' => $tmpFile, 'name' => 'Business-Account-Agreement.pdf', 'temp' => true];
             }
         } catch (\Exception $e) {
             error_log('Agreement PDF generation error: ' . $e->getMessage());

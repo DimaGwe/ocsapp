@@ -87,7 +87,7 @@
             <p style="margin:0 0 10px;color:#374151;font-size:14px;font-weight:700;">Next Steps:</p>
             <p style="margin:0 0 8px;color:#374151;font-size:14px;line-height:1.6;">
                 1. Log in to your distribution portal.<br>
-                2. Review and sign your <strong>Distribution Service Agreement</strong> (attached).<br>
+                2. Review and accept your <strong>Business Account Agreement</strong> (attached).<br>
                 3. Upload your verification documents if not already done.<br>
                 4. Submit your first distribution request.
             </p>
@@ -95,7 +95,7 @@
         </table>
 
         <p style="margin:0 0 24px;color:#4b5563;font-size:14px;line-height:1.7;">
-            Please find attached your <strong>Distribution Service Agreement</strong> and <strong>Onboarding Package</strong>. Log in to your portal to review and sign the agreement to activate your account.
+            Please find attached your <strong>Business Account Agreement</strong> and <strong>Onboarding Package</strong>. Log in to your portal to review and sign the agreement to activate your account.
         </p>
 
         <p style="text-align:center;margin:0 0 24px;">

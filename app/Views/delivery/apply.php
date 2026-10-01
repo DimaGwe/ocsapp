@@ -76,6 +76,7 @@ $at = [
         'bgcheck_ack'     => 'I understand that a criminal background check is required before I can go active as an OCSAPP driver. I agree to self-obtain and upload it through my driver portal after my application is approved.',
         'contractor_info' => '<strong><i class="fas fa-info-circle"></i> What this means:</strong> OCSAPP drivers are engaged as <strong>independent contractors</strong>, not employees. You set your own schedule and availability, use your own vehicle, and are responsible for your own income taxes, CPP/QPP contributions, and vehicle/liability insurance. OCSAPP does not withhold taxes or provide employee benefits (vacation pay, EI, group insurance, etc.).',
         'contractor_ack'  => 'I understand and agree that I am applying to work with OCSAPP as an independent contractor, not as an employee, and that I am responsible for my own taxes, insurance, and equipment.',
+        'agreement_ack'   => 'I have read and accept the <a href="%s" target="_blank" rel="noopener">Driver Independent Contractor Service Agreement</a>, the <a href="%s" target="_blank" rel="noopener">General Terms of Service</a> and the <a href="%s" target="_blank" rel="noopener">Privacy Policy</a>.',
         'btn_submit'      => 'Submit Application',
         'already_driver'  => 'Already a driver?',
         'sign_in'         => 'Sign In',
@@ -163,6 +164,7 @@ $at = [
         'bgcheck_ack'     => "Je comprends qu'une vérification des antécédents judiciaires est requise avant que je puisse être actif en tant que livreur OCSAPP. Je m'engage à l'obtenir moi-même et à la télécharger via mon portail livreur après approbation de ma candidature.",
         'contractor_info' => "<strong><i class=\"fas fa-info-circle\"></i> Ce que cela signifie :</strong> Les livreurs OCSAPP sont engagés à titre de <strong>travailleurs autonomes</strong>, et non d'employés. Vous établissez votre propre horaire et disponibilité, utilisez votre propre véhicule et êtes responsable de vos propres impôts sur le revenu, de vos cotisations au RRQ/RPC et de votre assurance véhicule/responsabilité civile. OCSAPP ne retient aucun impôt à la source et n'offre aucun avantage social d'employé (paie de vacances, assurance-emploi, assurance collective, etc.).",
         'contractor_ack'  => "Je comprends et j'accepte de poser ma candidature auprès d'OCSAPP à titre de travailleur autonome, et non d'employé, et d'être responsable de mes propres impôts, assurances et équipement.",
+        'agreement_ack'   => "J'ai lu et j'accepte l'<a href=\"%s\" target=\"_blank\" rel=\"noopener\">Entente de service d'entrepreneur indépendant - Livreur</a>, les <a href=\"%s\" target=\"_blank\" rel=\"noopener\">Conditions générales d'utilisation</a> et la <a href=\"%s\" target=\"_blank\" rel=\"noopener\">Politique de confidentialité</a>.",
         'btn_submit'      => 'Soumettre la candidature',
         'already_driver'  => 'Déjà livreur ?',
         'sign_in'         => 'Connectez-vous',
@@ -527,6 +529,14 @@ $at = $at[$currentLang] ?? $at['en'];
                     <input type="checkbox" name="contractor_status_acknowledged" id="contractor_status_acknowledged" required
                         <?= !empty($old['contractor_status_acknowledged']) ? 'checked' : '' ?>>
                     <span><?= $at['contractor_ack'] ?></span>
+                </label>
+            </div>
+
+            <div class="form-group">
+                <label class="terms-label">
+                    <input type="checkbox" name="driver_agreement_accepted" id="driver_agreement_accepted" required
+                        <?= !empty($old['driver_agreement_accepted']) ? 'checked' : '' ?>>
+                    <span><?= sprintf($at['agreement_ack'], url('driver-agreement'), url('terms'), url('privacy')) ?></span>
                 </label>
             </div>
 

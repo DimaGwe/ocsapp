@@ -21,7 +21,7 @@ $t = [
         'choose_file'           => 'Choose file',
         'no_file_chosen'        => 'No file chosen',
         // Agreement card
-        'agreement_name'        => 'Distribution Service Agreement',
+        'agreement_name'        => 'Business Account Agreement',
         'signed_on'             => 'Signed on',
         'sig_required'          => 'Signature required',
         'provided_by'           => 'Provided by OCSAPP',
@@ -66,7 +66,7 @@ $t = [
         'choose_file'           => 'Choisir un fichier',
         'no_file_chosen'        => 'Aucun fichier sélectionné',
         // Agreement card
-        'agreement_name'        => 'Accord de services de distribution',
+        'agreement_name'        => 'Entente de compte Entreprise',
         'signed_on'             => 'Signé le',
         'sig_required'          => 'Signature requise',
         'provided_by'           => 'Fourni par OCSAPP',
@@ -454,7 +454,7 @@ $agreedVersion = $profile['agreement_version'] ?? null;
           <input type="checkbox" id="agree_check" name="agreed" value="1" required
                  onchange="document.getElementById('btn_confirm').disabled = !this.checked;">
           <label for="agree_check">
-            J'ai lu et j'accepte l'Accord de services de distribution d'OCSAPP / I have read and agree to the OCSAPP Distribution Service Agreement (v<?= $currentAgreementVersion ?>).
+            J'ai lu et j'accepte l'Entente de compte Entreprise d'OCSAPP / I have read and agree to the OCSAPP Business Account Agreement (v<?= $currentAgreementVersion ?>).
           </label>
         </div>
         <button type="submit" id="btn_confirm" class="btn-confirm" disabled>

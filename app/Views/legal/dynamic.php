@@ -512,7 +512,7 @@ $fr = ($currentLang === 'fr');
     <div class="policy-page">
         <?= $page['content'] ?>
     </div>
-    <?php elseif (in_array($page['page_type'] ?? '', ['seller_agreement', 'supplier_agreement'], true)): ?>
+    <?php elseif (in_array($page['page_type'] ?? '', ['seller_agreement', 'supplier_agreement', 'distribution_agreement', 'driver_agreement', 'buyer_terms'], true)): ?>
     <div class="legal-agreement-page">
         <?= $page['content'] ?>
     </div>

@@ -2170,6 +2170,7 @@ class DeliveryController {
         $criminalRecord = post('criminal_record', 'no') === 'yes' ? 1 : 0;
         $criminalDetails = $criminalRecord ? sanitize(post('criminal_record_details', '')) : null;
         $contractorAck = post('contractor_status_acknowledged') ? 1 : 0;
+        $agreementAck = post('driver_agreement_accepted') ? 1 : 0;
 
         // Validate required fields
         if (!$firstName || !$lastName || !$email || !$phone || !$dob || !$street || !$city || !$province || !$postalCode || !$vehicleType) {
@@ -2180,6 +2181,15 @@ class DeliveryController {
 
         if (!$contractorAck) {
             setFlash('error', 'You must acknowledge the independent contractor status to apply.');
+            redirect(url('delivery/apply'));
+            return;
+        }
+
+        // Driver Agreement Sec 18: accepted electronically on the application
+        if (!$agreementAck) {
+            setFlash('error', (($_SESSION['language'] ?? 'fr') === 'fr')
+                ? "Vous devez accepter l'Entente de service d'entrepreneur indépendant pour poser votre candidature."
+                : 'You must accept the Driver Independent Contractor Service Agreement to apply.');
             redirect(url('delivery/apply'));
             return;
         }
@@ -2325,6 +2335,8 @@ class DeliveryController {
                 'criminal_record' => $criminalRecord,
                 'criminal_details' => $criminalDetails,
                 'contractor_ack'  => $contractorAck,
+                // Behind CloudFront/ALB: first X-Forwarded-For hop is the applicant, same as the business agreement
+                'agreement_ip'    => substr(trim(explode(',', (string)($_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? ''))[0]), 0, 45),
             ];
             $_SESSION['driver_verification_attempts'] = 0;
 
@@ -2570,8 +2582,12 @@ class DeliveryController {
             INSERT INTO driver_applications
             (user_id, lead_id, first_name, last_name, email, phone, date_of_birth, street_address, city, province, postal_code,
              vehicle_type, license_number, license_expiry, available_days, preferred_shift, motivation, previous_experience,
-             criminal_record, criminal_record_details, contractor_status_acknowledged, status, pipeline_stage)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'submitted')
+             criminal_record, criminal_record_details, contractor_status_acknowledged,
+             agreement_accepted_at, agreement_ip, agreement_version, status, pipeline_stage)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                    NOW(), ?,
+                    (SELECT version FROM legal_content WHERE page_type = 'driver_agreement' AND language = 'fr' AND is_published = 1 ORDER BY version DESC LIMIT 1),
+                    'pending', 'submitted')
         ");
         $stmt->execute([
             $pending['user_id'], $leadId,
@@ -2580,6 +2596,7 @@ class DeliveryController {
             $pending['vehicle_type'], $pending['license_number'] ?: null, $pending['license_expiry'],
             $pending['days_str'], $pending['preferred_shift'], $pending['motivation'] ?: null, $pending['previous_exp'],
             $pending['criminal_record'], $pending['criminal_details'], $pending['contractor_ack'] ?? 0,
+            $pending['agreement_ip'] ?? null,
         ]);
         $applicationId = $this->db->lastInsertId();
 
