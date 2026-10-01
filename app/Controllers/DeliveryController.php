@@ -118,6 +118,7 @@ class DeliveryController {
                     'number'     => (int) $fRow['founding_driver_number'],
                     'total'      => \App\Helpers\FoundingDriverHelper::TOTAL_SLOTS,
                     'granted_at' => $fRow['founding_driver_granted_at'],
+                    'perks'      => \App\Helpers\FoundingDriverHelper::perks((int) $driverId),
                 ];
             }
         } catch (\Exception $e) {
@@ -983,6 +984,9 @@ class DeliveryController {
             $payout['platform_commission'],
             $payout['driver_net_payout']
         ]);
+
+        require_once __DIR__ . '/../Helpers/FoundingDriverHelper.php';
+        \App\Helpers\FoundingDriverHelper::afterDeliveryRecorded((int)$delivery['driver_id'], (int)$deliveryId);
     }
     
     private function updateOrderStatus($orderId, $status) {
@@ -2171,6 +2175,7 @@ class DeliveryController {
         $criminalDetails = $criminalRecord ? sanitize(post('criminal_record_details', '')) : null;
         $contractorAck = post('contractor_status_acknowledged') ? 1 : 0;
         $agreementAck = post('driver_agreement_accepted') ? 1 : 0;
+        $referralCode = strtoupper(trim(sanitize(post('referral_code', ''))));
 
         // Validate required fields
         if (!$firstName || !$lastName || !$email || !$phone || !$dob || !$street || !$city || !$province || !$postalCode || !$vehicleType) {
@@ -2335,6 +2340,7 @@ class DeliveryController {
                 'criminal_record' => $criminalRecord,
                 'criminal_details' => $criminalDetails,
                 'contractor_ack'  => $contractorAck,
+                'referral_code'   => $referralCode,
                 // Behind CloudFront/ALB: first X-Forwarded-For hop is the applicant, same as the business agreement
                 'agreement_ip'    => substr(trim(explode(',', (string)($_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? ''))[0]), 0, 45),
             ];
@@ -2578,15 +2584,24 @@ class DeliveryController {
             $leadId = $this->db->lastInsertId();
         }
 
+        // Referral code typed on the application (Driver Agreement Sec 8.13.2): resolved to the
+        // referring driver; an unknown code or a self-referral is simply ignored.
+        require_once __DIR__ . '/../Helpers/ReferralHelper.php';
+        $referrerId = \App\Helpers\ReferralHelper::resolveReferrerId((string)($pending['referral_code'] ?? ''));
+        if ($referrerId && (int)$referrerId === (int)$pending['user_id']) {
+            $referrerId = null;
+        }
+
         $stmt = $this->db->prepare("
             INSERT INTO driver_applications
             (user_id, lead_id, first_name, last_name, email, phone, date_of_birth, street_address, city, province, postal_code,
              vehicle_type, license_number, license_expiry, available_days, preferred_shift, motivation, previous_experience,
              criminal_record, criminal_record_details, contractor_status_acknowledged,
-             agreement_accepted_at, agreement_ip, agreement_version, status, pipeline_stage)
+             agreement_accepted_at, agreement_ip, agreement_version, referred_by_user_id, status, pipeline_stage)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                     NOW(), ?,
                     (SELECT version FROM legal_content WHERE page_type = 'driver_agreement' AND language = 'fr' AND is_published = 1 ORDER BY version DESC LIMIT 1),
+                    ?,
                     'pending', 'submitted')
         ");
         $stmt->execute([
@@ -2597,6 +2612,7 @@ class DeliveryController {
             $pending['days_str'], $pending['preferred_shift'], $pending['motivation'] ?: null, $pending['previous_exp'],
             $pending['criminal_record'], $pending['criminal_details'], $pending['contractor_ack'] ?? 0,
             $pending['agreement_ip'] ?? null,
+            $referrerId,
         ]);
         $applicationId = $this->db->lastInsertId();
 

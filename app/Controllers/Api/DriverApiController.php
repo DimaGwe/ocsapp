@@ -255,6 +255,13 @@ class DriverApiController
         // not stranded; a driver whose city maps to no zone sees every zone. Self-pickup orders
         // (buyer collects at the shop) never go to a driver.
         $zoneClause = $zone ? "AND (o.delivery_zone = :zone OR o.delivery_zone IS NULL)" : "";
+        // Priority dispatch (Driver Agreement Sec 5.5 / 8.13.3): top-tier drivers (Founding
+        // Drivers) are offered a ready order first; everyone else sees it after a short head
+        // start. An order already assigned to this driver is never held back.
+        require_once __DIR__ . '/../../Helpers/FoundingDriverHelper.php';
+        $headStart = \App\Helpers\FoundingDriverHelper::hasPriorityDispatch((int)$userId)
+            ? ''
+            : 'AND (o.driver_id = :uid2 OR o.updated_at <= DATE_SUB(NOW(), INTERVAL ' . (int)\App\Helpers\FoundingDriverHelper::PRIORITY_HEAD_START_SECONDS . ' SECOND))';
         $pending = $this->db->prepare(
             "SELECT o.*, s.name AS merchant_name, s.address AS merchant_address,
                     s.latitude AS merchant_lat, s.longitude AS merchant_lng,
@@ -262,12 +269,13 @@ class DriverApiController
              FROM orders o
              JOIN shops s ON s.id = o.shop_id
              WHERE o.status = 'ready' AND (o.driver_id IS NULL OR o.driver_id = :uid)
-               AND o.fulfillment_type <> 'pickup' $zoneClause
+               AND o.fulfillment_type <> 'pickup' $zoneClause $headStart
              ORDER BY o.created_at ASC
              LIMIT 20"
         );
         $params = ['uid' => $userId];
         if ($zone) $params['zone'] = $zone;
+        if ($headStart !== '') $params['uid2'] = $userId;
         $pending->execute($params);
         $pendingOrders = $pending->fetchAll(\PDO::FETCH_ASSOC);
 
@@ -1783,6 +1791,8 @@ class DriverApiController
                     round($payout['driver_net_payout'] + $tip, 2),
                     "Distribution run #{$da['request_number']}" . ($tip > 0 ? " + tip \${$tip}" : ''),
                 ]);
+                require_once __DIR__ . '/../../Helpers/FoundingDriverHelper.php';
+                \App\Helpers\FoundingDriverHelper::afterDeliveryRecorded((int)$userId, (int)$da['assignment_id']);
             }
         } catch (\Exception $e) {
             error_log('Distribution earnings record error: ' . $e->getMessage());
@@ -3034,6 +3044,8 @@ class DriverApiController
                         $longDistanceSurcharge,
                         $gross, $commission, $payout
                     ]);
+                    require_once __DIR__ . '/../../Helpers/FoundingDriverHelper.php';
+                    \App\Helpers\FoundingDriverHelper::afterDeliveryRecorded((int)$driverId, (int)$daRow['id']);
                 }
 
                 // Mark delivery_assignment delivered

@@ -626,9 +626,36 @@ $_statusLabel = $_appStatusLabels[$applicationStatus ?? 'pending'] ?? $_appStatu
             </div>
             <div class="founding-card-text">
                 <?= $fr
-                    ? 'Votre insigne de livreur fondateur est permanent. Bientôt : une prime d\'étape, une prime de parrainage et un accès prioritaire à la répartition.'
-                    : 'Your Founding Driver badge is permanent. Coming soon: a milestone bonus, a referral bonus and priority dispatch access.' ?>
+                    ? 'Votre insigne de livreur fondateur est permanent, et les nouvelles commandes vous sont offertes en priorité.'
+                    : 'Your Founding Driver badge is permanent, and new orders are offered to you first.' ?>
                 <a href="<?= url('founding') ?>"><?= $fr ? 'Voir le programme' : 'See the program' ?></a>
+                <?php $fp = $founding['perks'] ?? null; if ($fp): ?>
+                <ul style="margin:8px 0 0;padding-left:18px;line-height:1.6;">
+                    <li>
+                        <?php if ($fp['milestone_done']): ?>
+                            <?= $fr ? 'Prime d\'étape de ' . number_format($fp['milestone_bonus'], 0) . ' $ obtenue.' : 'Milestone bonus of $' . number_format($fp['milestone_bonus'], 0) . ' earned.' ?>
+                        <?php elseif ($fp['days_left'] > 0): ?>
+                            <?= $fr
+                                ? 'Prime d\'étape : ' . number_format($fp['milestone_bonus'], 0) . ' $ pour ' . (int) $fp['milestone_target'] . ' livraisons dans vos 30 premiers jours. Progression : ' . (int) $fp['milestone_count'] . '/' . (int) $fp['milestone_target'] . ', ' . (int) $fp['days_left'] . ' jour(s) restant(s).'
+                                : 'Milestone bonus: $' . number_format($fp['milestone_bonus'], 0) . ' for ' . (int) $fp['milestone_target'] . ' deliveries in your first 30 days. Progress: ' . (int) $fp['milestone_count'] . '/' . (int) $fp['milestone_target'] . ', ' . (int) $fp['days_left'] . ' day(s) left.' ?>
+                        <?php else: ?>
+                            <?= $fr ? 'La période de 30 jours de la prime d\'étape est terminée.' : 'The 30-day milestone bonus window has ended.' ?>
+                        <?php endif; ?>
+                    </li>
+                    <li>
+                        <?= $fr
+                            ? 'Parrainage : ' . number_format($fp['referral_bonus'], 0) . ' $ pour vous et pour chaque livreur parrainé qui complète ' . (int) $fp['referral_orders'] . ' livraisons en 30 jours. Votre code : '
+                            : 'Referral: $' . number_format($fp['referral_bonus'], 0) . ' for you and for each driver you refer who completes ' . (int) $fp['referral_orders'] . ' deliveries in 30 days. Your code: ' ?>
+                        <strong><?= htmlspecialchars((string) $fp['referral_code']) ?></strong>
+                        <?php if ($fp['referrals_paid'] > 0): ?>(<?= (int) $fp['referrals_paid'] ?> <?= $fr ? 'prime(s) obtenue(s)' : 'bonus(es) earned' ?>)<?php endif; ?>
+                    </li>
+                    <?php if (!empty($fp['kit_status'])): $kitLabels = $fr
+                        ? ['pending' => 'en préparation', 'shipped' => 'expédiée', 'delivered' => 'remise']
+                        : ['pending' => 'being prepared', 'shipped' => 'shipped', 'delivered' => 'delivered']; ?>
+                    <li><?= $fr ? 'Trousse d\'équipement : ' : 'Equipment kit: ' ?><?= $kitLabels[$fp['kit_status']] ?? htmlspecialchars($fp['kit_status']) ?>.</li>
+                    <?php endif; ?>
+                </ul>
+                <?php endif; ?>
             </div>
         </div>
     </div>

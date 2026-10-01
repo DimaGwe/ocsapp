@@ -61,6 +61,8 @@ $at = [
             'Flexible'           => 'Flexible - Any Time',
         ],
         'lbl_motivation'  => 'Why do you want to deliver with OCSAPP?',
+        'lbl_referral'    => 'Referral code (optional)',
+        'referral_hint'   => 'If an OCSAPP driver referred you, enter their code.',
         'ph_motivation'   => "Tell us why you'd like to join our delivery team...",
         'lbl_exp'         => 'Have you delivered for other platforms?',
         'ph_exp'          => 'Select Option',
@@ -149,6 +151,8 @@ $at = [
             'Flexible'           => 'Flexible - N\'importe quand',
         ],
         'lbl_motivation'  => 'Pourquoi souhaitez-vous livrer avec OCSAPP ?',
+        'lbl_referral'    => 'Code de parrainage (facultatif)',
+        'referral_hint'   => "Si un livreur OCSAPP vous a recommandé, inscrivez son code.",
         'ph_motivation'   => 'Dites-nous pourquoi vous souhaitez rejoindre notre équipe de livraison...',
         'lbl_exp'         => 'Avez-vous livré pour d\'autres plateformes ?',
         'ph_exp'          => 'Sélectionner',
@@ -450,6 +454,13 @@ $at = $at[$currentLang] ?? $at['en'];
                 <label for="motivation"><?= $at['lbl_motivation'] ?></label>
                 <textarea id="motivation" name="motivation"
                     placeholder="<?= htmlspecialchars($at['ph_motivation']) ?>"><?= htmlspecialchars($old['motivation'] ?? '') ?></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="referral_code"><?= $at['lbl_referral'] ?></label>
+                <input type="text" id="referral_code" name="referral_code" maxlength="20" autocomplete="off"
+                    value="<?= htmlspecialchars($old['referral_code'] ?? ($_GET['ref'] ?? '')) ?>">
+                <span class="hint"><?= $at['referral_hint'] ?></span>
             </div>
 
             <div class="form-group">

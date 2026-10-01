@@ -3395,4 +3395,40 @@ public function reviewComplianceDoc(): void
         jsonResponse(['error' => 'Failed to update document status.'], 500);
     }
 }
+
+    /**
+     * Founding Driver equipment kit (Driver Agreement Sec 9 / Schedule D):
+     * admin records where the kit is; the driver sees it on the dashboard.
+     */
+    public function updateFoundingKit(): void {
+        $driverId = (int) post('driver_id', 0);
+        $status = (string) post('kit_status', '');
+        $back = url('admin/delivery/driver-details?id=' . $driverId);
+
+        if (!verifyCsrfToken(post(env('CSRF_TOKEN_NAME', '_csrf_token')))) {
+            setFlash('error', 'Invalid security token. Please try again.');
+            redirect($back);
+            return;
+        }
+        if (!$driverId || !in_array($status, ['pending', 'shipped', 'delivered'], true)) {
+            setFlash('error', 'Invalid kit status.');
+            redirect($back);
+            return;
+        }
+
+        $stmt = $this->db->prepare("UPDATE users SET founding_kit_status = ?, founding_kit_updated_at = NOW() WHERE id = ? AND founding_driver = 1");
+        $stmt->execute([$status, $driverId]);
+        if ($stmt->rowCount() === 0) {
+            setFlash('error', 'This driver is not a Founding Driver, or the status is unchanged.');
+            redirect($back);
+            return;
+        }
+
+        $en = ['pending' => 'Your Founding Driver equipment kit is being prepared.', 'shipped' => 'Your Founding Driver equipment kit is on its way.', 'delivered' => 'Your Founding Driver equipment kit has been delivered.'];
+        $fr = ['pending' => 'Votre trousse d\'équipement Livreur fondateur est en préparation.', 'shipped' => 'Votre trousse d\'équipement Livreur fondateur est en route.', 'delivered' => 'Votre trousse d\'équipement Livreur fondateur a été remise.'];
+        \App\Helpers\NotificationHelper::addDriverNotification($driverId, $en[$status], 'info', (int)($_SESSION['user']['id'] ?? 0), $fr[$status]);
+
+        setFlash('success', 'Founding kit status updated.');
+        redirect($back);
+    }
 }

@@ -615,6 +615,22 @@ ob_start();
         </div>
         <div class="driver-info">
           <h1><?= htmlspecialchars(($driver['first_name'] ?? '') . ' ' . ($driver['last_name'] ?? '')) ?></h1>
+          <?php if (!empty($driver['founding_driver'])): ?>
+          <form method="POST" action="<?= url('admin/delivery/founding-kit') ?>" style="display:flex;gap:8px;align-items:center;margin:6px 0 10px;flex-wrap:wrap;">
+            <?= csrfField() ?>
+            <input type="hidden" name="driver_id" value="<?= (int) $driver['id'] ?>">
+            <span style="font-size:13px;font-weight:600;color:#8a5a00;background:#fff7e6;border:1px solid #f5d48a;border-radius:999px;padding:3px 10px;">
+              &#9733; Founding Driver #<?= (int) ($driver['founding_driver_number'] ?? 0) ?>
+            </span>
+            <label for="kit_status" style="font-size:13px;">Equipment kit:</label>
+            <select name="kit_status" id="kit_status" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;">
+              <?php foreach (['pending' => 'Pending', 'shipped' => 'Shipped', 'delivered' => 'Delivered'] as $kv => $kl): ?>
+                <option value="<?= $kv ?>" <?= ($driver['founding_kit_status'] ?? 'pending') === $kv ? 'selected' : '' ?>><?= $kl ?></option>
+              <?php endforeach; ?>
+            </select>
+            <button type="submit" style="padding:4px 12px;border:0;border-radius:6px;background:#00b207;color:#fff;font-size:13px;cursor:pointer;">Save</button>
+          </form>
+          <?php endif; ?>
           <div class="driver-contact">
             <span class="driver-contact-item">
               <i class="fas fa-envelope"></i>

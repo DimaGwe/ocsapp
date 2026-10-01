@@ -733,6 +733,7 @@ return [
     // Background check — admin actions
     'GET /admin/delivery/bgcheck/download'  => ['BgcheckController', 'adminDownload'],
     'POST /admin/delivery/bgcheck/verify'   => ['AdminDeliveryController', 'verifyBgcheck'],
+    'POST /admin/delivery/founding-kit'     => ['AdminDeliveryController', 'updateFoundingKit'],
     'POST /admin/delivery/bgcheck/request'  => ['AdminDeliveryController', 'requestBgcheck'],
     'POST /admin/delivery/compliance/request' => ['AdminDeliveryController', 'requestComplianceDocs'],
 
