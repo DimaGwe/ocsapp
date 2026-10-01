@@ -371,13 +371,14 @@ class DistributionRequestController
                     s.postal_code,
                     s.latitude,
                     s.longitude,
-                    COUNT(sp.id) as product_count
+                    COUNT(sp.id) as product_count,
+                    " . \App\Helpers\FoundingSupplierHelper::featuredSql('s') . " AS is_featured
                 FROM suppliers s
                 LEFT JOIN supplier_products sp ON s.id = sp.supplier_id AND sp.is_available = 1
                 WHERE s.status = 'active'
                 GROUP BY s.id
                 HAVING product_count > 0
-                ORDER BY s.name ASC
+                ORDER BY is_featured DESC, s.name ASC
             ");
             $suppliers = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
@@ -1016,13 +1017,14 @@ class DistributionRequestController
                     s.id,
                     s.name,
                     s.company_name,
-                    COUNT(sp.id) as product_count
+                    COUNT(sp.id) as product_count,
+                    " . \App\Helpers\FoundingSupplierHelper::featuredSql('s') . " AS is_featured
                 FROM suppliers s
                 LEFT JOIN supplier_products sp ON s.id = sp.supplier_id AND sp.is_available = 1
                 WHERE s.status = 'active'
                 GROUP BY s.id
                 HAVING product_count > 0
-                ORDER BY s.name ASC
+                ORDER BY is_featured DESC, s.name ASC
             ");
             $suppliers = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 

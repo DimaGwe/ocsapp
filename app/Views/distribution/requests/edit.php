@@ -124,6 +124,9 @@ require __DIR__ . '/../layout-header.php';
                                         ?>
                                             <div class="supplier-card" data-supplier-id="<?= $supplier['id'] ?>"
                                                  data-supplier-name="<?= htmlspecialchars($supplierDisplayName) ?>">
+                                                <?php if (!empty($supplier['is_featured'])): ?>
+                                                    <div class="supplier-featured" style="display:inline-block;margin-bottom:6px;padding:2px 8px;border-radius:10px;background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;"><i class="fas fa-star"></i> <?= ($_SESSION['language'] ?? 'fr') === 'fr' ? 'En vedette' : 'Featured' ?></div>
+                                                <?php endif; ?>
                                                 <div class="supplier-logo">
                                                     <i class="fas fa-building"></i>
                                                 </div>

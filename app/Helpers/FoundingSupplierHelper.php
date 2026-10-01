@@ -128,6 +128,17 @@ class FoundingSupplierHelper
     }
 
     /**
+     * SQL condition for "featured placement" in the business procurement
+     * catalog: a Prestige plan feature (Supplier Agreement Schedule A), which
+     * Enterprise includes and Founding Suppliers get through their Prestige
+     * rate lock (Sec 7.4.1).
+     */
+    public static function featuredSql(string $alias = 's'): string
+    {
+        return "({$alias}.subscription_package IN ('Prestige', 'Enterprise'))";
+    }
+
+    /**
      * Was this supplier ever admitted to the Founding cohort? founding_partner
      * itself is reset to 0 when the 6-month rate lock expires, so the cohort
      * number is the lasting marker.
