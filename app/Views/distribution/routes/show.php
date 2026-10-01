@@ -128,7 +128,7 @@ $t = $_pageT; unset($_pageT); // restore page-specific translations
                 <p class="page-subtitle"><?= $t['created'] ?> <?= date('M j, Y', strtotime($route['created_at'])) ?></p>
             </div>
             <div class="header-actions">
-                <?php if ($route['status'] === 'active' || $route['status'] === 'paused'): ?>
+                <?php if (!empty($canUseRoutes) && ($route['status'] === 'active' || $route['status'] === 'paused')): ?>
                     <a href="<?= url('distribution/routes/edit?id=' . $route['id']) ?>" class="btn btn-secondary">
                         <i class="fas fa-edit"></i> <?= $t['btn_edit'] ?>
                     </a>
@@ -139,7 +139,7 @@ $t = $_pageT; unset($_pageT); // restore page-specific translations
                         <input type="hidden" name="route_id" value="<?= $route['id'] ?>">
                         <button type="submit" class="btn btn-warning"><i class="fas fa-pause"></i> <?= $t['btn_pause'] ?></button>
                     </form>
-                <?php elseif ($route['status'] === 'paused'): ?>
+                <?php elseif ($route['status'] === 'paused' && !empty($canUseRoutes)): ?>
                     <form action="<?= url('distribution/routes/resume') ?>" method="POST" style="display:inline;">
                         <input type="hidden" name="_csrf_token" value="<?= generateCsrfToken() ?>">
                         <input type="hidden" name="route_id" value="<?= $route['id'] ?>">

@@ -27,6 +27,9 @@ $t = ([
         'status_active'   => 'Active',
         'status_paused'   => 'Paused',
         'status_cancelled'=> 'Cancelled',
+        'locked_title'    => 'Recurring routes are a Distribution Pro feature',
+        'locked_desc'     => 'Recurring routes are available on the Distribution Pro tier and above, and to Founding Partners during their Founding period. You can still view, pause or cancel existing routes.',
+        'locked_cta'      => 'Contact us to upgrade',
     ],
     'fr' => [
         'page_title'      => 'Routes récurrentes - OCSAPP Distribution',
@@ -54,6 +57,9 @@ $t = ([
         'status_active'   => 'Actif',
         'status_paused'   => 'En pause',
         'status_cancelled'=> 'Annulé',
+        'locked_title'    => 'Les routes récurrentes sont une fonction Distribution Pro',
+        'locked_desc'     => "Les routes récurrentes sont offertes avec le forfait Distribution Pro ou supérieur, ainsi qu'aux Partenaires fondateurs pendant leur période fondatrice. Vous pouvez toujours consulter, mettre en pause ou annuler vos routes existantes.",
+        'locked_cta'      => 'Nous joindre pour changer de forfait',
     ],
 ])[$currentLang] ?? [];
 
@@ -66,10 +72,23 @@ $t = $_pageT; unset($_pageT); // restore page-specific translations
 
         <div class="page-header">
             <h1 class="page-title"><?= $t['title'] ?></h1>
+            <?php if (!empty($canUseRoutes)): ?>
             <a href="<?= url('distribution/routes/create') ?>" class="btn-primary">
                 <i class="fas fa-plus"></i> <?= $t['btn_new_route'] ?>
             </a>
+            <?php endif; ?>
         </div>
+
+        <?php if (empty($canUseRoutes)): ?>
+        <div class="alert-verification">
+            <i class="fas fa-lock"></i>
+            <div>
+                <strong><?= $t['locked_title'] ?></strong>
+                <p style="margin:4px 0 8px;"><?= $t['locked_desc'] ?></p>
+                <a href="mailto:info@ocsapp.ca?subject=Distribution%20Pro" style="font-weight:600;color:#1e40af;"><?= $t['locked_cta'] ?> &rarr;</a>
+            </div>
+        </div>
+        <?php endif; ?>
 
         <div class="stats-row">
             <div class="stat-card">
@@ -92,9 +111,11 @@ $t = $_pageT; unset($_pageT); // restore page-specific translations
                     <i class="fas fa-route"></i>
                     <h3><?= $t['empty_title'] ?></h3>
                     <p><?= $t['empty_desc'] ?></p>
+                    <?php if (!empty($canUseRoutes)): ?>
                     <a href="<?= url('distribution/routes/create') ?>" class="btn-primary">
                         <i class="fas fa-plus"></i> <?= $t['btn_create'] ?>
                     </a>
+                    <?php endif; ?>
                 </div>
             <?php else: ?>
                 <?php foreach ($routes as $route): ?>
@@ -137,7 +158,7 @@ $t = $_pageT; unset($_pageT); // restore page-specific translations
                             <a href="<?= url('distribution/routes/show?id=' . $route['id']) ?>" class="btn-sm btn-outline">
                                 <?= $t['btn_view'] ?>
                             </a>
-                            <?php if ($route['status'] === 'active'): ?>
+                            <?php if ($route['status'] === 'active' && !empty($canUseRoutes)): ?>
                                 <a href="<?= url('distribution/routes/edit?id=' . $route['id']) ?>" class="btn-sm btn-outline">
                                     <?= $t['btn_edit'] ?>
                                 </a>

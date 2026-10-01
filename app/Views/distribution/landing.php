@@ -245,7 +245,7 @@ $fr = ($currentLang === 'fr');
       <article class="feature-card">
         <span class="feature-icon feature-icon-3d" aria-hidden="true"><svg viewBox="0 0 64 64"><defs><linearGradient id="bc2" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#21e529"/><stop offset="1" stop-color="#07710b"/></linearGradient></defs><path d="M9 30h31v17H9z" fill="url(#bc2)"/><path d="M40 34h9l7 8v5H40z" fill="#0b8d10"/><circle cx="20" cy="49" r="5" fill="#082d0a"/><circle cx="47" cy="49" r="5" fill="#082d0a"/><path d="M18 19c8-7 24-7 31 1" fill="none" stroke="#00B207" stroke-width="4" stroke-linecap="round"/><path d="M46 15l5 6-7 4" fill="none" stroke="#00B207" stroke-width="3" stroke-linecap="round"/></svg></span>
         <h3><?= $fr ? "Routes de livraison récurrentes" : "Recurring delivery routes" ?></h3>
-        <p><?= $fr ? "Automatisez votre réapprovisionnement régulier avec des routes récurrentes - mettez en pause, reprenez ou ajustez à tout moment. Disponible dès le forfait Pro." : "Automate your regular restocking with recurring routes - pause, resume, or adjust anytime. Available from the Pro tier." ?></p>
+        <p><?= $fr ? "Automatisez votre réapprovisionnement régulier avec des routes récurrentes - mettez en pause, reprenez ou ajustez à tout moment. Disponible dès le forfait Pro, et pour les Partenaires fondateurs pendant leur période fondatrice." : "Automate your regular restocking with recurring routes - pause, resume, or adjust anytime. Available from the Pro tier, and to Founding Partners during their Founding period." ?></p>
       </article>
       <article class="feature-card">
         <span class="feature-icon feature-icon-3d" aria-hidden="true"><svg viewBox="0 0 64 64"><defs><linearGradient id="bc3" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#22e42a"/><stop offset="1" stop-color="#076e0a"/></linearGradient></defs><path d="M32 7c10 0 18 8 18 18 0 13-18 31-18 31S14 38 14 25C14 15 22 7 32 7z" fill="url(#bc3)"/><circle cx="32" cy="25" r="8" fill="#f5fff5"/><circle cx="32" cy="25" r="3.5" fill="#00B207"/></svg></span>
@@ -410,6 +410,9 @@ $fr = ($currentLang === 'fr');
       <p><strong><?= $fr ? "Frais de traitement des paiements :" : "Payment processing fee:" ?></strong> <?= $fr
         ? "2,9 % + 0,30 $ CAD, absorbés par le compte entreprise et déduits du montant net avant versement (Distribution) ou ajoutés à la facture (Approvisionnement) - toujours détaillés séparément, jamais facturés à vos propres clients."
         : "2.9% + \$0.30 CAD, absorbed by the business account and deducted from net proceeds before payout (Distribution) or added to the invoice (Procurement) - always itemized separately, never charged to your own customers." ?></p>
+      <p><strong><?= $fr ? "Pourquoi le taux Pro est plus élevé :" : "Why the Pro rate is higher:" ?></strong> <?= $fr
+        ? "Le taux Pro reflète la logistique supplémentaire du routage multi-emplacements et de l'optimisation des routes récurrentes; il ne s'agit pas d'un forfait de moindre valeur."
+        : "Pro's rate reflects the added logistics of multi-location routing and recurring-route optimization, not a reduced-value tier." ?></p>
     </div>
   </div>
 </section>
@@ -511,6 +514,9 @@ $fr = ($currentLang === 'fr');
           ? "Un gestionnaire de compte dédié dès le premier jour, normalement réservé aux paliers supérieurs."
           : "A dedicated account manager from day one, normally reserved for higher plan tiers." ?></li>
         <li><?= $fr
+          ? "Routes de livraison récurrentes incluses pendant vos 6 mois fondateurs, une fonction normalement réservée au forfait Pro."
+          : "Recurring delivery routes included during your 6 Founding months, a feature normally reserved for the Pro tier." ?></li>
+        <li><?= $fr
           ? "Bientôt : une exemption des frais d'Approvisionnement sur votre premier 10 000 $ de volume est prévue - elle sera annoncée une fois lancée."
           : "Coming soon: a fee waiver on your first \$10,000 of Procurement volume is planned - it'll be announced once it launches." ?></li>
         <li><?= $fr
@@ -541,7 +547,7 @@ $fr = ($currentLang === 'fr');
       </details>
       <details class="faq-item">
         <summary><h4><?= $fr ? "Puis-je configurer des livraisons récurrentes ?" : "Can I set up recurring deliveries?" ?></h4></summary>
-        <p><?= $fr ? "Oui, avec le forfait Distribution Pro ou supérieur - configurez une route récurrente pour automatiser votre réapprovisionnement selon le calendrier de votre choix. Mettez en pause, reprenez ou annulez à tout moment depuis votre tableau de bord." : "Yes, with the Distribution Pro tier or above - set up a recurring route to automate your restocking on your chosen schedule. Pause, resume, or cancel anytime from your dashboard." ?></p>
+        <p><?= $fr ? "Oui, avec le forfait Distribution Pro ou supérieur, ou pendant votre période fondatrice si vous êtes Partenaire fondateur - configurez une route récurrente pour automatiser votre réapprovisionnement selon le calendrier de votre choix. Mettez en pause, reprenez ou annulez à tout moment depuis votre tableau de bord." : "Yes, with the Distribution Pro tier or above, or during your Founding period if you are a Founding Partner - set up a recurring route to automate your restocking on your chosen schedule. Pause, resume, or cancel anytime from your dashboard." ?></p>
       </details>
       <details class="faq-item">
         <summary><h4><?= $fr ? "Combien ça coûte ?" : "How much does it cost?" ?></h4></summary>
@@ -617,8 +623,8 @@ $fr = ($currentLang === 'fr');
       <details class="faq-item new">
         <summary><h4><?= $fr ? "Comment fonctionne le programme Partenaire Fondateur ?" : "How does the Founding Partner Program work?" ?></h4></summary>
         <p><?= $fr
-          ? "Les 5 premiers comptes entreprise approuvés sur OCSAPP obtiennent automatiquement le statut de Partenaire Fondateur - aucune candidature séparée requise. Vous obtenez le taux Distribution Débutant (5 %) verrouillé 6 mois sans frais mensuel et un gestionnaire de compte dédié. L'exemption des frais d'Approvisionnement décrite dans nos documents du programme est prévue mais pas encore active - elle sera annoncée séparément une fois lancée."
-          : "The first 5 approved business accounts on OCSAPP automatically get Founding Partner status - no separate application needed. You get the Distribution Starter rate (5%) locked for 6 months at no monthly fee and a dedicated account manager. The Procurement fee waiver described in our program materials is planned but not yet active - it'll be announced separately once it launches." ?></p>
+          ? "Les 5 premiers comptes entreprise approuvés sur OCSAPP obtiennent automatiquement le statut de Partenaire Fondateur - aucune candidature séparée requise. Vous obtenez le taux Distribution Débutant (5 %) verrouillé 6 mois sans frais mensuel, un gestionnaire de compte dédié et l'accès aux routes récurrentes pendant cette période. L'exemption des frais d'Approvisionnement décrite dans nos documents du programme est prévue mais pas encore active - elle sera annoncée séparément une fois lancée."
+          : "The first 5 approved business accounts on OCSAPP automatically get Founding Partner status - no separate application needed. You get the Distribution Starter rate (5%) locked for 6 months at no monthly fee, a dedicated account manager, and access to recurring routes during that period. The Procurement fee waiver described in our program materials is planned but not yet active - it'll be announced separately once it launches." ?></p>
       </details>
     </div>
   </div>

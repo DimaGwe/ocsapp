@@ -82,6 +82,7 @@ class DistributionRouteController
                 'stats'         => $stats,
                 'currentStatus' => $status,
                 'business'      => $this->getBusinessData(),
+                'canUseRoutes'  => $this->canUseRecurringRoutes((int)$businessId),
             ]);
 
         } catch (\PDOException $e) {
@@ -98,6 +99,10 @@ class DistributionRouteController
     {
         if (!$this->isBusinessLoggedIn()) {
             redirect('distribution/login');
+            return;
+        }
+
+        if ($this->denyWithoutRecurringAccess()) {
             return;
         }
 
@@ -129,6 +134,10 @@ class DistributionRouteController
     {
         if (!$this->isBusinessLoggedIn()) {
             redirect('distribution/login');
+            return;
+        }
+
+        if ($this->denyWithoutRecurringAccess()) {
             return;
         }
 
@@ -294,6 +303,7 @@ class DistributionRouteController
                 'route'     => $route,
                 'shipments' => $shipments,
                 'business'  => $this->getBusinessData(),
+                'canUseRoutes' => $this->canUseRecurringRoutes((int)$businessId),
             ]);
 
         } catch (\PDOException $e) {
@@ -310,6 +320,10 @@ class DistributionRouteController
     {
         if (!$this->isBusinessLoggedIn()) {
             redirect('distribution/login');
+            return;
+        }
+
+        if ($this->denyWithoutRecurringAccess()) {
             return;
         }
 
@@ -367,6 +381,10 @@ class DistributionRouteController
     {
         if (!$this->isBusinessLoggedIn()) {
             redirect('distribution/login');
+            return;
+        }
+
+        if ($this->denyWithoutRecurringAccess()) {
             return;
         }
 
@@ -532,6 +550,10 @@ class DistributionRouteController
             return;
         }
 
+        if ($this->denyWithoutRecurringAccess()) {
+            return;
+        }
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             redirect('distribution/routes');
             return;
@@ -686,6 +708,10 @@ class DistributionRouteController
     {
         if (!$this->isBusinessLoggedIn()) {
             redirect('distribution/login');
+            return;
+        }
+
+        if ($this->denyWithoutRecurringAccess()) {
             return;
         }
 
@@ -850,6 +876,48 @@ class DistributionRouteController
         } catch (\PDOException $e) {
             error_log('Shipment status history log error: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Recurring routes are a Distribution Pro+ feature (Business Account
+     * Agreement Sec 5.2.2). Founding Business accounts get them for the
+     * duration of their Founding period (Sec 8.12), even though they are
+     * billed at the Debutant rate.
+     */
+    private function canUseRecurringRoutes(int $businessId): bool
+    {
+        \App\Helpers\FoundingBusinessHelper::applyLazyExpiryIfNeeded($businessId);
+
+        $stmt = $this->db->prepare("
+            SELECT bp.founding_partner, bp.founding_commission_rate_override, dp.code AS plan_code
+            FROM business_profiles bp
+            LEFT JOIN distribution_plans dp ON bp.distribution_plan_id = dp.id
+            WHERE bp.id = ? LIMIT 1
+        ");
+        $stmt->execute([$businessId]);
+        $biz = $stmt->fetch(\PDO::FETCH_ASSOC);
+        if (!$biz) return false;
+
+        return in_array($biz['plan_code'] ?? null, ['pro', 'enterprise'], true)
+            || \App\Helpers\FoundingBusinessHelper::isActive($biz);
+    }
+
+    /**
+     * Redirects with a flash and returns true when the business may not
+     * create or run recurring routes. Viewing, pausing and cancelling stay
+     * open so a downgraded account can still wind its routes down.
+     */
+    private function denyWithoutRecurringAccess(): bool
+    {
+        if ($this->canUseRecurringRoutes((int)$_SESSION['business']['id'])) {
+            return false;
+        }
+        $fr = ($_SESSION['language'] ?? 'fr') === 'fr';
+        setFlash('error', $fr
+            ? 'Les routes récurrentes sont offertes avec le forfait Distribution Pro ou supérieur, ainsi qu\'aux Partenaires fondateurs pendant leur période fondatrice. Communiquez avec nous pour changer de forfait.'
+            : 'Recurring routes are available on the Distribution Pro tier and above, and to Founding Partners during their Founding period. Contact us to change your plan.');
+        redirect('distribution/routes');
+        return true;
     }
 
     /**
