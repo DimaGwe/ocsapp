@@ -438,8 +438,17 @@ $fr = ($currentLang === 'fr');
           ? "Aucune démarche à faire : votre statut est confirmé automatiquement à l'approbation de votre candidature, tant que la cohorte n'est pas fermée."
           : "Nothing to request: your status is confirmed automatically when your application is approved, as long as the cohort isn't already closed." ?></li>
         <li><?= $fr
-          ? "Bientôt : une prime d'étape, une prime de parrainage et un accès prioritaire à la répartition sont prévus pour les livreurs fondateurs, en plus du partage standard 70/30 - ces avantages seront annoncés une fois lancés."
-          : "Coming soon: a milestone bonus, a referral bonus, and priority dispatch access are planned for Founding Drivers, on top of the standard 70/30 split - these will be announced once they launch." ?></li>
+          ? "Prime d'étape de 100 $ lorsque vous complétez 20 livraisons dans vos 30 premiers jours, en plus du partage standard 70/30."
+          : "A \$100 milestone bonus when you complete 20 deliveries in your first 30 days, on top of the standard 70/30 split." ?></li>
+        <li><?= $fr
+          ? "Prime de parrainage de 50 $ pour vous et pour chaque livreur parrainé qui complète 15 livraisons dans ses 30 premiers jours. Votre code de parrainage se trouve sur votre tableau de bord."
+          : "A \$50 referral bonus for you and for each driver you refer who completes 15 deliveries in their first 30 days. Your referral code is on your dashboard." ?></li>
+        <li><?= $fr
+          ? "Répartition prioritaire : les nouvelles commandes vous sont offertes 60 secondes avant les autres livreurs."
+          : "Priority dispatch: new orders are offered to you 60 seconds before other drivers." ?></li>
+        <li><?= $fr
+          ? "Une trousse d'équipement OCSAPP, dont vous suivez l'envoi sur votre tableau de bord."
+          : "An OCSAPP equipment kit, which you can track from your dashboard." ?></li>
       </ul>
       <p style="margin:14px 0 0;font-weight:600;"><a href="<?= url('founding') ?>#driver" style="color:#00b207;"><?= $fr ? 'Voir tous les programmes fondateurs et les places restantes' : 'See all founding programs and spots remaining' ?> &rarr;</a></p>
     </div>
@@ -482,8 +491,8 @@ $fr = ($currentLang === 'fr');
       <details class="faq-item">
         <summary><h4><?= $fr ? "Existe-t-il un système de paliers ou de priorité ?" : "Is there a priority tier or status system?" ?></h4></summary>
         <p><?= $fr
-          ? "Pas encore, mais c'est prévu. OCSAPP prévoit offrir un système de paliers non monétaire, basé sur votre volume de livraisons complétées et votre évaluation, donnant aux livreurs de palier supérieur un accès prioritaire aux courses disponibles. Ce statut s'acquerrait uniquement par la performance, ne s'achèterait jamais, et ne changerait ni votre partage de 70 % ni le tarif de base. En attendant son lancement, tous les livreurs ont un accès égal, au premier arrivé, aux courses de leur zone choisie."
-          : "Not yet, but it's planned. OCSAPP intends to offer a non-monetary tier system based on your completed-delivery volume and rating, giving higher-tier drivers priority access to available jobs. This status would be earned through performance alone, never purchased, and wouldn't change your 70% split or base rate. Until it launches, every driver has equal, first-come access to jobs in their chosen zone." ?></p>
+          ? "Pas encore, mais c'est prévu. OCSAPP prévoit offrir un système de paliers non monétaire, basé sur votre volume de livraisons complétées et votre évaluation, donnant aux livreurs de palier supérieur un accès prioritaire aux courses disponibles. Ce statut s'acquerrait uniquement par la performance, ne s'achèterait jamais, et ne changerait ni votre partage de 70 % ni le tarif de base. En attendant son lancement, les courses de votre zone sont offertes au premier arrivé; la seule priorité est celle des livreurs fondateurs, à qui les nouvelles commandes sont offertes 60 secondes plus tôt."
+          : "Not yet, but it's planned. OCSAPP intends to offer a non-monetary tier system based on your completed-delivery volume and rating, giving higher-tier drivers priority access to available jobs. This status would be earned through performance alone, never purchased, and wouldn't change your 70% split or base rate. Until it launches, jobs in your chosen zone are first-come; the only priority is for Founding Drivers, who are offered new orders 60 seconds earlier." ?></p>
       </details>
       <details class="faq-item">
         <summary><h4><?= $fr ? "Puis-je travailler dans plus d'une zone ?" : "Can I work in more than one zone?" ?></h4></summary>
@@ -520,8 +529,8 @@ $fr = ($currentLang === 'fr');
       <details class="faq-item new">
         <summary><h4><?= $fr ? "Comment fonctionne le programme Partenaire Fondateur ?" : "How does the Founding Partner Program work?" ?></h4></summary>
         <p><?= $fr
-          ? "Les 50 premiers livreurs approuvés sur OCSAPP obtiennent automatiquement le statut de Livreur Fondateur - aucune candidature séparée requise. Vous obtenez un insigne permanent sur votre profil. La prime d'étape, la prime de parrainage et l'accès prioritaire décrits dans nos documents du programme sont prévus mais pas encore actifs - ils seront annoncés séparément une fois lancés."
-          : "The first 50 approved drivers on OCSAPP automatically get Founding Driver status - no separate application needed. You get a permanent badge on your profile. The milestone bonus, referral bonus, and priority access described in our program materials are planned but not yet active - they'll be announced separately once they launch." ?></p>
+          ? "Les 50 premiers livreurs approuvés sur OCSAPP obtiennent automatiquement le statut de Livreur Fondateur - aucune candidature séparée requise. Vous obtenez un insigne permanent sur votre profil, une prime d'étape de 100 $ (20 livraisons dans vos 30 premiers jours), une prime de parrainage de 50 $ (pour vous et pour chaque livreur parrainé qui complète 15 livraisons dans ses 30 premiers jours), la répartition prioritaire et une trousse d'équipement. Les primes sont versées avec votre paiement hebdomadaire."
+          : "The first 50 approved drivers on OCSAPP automatically get Founding Driver status - no separate application needed. You get a permanent badge on your profile, a \$100 milestone bonus (20 deliveries in your first 30 days), a \$50 referral bonus (for you and for each driver you refer who completes 15 deliveries in their first 30 days), priority dispatch and an equipment kit. Bonuses are paid with your weekly payout." ?></p>
       </details>
     </div>
   </div>

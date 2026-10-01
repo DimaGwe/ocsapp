@@ -415,6 +415,12 @@ $fr = ($currentLang === 'fr');
           ? "Configuration de catalogue gratuite et un insigne Partenaire Fondateur permanent sur votre profil."
           : "Free catalog setup and a permanent Founding Partner badge on your profile." ?></li>
         <li><?= $fr
+          ? "Prime d'étape de 150 $ lorsque vous exécutez 10 bons de commande dans vos 30 premiers jours."
+          : "A \$150 milestone bonus when you fulfill 10 purchase orders in your first 30 days." ?></li>
+        <li><?= $fr
+          ? "Prime de parrainage de 75 $ pour vous et pour chaque fournisseur recommandé qui exécute 5 bons de commande dans ses 30 premiers jours. Votre code se trouve sur votre tableau de bord."
+          : "A \$75 referral bonus for you and for each supplier you refer who fulfills 5 purchase orders in their first 30 days. Your code is on your dashboard." ?></li>
+        <li><?= $fr
           ? "Aucune démarche à faire : votre statut est confirmé automatiquement à l'activation de votre compte, tant que la cohorte n'est pas fermée."
           : "Nothing to request: your status is confirmed automatically when your account is activated, as long as the cohort isn't already closed." ?></li>
       </ul>
@@ -502,8 +508,8 @@ $fr = ($currentLang === 'fr');
       <details class="faq-item new">
         <summary><h4><?= $fr ? "Comment fonctionne le programme Partenaire Fondateur ?" : "How does the Founding Partner Program work?" ?></h4></summary>
         <p><?= $fr
-          ? "Les 15 premiers fournisseurs activés sur OCSAPP obtiennent automatiquement le statut de Partenaire Fondateur - aucune candidature séparée requise. Vous obtenez le taux Prestige (5 %) verrouillé 6 mois sans frais mensuel, et un insigne permanent. Votre position dans la cohorte est confirmée à l'activation de votre compte et visible sur votre tableau de bord."
-          : "The first 15 activated suppliers on OCSAPP automatically get Founding Partner status - no separate application needed. You get the Prestige rate (5%) locked for 6 months at no monthly fee, and a permanent badge. Your cohort position is confirmed when your account is activated and shown on your dashboard." ?></p>
+          ? "Les 15 premiers fournisseurs activés sur OCSAPP obtiennent automatiquement le statut de Partenaire Fondateur - aucune candidature séparée requise. Vous obtenez le taux Prestige (5 %) verrouillé 6 mois sans frais mensuel, un insigne permanent, une prime d'étape de 150 $ (10 bons de commande exécutés dans vos 30 premiers jours) et une prime de parrainage de 75 $ (pour vous et pour chaque fournisseur recommandé qui exécute 5 bons de commande dans ses 30 premiers jours), versées avec votre prochain paiement. Votre position dans la cohorte est confirmée à l'activation de votre compte et visible sur votre tableau de bord."
+          : "The first 15 activated suppliers on OCSAPP automatically get Founding Partner status - no separate application needed. You get the Prestige rate (5%) locked for 6 months at no monthly fee, a permanent badge, a \$150 milestone bonus (10 purchase orders fulfilled in your first 30 days) and a \$75 referral bonus (for you and for each supplier you refer who fulfills 5 purchase orders in their first 30 days), paid with your next payout. Your cohort position is confirmed when your account is activated and shown on your dashboard." ?></p>
       </details>
     </div>
   </div>

@@ -702,8 +702,8 @@ if (!empty($awaitingPayment)):
         </div>
         <div class="founding-card-text">
             <?= $bfFr
-                ? 'Taux Distribution Débutant de 5 % et frais mensuels de 0 $ verrouillés pendant 6 mois, avec un gestionnaire de compte dédié. Bientôt : exemption des frais d\'Approvisionnement sur vos premiers 10 000 $.'
-                : 'Distribution Starter rate of 5% and a $0 monthly fee locked for 6 months, with a dedicated account manager. Coming soon: a Procurement fee waiver on your first $10,000.' ?>
+                ? 'Taux Distribution Débutant de 5 % et frais mensuels de 0 $ verrouillés pendant 6 mois, avec un gestionnaire de compte dédié. Aucuns frais d\'Approvisionnement sur vos premiers 10 000 $ de volume.'
+                : 'Distribution Starter rate of 5% and a $0 monthly fee locked for 6 months, with a dedicated account manager. No Procurement fee on your first $10,000 of volume.' ?>
             <a href="<?= url('founding') ?>"><?= $bfFr ? 'Voir le programme' : 'See the program' ?></a>
         </div>
     </div>

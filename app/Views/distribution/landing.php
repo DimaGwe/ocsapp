@@ -517,8 +517,8 @@ $fr = ($currentLang === 'fr');
           ? "Routes de livraison récurrentes incluses pendant vos 6 mois fondateurs, une fonction normalement réservée au forfait Pro."
           : "Recurring delivery routes included during your 6 Founding months, a feature normally reserved for the Pro tier." ?></li>
         <li><?= $fr
-          ? "Bientôt : une exemption des frais d'Approvisionnement sur votre premier 10 000 $ de volume est prévue - elle sera annoncée une fois lancée."
-          : "Coming soon: a fee waiver on your first \$10,000 of Procurement volume is planned - it'll be announced once it launches." ?></li>
+          ? "Aucuns frais d'Approvisionnement sur vos premiers 10 000 $ de volume, appliqué automatiquement à vos demandes."
+          : "No Procurement fee on your first \$10,000 of Procurement volume, applied automatically to your requests." ?></li>
         <li><?= $fr
           ? "Aucune démarche à faire : votre statut est confirmé automatiquement à l'approbation de votre compte, tant que la cohorte n'est pas fermée."
           : "Nothing to request: your status is confirmed automatically when your account is approved, as long as the cohort isn't already closed." ?></li>
@@ -623,8 +623,8 @@ $fr = ($currentLang === 'fr');
       <details class="faq-item new">
         <summary><h4><?= $fr ? "Comment fonctionne le programme Partenaire Fondateur ?" : "How does the Founding Partner Program work?" ?></h4></summary>
         <p><?= $fr
-          ? "Les 5 premiers comptes entreprise approuvés sur OCSAPP obtiennent automatiquement le statut de Partenaire Fondateur - aucune candidature séparée requise. Vous obtenez le taux Distribution Débutant (5 %) verrouillé 6 mois sans frais mensuel, un gestionnaire de compte dédié et l'accès aux routes récurrentes pendant cette période. L'exemption des frais d'Approvisionnement décrite dans nos documents du programme est prévue mais pas encore active - elle sera annoncée séparément une fois lancée."
-          : "The first 5 approved business accounts on OCSAPP automatically get Founding Partner status - no separate application needed. You get the Distribution Starter rate (5%) locked for 6 months at no monthly fee, a dedicated account manager, and access to recurring routes during that period. The Procurement fee waiver described in our program materials is planned but not yet active - it'll be announced separately once it launches." ?></p>
+          ? "Les 5 premiers comptes entreprise approuvés sur OCSAPP obtiennent automatiquement le statut de Partenaire Fondateur - aucune candidature séparée requise. Vous obtenez le taux Distribution Débutant (5 %) verrouillé 6 mois sans frais mensuel, un gestionnaire de compte dédié et l'accès aux routes récurrentes pendant cette période. Les frais d'Approvisionnement sont aussi exemptés sur vos premiers 10 000 $ de volume, automatiquement."
+          : "The first 5 approved business accounts on OCSAPP automatically get Founding Partner status - no separate application needed. You get the Distribution Starter rate (5%) locked for 6 months at no monthly fee, a dedicated account manager, and access to recurring routes during that period. The Procurement fee is also waived on your first \$10,000 of volume, automatically." ?></p>
       </details>
     </div>
   </div>
