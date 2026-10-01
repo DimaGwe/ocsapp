@@ -226,6 +226,11 @@ foreach ($taxonomy as $cat) {
                                 <span class="shop-type-badge <?= $shopType ?>">
                                     <?= $typeLabels[$shopType] ?? 'Shop' ?>
                                 </span>
+                                <?php if (!empty($shop['is_featured'])): ?>
+                                <span class="shop-featured-badge" style="position:absolute;top:14px;left:14px;padding:4px 11px;border-radius:999px;background:#FFF7E6;color:#8A5A00;border:1px solid #F5D48A;font-size:9.5px;font-weight:700;">
+                                    &#9733; <?= ($currentLang ?? 'fr') === 'fr' ? 'En vedette' : 'Featured' ?>
+                                </span>
+                                <?php endif; ?>
 
                                 <div class="shop-logo">
                                     <?php if (!empty($shop['logo'])): ?>

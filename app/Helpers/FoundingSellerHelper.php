@@ -19,6 +19,8 @@ class FoundingSellerHelper
     const TOTAL_SLOTS = 20;
     const LOCK_MONTHS = 12;
     const FREE_DELIVERIES = 5;
+    /** Schedule A: featured placement for the first 3 months as a Founding Partner. */
+    const FEATURED_MONTHS = 3;
 
     private static function db(): \PDO
     {
@@ -80,6 +82,20 @@ class FoundingSellerHelper
             error_log('FoundingSellerHelper::claimSlotIfEligible error: ' . $e->getMessage());
             return ['eligible' => false, 'founding_partner_number' => null];
         }
+    }
+
+    /**
+     * SQL boolean: is this shop currently featured? Featured placement
+     * (listed first, with a badge) is a Founding Partner benefit for the first
+     * FEATURED_MONTHS months (Seller Account Agreement Sec 4.4 / Schedule A) and
+     * part of the Prestige and Enterprise plans (Schedule C).
+     */
+    public static function featuredSql(string $alias = 's'): string
+    {
+        $months = (int)self::FEATURED_MONTHS;
+        return "(({$alias}.founding_partner = 1 AND {$alias}.founding_partner_granted_at IS NOT NULL"
+             . " AND {$alias}.founding_partner_granted_at >= DATE_SUB(NOW(), INTERVAL {$months} MONTH))"
+             . " OR {$alias}.subscription_package IN ('Prestige', 'Enterprise'))";
     }
 
     public static function remainingSlots(): int

@@ -2,6 +2,8 @@
 
 namespace App\Controllers;
 
+require_once __DIR__ . '/../Helpers/FoundingSellerHelper.php';
+
 class HomeController {
     
     /**
@@ -398,7 +400,7 @@ try {
           AND s.shop_type = 'grocery_store'
         GROUP BY s.id
         HAVING product_count > 0
-        ORDER BY s.average_rating DESC, s.reviews_count DESC, s.total_orders DESC
+        ORDER BY " . \App\Helpers\FoundingSellerHelper::featuredSql('s') . " DESC, s.average_rating DESC, s.reviews_count DESC, s.total_orders DESC
         LIMIT 6
     ");
     
@@ -438,7 +440,7 @@ try {
           AND s.shop_type = 'food_court'
         GROUP BY s.id
         HAVING product_count > 0
-        ORDER BY s.average_rating DESC, s.reviews_count DESC, s.total_orders DESC
+        ORDER BY " . \App\Helpers\FoundingSellerHelper::featuredSql('s') . " DESC, s.average_rating DESC, s.reviews_count DESC, s.total_orders DESC
         LIMIT 6
     ");
     
@@ -478,7 +480,7 @@ try {
           AND s.shop_type = 'store'
         GROUP BY s.id
         HAVING product_count > 0
-        ORDER BY s.average_rating DESC, s.reviews_count DESC, s.total_orders DESC
+        ORDER BY " . \App\Helpers\FoundingSellerHelper::featuredSql('s') . " DESC, s.average_rating DESC, s.reviews_count DESC, s.total_orders DESC
         LIMIT 6
     ");
     
@@ -518,7 +520,7 @@ try {
           AND s.shop_type = 'products'
         GROUP BY s.id
         HAVING product_count > 0
-        ORDER BY s.average_rating DESC, s.reviews_count DESC, s.total_orders DESC
+        ORDER BY " . \App\Helpers\FoundingSellerHelper::featuredSql('s') . " DESC, s.average_rating DESC, s.reviews_count DESC, s.total_orders DESC
         LIMIT 6
     ");
     
@@ -731,7 +733,7 @@ view('buyer.home', [
                 WHERE s.is_active = 1 AND s.is_approved = 1
                 GROUP BY s.id
                 HAVING product_count > 0
-                ORDER BY s.average_rating DESC, s.created_at DESC
+                ORDER BY " . \App\Helpers\FoundingSellerHelper::featuredSql('s') . " DESC, s.average_rating DESC, s.created_at DESC
                 LIMIT 8
             ");
             $featuredShops = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -848,7 +850,7 @@ view('buyer.home', [
                       AND s.shop_type = ?
                     GROUP BY s.id
                     HAVING product_count > 0
-                    ORDER BY s.average_rating DESC, s.reviews_count DESC, s.total_orders DESC
+                    ORDER BY " . \App\Helpers\FoundingSellerHelper::featuredSql('s') . " DESC, s.average_rating DESC, s.reviews_count DESC, s.total_orders DESC
                     LIMIT 6
                 ");
                 $stmt->execute([$dbType]);
@@ -1412,7 +1414,8 @@ view('buyer.home', [
 
         $sql = "
             SELECT s.*,
-                   COUNT(DISTINCT si.id) as product_count
+                   COUNT(DISTINCT si.id) as product_count,
+                   " . \App\Helpers\FoundingSellerHelper::featuredSql('s') . " AS is_featured
             FROM shops s
             LEFT JOIN shop_inventory si ON s.id = si.shop_id AND si.status = 'active'
             WHERE s.is_active = 1 AND s.is_approved = 1
@@ -1427,7 +1430,7 @@ view('buyer.home', [
             $params[] = "%$search%";
         }
         
-        $sql .= " GROUP BY s.id ORDER BY s.average_rating DESC, s.name ASC LIMIT ? OFFSET ?";
+        $sql .= " GROUP BY s.id ORDER BY is_featured DESC, s.average_rating DESC, s.name ASC LIMIT ? OFFSET ?";
         $params[] = $perPage;
         $params[] = $offset;
         
@@ -1446,7 +1449,8 @@ view('buyer.home', [
 
         $sql = "
             SELECT s.*,
-                   COUNT(DISTINCT si.id) as product_count
+                   COUNT(DISTINCT si.id) as product_count,
+                   " . \App\Helpers\FoundingSellerHelper::featuredSql('s') . " AS is_featured
             FROM shops s
             LEFT JOIN shop_inventory si ON s.id = si.shop_id AND si.status = 'active'
             WHERE s.is_active = 1
@@ -1463,7 +1467,7 @@ view('buyer.home', [
             $params[] = "%$search%";
         }
         
-        $sql .= " GROUP BY s.id ORDER BY s.average_rating DESC, s.name ASC LIMIT ? OFFSET ?";
+        $sql .= " GROUP BY s.id ORDER BY is_featured DESC, s.average_rating DESC, s.name ASC LIMIT ? OFFSET ?";
         $params[] = $perPage;
         $params[] = $offset;
         
