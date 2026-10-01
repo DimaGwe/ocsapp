@@ -443,6 +443,10 @@ $fr = ($currentLang === 'fr');
     .legal-agreement-page .legal-list { max-width: 830px; margin: 0 auto 16px; padding-left: 28px; }
     .legal-agreement-page .legal-list li { font-size: 14px; color: var(--la-grey); margin: 6px 0; line-height: 1.65; }
     .legal-agreement-page .schedule-section { margin-top: 44px; }
+    .legal-agreement-page .legal-notice {
+        max-width: 830px; margin: 0 auto 16px; padding: 12px 16px; font-size: 14px; font-weight: 600; line-height: 1.6;
+        color: #7a4b00; background: #fff7e6; border: 1px solid #f5d48a; border-left: 4px solid #e0a100; border-radius: 8px;
+    }
     .legal-agreement-page .signature-line {
         font-family: 'Courier New', monospace; color: #343a36; background: #fafafa;
         border: 1px solid var(--la-border); padding: 10px 12px; border-radius: 8px; display: inline-block;

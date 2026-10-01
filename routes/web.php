@@ -97,6 +97,8 @@ return [
     'GET /entente-vendeur'       => ['PageController', 'sellerAgreement'],
     'GET /supplier-agreement'     => ['PageController', 'supplierAgreement'],
     'GET /entente-fournisseur'     => ['PageController', 'supplierAgreement'],
+    'GET /buyer-terms'            => ['PageController', 'buyerTerms'],
+    'GET /conditions-acheteur'    => ['PageController', 'buyerTerms'],
     'GET /driver-agreement'       => ['PageController', 'driverAgreement'],
     'GET /entente-livreur'       => ['PageController', 'driverAgreement'],
     'GET /distribution-agreement' => ['PageController', 'distributionAgreement'],

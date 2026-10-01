@@ -224,6 +224,7 @@ function localized_paths(): array {
             'cookies'                => 'temoins',
             'returns'                => 'retours',
             'accessibility'          => 'accessibilite',
+            'buyer-terms'            => 'conditions-acheteur',
             'seller-agreement'       => 'entente-vendeur',
             'supplier-agreement'     => 'entente-fournisseur',
             'driver-agreement'       => 'entente-livreur',

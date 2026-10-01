@@ -264,6 +264,14 @@ class PageController
     }
 
     /**
+     * Buyer Terms of Service page (the Buyer's Role-Specific Agreement)
+     */
+    public function buyerTerms(): void
+    {
+        $this->loadLegalPage('buyer_terms', 'Buyer Terms of Service');
+    }
+
+    /**
      * Driver / Contractor Agreement page
      */
     public function driverAgreement(): void

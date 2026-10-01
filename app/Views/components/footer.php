@@ -39,6 +39,7 @@ include __DIR__ . '/newsletter-signup.php';
     <div class="footer-links">
       <a href="<?= url('privacy') ?>"><?= $t['privacy'] ?? 'Privacy' ?></a>
       <a href="<?= url('terms') ?>"><?= $t['terms'] ?? 'Terms' ?></a>
+      <a href="<?= url('buyer-terms') ?>"><?= ($currentLang ?? 'en') === 'fr' ? 'Conditions Acheteur' : 'Buyer Terms' ?></a>
       <a href="<?= url('cookies') ?>"><?= $t['cookies'] ?? 'Cookies' ?></a>
       <a href="<?= url('returns') ?>"><?= $t['returns'] ?? 'Returns' ?></a>
       <a href="<?= url('accessibility') ?>"><?= ($currentLang ?? 'en') === 'fr' ? 'Accessibilité' : 'Accessibility' ?></a>
